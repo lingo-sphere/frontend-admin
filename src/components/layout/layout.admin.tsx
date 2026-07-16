@@ -1,180 +1,285 @@
-import React, { useEffect, useState } from 'react';
+import ProtectedRoute from '@/components/auth';
+import { useI18n } from '@/context/i18n.context';
+import { usePermission } from '@/hooks/usePermission';
 import {
     AppstoreOutlined,
-    ExceptionOutlined,
-    HeartTwoTone,
-    TeamOutlined,
-    UserOutlined,
     DollarCircleOutlined,
+    ExceptionOutlined,
+    GlobalOutlined,
+    LockOutlined,
+    LogoutOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
+    MoonOutlined,
+    SafetyCertificateOutlined,
+    SettingOutlined,
+    SunOutlined,
+    TeamOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, Dropdown, Space, Avatar } from 'antd';
-import { Outlet, useLocation } from "react-router-dom";
-import { Link } from 'react-router-dom';
-import { useCurrentApp } from '../context/app.context';
 import type { MenuProps } from 'antd';
-import { logoutAPI } from '@/services/api';
+import { Avatar, Dropdown, Layout, Menu, Space, Tag, Tooltip } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useCurrentApp } from '../context/app.context';
+
 type MenuItem = Required<MenuProps>['items'][number];
 
-const { Content, Footer, Sider } = Layout;
-
+const { Content, Sider } = Layout;
 
 const LayoutAdmin = () => {
     const [collapsed, setCollapsed] = useState(false);
-    const [activeMenu, setActiveMenu] = useState('');
+    const [activeMenu, setActiveMenu] = useState('/');
+
     const {
-        user, setUser, setIsAuthenticated, isAuthenticated,
-        setCarts
+        user,
+        isAuthenticated,
+        handleLogout: contextLogout,
+        isAdmin,
+        isSuperAdmin
     } = useCurrentApp();
 
+    const { can } = usePermission();
+    const { t, language, setLanguage, theme, setTheme, isDarkMode } = useI18n();
+
     const location = useLocation();
+    const navigate = useNavigate();
 
-    const items: MenuItem[] = [
-        {
-            label: <Link to='/admin'>Dashboard</Link>,
-            key: '/admin',
+    const items: MenuItem[] = useMemo(() => {
+        const menuItems: MenuItem[] = [];
+        const isAdminRole = isAdmin();
+        const hasAnyPermission = (user?.permissions?.length || 0) > 0;
+        menuItems.push({
+            label: <Link to='/'>{t.menu.dashboard}</Link>,
+            key: '/',
             icon: <AppstoreOutlined />,
+        });
+        if (can('users', 'read') || (isAdminRole && !hasAnyPermission)) {
+            menuItems.push({
+                label: <Link to='/user'>{t.menu.users}</Link>,
+                key: '/user',
+                icon: <TeamOutlined />,
+            });
+        }
 
-        },
-        {
-            label: <span>Manage Users</span>,
-            key: '/admin/user',
-            icon: <UserOutlined />,
-            children: [
-                {
-                    label: <Link to='/admin/user'>CRUD</Link>,
-                    key: '/admin/user',
-                    icon: <TeamOutlined />,
-                },
-            ]
-        },
-        {
-            label: <Link to='/admin/book'>Manage Books</Link>,
-            key: '/admin/book',
-            icon: <ExceptionOutlined />
-        },
-        {
-            label: <Link to='/admin/order'>Manage Orders</Link>,
-            key: '/admin/order',
-            icon: <DollarCircleOutlined />
-        },
+        if ((can('roles', 'read') || (isAdminRole && !hasAnyPermission)) && isAdmin()) {
+            menuItems.push({
+                label: <Link to='/role'>{t.menu.roles}</Link>,
+                key: '/role',
+                icon: <SafetyCertificateOutlined />,
+            });
+        }
 
-    ];
+        if ((can('permissions', 'read') || (isAdminRole && !hasAnyPermission)) && isAdmin()) {
+            menuItems.push({
+                label: <Link to='/permission'>{t.menu.permissions}</Link>,
+                key: '/permission',
+                icon: <LockOutlined />,
+            });
+        }
 
+        if (can('books', 'read') || (isAdminRole && !hasAnyPermission)) {
+            menuItems.push({
+                label: <Link to='/book'>{t.menu.books}</Link>,
+                key: '/book',
+                icon: <ExceptionOutlined />,
+            });
+        }
+
+        if (can('orders', 'read') || (isAdminRole && !hasAnyPermission)) {
+            menuItems.push({
+                label: <Link to='/order'>{t.menu.orders}</Link>,
+                key: '/order',
+                icon: <DollarCircleOutlined />,
+            });
+        }
+
+        if (isSuperAdmin()) {
+            menuItems.push({
+                label: <Link to='/settings'>{t.menu.settings}</Link>,
+                key: '/settings',
+                icon: <SettingOutlined />,
+            });
+        }
+
+        return menuItems;
+    }, [can, isAdmin, isSuperAdmin, user?.permissions, t]);
 
     useEffect(() => {
-        const active: any = items.find(item => location.pathname === (item!.key as any)) ?? "/admin";
-        setActiveMenu(active.key)
-    }, [location])
+        const currentItem = items.find(
+            item => location.pathname === (item?.key as string)
+        );
+        if (currentItem) {
+            setActiveMenu(currentItem.key as string);
+        }
+    }, [location, items]);
 
     const handleLogout = async () => {
-        //todo
-        const res = await logoutAPI();
-        if (res.data) {
-            setUser(null);
-            setCarts([]);
-            setIsAuthenticated(false);
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("carts")
-        }
-    }
-
+        await contextLogout();
+        navigate('/login');
+    };
 
     const itemsDropdown = [
         {
-            label: <label
-                style={{ cursor: 'pointer' }}
-                onClick={() => alert("me")}
-            >Quản lý tài khoản</label>,
-            key: 'account',
+            label: (
+                <label
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate('/profile')}
+                >
+                    <AppstoreOutlined style={{ marginRight: 8 }} />
+                    Hồ sơ cá nhân
+                </label>
+            ),
+            key: 'profile',
         },
         {
-            label: <Link to={'/'}>Trang chủ</Link>,
-            key: 'home',
+            type: 'divider',
         },
         {
-            label: <label
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleLogout()}
-            >Đăng xuất</label>,
+            label: (
+                <label
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleLogout()}
+                >
+                    <LogoutOutlined style={{ marginRight: 8 }} />
+                    Đăng xuất
+                </label>
+            ),
             key: 'logout',
         },
-
     ];
 
-    const urlAvatar = `${import.meta.env.VITE_BACKEND_URL}/images/avatar/${user?.avatar}`;
+    const urlAvatar = user?.image
+        ? `${import.meta.env.VITE_BACKEND_URL}/images/avatar/${user.image}`
+        : undefined;
+    const showAvatar = urlAvatar && !urlAvatar.includes('undefined');
 
     if (isAuthenticated === false) {
-        return (
-            <Outlet />
-        )
+        return <Outlet />;
     }
 
-    const isAdminRoute = location.pathname.includes("admin");
-    if (isAuthenticated === true && isAdminRoute === true) {
-        const role = user?.role;
-        if (role === "USER") {
-            return (
-                <Outlet />
-            )
-        }
+    const hasAdminAccess = isAdmin() || !!user?.role;
+
+    if (!hasAdminAccess) {
+        return <Outlet />;
     }
+
+    const getRoleDisplay = () => {
+        const role = user?.role || '';
+        if (role === 'SUPER_ADMIN') return 'Super Admin';
+        if (role === 'ADMIN') return 'Admin';
+        if (role === 'TEACHER') return 'Teacher';
+        if (role === 'USER') return 'User';
+        return role || 'Guest';
+    };
+
+    const getRoleColor = () => {
+        const role = user?.role || '';
+        if (role === 'SUPER_ADMIN') return 'red';
+        if (role === 'ADMIN') return 'orange';
+        if (role === 'TEACHER') return 'blue';
+        if (role === 'USER') return 'green';
+        return 'default';
+    };
 
     return (
-        <>
-            <Layout
-                style={{ minHeight: '100vh' }}
-                className="layout-admin"
-            >
+        <ProtectedRoute requiredRoles={['ADMIN', 'SUPER_ADMIN']}>
+            <Layout style={{ minHeight: '100vh' }} className="layout-admin">
                 <Sider
-                    theme='light'
+                    theme={isDarkMode ? 'dark' : 'light'}
                     collapsible
                     collapsed={collapsed}
-                    onCollapse={(value) => setCollapsed(value)}>
-                    <div style={{ height: 32, margin: 16, textAlign: 'center' }}>
-                        Admin
+                    onCollapse={(value) => setCollapsed(value)}
+                >
+                    <div style={{
+                        height: 32,
+                        margin: 16,
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                        fontSize: collapsed ? 14 : 18,
+                        color: isDarkMode ? '#e8e8e8' : '#000'
+                    }}>
+                        {collapsed ? 'Admin' : 'LingoSphere Admin'}
                     </div>
                     <Menu
-                        // defaultSelectedKeys={[activeMenu]}
+                        theme={isDarkMode ? 'dark' : 'light'}
                         selectedKeys={[activeMenu]}
                         mode="inline"
                         items={items}
-                        onClick={(e) => setActiveMenu(e.key)}
+                        onClick={(e) => setActiveMenu(e.key as string)}
                     />
                 </Sider>
                 <Layout>
-                    <div className='admin-header' style={{
-                        height: "50px",
-                        borderBottom: "1px solid #ebebeb",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0 15px",
-
-                    }}>
+                    <div
+                        className='admin-header'
+                        style={{
+                            height: "50px",
+                            borderBottom: `1px solid ${isDarkMode ? '#404040' : '#ebebeb'}`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "0 15px",
+                        }}
+                    >
                         <span>
-                            {React.createElement(collapsed ? MenuUnfoldOutlined : MenuFoldOutlined, {
-                                className: 'trigger',
-                                onClick: () => setCollapsed(!collapsed),
-                            })}
+                            {React.createElement(
+                                collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
+                                {
+                                    className: 'trigger',
+                                    style: { color: isDarkMode ? '#e8e8e8' : '#000', cursor: 'pointer' },
+                                    onClick: () => setCollapsed(!collapsed),
+                                }
+                            )}
                         </span>
-                        <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
-                            <Space style={{ cursor: "pointer" }}>
-                                <Avatar src={urlAvatar} />
-                                {user?.fullName}
-                            </Space>
-                        </Dropdown>
+                        <Space size="middle">
+                            {/* Theme Toggle */}
+                            <Tooltip title={isDarkMode ? 'Light mode' : 'Dark mode'} color={isDarkMode ? '#2a2a2a' : '#ffffff'}>
+                                {isDarkMode ? (
+                                    <SunOutlined
+                                        style={{ fontSize: 16, cursor: 'pointer', color: '#faad14' }}
+                                        onClick={() => setTheme('light')}
+                                    />
+                                ) : (
+                                    <MoonOutlined
+                                        style={{ fontSize: 16, cursor: 'pointer', color: '#722ed1' }}
+                                        onClick={() => setTheme('dark')}
+                                    />
+                                )}
+                            </Tooltip>
+
+                            {/* Language Selector */}
+                            <Tooltip title={language === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'} color={isDarkMode ? '#2a2a2a' : '#ffffff'}>
+                                <GlobalOutlined
+                                    style={{ fontSize: 16, cursor: 'pointer', color: isDarkMode ? '#e8e8e8' : '#000' }}
+                                    onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+                                />
+                            </Tooltip>
+
+                            {/* Role badge */}
+                            <Tooltip title={`Vai trò: ${user?.role || 'Không có'}`} color={isDarkMode ? '#2a2a2a' : '#ffffff'}>
+                                <Tag color={getRoleColor()}>
+                                    {getRoleDisplay()}
+                                </Tag>
+                            </Tooltip>
+                            <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
+                                <Space style={{ cursor: "pointer" }}>
+                                    {showAvatar ? (
+                                        <Avatar src={urlAvatar} />
+                                    ) : (
+                                        <Avatar style={{ backgroundColor: '#1890ff' }}>
+                                            {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                                        </Avatar>
+                                    )}
+                                    <span style={{ color: isDarkMode ? '#e8e8e8' : '#000' }}>{user?.name}</span>
+                                </Space>
+                            </Dropdown>
+                        </Space>
                     </div>
-                    <Content style={{ padding: '15px' }}>
+                    <Content style={{ padding: '15px', backgroundColor: isDarkMode ? '#141414' : '#f5f5f5' }}>
                         <Outlet />
                     </Content>
-                    <Footer style={{ padding: 0, textAlign: "center" }}>
-                        React Test Fresher &copy; Nguyễn Tấn Nghị - Made with <HeartTwoTone />
-                    </Footer>
                 </Layout>
             </Layout>
-        </>
+        </ProtectedRoute>
     );
 };
 
