@@ -1,13 +1,11 @@
 /**
  * Login Component
  *
- * Shared login form component with dark mode support
+ * Shared login form component - English only, light theme
  */
 
-import { Button, Divider, Form, Input, Typography } from 'antd';
+import { Button, Form, Input, Typography } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
-import { GoogleLogin } from '@react-oauth/google';
-import { useI18n } from '@/context/i18n.context';
 
 const { Title, Text } = Typography;
 
@@ -18,7 +16,6 @@ interface IProps {
 
 const Login = (props: IProps) => {
     const { form, onFinish } = props;
-    const { isDarkMode, t } = useI18n();
 
     return (
         <div style={{
@@ -26,20 +23,20 @@ const Login = (props: IProps) => {
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: '100vh',
-            background: isDarkMode ? '#141414' : '#f0f2f5'
+            background: '#f0f2f5'
         }}>
             <div style={{
                 width: 400,
                 padding: 24,
-                background: isDarkMode ? '#1f1f1f' : '#fff',
+                background: '#fff',
                 borderRadius: 8,
-                boxShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.1)',
-                border: isDarkMode ? '1px solid #303030' : 'none'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                border: 'none'
             }}>
                 <Title level={3} style={{
                     textAlign: 'center',
                     marginBottom: 8,
-                    color: isDarkMode ? '#e8e8e8' : '#000'
+                    color: '#000'
                 }}>
                     LingoSphere Admin
                 </Title>
@@ -47,9 +44,9 @@ const Login = (props: IProps) => {
                     textAlign: 'center',
                     display: 'block',
                     marginBottom: 24,
-                    color: isDarkMode ? '#a6a6a6' : '#666'
+                    color: '#666'
                 }}>
-                    {t.auth.login} {isDarkMode ? '' : 'để quản lý hệ thống'}
+                    Login to manage the system
                 </Text>
 
                 <Form
@@ -62,18 +59,18 @@ const Login = (props: IProps) => {
                     <Form.Item
                         name="username"
                         rules={[
-                            { required: true, message: 'Vui lòng nhập email!' },
-                            { type: 'email', message: 'Email không hợp lệ!' }
+                            { required: true, message: 'Please enter email!' },
+                            { type: 'email', message: 'Invalid email!' }
                         ]}
                     >
                         <Input
-                            prefix={<MailOutlined style={{ color: isDarkMode ? '#666' : '#999' }} />}
+                            prefix={<MailOutlined style={{ color: '#999' }} />}
                             placeholder="Email"
                             size="large"
                             style={{
-                                backgroundColor: isDarkMode ? '#262626' : '#fff',
-                                borderColor: isDarkMode ? '#434343' : '#d9d9d9',
-                                color: isDarkMode ? '#e8e8e8' : '#000'
+                                backgroundColor: '#fff',
+                                borderColor: '#d9d9d9',
+                                color: '#000'
                             }}
                         />
                     </Form.Item>
@@ -81,17 +78,17 @@ const Login = (props: IProps) => {
                     <Form.Item
                         name="password"
                         rules={[
-                            { required: true, message: 'Vui lòng nhập mật khẩu!' }
+                            { required: true, message: 'Please enter password!' }
                         ]}
                     >
                         <Input.Password
-                            prefix={<LockOutlined style={{ color: isDarkMode ? '#666' : '#999' }} />}
-                            placeholder="Mật khẩu"
+                            prefix={<LockOutlined style={{ color: '#999' }} />}
+                            placeholder="Password"
                             size="large"
                             style={{
-                                backgroundColor: isDarkMode ? '#262626' : '#fff',
-                                borderColor: isDarkMode ? '#434343' : '#d9d9d9',
-                                color: isDarkMode ? '#e8e8e8' : '#000'
+                                backgroundColor: '#fff',
+                                borderColor: '#d9d9d9',
+                                color: '#000'
                             }}
                         />
                     </Form.Item>
@@ -103,33 +100,20 @@ const Login = (props: IProps) => {
                             size="large"
                             style={{ width: '100%' }}
                         >
-                            {t.auth.login}
+                            Login
                         </Button>
                     </Form.Item>
                 </Form>
-
-                <Divider plain style={{ color: isDarkMode ? '#666' : '#999' }}>hoặc</Divider>
-
-                <div style={{ textAlign: 'center' }}>
-                    <GoogleLogin
-                        onSuccess={() => {
-                            // TODO: Implement Google login
-                        }}
-                        onError={() => {
-                            console.error('Google login failed');
-                        }}
-                    />
-                </div>
 
                 <div style={{
                     marginTop: 24,
                     textAlign: 'center',
                     fontSize: 14,
-                    color: isDarkMode ? '#a6a6a6' : '#666'
+                    color: '#666'
                 }}>
-                    <a href="/forgot-password" style={{ color: isDarkMode ? '#1890ff' : undefined }}>Quên mật khẩu?</a>
-                    <span style={{ margin: '0 8px', color: isDarkMode ? '#434343' : '#d9d9d9' }}>|</span>
-                    <a href="/register" style={{ color: isDarkMode ? '#1890ff' : undefined }}>Đăng ký</a>
+                    <a href="/forgot-password">Forgot password?</a>
+                    <span style={{ margin: '0 8px', color: '#d9d9d9' }}>|</span>
+                    <a href="/register">Register</a>
                 </div>
             </div>
         </div>

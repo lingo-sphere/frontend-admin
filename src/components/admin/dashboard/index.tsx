@@ -1,4 +1,3 @@
-import { useI18n } from "@/context/i18n.context";
 import { getDashboardAPI, toast } from "@/services";
 import { Card, Col, Row, Statistic, Typography } from "antd";
 import { useEffect, useState } from "react";
@@ -13,7 +12,6 @@ interface StatisticItem {
 }
 
 const AdminDashboard = () => {
-    const { t, isDarkMode } = useI18n();
     const [dataDashboard, setDataDashboard] = useState<IDashboardStats>({
         totalUsers: 0,
         activeUsers: 0,
@@ -33,8 +31,8 @@ const AdminDashboard = () => {
                 }
             } catch (error) {
                 toast.notifyError(
-                    "Lỗi khi tải dữ liệu dashboard",
-                    "Vui lòng thử lại sau.",
+                    "Error loading dashboard data",
+                    "Please try again later.",
                 );
             } finally {
                 setLoading(false);
@@ -47,36 +45,36 @@ const AdminDashboard = () => {
         <CountUp end={Number(value ?? 0)} separator="," />
     );
     const cardStyle = {
-        background: isDarkMode ? "#1f1f1f" : "#fff",
-        borderColor: isDarkMode ? "#303030" : "#d9d9d9",
+        background: "#fff",
+        borderColor: "#d9d9d9",
     };
 
     const statisticTitleStyle = {
-        color: isDarkMode ? "#a6a6a6" : "rgba(0,0,0,0.65)",
+        color: "rgba(0,0,0,0.65)",
     };
     const statistics: StatisticItem[] = [
         {
-            title: t.dashboard.totalUsers,
+            title: "Total Users",
             value: dataDashboard.totalUsers,
             color: "#1890ff",
         },
         {
-            title: t.dashboard.activeUsers,
+            title: "Active Users",
             value: dataDashboard.activeUsers,
             color: "#52c41a",
         },
         {
-            title: "inactiveUsers",
+            title: "Inactive Users",
             value: dataDashboard.inactiveUsers,
             color: "#722ed1",
         },
         {
-            title: t.roles.title,
+            title: "Roles",
             value: dataDashboard.totalRoles,
             color: "#722ed1",
         },
         {
-            title: t.permissions.title,
+            title: "Permissions",
             value: dataDashboard.totalPermissions,
             color: "#faad14",
         },
@@ -88,10 +86,10 @@ const AdminDashboard = () => {
                 level={3}
                 style={{
                     marginBottom: 24,
-                    color: isDarkMode ? "#e8e8e8" : "#000",
+                    color: "#000",
                 }}
             >
-                {t.dashboard.title}
+                Dashboard
             </Title>
             <Row gutter={[24, 24]}>
                 {statistics.map((item) => (

@@ -20,7 +20,7 @@ export const usePermission = (): UsePermissionReturn => {
         return result;
     }, [user?.role]);
     const can = useCallback((module: string, ...actions: string[]): boolean => {
-        if (user.role === 'SUPER_ADMIN') return true;
+        if (user?.role === 'SUPER_ADMIN') return true;
         if (!user?.permissions?.length) return false;
         const permissionCodes = actions.map(action =>
             `${module.toLowerCase()}.${action.toLowerCase()}`

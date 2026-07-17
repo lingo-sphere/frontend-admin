@@ -1,13 +1,11 @@
 import { useCurrentApp } from '@/components/context/app.context';
 import { Card, Avatar, Tag, Space, Descriptions, Typography, Divider } from 'antd';
 import { SafetyOutlined, LockOutlined } from '@ant-design/icons';
-import { useI18n } from '@/context/i18n.context';
 
 const { Title, Text } = Typography;
 
 const ProfilePage = () => {
     const { user } = useCurrentApp();
-    const { isDarkMode, t } = useI18n();
 
     const getRoleColor = (roleName: string) => {
         const colors: Record<string, string> = {
@@ -43,17 +41,17 @@ const ProfilePage = () => {
 
     return (
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-            <Title level={3} style={{ color: isDarkMode ? '#e8e8e8' : '#000' }}>
+            <Title level={3} style={{ color: '#000' }}>
                 <Space>
                     <LockOutlined />
-                    {t.profile.title}
+                    Profile
                 </Space>
             </Title>
 
             <Card
                 style={{
-                    background: isDarkMode ? '#1f1f1f' : '#fff',
-                    borderColor: isDarkMode ? '#303030' : '#d9d9d9'
+                    background: '#fff',
+                    borderColor: '#d9d9d9'
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
@@ -65,25 +63,25 @@ const ProfilePage = () => {
                         {user?.name?.charAt(0)?.toUpperCase() || 'A'}
                     </Avatar>
                     <div style={{ marginLeft: 24 }}>
-                        <Title level={3} style={{ margin: 0, color: isDarkMode ? '#e8e8e8' : '#000' }}>
+                        <Title level={3} style={{ margin: 0, color: '#000' }}>
                             {user?.name}
                         </Title>
                         <Text type="secondary">{user?.email}</Text>
                     </div>
                 </div>
 
-                <Divider style={{ borderColor: isDarkMode ? '#303030' : '#d9d9d9' }} />
+                <Divider style={{ borderColor: '#d9d9d9' }} />
 
                 <Descriptions
                     column={1}
                     bordered
-                    labelStyle={{ background: isDarkMode ? '#2a2a2a' : '#fafafa', color: isDarkMode ? '#a6a6a6' : 'rgba(0,0,0,0.65)' }}
-                    contentStyle={{ background: isDarkMode ? '#1f1f1f' : '#fff', color: isDarkMode ? '#e8e8e8' : 'rgba(0,0,0,0.88)' }}
+                    labelStyle={{ background: '#fafafa', color: 'rgba(0,0,0,0.65)' }}
+                    contentStyle={{ background: '#fff', color: 'rgba(0,0,0,0.88)' }}
                 >
                     <Descriptions.Item label="ID">{user?._id}</Descriptions.Item>
-                    <Descriptions.Item label={t.auth.email}>{user?.email}</Descriptions.Item>
-                    <Descriptions.Item label="Tên">{user?.name}</Descriptions.Item>
-                    <Descriptions.Item label={t.roles.permissions}>
+                    <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
+                    <Descriptions.Item label="Name">{user?.name}</Descriptions.Item>
+                    <Descriptions.Item label="Role">
                         <Space wrap>
                             {user?.role && (
                                 <Tag
@@ -98,12 +96,12 @@ const ProfilePage = () => {
                             <div style={{
                                 marginTop: 12,
                                 padding: 12,
-                                background: isDarkMode ? '#2a2a2a' : '#fffbe6',
-                                border: `1px solid ${isDarkMode ? '#434343' : '#ffe58f'}`,
+                                background: '#fffbe6',
+                                border: '1px solid #ffe58f',
                                 borderRadius: 4
                             }}>
                                 <Text type="warning">
-                                    ⚠️ Backend chưa populate role. Role đang hiển thị ObjectId.
+                                    ⚠️ Backend has not populated role. Role is showing ObjectId.
                                 </Text>
                             </div>
                         )}
@@ -120,14 +118,14 @@ const ProfilePage = () => {
                         ) : (
                             <Text type="secondary">
                                 {isUnresolvedRole(user?.role || '')
-                                    ? 'Không có (backend chưa populate role)'
-                                    : 'Không có quyền nào'}
+                                    ? 'None (backend has not populated role)'
+                                    : 'No permissions'}
                             </Text>
                         )}
                     </Descriptions.Item>
                 </Descriptions>
 
-                <Divider style={{ borderColor: isDarkMode ? '#303030' : '#d9d9d9' }} />
+                <Divider style={{ borderColor: '#d9d9d9' }} />
 
                 <Text type="secondary">
                     Permissions loaded from backend via JWT token.

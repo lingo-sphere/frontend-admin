@@ -1,19 +1,15 @@
 import ProtectedRoute from '@/components/auth';
-import { useI18n } from '@/context/i18n.context';
 import { usePermission } from '@/hooks/usePermission';
 import {
     AppstoreOutlined,
     DollarCircleOutlined,
     ExceptionOutlined,
-    GlobalOutlined,
     LockOutlined,
     LogoutOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    MoonOutlined,
     SafetyCertificateOutlined,
     SettingOutlined,
-    SunOutlined,
     TeamOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -39,7 +35,6 @@ const LayoutAdmin = () => {
     } = useCurrentApp();
 
     const { can } = usePermission();
-    const { t, language, setLanguage, theme, setTheme, isDarkMode } = useI18n();
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -49,13 +44,13 @@ const LayoutAdmin = () => {
         const isAdminRole = isAdmin();
         const hasAnyPermission = (user?.permissions?.length || 0) > 0;
         menuItems.push({
-            label: <Link to='/'>{t.menu.dashboard}</Link>,
+            label: <Link to='/'>{'Dashboard'}</Link>,
             key: '/',
             icon: <AppstoreOutlined />,
         });
         if (can('users', 'read') || (isAdminRole && !hasAnyPermission)) {
             menuItems.push({
-                label: <Link to='/user'>{t.menu.users}</Link>,
+                label: <Link to='/user'>{'Users'}</Link>,
                 key: '/user',
                 icon: <TeamOutlined />,
             });
@@ -63,7 +58,7 @@ const LayoutAdmin = () => {
 
         if ((can('roles', 'read') || (isAdminRole && !hasAnyPermission)) && isAdmin()) {
             menuItems.push({
-                label: <Link to='/role'>{t.menu.roles}</Link>,
+                label: <Link to='/role'>{'Roles'}</Link>,
                 key: '/role',
                 icon: <SafetyCertificateOutlined />,
             });
@@ -71,7 +66,7 @@ const LayoutAdmin = () => {
 
         if ((can('permissions', 'read') || (isAdminRole && !hasAnyPermission)) && isAdmin()) {
             menuItems.push({
-                label: <Link to='/permission'>{t.menu.permissions}</Link>,
+                label: <Link to='/permission'>{'Permissions'}</Link>,
                 key: '/permission',
                 icon: <LockOutlined />,
             });
@@ -79,7 +74,7 @@ const LayoutAdmin = () => {
 
         if (can('books', 'read') || (isAdminRole && !hasAnyPermission)) {
             menuItems.push({
-                label: <Link to='/book'>{t.menu.books}</Link>,
+                label: <Link to='/book'>{'Books'}</Link>,
                 key: '/book',
                 icon: <ExceptionOutlined />,
             });
@@ -87,7 +82,7 @@ const LayoutAdmin = () => {
 
         if (can('orders', 'read') || (isAdminRole && !hasAnyPermission)) {
             menuItems.push({
-                label: <Link to='/order'>{t.menu.orders}</Link>,
+                label: <Link to='/order'>{'Orders'}</Link>,
                 key: '/order',
                 icon: <DollarCircleOutlined />,
             });
@@ -95,14 +90,14 @@ const LayoutAdmin = () => {
 
         if (isSuperAdmin()) {
             menuItems.push({
-                label: <Link to='/settings'>{t.menu.settings}</Link>,
+                label: <Link to='/settings'>{'Settings'}</Link>,
                 key: '/settings',
                 icon: <SettingOutlined />,
             });
         }
 
         return menuItems;
-    }, [can, isAdmin, isSuperAdmin, user?.permissions, t]);
+    }, [can, isAdmin, isSuperAdmin, user?.permissions]);
 
     useEffect(() => {
         const currentItem = items.find(
@@ -126,7 +121,7 @@ const LayoutAdmin = () => {
                     onClick={() => navigate('/profile')}
                 >
                     <AppstoreOutlined style={{ marginRight: 8 }} />
-                    Hồ sơ cá nhân
+                    Profile
                 </label>
             ),
             key: 'profile',
@@ -141,7 +136,7 @@ const LayoutAdmin = () => {
                     onClick={() => handleLogout()}
                 >
                     <LogoutOutlined style={{ marginRight: 8 }} />
-                    Đăng xuất
+                    Logout
                 </label>
             ),
             key: 'logout',
@@ -182,10 +177,10 @@ const LayoutAdmin = () => {
     };
 
     return (
-        <ProtectedRoute requiredRoles={['ADMIN', 'SUPER_ADMIN']}>
+        <ProtectedRoute requiredRole="ADMIN">
             <Layout style={{ minHeight: '100vh' }} className="layout-admin">
                 <Sider
-                    theme={isDarkMode ? 'dark' : 'light'}
+                    theme="light"
                     collapsible
                     collapsed={collapsed}
                     onCollapse={(value) => setCollapsed(value)}
@@ -196,12 +191,12 @@ const LayoutAdmin = () => {
                         textAlign: 'center',
                         fontWeight: 'bold',
                         fontSize: collapsed ? 14 : 18,
-                        color: isDarkMode ? '#e8e8e8' : '#000'
+                        color: '#000'
                     }}>
                         {collapsed ? 'Admin' : 'LingoSphere Admin'}
                     </div>
                     <Menu
-                        theme={isDarkMode ? 'dark' : 'light'}
+                        theme="light"
                         selectedKeys={[activeMenu]}
                         mode="inline"
                         items={items}
@@ -213,7 +208,7 @@ const LayoutAdmin = () => {
                         className='admin-header'
                         style={{
                             height: "50px",
-                            borderBottom: `1px solid ${isDarkMode ? '#404040' : '#ebebeb'}`,
+                            borderBottom: "1px solid #ebebeb",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
@@ -225,37 +220,13 @@ const LayoutAdmin = () => {
                                 collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
                                 {
                                     className: 'trigger',
-                                    style: { color: isDarkMode ? '#e8e8e8' : '#000', cursor: 'pointer' },
+                                    style: { color: '#000', cursor: 'pointer' },
                                     onClick: () => setCollapsed(!collapsed),
                                 }
                             )}
                         </span>
                         <Space size="middle">
-                            {/* Theme Toggle */}
-                            <Tooltip title={isDarkMode ? 'Light mode' : 'Dark mode'} color={isDarkMode ? '#2a2a2a' : '#ffffff'}>
-                                {isDarkMode ? (
-                                    <SunOutlined
-                                        style={{ fontSize: 16, cursor: 'pointer', color: '#faad14' }}
-                                        onClick={() => setTheme('light')}
-                                    />
-                                ) : (
-                                    <MoonOutlined
-                                        style={{ fontSize: 16, cursor: 'pointer', color: '#722ed1' }}
-                                        onClick={() => setTheme('dark')}
-                                    />
-                                )}
-                            </Tooltip>
-
-                            {/* Language Selector */}
-                            <Tooltip title={language === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'} color={isDarkMode ? '#2a2a2a' : '#ffffff'}>
-                                <GlobalOutlined
-                                    style={{ fontSize: 16, cursor: 'pointer', color: isDarkMode ? '#e8e8e8' : '#000' }}
-                                    onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-                                />
-                            </Tooltip>
-
-                            {/* Role badge */}
-                            <Tooltip title={`Vai trò: ${user?.role || 'Không có'}`} color={isDarkMode ? '#2a2a2a' : '#ffffff'}>
+                            <Tooltip title={`Role: ${user?.role || 'None'}`}>
                                 <Tag color={getRoleColor()}>
                                     {getRoleDisplay()}
                                 </Tag>
@@ -269,12 +240,12 @@ const LayoutAdmin = () => {
                                             {user?.name?.charAt(0)?.toUpperCase() || 'A'}
                                         </Avatar>
                                     )}
-                                    <span style={{ color: isDarkMode ? '#e8e8e8' : '#000' }}>{user?.name}</span>
+                                    <span style={{ color: '#000' }}>{user?.name}</span>
                                 </Space>
                             </Dropdown>
                         </Space>
                     </div>
-                    <Content style={{ padding: '15px', backgroundColor: isDarkMode ? '#141414' : '#f5f5f5' }}>
+                    <Content style={{ padding: '15px', backgroundColor: '#f5f5f5' }}>
                         <Outlet />
                     </Content>
                 </Layout>
