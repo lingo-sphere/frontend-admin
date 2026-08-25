@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   ChevronDown,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 
 import { useAdminStore } from "@/store/admin-store";
@@ -115,7 +116,10 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const user = useAuthStore((state) => state.user);
   const profile = useAuthStore((state) => state.profile);
 
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([
+    "users",
+    "practice",
+  ]);
 
   const handleNavigate = (id: string) => {
     setActiveNavItem(id);
@@ -144,158 +148,182 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     })),
   }));
 
-  const sidebarClass = `sidebar${sidebarCollapsed ? " collapsed" : ""}`;
-
   const content = (
-    <>
-      
-      <div className="brand-lockup">
-        <img
-          alt="LingoSphere logo"
-          className="brand-logo"
-          height="36"
-          src="/assets/lingosphere-logo.png"
-          width="36"
-        />
-        <div>
-          <p className="brand-name">{t("common.appName")}</p>
-          <p className="brand-meta">
-            {t("common.adminConsole")} · Học tiếng Anh
-          </p>
+    <div className="flex flex-col h-full justify-between">
+      <div>
+        {/* Brand Lockup */}
+        <div className={`flex items-center gap-3 pb-4 border-b border-slate-800/80 ${sidebarCollapsed && !mobile ? "justify-center" : ""}`}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0 ring-1 ring-white/20">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          {(!sidebarCollapsed || mobile) && (
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-sm text-slate-100 truncate tracking-tight">LingoSphere</p>
+              <p className="text-[11px] text-teal-400 font-medium truncate">Admin Console</p>
+            </div>
+          )}
         </div>
+
+        {/* Navigation Groups */}
+        <nav className="mt-4 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] pr-1 scrollbar-none">
+          {localizedGroups.map((group, groupIdx) => (
+            <div key={group.id} className="space-y-1">
+              {(!sidebarCollapsed || mobile) && groupIdx > 0 && (
+                <div className="pt-3 pb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {group.label}
+                </div>
+              )}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeNavItem === item.id;
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedItems.includes(item.id);
+
+                if (sidebarCollapsed && !mobile) {
+                  return (
+                    <button
+                      key={item.id}
+                      className={`w-full flex items-center justify-center p-2.5 rounded-xl transition-all ${
+                        isActive
+                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
+                      }`}
+                      onClick={
+                        hasChildren
+                          ? () => toggleExpand(item.id)
+                          : () => handleNavigate(item.id)
+                      }
+                      type="button"
+                      title={item.label}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </button>
+                  );
+                }
+
+                return (
+                  <div key={item.id} className="space-y-0.5">
+                    <button
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                        isActive
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/25"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
+                      }`}
+                      onClick={
+                        hasChildren
+                          ? () => toggleExpand(item.id)
+                          : () => handleNavigate(item.id)
+                      }
+                      type="button"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {item.kicker && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            {item.kicker}
+                          </span>
+                        )}
+                        {hasChildren &&
+                          (isExpanded ? (
+                            <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+                          ))}
+                      </div>
+                    </button>
+                    {hasChildren && isExpanded && (
+                      <div className="ml-4 pl-3 border-l border-slate-800 space-y-0.5 mt-0.5">
+                        {item.children!.map((child) => (
+                          <button
+                            key={child.id}
+                            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left ${
+                              activeNavItem === child.id
+                                ? "bg-indigo-500/20 text-indigo-300 font-semibold"
+                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                            }`}
+                            onClick={() => handleNavigate(child.id)}
+                            type="button"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                            <span className="truncate">{child.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
       </div>
 
-      <nav className="sidebar-nav">
-        {localizedGroups.map((group, groupIdx) => (
-          <div key={group.id} className="nav-group">
-            {groupIdx > 0 && <div className="nav-divider" />}
-            {group.items.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeNavItem === item.id;
-              const hasChildren = item.children && item.children.length > 0;
-              const isExpanded = expandedItems.includes(item.id);
-
-              if (sidebarCollapsed) {
-                return (
-                  <button
-                    key={item.id}
-                    className={`nav-item${isActive ? " active" : ""}`}
-                    onClick={
-                      hasChildren
-                        ? () => toggleExpand(item.id)
-                        : () => handleNavigate(item.id)
-                    }
-                    type="button"
-                    title={item.label}
-                  >
-                    <Icon className="icon" />
-                  </button>
-                );
-              }
-
-              return (
-                <div key={item.id}>
-                  <button
-                    className={`nav-item${isActive ? " active" : ""}${
-                      hasChildren ? " has-children" : ""
-                    }`}
-                    onClick={
-                      hasChildren
-                        ? () => toggleExpand(item.id)
-                        : () => handleNavigate(item.id)
-                    }
-                    type="button"
-                  >
-                    <Icon className="icon" />
-                    <span className="nav-item-label">{item.label}</span>
-                    {item.kicker && (
-                      <span className="nav-item-kicker">{item.kicker}</span>
-                    )}
-                    {hasChildren &&
-                      (isExpanded ? (
-                        <ChevronDown className="nav-chevron" />
-                      ) : (
-                        <ChevronRight className="nav-chevron" />
-                      ))}
-                  </button>
-                  {hasChildren && isExpanded && (
-                    <div className="nav-children">
-                      {item.children!.map((child) => (
-                        <button
-                          key={child.id}
-                          className={`nav-child-item${
-                            activeNavItem === child.id ? " active" : ""
-                          }`}
-                          onClick={() => handleNavigate(child.id)}
-                          type="button"
-                        >
-                          <ChevronRight className="nav-child-icon" />
-                          <span>{child.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
-
-      <button
-        className="admin-profile"
-        onClick={() => handleNavigate(`admin-profile:${user?.user_id || 'me'}`)}
-        type="button"
-        title="Xem hồ sơ cá nhân"
-      >
-        <span className="avatar">
-          {profile?.full_name
-            ? profile.full_name
-                .split(' ')
-                .map((n) => n[0])
-                .slice(-2)
-                .join('')
-                .toUpperCase()
-            : user?.email
-              ? user.email.substring(0, 2).toUpperCase()
-              : 'AD'}
-        </span>
-        <span className="profile-copy">
-          <span className="profile-name">
-            {profile?.full_name || user?.email?.split('@')[0] || 'Quản trị viên'}
-          </span>
-          <span className="profile-role">
-            {user?.role === 'ADMIN'
-              ? 'Quản trị viên'
-              : user?.role === 'INSTRUCTOR'
-                ? 'Giáo viên'
-                : user?.role || 'Admin'}
-          </span>
-        </span>
-        <ChevronDown className="profile-chevron" />
-      </button>
-
-      {!mobile && (
+      {/* Profile & Footer Actions */}
+      <div className="pt-3 border-t border-slate-800/80 space-y-2">
         <button
-          className="sidebar-collapse"
-          onClick={toggleSidebarCollapsed}
+          className={`w-full flex items-center gap-2.5 p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800/80 border border-slate-800 transition-all text-left ${
+            sidebarCollapsed && !mobile ? "justify-center p-1.5" : ""
+          }`}
+          onClick={() => handleNavigate(`admin-profile:${user?.user_id || 'me'}`)}
           type="button"
-          aria-label={sidebarCollapsed ? "Mở rộng menu" : "Thu gọn menu"}
+          title="Xem hồ sơ cá nhân"
         >
-          <PanelLeftClose className="icon" />
-          <span>{isVietnamese ? "Thu gọn menu" : "Collapse menu"}</span>
+          <div className="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 font-bold text-xs flex items-center justify-center shrink-0">
+            {profile?.full_name
+              ? profile.full_name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .slice(-2)
+                  .join('')
+                  .toUpperCase()
+              : user?.email
+                ? user.email.substring(0, 2).toUpperCase()
+                : 'AD'}
+          </div>
+          {(!sidebarCollapsed || mobile) && (
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-slate-200 truncate">
+                {profile?.full_name || user?.email?.split('@')[0] || 'Quản trị viên'}
+              </p>
+              <p className="text-[10px] text-teal-400 truncate">
+                {user?.role === 'ADMIN' ? 'Quản trị viên' : user?.role || 'Admin'}
+              </p>
+            </div>
+          )}
         </button>
-      )}
-    </>
+
+        {!mobile && (
+          <button
+            className={`w-full flex items-center justify-center gap-2 p-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all ${
+              sidebarCollapsed ? "px-0" : ""
+            }`}
+            onClick={toggleSidebarCollapsed}
+            type="button"
+          >
+            <PanelLeftClose className="w-4 h-4 shrink-0" />
+            {!sidebarCollapsed && <span>{isVietnamese ? "Thu gọn menu" : "Collapse"}</span>}
+          </button>
+        )}
+      </div>
+    </div>
   );
 
   if (mobile) {
     return (
-      <div className="flex h-full w-full flex-col bg-surface px-4 py-5">
+      <div className="flex h-full w-full flex-col bg-slate-900 px-4 py-5 border-r border-slate-800 text-slate-100">
         {content}
       </div>
     );
   }
 
-  return <aside className={sidebarClass}>{content}</aside>;
+  return (
+    <aside className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-slate-900 border-r border-slate-800 p-4 transition-all duration-300 ${
+      sidebarCollapsed ? "w-[72px] p-2.5" : "w-64 p-4"
+    }`}>
+      {content}
+    </aside>
+  );
 }

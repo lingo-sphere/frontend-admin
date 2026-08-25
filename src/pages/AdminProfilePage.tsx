@@ -5,25 +5,20 @@ import {
   Mail,
   Shield,
   GraduationCap,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Calendar,
   Edit2,
-  X,
-  Check,
-  Key,
   Lock,
   User,
   Eye,
   EyeOff,
+  Calendar,
+  Save,
+  CheckCircle,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { useAuthStore } from '@/store/auth-store'
 import { userService } from '@/services/user.service'
 import { authService } from '@/services/auth.service'
 import { toast } from '@/store/toast-store'
-import { adminUsers } from '@/data/settings-data'
 
 interface AdminProfileData {
   id: string
@@ -34,7 +29,6 @@ interface AdminProfileData {
   is_active: boolean
   last_active: string
   created_at: string
-  
   total_courses_created: number
   total_lessons_created: number
   total_users_managed: number
@@ -44,102 +38,66 @@ export function AdminProfilePage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
-  const activeNavItem = useAdminStore((state) => state.activeNavItem)
-
-  const userId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : adminUsers[0]?.id
-  const adminUser = adminUsers.find(u => u.id === userId) || adminUsers[0]
-
-  const [profileData, setProfileData] = useState<AdminProfileData | null>(null)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  const [editForm, setEditForm] = useState({
-    name: '',
-    email: '',
-    role: 'ADMIN' as 'ADMIN' | 'TEACHER',
-    is_active: true,
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  })
 
   const authUser = useAuthStore((state) => state.user)
   const authProfile = useAuthStore((state) => state.profile)
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
 
+  const [profileData, setProfileData] = useState<AdminProfileData | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    bio: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        if (userId === 'me' || userId === authUser?.user_id) {
-          const prof = await userService.getMyProfile()
-          if (prof) {
-            setProfileData({
-              id: prof.user_id || authUser?.user_id || 'admin',
-              name: prof.full_name || authUser?.email || 'Admin',
-              email: prof.email || authUser?.email || '',
-              role: (authUser?.role === 'INSTRUCTOR' ? 'TEACHER' : authUser?.role) as any || 'ADMIN',
-              avatar: prof.avatar_url,
-              is_active: prof.status === 'ACTIVE',
-              last_active: prof.updated_at || new Date().toISOString(),
-              created_at: prof.created_at || new Date().toISOString(),
-              total_courses_created: 12,
-              total_lessons_created: 156,
-              total_users_managed: 1234,
-            })
-            return
-          }
+        const p = await userService.getMyProfile()
+        if (p) {
+          setProfileData({
+            id: p._id || authUser?.user_id || 'me',
+            name: p.full_name || authUser?.email?.split('@')[0] || 'Quản trị viên',
+            email: p.email || authUser?.email || 'admin@lingosphere.local',
+            role: (authUser?.role === 'INSTRUCTOR' ? 'TEACHER' : 'ADMIN') as 'ADMIN' | 'TEACHER',
+            avatar: p.avatar_url,
+            is_active: true,
+            last_active: 'Vừa xong',
+            created_at: p.created_at || '10/01/2026',
+            total_courses_created: 12,
+            total_lessons_created: 48,
+            total_users_managed: 12840,
+          })
+          setEditForm((prev) => ({
+            ...prev,
+            name: p.full_name || '',
+            phone: p.phone_number || '',
+            bio: p.bio || '',
+          }))
         }
       } catch (err) {
-        console.warn('Could not load real profile from API:', err)
-      }
-
-      if (adminUser) {
-        setProfileData({
-          id: adminUser.id,
-          name: adminUser.name,
-          email: adminUser.email,
-          role: adminUser.role,
-          avatar: adminUser.avatar,
-          is_active: adminUser.is_active,
-          last_active: adminUser.last_active,
-          created_at: adminUser.created_at || new Date().toISOString(),
-          total_courses_created: 12,
-          total_lessons_created: 156,
-          total_users_managed: 1234,
-        })
+        console.warn('Using local auth profile:', err)
       }
     }
-
     loadProfile()
-  }, [adminUser, userId, authUser])
+  }, [authUser, authProfile])
 
-  const handleOpenEdit = () => {
-    if (profileData) {
-      setEditForm({
-        name: profileData.name,
-        email: profileData.email,
-        role: profileData.role,
-        is_active: profileData.is_active,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      })
-      setIsEditModalOpen(true)
-    }
-  }
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!profileData) return
 
     try {
       if (editForm.newPassword) {
         if (editForm.newPassword !== editForm.confirmPassword) {
-          toast.error('Mật khẩu xác nhận không khớp')
+          toast.error('Mật khẩu mới không khớp')
           return
         }
         if (!editForm.currentPassword) {
@@ -155,406 +113,244 @@ export function AdminProfilePage() {
 
       await userService.updateMyProfile({
         full_name: editForm.name,
-      })
-
-      setProfileData({
-        ...profileData,
-        name: editForm.name,
-        email: editForm.email,
-        role: editForm.role,
-        is_active: editForm.is_active,
+        phone_number: editForm.phone,
+        bio: editForm.bio,
       })
 
       await fetchCurrentUser()
       setIsEditModalOpen(false)
-      toast.success(isVietnamese ? 'Cập nhật thông tin quản trị viên thành công!' : 'Profile updated successfully!')
+      toast.success('Cập nhật thông tin quản trị viên thành công!')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Cập nhật thất bại'
+      const msg = err instanceof Error ? err.message : 'Cập nhật thông tin thất bại'
       toast.error(msg)
     }
   }
 
-  if (!adminUser || !profileData) {
+  if (!profileData) {
     return (
-      <main className="page-content">
-        <div className="form-header">
-          <button className="back-button" onClick={() => setActiveNavItem('dashboard')}>
-            <ChevronLeft />
-            {isVietnamese ? 'Quay lại' : 'Back'}
-          </button>
-        </div>
-        <div className="not-found">
-          <p>{isVietnamese ? 'Không tìm thấy người dùng' : 'User not found'}</p>
-        </div>
-      </main>
+      <div className="py-20 text-center text-xs text-slate-500">
+        Đang tải thông tin quản trị viên...
+      </div>
     )
   }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-  }
-
-  const formatTimeAgo = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 60) return `${diffMins} ${isVietnamese ? 'phút trước' : 'mins ago'}`
-    if (diffHours < 24) return `${diffHours} ${isVietnamese ? 'giờ trước' : 'hours ago'}`
-    if (diffDays < 7) return `${diffDays} ${isVietnamese ? 'ngày trước' : 'days ago'}`
-    return formatDate(dateStr)
-  }
-
-  const RoleIcon = profileData.role === 'TEACHER' ? GraduationCap : Shield
-
   return (
-    <main className="page-content">
-      
-      {toastMessage && (
-        <div className="toast-notification success" style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: 'var(--success)',
-          color: '#fff',
-          padding: '12px 20px',
-          borderRadius: '10px',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-          zIndex: 1100,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: 500,
-          fontSize: '14px',
-        }}>
-          <Check size={18} />
-          {toastMessage}
-        </div>
-      )}
-
-      <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="back-button" onClick={() => setActiveNavItem('dashboard')}>
-            <ChevronLeft />
-            {isVietnamese ? 'Quay lại' : 'Back'}
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveNavItem('dashboard')}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+            type="button"
+          >
+            <ChevronLeft className="w-5 h-5" />
           </button>
-          <h1 className="form-title" style={{ margin: 0 }}>
-            {isVietnamese ? 'Chi tiết quản trị viên' : 'Admin Details'}
-          </h1>
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+              Hồ Sơ Quản Trị Viên
+            </h1>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Thông tin định danh, quyền hạn hệ thống và lịch sử hoạt động điều hành
+            </p>
+          </div>
         </div>
 
-        <button className="primary-button" onClick={handleOpenEdit} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Edit2 size={16} />
-          {isVietnamese ? 'Chỉnh sửa hồ sơ' : 'Edit Profile'}
+        <button
+          onClick={() => setIsEditModalOpen(true)}
+          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+        >
+          <Edit2 className="w-4 h-4" />
+          <span>Chỉnh sửa hồ sơ</span>
         </button>
       </div>
 
-      <div className="profile-content">
-        
-        <div className="profile-header-card">
-          <div className="profile-avatar admin">
-            <RoleIcon />
-          </div>
-          <div className="profile-info">
-            <h2 className="profile-name">{profileData.name}</h2>
-            <p className="profile-email">
-              <Mail /> {profileData.email}
-            </p>
-            <div className="profile-badges">
-              <span className={`status-badge ${profileData.is_active ? 'active' : 'inactive'}`}>
-                {profileData.is_active
-                  ? (isVietnamese ? 'Hoạt động' : 'Active')
-                  : (isVietnamese ? 'Không hoạt động' : 'Inactive')
-                }
-              </span>
-              <span className="role-badge">
-                <RoleIcon />
-                {profileData.role === 'ADMIN'
-                  ? (isVietnamese ? 'Quản trị viên' : 'Admin')
-                  : (isVietnamese ? 'Giáo viên' : 'Teacher')
-                }
-              </span>
-            </div>
-          </div>
+      {/* Main Profile Info Card */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-xl shadow-teal-500/20 ring-4 ring-slate-800 shrink-0">
+          {profileData.avatar ? (
+            <img src={profileData.avatar} alt={profileData.name} className="w-full h-full rounded-3xl object-cover" />
+          ) : (
+            profileData.name.slice(0, 2).toUpperCase()
+          )}
         </div>
 
-        <div className="profile-grid">
-          
-          <div className="profile-card">
-            <h3 className="card-title">
-              {isVietnamese ? 'Hoạt động' : 'Activity'}
-            </h3>
-            <div className="activity-stats">
-              <div className="activity-stat">
-                <span className="activity-value">{profileData.total_courses_created}</span>
-                <span className="activity-label">
-                  {isVietnamese ? 'Khóa học đã tạo' : 'Courses created'}
-                </span>
-              </div>
-              <div className="activity-stat">
-                <span className="activity-value">{profileData.total_lessons_created}</span>
-                <span className="activity-label">
-                  {isVietnamese ? 'Bài học đã tạo' : 'Lessons created'}
-                </span>
-              </div>
-              <div className="activity-stat">
-                <span className="activity-value">{profileData.total_users_managed}</span>
-                <span className="activity-label">
-                  {isVietnamese ? 'Người dùng quản lý' : 'Users managed'}
-                </span>
-              </div>
-            </div>
+        <div className="space-y-3 flex-1 text-center sm:text-left">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <h2 className="text-xl font-bold text-slate-100">{profileData.name}</h2>
+            {profileData.role === 'ADMIN' ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <Shield className="w-3 h-3" />
+                <span>QUẢN TRỊ VIÊN TỐI CAO</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                <GraduationCap className="w-3 h-3" />
+                <span>GIẢNG VIÊN KHÓA HỌC</span>
+              </span>
+            )}
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Hoạt động
+            </span>
           </div>
 
-          <div className="profile-card">
-            <h3 className="card-title">
-              {profileData.role === 'ADMIN' ? (isVietnamese ? 'Quyền quản trị' : 'Admin Permissions') : (isVietnamese ? 'Quyền giáo viên' : 'Teacher Permissions')}
-            </h3>
-            <div className="permissions-list">
-              {profileData.role === 'ADMIN' ? (
-                <>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Quản lý người dùng' : 'Manage users'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Quản lý khóa học' : 'Manage courses'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Quản lý từ vựng' : 'Manage vocabulary'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Cài đặt hệ thống' : 'System settings'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Xem báo cáo' : 'View reports'}</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Tạo khóa học' : 'Create courses'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Quản lý bài học' : 'Manage lessons'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <CheckCircle className="perm-icon success" />
-                    <span>{isVietnamese ? 'Thêm từ vựng' : 'Add vocabulary'}</span>
-                  </div>
-                  <div className="permission-item">
-                    <XCircle className="perm-icon danger" />
-                    <span>{isVietnamese ? 'Cài đặt hệ thống' : 'System settings'}</span>
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <Mail className="w-4 h-4 text-slate-500" />
+              <span>{profileData.email}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-slate-500" />
+              <span>Tham gia: {profileData.created_at}</span>
+            </span>
           </div>
 
-          <div className="profile-card">
-            <h3 className="card-title">
-              <Calendar /> {isVietnamese ? 'Thông tin tài khoản' : 'Account Info'}
-            </h3>
-            <div className="account-info">
-              <div className="info-row">
-                <span className="info-label">{isVietnamese ? 'Ngày tạo' : 'Created'}</span>
-                <span className="info-value">{formatDate(profileData.created_at)}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">{isVietnamese ? 'Hoạt động cuối' : 'Last active'}</span>
-                <span className="info-value">{formatTimeAgo(profileData.last_active)}</span>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs text-slate-400 leading-relaxed max-w-xl">
+            {editForm.bio || 'Quản trị viên phụ trách điều hành hệ thống dữ liệu, kiểm duyệt khóa học và phân quyền bảo mật LingoSphere.'}
+          </p>
         </div>
       </div>
 
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <p className="text-xs text-slate-400">Khóa học đã tạo</p>
+          <p className="text-2xl font-bold text-teal-400 mt-1">{profileData.total_courses_created}</p>
+        </div>
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <p className="text-xs text-slate-400">Bài giảng & Đề thi</p>
+          <p className="text-2xl font-bold text-indigo-400 mt-1">{profileData.total_lessons_created}</p>
+        </div>
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <p className="text-xs text-slate-400">Học viên quản lý</p>
+          <p className="text-2xl font-bold text-amber-400 mt-1">
+            {profileData.total_users_managed.toLocaleString('vi-VN')}
+          </p>
+        </div>
+      </div>
+
+      {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
-          <div className="modal-container edit-profile-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header-row">
-              <h3 className="modal-title" style={{ margin: 0 }}>
-                {isVietnamese ? 'Chỉnh sửa thông tin tài khoản' : 'Edit Account Details'}
-              </h3>
-              <button className="modal-close-btn" onClick={() => setIsEditModalOpen(false)}>
-                <X size={20} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <h3 className="text-base font-bold text-slate-100">Chỉnh Sửa Thông Tin Cá Nhân</h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-slate-400 hover:text-slate-200"
+              >
+                ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveProfile}>
-              <div className="form-group-full">
-                <label className="form-field-label">{isVietnamese ? 'Họ và tên' : 'Full Name'}</label>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  Họ và tên
+                </label>
                 <input
                   type="text"
-                  className="form-field-input"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100"
                   required
                 />
               </div>
 
-              <div className="form-group-grid">
-                <div>
-                  <label className="form-field-label">Email</label>
-                  <input
-                    type="email"
-                    className="form-field-input"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-field-label">{isVietnamese ? 'Vai trò' : 'Role'}</label>
-                  <select
-                    className="form-field-select"
-                    value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'ADMIN' | 'TEACHER' })}
-                  >
-                    <option value="ADMIN">{isVietnamese ? 'Quản trị viên' : 'Admin'}</option>
-                    <option value="TEACHER">{isVietnamese ? 'Giáo viên' : 'Teacher'}</option>
-                  </select>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  Số điện thoại
+                </label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="0987654321"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  Giới thiệu ngắn (Bio)
+                </label>
+                <textarea
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  rows={2}
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100"
+                />
+              </div>
+
+              {/* Change Password Section */}
+              <div className="pt-4 border-t border-slate-800 space-y-3">
+                <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Đổi mật khẩu (Tùy chọn)</span>
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-400">Mật khẩu hiện tại</label>
+                    <div className="relative flex items-center">
+                      <input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        value={editForm.currentPassword}
+                        onChange={(e) => setEditForm({ ...editForm, currentPassword: e.target.value })}
+                        placeholder="••••••••"
+                        className="w-full h-10 px-3 pr-8 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-2.5 text-slate-500"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-400">Mật khẩu mới</label>
+                    <div className="relative flex items-center">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={editForm.newPassword}
+                        onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
+                        placeholder="••••••••"
+                        className="w-full h-10 px-3 pr-8 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-2.5 text-slate-500"
+                      >
+                        {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="form-group-full">
-                <label className="form-field-label">{isVietnamese ? 'Trạng thái hoạt động' : 'Account Status'}</label>
-                <select
-                  className="form-field-select"
-                  value={editForm.is_active ? 'active' : 'inactive'}
-                  onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'active' })}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="h-10 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
                 >
-                  <option value="active">{isVietnamese ? 'Đang hoạt động' : 'Active'}</option>
-                  <option value="inactive">{isVietnamese ? 'Không hoạt động' : 'Inactive'}</option>
-                </select>
-              </div>
-
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Lock size={16} />
-                  {isVietnamese ? 'Đổi mật khẩu (Tùy chọn)' : 'Change Password (Optional)'}
-                </h4>
-
-                <div className="form-group-full" style={{ position: 'relative' }}>
-                  <input
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    placeholder={isVietnamese ? 'Mật khẩu hiện tại' : 'Current password'}
-                    className="form-field-input"
-                    style={{ paddingRight: '40px' }}
-                    value={editForm.currentPassword}
-                    onChange={(e) => setEditForm({ ...editForm, currentPassword: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-tertiary)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '2px',
-                    }}
-                    title={showCurrentPassword ? (isVietnamese ? 'Ẩn mật khẩu' : 'Hide password') : (isVietnamese ? 'Hiện mật khẩu' : 'Show password')}
-                  >
-                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-
-                <div className="form-group-grid">
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      placeholder={isVietnamese ? 'Mật khẩu mới' : 'New password'}
-                      className="form-field-input"
-                      style={{ paddingRight: '40px' }}
-                      value={editForm.newPassword}
-                      onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--text-tertiary)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '2px',
-                      }}
-                      title={showNewPassword ? (isVietnamese ? 'Ẩn mật khẩu' : 'Hide password') : (isVietnamese ? 'Hiện mật khẩu' : 'Show password')}
-                    >
-                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder={isVietnamese ? 'Xác nhận mật khẩu' : 'Confirm password'}
-                      className="form-field-input"
-                      style={{ paddingRight: '40px' }}
-                      value={editForm.confirmPassword}
-                      onChange={(e) => setEditForm({ ...editForm, confirmPassword: e.target.value })}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--text-tertiary)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '2px',
-                      }}
-                      title={showConfirmPassword ? (isVietnamese ? 'Ẩn mật khẩu' : 'Hide password') : (isVietnamese ? 'Hiện mật khẩu' : 'Show password')}
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-actions" style={{ marginTop: '24px' }}>
-                <button type="button" className="modal-btn modal-btn-cancel" onClick={() => setIsEditModalOpen(false)}>
-                  {isVietnamese ? 'Hủy' : 'Cancel'}
+                  Hủy
                 </button>
-                <button type="submit" className="primary-button" style={{ height: '44px', flex: 1, justifyContent: 'center' }}>
-                  {isVietnamese ? 'Lưu thay đổi' : 'Save Changes'}
+                <button
+                  type="submit"
+                  className="h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30"
+                >
+                  Lưu thay đổi
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </main>
+    </div>
   )
 }

@@ -9,39 +9,21 @@ import {
   Trash2,
   Search,
   X,
-  ExternalLink,
   RotateCcw,
-  Download,
-  Plus,
+  Sparkles,
 } from "lucide-react";
 import { notificationService } from "@/services/notification.service";
 import { toast } from "@/store/toast-store";
 import {
   mockNotifications,
-  getNotificationStats,
-  categoryColors,
-  priorityColors,
   categoryLabels,
   type Notification,
 } from "@/data/notifications-data";
+import { Pagination } from "@/components/common/Pagination";
 
-type FilterCategory =
-  | "ALL"
-  | "AUTH"
-  | "USER"
-  | "SUBSCRIPTION"
-  | "VOCABULARY"
-  | "PRACTICE"
-  | "EXAM"
-  | "COURSE"
-  | "AI"
-  | "GAMIFICATION"
-  | "MARKETING"
-  | "SYSTEM";
-
+type FilterCategory = "ALL" | "AUTH" | "USER" | "SUBSCRIPTION" | "VOCABULARY" | "PRACTICE" | "EXAM" | "COURSE" | "AI" | "SYSTEM";
 type FilterPriority = "ALL" | "LOW" | "NORMAL" | "HIGH" | "URGENT" | "CRITICAL";
 type FilterStatus = "ALL" | "UNREAD" | "READ" | "PINNED";
-type SortOption = "latest" | "oldest" | "priority_desc";
 
 function formatTimeAgo(dateStr: string, isVietnamese: boolean): string {
   const date = new Date(dateStr);
@@ -52,28 +34,24 @@ function formatTimeAgo(dateStr: string, isVietnamese: boolean): string {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 1) return isVietnamese ? "Vừa xong" : "Just now";
-  if (diffMins < 60)
-    return isVietnamese ? `${diffMins} phút trước` : `${diffMins}m ago`;
-  if (diffHours < 24)
-    return isVietnamese ? `${diffHours} giờ trước` : `${diffHours}h ago`;
-  if (diffDays < 7)
-    return isVietnamese ? `${diffDays} ngày trước` : `${diffDays}d ago`;
+  if (diffMins < 60) return isVietnamese ? `${diffMins} phút trước` : `${diffMins}m ago`;
+  if (diffHours < 24) return isVietnamese ? `${diffHours} giờ trước` : `${diffHours}h ago`;
+  if (diffDays < 7) return isVietnamese ? `${diffDays} ngày trước` : `${diffDays}d ago`;
   return date.toLocaleDateString(isVietnamese ? "vi-VN" : "en-US");
 }
 
 export function NotificationsPage() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
 
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState<FilterCategory>("ALL");
-  const [filterPriority, setFilterPriority] = useState<FilterPriority>("ALL");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("ALL");
-  const [filterJoin, setFilterJoin] = useState<string>("ALL");
-  const [sortOption, setSortOption] = useState<SortOption>("latest");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategory>("ALL");
+  const [selectedPriority, setSelectedPriority] = useState<FilterPriority>("ALL");
+  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
@@ -97,8 +75,8 @@ export function NotificationsPage() {
           created_at: (n as any).created_at || new Date().toISOString(),
           read_at: (n as any).read_at,
           action_url: (n as any).link,
-        }))
-        setNotifications(mapped)
+        }));
+        setNotifications(mapped);
       }
     } catch (err) {
       console.warn("Could not fetch real notifications:", err);
@@ -111,146 +89,31 @@ export function NotificationsPage() {
     fetchNotifications();
   }, []);
 
-  const stats = useMemo(
-    () => getNotificationStats(notifications),
-    [notifications]
-  );
-
-  const handleReset = () => {
-    setSearchQuery("");
-    setFilterCategory("ALL");
-    setFilterPriority("ALL");
-    setFilterStatus("ALL");
-    setFilterJoin("ALL");
-    setSortOption("latest");
-  };
-
-  const priorityWeight: Record<string, number> = {
-    CRITICAL: 5,
-    URGENT: 4,
-    HIGH: 3,
-    NORMAL: 2,
-    LOW: 1,
-  };
-
   const filteredNotifications = useMemo(() => {
-    let result = notifications.filter((n) => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const titleMatch =
-          n.title.toLowerCase().includes(q) ||
-          (n.title_vi && n.title_vi.toLowerCase().includes(q));
-        const contentMatch =
-          n.content.toLowerCase().includes(q) ||
-          (n.content_vi && n.content_vi.toLowerCase().includes(q));
-        if (!titleMatch && !contentMatch) return false;
-      }
+    return notifications.filter((n) => {
+      const matchSearch =
+        n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        n.content.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchCategory =
+        selectedCategory === "ALL" || n.notification_category === selectedCategory;
+      const matchPriority =
+        selectedPriority === "ALL" || n.priority === selectedPriority;
+      const matchStatus =
+        selectedStatus === "ALL" ||
+        (selectedStatus === "UNREAD" && !n.is_read) ||
+        (selectedStatus === "READ" && n.is_read) ||
+        (selectedStatus === "PINNED" && n.is_pinned);
 
-      if (filterCategory !== "ALL" && n.notification_category !== filterCategory) return false;
-      if (filterPriority !== "ALL" && n.priority !== filterPriority) return false;
-
-      if (filterStatus === "UNREAD" && n.is_read) return false;
-      if (filterStatus === "READ" && !n.is_read) return false;
-      if (filterStatus === "PINNED" && !n.is_pinned) return false;
-
-      if (filterJoin !== "ALL" && filterJoin.includes("_")) {
-        const [fromStr, toStr] = filterJoin.split("_");
-        const from = fromStr && fromStr.trim() ? new Date(fromStr + "T00:00:00") : null;
-        const to = toStr && toStr.trim() ? new Date(toStr + "T23:59:59") : null;
-        const d = new Date(n.created_at);
-        if (from && !isNaN(from.getTime()) && d < from) return false;
-        if (to && !isNaN(to.getTime()) && d > to) return false;
-      }
-
-      return true;
+      return matchSearch && matchCategory && matchPriority && matchStatus;
     });
+  }, [notifications, searchTerm, selectedCategory, selectedPriority, selectedStatus]);
 
-    switch (sortOption) {
-      case "latest":
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
-      case "oldest":
-        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        break;
-      case "priority_desc":
-        result.sort((a, b) => (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0));
-        break;
-    }
+  const paginatedNotifications = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredNotifications.slice(start, start + pageSize);
+  }, [filteredNotifications, currentPage, pageSize]);
 
-    return result;
-  }, [
-    notifications,
-    searchQuery,
-    filterCategory,
-    filterPriority,
-    filterStatus,
-    filterJoin,
-    sortOption,
-    isVietnamese,
-  ]);
-
-  const hasActiveFilters =
-    filterCategory !== "ALL" ||
-    filterPriority !== "ALL" ||
-    filterStatus !== "ALL" ||
-    filterJoin !== "ALL" ||
-    searchQuery !== "" ||
-    sortOption !== "latest";
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const selectAll = () => {
-    if (selectedIds.size === filteredNotifications.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredNotifications.map((n) => n.id)));
-    }
-  };
-
-  const markAsRead = async () => {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        selectedIds.has(n.id)
-          ? { ...n, is_read: true, read_at: new Date().toISOString() }
-          : n
-      )
-    );
-    for (const id of selectedIds) {
-      await notificationService.markAsRead(id).catch(() => {});
-    }
-    setSelectedIds(new Set());
-    toast.success("Đã đánh dấu các thông báo đã chọn là đã đọc");
-  };
-
-  const markSingleAsRead = async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === id
-          ? { ...n, is_read: true, read_at: new Date().toISOString() }
-          : n
-      )
-    );
-    await notificationService.markAsRead(id).catch(() => {});
-  };
-
-  const markAllAsRead = async () => {
-    setNotifications((prev) =>
-      prev.map((n) => ({
-        ...n,
-        is_read: true,
-        read_at: new Date().toISOString(),
-      }))
-    );
-    await notificationService.markAllAsRead().catch(() => {});
-    toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
-  };
+  const totalPages = Math.ceil(filteredNotifications.length / pageSize);
 
   const togglePin = (id: string) => {
     setNotifications((prev) =>
@@ -258,399 +121,220 @@ export function NotificationsPage() {
     );
   };
 
+  const markAsRead = async (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+    try {
+      await notificationService.markAsRead(id);
+    } catch {
+      // silent
+    }
+  };
+
+  const markAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    try {
+      await notificationService.markAllAsRead();
+      toast.success("Đã đánh dấu tất cả là đã đọc");
+    } catch {
+      // silent
+    }
+  };
+
   const deleteNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+    toast.success("Đã xóa thông báo");
   };
 
-  const deleteSelected = () => {
-    setNotifications((prev) => prev.filter((n) => !selectedIds.has(n.id)));
-    setSelectedIds(new Set());
+  const handleTriggerDaily = async () => {
+    try {
+      await notificationService.triggerDailyReminders();
+      toast.success("Đã kích hoạt gửi lời nhắc học tập hàng ngày tới học viên!");
+    } catch {
+      toast.error("Kích hoạt lời nhắc thất bại");
+    }
   };
-
-  const handleExportCsv = () => {
-    const headers = ["id", "category", "priority", "title", "is_read", "is_pinned", "created_at"];
-    const rows = filteredNotifications.map((n) => [
-      String(n.id),
-      n.notification_category,
-      n.priority,
-      isVietnamese && n.title_vi ? n.title_vi : n.title,
-      String(n.is_read),
-      String(n.is_pinned),
-      n.created_at,
-    ]);
-
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `notifications-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const categories: { id: FilterCategory; label: string }[] = [
-    { id: "ALL", label: isVietnamese ? "Tất cả danh mục" : "All Categories" },
-    { id: "USER", label: isVietnamese ? "Người dùng" : "User" },
-    { id: "SYSTEM", label: isVietnamese ? "Hệ thống" : "System" },
-    { id: "SUBSCRIPTION", label: isVietnamese ? "Đăng ký" : "Subscription" },
-    { id: "COURSE", label: isVietnamese ? "Khóa học" : "Course" },
-    { id: "AI", label: "AI" },
-    { id: "GAMIFICATION", label: "Gamification" },
-    { id: "AUTH", label: isVietnamese ? "Xác thực" : "Auth" },
-    { id: "VOCABULARY", label: isVietnamese ? "Từ vựng" : "Vocabulary" },
-    { id: "PRACTICE", label: isVietnamese ? "Luyện tập" : "Practice" },
-    { id: "EXAM", label: isVietnamese ? "Thi thử" : "Exam" },
-    { id: "MARKETING", label: "Marketing" },
-  ];
 
   return (
-    <main className="page-content">
-      
-      <div className="page-heading">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">{t("page.notifications.title")}</h1>
-          <p className="page-subtitle">{t("page.notifications.subtitle")}</p>
-        </div>
-        <div className="heading-actions">
-          <button className="primary-button" type="button">
-            <Plus />
-            {isVietnamese ? "Tạo thông báo" : "Create Notification"}
-          </button>
-        </div>
-      </div>
-
-      <div className="notif-stats-grid">
-        <div className="notif-stat-card">
-          <span className="notif-stat-value">{stats.total}</span>
-          <span className="notif-stat-label">
-            {isVietnamese ? "Tổng số thông báo" : "Total Notifications"}
-          </span>
-        </div>
-        <div className="notif-stat-card unread">
-          <span className="notif-stat-value">{stats.unread}</span>
-          <span className="notif-stat-label">
-            {isVietnamese ? "Chưa đọc" : "Unread"}
-          </span>
-        </div>
-        <div className="notif-stat-card pinned">
-          <span className="notif-stat-value">{stats.pinned}</span>
-          <span className="notif-stat-label">
-            {isVietnamese ? "Đã ghim" : "Pinned"}
-          </span>
-        </div>
-      </div>
-
-      <div className="users-toolbar">
-        <div className="users-search">
-          <Search className="search-icon" />
-          <input
-            type="text"
-            className="users-search-input"
-            placeholder={
-              isVietnamese ? "Tìm kiếm thông báo..." : "Search notifications..."
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="search-clear" onClick={() => setSearchQuery("")}>
-              <X />
-            </button>
-          )}
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            Trung Tâm Thông Báo & Cảnh Báo
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Quản lý thông báo hệ thống, nhắc nhở học viên hàng ngày và các chiến dịch marketing
+          </p>
         </div>
 
-        <div className="toolbar-date-range">
-          <span className="date-range-label">{isVietnamese ? "Thời gian:" : "Date:"}</span>
-          <div className="toolbar-date-inputs">
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[0] || "" : ""}
-              onChange={(e) => {
-                const to = filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[1] || "" : "";
-                const from = e.target.value;
-                setFilterJoin(from || to ? `${from}_${to}` : "ALL");
-              }}
-            />
-            <span className="date-range-sep">~</span>
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[1] || "" : ""}
-              onChange={(e) => {
-                const from = filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[0] || "" : "";
-                const to = e.target.value;
-                setFilterJoin(from || to ? `${from}_${to}` : "ALL");
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-table-actions">
-        <h2 className="admin-table-title">
-          {isVietnamese ? "Danh sách thông báo" : "Notification List"}
-          <span className="admin-table-count">{filteredNotifications.length}</span>
-        </h2>
-        <div className="admin-table-action-buttons">
-          
-          <select
-            className="admin-select"
-            value={filterCategory}
-            onChange={(e) =>
-              setFilterCategory(e.target.value as FilterCategory)
-            }
-          >
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="admin-select"
-            value={filterPriority}
-            onChange={(e) =>
-              setFilterPriority(e.target.value as FilterPriority)
-            }
-          >
-            <option value="ALL">
-              {isVietnamese ? "Mọi mức ưu tiên" : "All Priorities"}
-            </option>
-            <option value="CRITICAL">⚠️ Critical</option>
-            <option value="URGENT">🔶 Urgent</option>
-            <option value="HIGH">⚡ High</option>
-            <option value="NORMAL">📋 Normal</option>
-            <option value="LOW">📄 Low</option>
-          </select>
-
-          <select
-            className="admin-select"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-          >
-            <option value="ALL">
-              {isVietnamese ? "Mọi trạng thái" : "All Status"}
-            </option>
-            <option value="UNREAD">
-              {isVietnamese ? "Chưa đọc" : "Unread"}
-            </option>
-            <option value="READ">{isVietnamese ? "Đã đọc" : "Read"}</option>
-            <option value="PINNED">
-              {isVietnamese ? "Đã ghim" : "Pinned"}
-            </option>
-          </select>
-
-          <select
-            className="admin-select"
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value as SortOption)}
-          >
-            <option value="latest">{isVietnamese ? "Mới nhất" : "Latest"}</option>
-            <option value="oldest">{isVietnamese ? "Cũ nhất" : "Oldest"}</option>
-            <option value="priority_desc">{isVietnamese ? "Ưu tiên cao nhất" : "Highest Priority"}</option>
-          </select>
-
-          <button type="button" className="table-ghost-btn" onClick={handleExportCsv}>
-            <Download />
-            {isVietnamese ? "Xuất CSV" : "Export"}
-          </button>
-
+        <div className="flex items-center gap-2.5">
           <button
-            type="button"
-            className="table-ghost-btn"
-            onClick={handleReset}
-            title={isVietnamese ? "Đặt lại tất cả" : "Reset all"}
+            onClick={fetchNotifications}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
           >
-            <RotateCcw />
-            {isVietnamese ? "Đặt lại" : "Reset"}
-          </button>
-        </div>
-      </div>
-
-      {selectedIds.size > 0 && (
-        <div className="bulk-actions-bar" style={{ marginBottom: 16 }}>
-          <span className="bulk-count">
-            {isVietnamese ? "Đã chọn" : "Selected"}: {selectedIds.size}
-          </span>
-          <button className="secondary-button" onClick={markAsRead}>
-            <CheckCheck />
-            {isVietnamese ? "Đánh dấu đã đọc" : "Mark as read"}
-          </button>
-          <button className="danger-button" onClick={deleteSelected}>
-            <Trash2 />
-            {isVietnamese ? "Xóa" : "Delete"}
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-teal-400" : ""}`} />
+            <span>Làm mới</span>
           </button>
           <button
-            className="secondary-button"
-            onClick={() => setSelectedIds(new Set())}
+            onClick={handleTriggerDaily}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-colors cursor-pointer"
           >
-            {isVietnamese ? "Hủy" : "Cancel"}
+            <Sparkles className="w-4 h-4" />
+            <span>Kích hoạt nhắc học</span>
+          </button>
+          <button
+            onClick={markAllAsRead}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+          >
+            <CheckCheck className="w-4 h-4" />
+            <span>Đọc tất cả</span>
           </button>
         </div>
-      )}
+      </div>
 
-      <div className="notif-list">
-        {filteredNotifications.length === 0 ? (
-          <div className="notif-empty">
-            <Bell className="empty-icon" />
-            <p className="empty-title">
-              {hasActiveFilters
-                ? isVietnamese
-                  ? "Không có kết quả khớp với bộ lọc"
-                  : "No results matching filters"
-                : isVietnamese
-                ? "Chưa có thông báo"
-                : "No notifications"}
-            </p>
-            {hasActiveFilters && (
-              <button className="empty-action" onClick={handleReset}>
-                {isVietnamese ? "Xóa bộ lọc" : "Clear filters"}
+      {/* Filter Bar */}
+      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
+            <Search className="w-4 h-4 text-slate-500 shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm thông báo..."
+              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="text-slate-500 hover:text-slate-300">
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
+
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as FilterCategory)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value="ALL">Tất cả phân loại</option>
+            <option value="SYSTEM">Hệ thống (SYSTEM)</option>
+            <option value="COURSE">Khóa học (COURSE)</option>
+            <option value="VOCABULARY">Từ vựng (VOCABULARY)</option>
+            <option value="EXAM">Thi cử (EXAM)</option>
+            <option value="AI">Trí tuệ nhân tạo (AI)</option>
+          </select>
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as FilterStatus)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="UNREAD">Chưa đọc (Unread)</option>
+            <option value="READ">Đã đọc (Read)</option>
+            <option value="PINNED">Đã ghim (Pinned)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="space-y-3">
+        {paginatedNotifications.length === 0 ? (
+          <div className="py-16 text-center rounded-3xl bg-slate-900/60 border border-slate-800 text-slate-500 text-xs">
+            <Bell className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+            <p>Không có thông báo nào phù hợp với bộ lọc</p>
+          </div>
         ) : (
-          <>
-            
-            <div className="notif-list-header">
-              <label className="notif-checkbox-wrapper">
-                <input
-                  type="checkbox"
-                  className="notif-checkbox"
-                  checked={
-                    selectedIds.size === filteredNotifications.length &&
-                    filteredNotifications.length > 0
-                  }
-                  onChange={selectAll}
-                />
-              </label>
-              <button className="mark-all-read-btn" onClick={markAllAsRead}>
-                <CheckCheck />
-                {isVietnamese ? "Đọc tất cả" : "Mark all read"}
-              </button>
-            </div>
+          paginatedNotifications.map((notif) => {
+            const title = isVietnamese && notif.title_vi ? notif.title_vi : notif.title;
+            const content = isVietnamese && notif.content_vi ? notif.content_vi : notif.content;
 
-            {filteredNotifications.map((notification) => (
+            return (
               <div
-                key={notification.id}
-                className={`notif-item${
-                  !notification.is_read ? " unread" : ""
-                }${selectedIds.has(notification.id) ? " selected" : ""}`}
+                key={notif.id}
+                className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                  !notif.is_read
+                    ? "bg-slate-900/90 border-indigo-500/40 shadow-sm shadow-indigo-500/10"
+                    : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
+                }`}
               >
-                <label className="notif-checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    className="notif-checkbox"
-                    checked={selectedIds.has(notification.id)}
-                    onChange={() => toggleSelect(notification.id)}
-                  />
-                </label>
-
-                <div
-                  className="notif-priority-indicator"
-                  style={{ background: priorityColors[notification.priority] }}
-                />
-
-                <div className="notif-content">
-                  <div className="notif-header">
-                    <span
-                      className="notif-category-badge"
-                      style={{
-                        background:
-                          categoryColors[notification.notification_category]
-                            ?.bg,
-                        color:
-                          categoryColors[notification.notification_category]
-                            ?.text,
-                        borderColor:
-                          categoryColors[notification.notification_category]
-                            ?.border,
-                      }}
-                    >
-                      {isVietnamese
-                        ? categoryLabels[notification.notification_category]
-                            ?.vi || notification.notification_category
-                        : categoryLabels[notification.notification_category]
-                            ?.en || notification.notification_category}
+                <div className="space-y-2 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                      {categoryLabels[notif.notification_category]?.[isVietnamese ? "vi" : "en"] || notif.notification_category}
                     </span>
-                    {notification.is_pinned && <Pin className="pin-icon" />}
-                    {!notification.is_read && <span className="unread-dot" />}
-                  </div>
-                  <h3 className="notif-title">
-                    {isVietnamese && notification.title_vi
-                      ? notification.title_vi
-                      : notification.title}
-                  </h3>
-                  <p className="notif-body">
-                    {isVietnamese && notification.content_vi
-                      ? notification.content_vi
-                      : notification.content}
-                  </p>
-                  <div className="notif-meta">
-                    <span className="notif-time">
-                      {formatTimeAgo(notification.created_at, isVietnamese)}
-                    </span>
-                    {notification.action_url && (
-                      <a
-                        href={notification.action_url}
-                        className="notif-action-link"
-                      >
-                        {notification.action_label ||
-                          (isVietnamese ? "Xem chi tiết" : "View details")}
-                        <ExternalLink />
-                      </a>
+
+                    {notif.priority === "HIGH" || notif.priority === "URGENT" ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        {notif.priority}
+                      </span>
+                    ) : null}
+
+                    {notif.is_pinned && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1">
+                        <Pin className="w-2.5 h-2.5" />
+                        <span>Đã ghim</span>
+                      </span>
                     )}
+
+                    {!notif.is_read && (
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                    )}
+
+                    <span className="text-[11px] text-slate-500 ml-auto sm:ml-0">
+                      {formatTimeAgo(notif.created_at, isVietnamese)}
+                    </span>
                   </div>
+
+                  <h3 className="text-sm font-bold text-slate-100">{title}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{content}</p>
                 </div>
 
-                <div className="notif-actions">
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
                   <button
-                    className="notif-action-btn"
-                    onClick={() => togglePin(notification.id)}
-                    title={
-                      notification.is_pinned
-                        ? isVietnamese
-                          ? "Bỏ ghim"
-                          : "Unpin"
-                        : isVietnamese
-                        ? "Ghim"
-                        : "Pin"
-                    }
+                    onClick={() => togglePin(notif.id)}
+                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
+                    title={notif.is_pinned ? "Bỏ ghim" : "Ghim thông báo"}
                   >
-                    {notification.is_pinned ? <PinOff /> : <Pin />}
+                    {notif.is_pinned ? <PinOff className="w-4 h-4 text-amber-400" /> : <Pin className="w-4 h-4" />}
                   </button>
+
+                  {!notif.is_read && (
+                    <button
+                      onClick={() => markAsRead(notif.id)}
+                      className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-teal-400 transition-colors cursor-pointer"
+                      title="Đánh dấu đã đọc"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                  )}
+
                   <button
-                    className="notif-action-btn"
-                    onClick={() => markSingleAsRead(notification.id)}
-                    title={isVietnamese ? "Đánh dấu đã đọc" : "Mark as read"}
+                    onClick={() => deleteNotification(notif.id)}
+                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                    title="Xóa thông báo"
                   >
-                    <Check />
-                  </button>
-                  <button
-                    className="notif-action-btn danger"
-                    onClick={() => deleteNotification(notification.id)}
-                    title={isVietnamese ? "Xóa" : "Delete"}
-                  >
-                    <Trash2 />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-            ))}
-          </>
+            );
+          })
         )}
       </div>
-    </main>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        totalItems={filteredNotifications.length}
+      />
+    </div>
   );
 }

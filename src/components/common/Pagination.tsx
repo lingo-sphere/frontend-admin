@@ -36,12 +36,6 @@ export function Pagination({
     }
   }
 
-  const getShowingText = () => {
-    const start = (currentPage - 1) * pageSize + 1
-    const end = Math.min(currentPage * pageSize, totalItems)
-    return `${start} - ${end} / ${totalItems}`
-  }
-
   const getPageNumbers = () => {
     const pages: (number | 'ellipsis')[] = []
     const delta = 2
@@ -73,90 +67,107 @@ export function Pagination({
   }
 
   return (
-    <div className="ant-pagination">
+    <div className="flex flex-wrap items-center justify-between gap-4 py-4 px-2 text-xs text-slate-400">
       {showTotal && (
-        <div className="ant-pagination-total-text">
-          Tổng <strong>{totalItems}</strong> mục
+        <div className="text-slate-400 font-medium">
+          Tổng cộng <span className="font-bold text-slate-200">{totalItems}</span> bản ghi
         </div>
       )}
 
-      {onPageSizeChange && (
-        <div className="ant-pagination-options">
-          <div className="ant-pagination-options-size-changer ant-select">
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
-              className="ant-select-selector"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size} / trang
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 ml-auto">
+        {onPageSizeChange && (
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
+            className="h-8 px-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size} / trang
+              </option>
+            ))}
+          </select>
+        )}
 
-      <div className="ant-pagination-options">
-        <div className="ant-pagination-options-quick-jumper">
-          Đến
+        <div className="flex items-center gap-1.5">
+          <span>Đến</span>
           <input
             type="text"
             value={jumpValue}
             onChange={(e) => setJumpValue(e.target.value)}
             onKeyDown={handleJump}
-            className="ant-input"
+            className="w-12 h-8 px-2 text-center rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
           />
-          <button type="button" onClick={() => handleJump({ key: 'Enter' } as React.KeyboardEvent<HTMLInputElement>)}>
-            OK
-          </button>
         </div>
+
+        {/* Page Buttons List */}
+        <ul className="flex items-center gap-1">
+          <li
+            className={`w-8 h-8 rounded-lg border border-slate-800 flex items-center justify-center transition-colors cursor-pointer ${
+              currentPage === 1
+                ? 'opacity-40 pointer-events-none text-slate-600 bg-slate-950'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white bg-slate-900'
+            }`}
+            onClick={() => currentPage > 1 && onPageChange(1)}
+          >
+            <ChevronsLeft className="w-3.5 h-3.5" />
+          </li>
+          <li
+            className={`w-8 h-8 rounded-lg border border-slate-800 flex items-center justify-center transition-colors cursor-pointer ${
+              currentPage === 1
+                ? 'opacity-40 pointer-events-none text-slate-600 bg-slate-950'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white bg-slate-900'
+            }`}
+            onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </li>
+
+          {getPageNumbers().map((page, index) =>
+            page === 'ellipsis' ? (
+              <li
+                key={`ellipsis-${index}`}
+                className="w-8 h-8 flex items-center justify-center text-slate-500 font-bold"
+              >
+                •••
+              </li>
+            ) : (
+              <li
+                key={page}
+                className={`w-8 h-8 rounded-lg border text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                  currentPage === page
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </li>
+            )
+          )}
+
+          <li
+            className={`w-8 h-8 rounded-lg border border-slate-800 flex items-center justify-center transition-colors cursor-pointer ${
+              currentPage === totalPages
+                ? 'opacity-40 pointer-events-none text-slate-600 bg-slate-950'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white bg-slate-900'
+            }`}
+            onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </li>
+          <li
+            className={`w-8 h-8 rounded-lg border border-slate-800 flex items-center justify-center transition-colors cursor-pointer ${
+              currentPage === totalPages
+                ? 'opacity-40 pointer-events-none text-slate-600 bg-slate-950'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white bg-slate-900'
+            }`}
+            onClick={() => currentPage < totalPages && onPageChange(totalPages)}
+          >
+            <ChevronsRight className="w-3.5 h-3.5" />
+          </li>
+        </ul>
       </div>
-
-      <ul className="ant-pagination-list">
-        <li
-          className={`ant-pagination-item ant-pagination-item-prev${currentPage === 1 ? ' ant-pagination-item-disabled' : ''}`}
-          onClick={() => currentPage > 1 && onPageChange(1)}
-        >
-          <ChevronsLeft />
-        </li>
-        <li
-          className={`ant-pagination-item ant-pagination-item-prev${currentPage === 1 ? ' ant-pagination-item-disabled' : ''}`}
-          onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
-        >
-          <ChevronLeft />
-        </li>
-
-        {getPageNumbers().map((page, index) =>
-          page === 'ellipsis' ? (
-            <li key={`ellipsis-${index}`} className="ant-pagination-item ant-pagination-item-ellipsis">
-              •••
-            </li>
-          ) : (
-            <li
-              key={page}
-              className={`ant-pagination-item${currentPage === page ? ' ant-pagination-item-active' : ''}`}
-              onClick={() => onPageChange(page)}
-            >
-              {page}
-            </li>
-          )
-        )}
-
-        <li
-          className={`ant-pagination-item ant-pagination-item-next${currentPage === totalPages ? ' ant-pagination-item-disabled' : ''}`}
-          onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
-        >
-          <ChevronRight />
-        </li>
-        <li
-          className={`ant-pagination-item ant-pagination-item-next${currentPage === totalPages ? ' ant-pagination-item-disabled' : ''}`}
-          onClick={() => currentPage < totalPages && onPageChange(totalPages)}
-        >
-          <ChevronsRight />
-        </li>
-      </ul>
     </div>
   )
 }

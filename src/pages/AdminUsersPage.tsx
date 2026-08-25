@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Shield,
@@ -6,366 +6,70 @@ import {
   Plus,
   Edit2,
   CheckCircle,
-  Download,
   Search,
   Eye,
   Ban,
-  ChevronDown,
-  ChevronUp,
-  ChevronsUpDown,
-  Filter,
   RotateCcw,
-  Settings2,
   X,
+  Lock,
 } from "lucide-react";
 import {
   adminUsers,
-  roleLabels,
-  roleColors,
   type AdminUser,
 } from "@/data/settings-data";
 import { useAdminStore } from "@/store/admin-store";
 import { userService } from "@/services/user.service";
-import { roleService } from "@/services/role.service";
 import { toast } from "@/store/toast-store";
 import { Pagination } from "@/components/common/Pagination";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 
-function DensityIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-      <path d="M8 1L5.5 3.5H10.5L8 1Z" fill="currentColor" />
-      <rect x="2" y="4.5" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="2" y="7.25" width="12" height="1.5" rx="0.75" fill="currentColor" opacity="0.5" />
-      <rect x="2" y="10" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <path d="M8 15L5.5 12.5H10.5L8 15Z" fill="currentColor" />
-    </svg>
-  );
-}
-
 type FilterStatus = "ALL" | "ACTIVE" | "INACTIVE";
 type FilterRole = "ALL" | "ADMIN" | "TEACHER";
-type Density = "compact" | "middle" | "comfortable";
-type SortKey = "name" | "last_active" | null;
-type SortDir = "asc" | "desc";
-
-interface ColumnConfig {
-  key: string;
-  labelVi: string;
-  labelEn: string;
-  visible: boolean;
-}
-
-const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: "user",        labelVi: "Người dùng",     labelEn: "User",        visible: true },
-  { key: "role",        labelVi: "Vai trò",         labelEn: "Role",        visible: true },
-  { key: "last_active", labelVi: "Hoạt động cuối", labelEn: "Last Active", visible: true },
-  { key: "status",      labelVi: "Trạng thái",     labelEn: "Status",      visible: true },
-];
-
-function formatTimeAgo(dateStr: string, isVietnamese: boolean): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return isVietnamese ? "Vừa xong" : "Just now";
-  if (diffMins < 60)
-    return isVietnamese ? `${diffMins} phút trước` : `${diffMins}m ago`;
-  if (diffHours < 24)
-    return isVietnamese ? `${diffHours} giờ trước` : `${diffHours}h ago`;
-  if (diffDays < 7)
-    return isVietnamese ? `${diffDays} ngày trước` : `${diffDays}d ago`;
-  return date.toLocaleDateString(isVietnamese ? "vi-VN" : "en-US");
-}
-
-function SortableHeader({
-  label, colKey, sortKey, sortDir, onSort,
-}: {
-  label: string;
-  colKey: SortKey;
-  sortKey: SortKey;
-  sortDir: SortDir;
-  onSort: (key: SortKey) => void;
-}) {
-  const active = sortKey === colKey;
-  return (
-    <button
-      type="button"
-      className={`th-sort-btn${active ? " active" : ""}`}
-      onClick={() => onSort(colKey)}
-    >
-      {label}
-      {active ? (
-        <ChevronUp
-          className="th-sort-icon"
-          style={{ transform: sortDir === "desc" ? "rotate(180deg)" : "rotate(0deg)" }}
-        />
-      ) : (
-        <ChevronsUpDown className="th-sort-icon muted" />
-      )}
-    </button>
-  );
-}
-
-function RoleFilterHeader({
-  isVi, filterRole, setFilterRole, setCurrentPage,
-}: {
-  isVi: boolean;
-  filterRole: FilterRole;
-  setFilterRole: (v: FilterRole) => void;
-  setCurrentPage: (n: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const OPTIONS: { value: FilterRole; labelVi: string; labelEn: string }[] = [
-    { value: "ALL",     labelVi: "Tất cả vai trò", labelEn: "All Roles" },
-    { value: "ADMIN",   labelVi: "Quản trị viên",  labelEn: "Admin"     },
-    { value: "TEACHER", labelVi: "Giáo viên",      labelEn: "Teacher"   },
-  ];
-
-  const current = OPTIONS.find((o) => o.value === filterRole);
-
-  return (
-    <div className="th-filter-wrapper" ref={ref}>
-      <button
-        type="button"
-        className={`th-filter-btn${filterRole !== "ALL" ? " active" : ""}${open ? " open" : ""}`}
-        onClick={() => setOpen(!open)}
-      >
-        {isVi ? (current?.value === "ALL" ? "Vai trò" : current?.labelVi) : (current?.value === "ALL" ? "Role" : current?.labelEn)}
-        <Filter className="th-filter-icon" />
-      </button>
-      {open && (
-        <div className="th-filter-dropdown">
-          {OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`th-filter-option${filterRole === opt.value ? " active" : ""}`}
-              onClick={() => {
-                setFilterRole(opt.value);
-                setCurrentPage(1);
-                setOpen(false);
-              }}
-            >
-              {filterRole === opt.value && <CheckCircle className="th-filter-check" />}
-              {isVi ? opt.labelVi : opt.labelEn}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatusFilterHeader({
-  isVi, filterStatus, setFilterStatus, setCurrentPage,
-}: {
-  isVi: boolean;
-  filterStatus: FilterStatus;
-  setFilterStatus: (v: FilterStatus) => void;
-  setCurrentPage: (n: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const OPTIONS: { value: FilterStatus; labelVi: string; labelEn: string }[] = [
-    { value: "ALL",      labelVi: "Tất cả trạng thái", labelEn: "All Status" },
-    { value: "ACTIVE",   labelVi: "Hoạt động",         labelEn: "Active"     },
-    { value: "INACTIVE", labelVi: "Không hoạt động",   labelEn: "Inactive"   },
-  ];
-
-  const current = OPTIONS.find((o) => o.value === filterStatus);
-
-  return (
-    <div className="th-filter-wrapper" ref={ref}>
-      <button
-        type="button"
-        className={`th-filter-btn${filterStatus !== "ALL" ? " active" : ""}${open ? " open" : ""}`}
-        onClick={() => setOpen(!open)}
-      >
-        {isVi ? (current?.value === "ALL" ? "Trạng thái" : current?.labelVi) : (current?.value === "ALL" ? "Status" : current?.labelEn)}
-        <Filter className="th-filter-icon" />
-      </button>
-      {open && (
-        <div className="th-filter-dropdown">
-          {OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`th-filter-option${filterStatus === opt.value ? " active" : ""}`}
-              onClick={() => {
-                setFilterStatus(opt.value);
-                setCurrentPage(1);
-                setOpen(false);
-              }}
-            >
-              {filterStatus === opt.value && <CheckCircle className="th-filter-check" />}
-              {isVi ? opt.labelVi : opt.labelEn}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function RoleCellDropdown({
-  admin,
-  isVi,
-  onRoleChangeRequest,
-}: {
-  admin: AdminUser;
-  isVi: boolean;
-  onRoleChangeRequest: (admin: AdminUser, newRole: "ADMIN" | "TEACHER") => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const RoleIcon = admin.role === "TEACHER" ? GraduationCap : Shield;
-
-  const ROLES: { value: "ADMIN" | "TEACHER"; labelVi: string; labelEn: string; icon: any; color: string }[] = [
-    { value: "ADMIN",   labelVi: "Quản trị viên", labelEn: "Admin",   icon: Shield,        color: roleColors["ADMIN"] },
-    { value: "TEACHER", labelVi: "Giáo viên",      labelEn: "Teacher", icon: GraduationCap, color: roleColors["TEACHER"] },
-  ];
-
-  return (
-    <div className="th-filter-wrapper role-cell-wrapper" ref={ref}>
-      <button
-        type="button"
-        className="role-badge role-badge-dropdown"
-        style={{
-          background: roleColors[admin.role] + "20",
-          color: roleColors[admin.role],
-          cursor: "pointer",
-          border: "none",
-        }}
-        onClick={() => setOpen(!open)}
-        title={isVi ? "Bấm để đổi vai trò" : "Click to change role"}
-      >
-        <RoleIcon className="role-icon" />
-        {roleLabels[admin.role]?.[isVi ? "vi" : "en"] || admin.role}
-        <ChevronDown style={{ width: 12, height: 12, marginLeft: 4, opacity: 0.7 }} />
-      </button>
-
-      {open && (
-        <div className="th-filter-dropdown role-cell-menu" style={{ minWidth: 160, right: "auto", left: 0 }}>
-          {ROLES.map((r) => {
-            const Icon = r.icon;
-            const isCurrent = admin.role === r.value;
-            return (
-              <button
-                key={r.value}
-                type="button"
-                className={`th-filter-option${isCurrent ? " active" : ""}`}
-                onClick={() => {
-                  setOpen(false);
-                  if (!isCurrent) {
-                    onRoleChangeRequest(admin, r.value);
-                  }
-                }}
-              >
-                <Icon style={{ width: 14, height: 14, color: r.color, marginRight: 6 }} />
-                <span>{isVi ? r.labelVi : r.labelEn}</span>
-                {isCurrent && <CheckCircle className="th-filter-check" style={{ marginLeft: "auto" }} />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function AdminUsersPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
-  const isVi = isVietnamese;
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
+
   const [admins, setAdmins] = useState<AdminUser[]>(adminUsers);
-  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterRole, setFilterRole] = useState<FilterRole>("ALL");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("ALL");
-  const [filterJoin, setFilterJoin] = useState<string>("ALL");
-
-  const [sortKey, setSortKey] = useState<SortKey>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
-
-  const [density, setDensity] = useState<Density>("middle");
-  const [showDensityMenu, setShowDensityMenu] = useState(false);
-  const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const [showColSettings, setShowColSettings] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState<FilterRole>("ALL");
+  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [banModalAdmin, setBanModalAdmin] = useState<AdminUser | null>(null);
-  const [roleChangeTarget, setRoleChangeTarget] = useState<{
-    admin: AdminUser;
-    newRole: "ADMIN" | "TEACHER";
-  } | null>(null);
+
+  // Ban/Unban Modal
+  const [modalUser, setModalUser] = useState<AdminUser | null>(null);
+  const [modalAction, setModalAction] = useState<"ban" | "unban" | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const fetchAdmins = async () => {
-    setIsLoadingAdmins(true);
+    setIsLoading(true);
     try {
       const res = await userService.getAllUsers({
-        role: filterRole !== "ALL" ? filterRole : undefined,
-        search: searchQuery || undefined,
-        status: filterStatus !== "ALL" ? filterStatus : undefined,
+        role: "ADMIN",
+        limit: 50,
       });
 
-      if (res?.items && res.items.length > 0) {
-        const mappedAdmins: AdminUser[] = res.items
-          .filter((u: any) => u.role === "ADMIN" || u.role === "INSTRUCTOR" || u.role === "TEACHER")
-          .map((u: any) => ({
-            id: u.user_id || u._id || "",
-            name: u.full_name,
-            email: u.email,
-            avatar: u.avatar_url,
-            role: (u.role === "INSTRUCTOR" ? "TEACHER" : u.role) as "ADMIN" | "TEACHER",
-            is_active: u.status === "ACTIVE",
-            created_at: u.created_at || new Date().toISOString(),
-            last_active: u.updated_at || u.created_at || new Date().toISOString(),
-            permissions: ["all"],
-          }));
-
-        if (mappedAdmins.length > 0) {
-          setAdmins(mappedAdmins);
-        }
+      const items = res?.items || (res as any)?.users || []
+      if (items.length > 0) {
+        const mapped: AdminUser[] = items.map((u: any) => ({
+          id: u._id,
+          name: u.full_name || u.email.split("@")[0],
+          email: u.email,
+          role: u.role === "INSTRUCTOR" ? "TEACHER" : "ADMIN",
+          avatar: u.avatar_url,
+          is_active: u.is_active !== false,
+          last_active: u.updated_at ? new Date(u.updated_at).toLocaleDateString("vi-VN") : "Hôm nay",
+          created_at: u.created_at || new Date().toISOString(),
+        }));
+        setAdmins(mapped);
       }
     } catch (err) {
-      console.warn("Could not fetch real admin users, using cached data:", err);
+      console.warn("Using local admin users:", err);
     } finally {
-      setIsLoadingAdmins(false);
+      setIsLoading(false);
     }
   };
 
@@ -373,584 +77,305 @@ export function AdminUsersPage() {
     fetchAdmins();
   }, []);
 
-  const handleRoleChangeRequest = (admin: AdminUser, newRole: "ADMIN" | "TEACHER") => {
-    if (newRole === "ADMIN") {
-      setRoleChangeTarget({ admin, newRole });
-    } else {
-      assignRole(admin, newRole);
-    }
-  };
-
-  const assignRole = async (admin: AdminUser, newRole: "ADMIN" | "TEACHER") => {
-    try {
-      await roleService.assignUserRole(admin.id, newRole);
-      toast.success(`Đã phân vai trò ${newRole} cho ${admin.name} thành công!`);
-    } catch (err) {
-      console.warn("Could not assign role via backend:", err);
-    }
-    setAdmins((prev) =>
-      prev.map((a) => (a.id === admin.id ? { ...a, role: newRole } : a))
-    );
-  };
-
-  const confirmRoleChange = () => {
-    if (roleChangeTarget) {
-      assignRole(roleChangeTarget.admin, roleChangeTarget.newRole);
-      setRoleChangeTarget(null);
-    }
-  };
-
-  const densityRef = useRef<HTMLDivElement>(null);
-  const colRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (densityRef.current && !densityRef.current.contains(e.target as Node)) setShowDensityMenu(false);
-      if (colRef.current && !colRef.current.contains(e.target as Node)) setShowColSettings(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDir === "asc") setSortDir("desc");
-      else { setSortKey(null); setSortDir("asc"); }
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSearchQuery("");
-    setFilterRole("ALL");
-    setFilterStatus("ALL");
-    setFilterJoin("ALL");
-    setSortKey(null);
-    setSortDir("asc");
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters =
-    searchQuery !== "" || filterRole !== "ALL" || filterStatus !== "ALL" || filterJoin !== "ALL" || sortKey !== null;
-
   const filteredAdmins = useMemo(() => {
-    let result = [...admins];
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (admin) => admin.name.toLowerCase().includes(q) || admin.email.toLowerCase().includes(q)
-      );
-    }
-
-    if (filterRole !== "ALL") {
-      result = result.filter((admin) => admin.role === filterRole);
-    }
-
-    if (filterStatus !== "ALL") {
-      result = result.filter((admin) => (filterStatus === "ACTIVE" ? admin.is_active : !admin.is_active));
-    }
-
-    if (filterJoin !== "ALL" && filterJoin.includes("_")) {
-      const [fromStr, toStr] = filterJoin.split("_");
-      const from = fromStr && fromStr.trim() ? new Date(fromStr + "T00:00:00") : null;
-      const to = toStr && toStr.trim() ? new Date(toStr + "T23:59:59") : null;
-      result = result.filter((admin) => {
-        const d = new Date(admin.last_active);
-        if (from && !isNaN(from.getTime()) && d < from) return false;
-        if (to && !isNaN(to.getTime()) && d > to) return false;
-        return true;
-      });
-    }
-
-    if (sortKey) {
-      const dir = sortDir === "asc" ? 1 : -1;
-      switch (sortKey) {
-        case "name":
-          result.sort((a, b) => dir * a.name.localeCompare(b.name));
-          break;
-        case "last_active":
-          result.sort((a, b) => dir * (new Date(a.last_active).getTime() - new Date(b.last_active).getTime()));
-          break;
-      }
-    } else {
-      result.sort((a, b) => new Date(b.last_active).getTime() - new Date(a.last_active).getTime());
-    }
-
-    return result;
-  }, [admins, searchQuery, filterRole, filterStatus, filterJoin, sortKey, sortDir]);
+    return admins.filter((a) => {
+      const matchSearch =
+        a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchRole = selectedRole === "ALL" || a.role === selectedRole;
+      const matchStatus =
+        selectedStatus === "ALL" ||
+        (selectedStatus === "ACTIVE" ? a.is_active : !a.is_active);
+      return matchSearch && matchRole && matchStatus;
+    });
+  }, [admins, searchTerm, selectedRole, selectedStatus]);
 
   const paginatedAdmins = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredAdmins.slice(start, start + pageSize);
   }, [filteredAdmins, currentPage, pageSize]);
 
-  const isColVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
-  const toggleColumn = (key: string) => {
-    setColumns((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
-  };
-  const visibleColCount = columns.filter((c) => c.visible).length;
+  const totalPages = Math.ceil(filteredAdmins.length / pageSize);
 
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
+  const handleStatusChangeConfirm = async () => {
+    if (!modalUser || !modalAction) return;
+    setIsUpdatingStatus(true);
+    const newStatus = modalAction === "ban" ? "BLOCKED" : "ACTIVE";
 
-  const handleBanAdmin = (admin: AdminUser) => {
-    setBanModalAdmin(admin);
-  };
-
-  const confirmBanAdmin = () => {
-    if (banModalAdmin) {
+    try {
+      await userService.updateUserStatus(modalUser.id, newStatus);
       setAdmins((prev) =>
-        prev.map((a) => (a.id === banModalAdmin.id ? { ...a, is_active: !a.is_active } : a))
+        prev.map((a) =>
+          a.id === modalUser.id ? { ...a, is_active: modalAction !== "ban" } : a
+        )
       );
-      setBanModalAdmin(null);
+      toast.success(
+        modalAction === "ban"
+          ? `Đã vô hiệu hóa quản trị viên ${modalUser.email}`
+          : `Đã kích hoạt lại quản trị viên ${modalUser.email}`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Cập nhật thất bại";
+      toast.error(msg);
+    } finally {
+      setIsUpdatingStatus(false);
+      setModalUser(null);
+      setModalAction(null);
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    if (role === "TEACHER") return GraduationCap;
-    return Shield;
-  };
-
-  const handleExportCsv = () => {
-    const headers = ["id", "name", "email", "role", "last_active", "status"];
-    const rows = filteredAdmins.map((admin) => [
-      String(admin.id),
-      admin.name,
-      admin.email,
-      admin.role,
-      admin.last_active,
-      admin.is_active ? "ACTIVE" : "INACTIVE",
-    ]);
-
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `admin-users-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const densityLabel: Record<Density, { vi: string; en: string }> = {
-    compact:     { vi: "Nén", en: "Compact" },
-    middle:      { vi: "Vừa", en: "Middle" },
-    comfortable: { vi: "Thoải mái", en: "Comfortable" },
-  };
-
   return (
-    <main className="page-content">
-      
-      <div className="page-heading">
+    <div className="space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">
-            {isVi ? "Quản trị viên" : "Admin Users"}
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            Quản Trị Viên & Giảng Viên
           </h1>
-          <p className="page-subtitle">
-            {isVi
-              ? "Quản lý tài khoản quản trị viên và giáo viên"
-              : "Manage admin and teacher accounts"}
+          <p className="text-xs text-slate-400 mt-1">
+            Quản lý tài khoản quản trị viên tối cao và giáo viên soạn thảo khóa học
           </p>
         </div>
-      </div>
 
-      <div className="admin-stats-grid">
-        <div className="admin-stat-card">
-          <span className="admin-stat-value">{admins.length}</span>
-          <span className="admin-stat-label">
-            {isVi ? "Tổng số" : "Total"}
-          </span>
-        </div>
-        <div className="admin-stat-card active">
-          <span className="admin-stat-value">
-            {admins.filter((a) => a.is_active).length}
-          </span>
-          <span className="admin-stat-label">
-            {isVi ? "Đang hoạt động" : "Active"}
-          </span>
-        </div>
-        <div className="admin-stat-card">
-          <span className="admin-stat-value">
-            {admins.filter((a) => !a.is_active).length}
-          </span>
-          <span className="admin-stat-label">
-            {isVi ? "Không hoạt động" : "Inactive"}
-          </span>
-        </div>
-      </div>
-
-      <div className="users-toolbar">
-        <div className="users-search">
-          <Search className="search-icon" />
-          <input
-            type="text"
-            className="users-search-input"
-            placeholder={isVi ? "Tìm kiếm..." : "Search..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="search-clear" onClick={() => setSearchQuery("")}><X /></button>
-          )}
-        </div>
-
-        <div className="toolbar-date-range">
-          <span className="date-range-label">{isVi ? "Hoạt động:" : "Active:"}</span>
-          <div className="toolbar-date-inputs">
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[0] || "" : ""}
-              onChange={(e) => {
-                const to = filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[1] || "" : "";
-                const from = e.target.value;
-                setFilterJoin(from || to ? `${from}_${to}` : "ALL");
-                setCurrentPage(1);
-              }}
-            />
-            <span className="date-range-sep">~</span>
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[1] || "" : ""}
-              onChange={(e) => {
-                const from = filterJoin && filterJoin !== "ALL" ? filterJoin.split("_")[0] || "" : "";
-                const to = e.target.value;
-                setFilterJoin(from || to ? `${from}_${to}` : "ALL");
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-table-actions">
-        <h2 className="admin-table-title">
-          {isVi ? "Danh sách quản trị viên" : "Admin Users List"}
-          <span className="admin-table-count">{filteredAdmins.length}</span>
-        </h2>
-        <div className="admin-table-action-buttons">
-          
-          <button type="button" className="table-ghost-btn" onClick={handleExportCsv}>
-            <Download />
-            {isVi ? "Xuất CSV" : "Export"}
-            <ChevronDown />
-          </button>
-
+        <div className="flex items-center gap-2.5">
           <button
-            type="button"
-            className="table-ghost-btn"
-            onClick={handleReset}
-            title={isVi ? "Đặt lại tất cả" : "Reset all"}
+            onClick={fetchAdmins}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
           >
-            <RotateCcw />
-            {isVi ? "Đặt lại" : "Reset"}
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-teal-400" : ""}`} />
+            <span>Làm mới</span>
           </button>
-
-          <div className="protable-tool-wrapper" ref={densityRef}>
-            <button
-              type="button"
-              className={`table-ghost-btn${showDensityMenu ? " active" : ""}`}
-              onClick={() => setShowDensityMenu(!showDensityMenu)}
-              title={isVi ? "Tỉ trọng hàng" : "Row density"}
-            >
-              <DensityIcon />
-              {isVi ? densityLabel[density].vi : densityLabel[density].en}
-            </button>
-            {showDensityMenu && (
-              <div className="protable-dropdown">
-                <div className="protable-dropdown-title">{isVi ? "Tỉ trọng hàng" : "Row Density"}</div>
-                {(["compact", "middle", "comfortable"] as Density[]).map((d) => (
-                  <button
-                    key={d}
-                    className={`protable-dropdown-item${density === d ? " active" : ""}`}
-                    onClick={() => { setDensity(d); setShowDensityMenu(false); }}
-                  >
-                    {isVi ? densityLabel[d].vi : densityLabel[d].en}
-                    {density === d && <CheckCircle className="dropdown-check" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="protable-tool-wrapper" ref={colRef}>
-            <button
-              type="button"
-              className={`table-ghost-btn${showColSettings ? " active" : ""}`}
-              onClick={() => setShowColSettings(!showColSettings)}
-              title={isVi ? "Cài đặt cột" : "Column settings"}
-            >
-              <Settings2 />
-              {isVi ? "Cột" : "Columns"}
-              {visibleColCount < columns.length && (
-                <span className="col-badge">{visibleColCount}/{columns.length}</span>
-              )}
-            </button>
-            {showColSettings && (
-              <div className="protable-dropdown col-settings-dropdown">
-                <div className="protable-dropdown-title">{isVi ? "Cài đặt cột" : "Column Settings"}</div>
-                {columns.map((col) => (
-                  <label key={col.key} className="col-settings-item">
-                    <input
-                      type="checkbox"
-                      checked={col.visible}
-                      onChange={() => toggleColumn(col.key)}
-                    />
-                    <span>{isVi ? col.labelVi : col.labelEn}</span>
-                  </label>
-                ))}
-                <div className="protable-dropdown-footer">
-                  <button
-                    className="col-reset-btn"
-                    onClick={() => setColumns(DEFAULT_COLUMNS)}
-                  >
-                    {isVi ? "Đặt lại mặc định" : "Reset to default"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           <button
-            type="button"
-            className="primary-button"
-            onClick={() => setActiveNavItem("admin-user-form")}
+            onClick={() => setActiveNavItem("admin-user-create")}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
           >
-            <Plus />
-            {isVi ? "Thêm quản trị viên" : "Add Admin User"}
+            <Plus className="w-4 h-4" />
+            <span>Thêm Quản Trị Viên</span>
           </button>
         </div>
       </div>
 
-      <div className="users-table-wrapper">
-        <table className={`users-table density-${density}`}>
-          <thead>
-            <tr>
-              {isColVisible("user") && (
-                <th>
-                  <SortableHeader
-                    label={isVi ? "Người dùng" : "User"}
-                    colKey="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("role") && (
-                <th className="th-with-filter">
-                  <RoleFilterHeader
-                    isVi={isVi}
-                    filterRole={filterRole}
-                    setFilterRole={setFilterRole}
-                    setCurrentPage={setCurrentPage}
-                  />
-                </th>
-              )}
-              {isColVisible("last_active") && (
-                <th>
-                  <SortableHeader
-                    label={isVi ? "Hoạt động cuối" : "Last Active"}
-                    colKey="last_active" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("status") && (
-                <th className="th-with-filter">
-                  <StatusFilterHeader
-                    isVi={isVi}
-                    filterStatus={filterStatus}
-                    setFilterStatus={setFilterStatus}
-                    setCurrentPage={setCurrentPage}
-                  />
-                </th>
-              )}
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedAdmins.map((admin) => {
-              const RoleIcon = getRoleIcon(admin.role);
-              return (
-                <tr
-                  key={admin.id}
-                  className={!admin.is_active ? "banned-row" : ""}
-                >
-                  {isColVisible("user") && (
-                    <td>
-                      <div className="admin-user-cell">
-                        <div
-                          className="admin-avatar"
-                          style={{
-                            background: roleColors[admin.role] + "20",
-                            color: roleColors[admin.role],
-                          }}
-                        >
-                          <RoleIcon className="avatar-icon" />
-                        </div>
-                        <div className="admin-user-info">
-                          <span className="admin-name">{admin.name}</span>
-                          <span className="admin-email">{admin.email}</span>
-                        </div>
-                      </div>
-                    </td>
-                  )}
-                  {isColVisible("role") && (
-                    <td>
-                      <RoleCellDropdown
-                        admin={admin}
-                        isVi={isVi}
-                        onRoleChangeRequest={handleRoleChangeRequest}
-                      />
-                    </td>
-                  )}
-                  {isColVisible("last_active") && (
-                    <td className="last-active">
-                      {formatTimeAgo(admin.last_active, isVi)}
-                    </td>
-                  )}
-                  {isColVisible("status") && (
-                    <td>
-                      <span
-                        className={`status-pill ${
-                          admin.is_active ? "success" : "inactive"
-                        }`}
-                      >
-                        {admin.is_active
-                          ? isVi ? "Hoạt động" : "Active"
-                          : isVi ? "Không hoạt động" : "Inactive"}
-                      </span>
-                    </td>
-                  )}
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        className="row-action-btn"
-                        title={isVi ? "Xem chi tiết" : "View Details"}
-                        onClick={() =>
-                          setActiveNavItem(`admin-profile:${admin.id}`)
-                        }
-                      >
-                        <Eye />
-                      </button>
-                      <button
-                        className="row-action-btn"
-                        title={isVi ? "Sửa" : "Edit"}
-                        onClick={() =>
-                          setActiveNavItem(`admin-user-form:${admin.id}`)
-                        }
-                      >
-                        <Edit2 />
-                      </button>
-                      <button
-                        className={`row-action-btn ${
-                          admin.is_active ? "danger" : "success"
-                        }`}
-                        onClick={() => handleBanAdmin(admin)}
-                        title={
-                          admin.is_active
-                            ? isVi ? "Khóa tài khoản" : "Deactivate"
-                            : isVi ? "Mở khóa" : "Activate"
-                        }
-                      >
-                        {admin.is_active ? <Ban /> : <CheckCircle />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* KPI Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+            <Shield className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Tổng ban quản trị</p>
+            <p className="text-lg font-bold text-slate-100">{admins.length} nhân sự</p>
+          </div>
+        </div>
 
-        {filteredAdmins.length === 0 && (
-          <div className="users-empty">
-            <Search className="empty-icon" />
-            <p className="empty-title">
-              {hasActiveFilters
-                ? isVi ? "Không tìm thấy quản trị viên" : "No admin users found"
-                : isVi ? "Chưa có quản trị viên" : "No admin users"}
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Quyền tối cao (ADMIN)</p>
+            <p className="text-lg font-bold text-slate-100">
+              {admins.filter((a) => a.role === "ADMIN").length} tài khoản
             </p>
-            {hasActiveFilters && (
-              <button className="empty-action" onClick={handleReset}>
-                {isVi ? "Xóa bộ lọc" : "Clear filters"}
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center shrink-0">
+            <GraduationCap className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Giảng viên (TEACHER)</p>
+            <p className="text-lg font-bold text-slate-100">
+              {admins.filter((a) => a.role === "TEACHER").length} tài khoản
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500/80 transition-all">
+            <Search className="w-4 h-4 text-slate-500 shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm theo tên hoặc email admin..."
+              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="text-slate-500 hover:text-slate-300">
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
-        )}
+
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value as FilterRole)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value="ALL">Tất cả vai trò</option>
+            <option value="ADMIN">Quản trị viên tối cao (ADMIN)</option>
+            <option value="TEACHER">Giáo viên (TEACHER)</option>
+          </select>
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as FilterStatus)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="ACTIVE">Đang hoạt động</option>
+            <option value="INACTIVE">Đã khóa / Tạm dừng</option>
+          </select>
+        </div>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(filteredAdmins.length / pageSize)}
-        pageSize={pageSize}
-        onPageSizeChange={handlePageSizeChange}
-        totalItems={filteredAdmins.length}
-        onPageChange={setCurrentPage}
-      />
+      {/* Admin Table */}
+      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
+                <th className="py-3.5 px-4">Quản trị viên</th>
+                <th className="py-3.5 px-4">Vai trò (Role)</th>
+                <th className="py-3.5 px-4">Trạng thái</th>
+                <th className="py-3.5 px-4">Hoạt động gần nhất</th>
+                <th className="py-3.5 px-4 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/50 text-slate-200">
+              {paginatedAdmins.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-500">
+                    Không tìm thấy quản trị viên nào
+                  </td>
+                </tr>
+              ) : (
+                paginatedAdmins.map((user) => (
+                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => setActiveNavItem(`admin-profile:${user.id}`)}
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-bold text-xs flex items-center justify-center shrink-0">
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="w-full h-full rounded-xl object-cover"
+                            />
+                          ) : (
+                            user.name.slice(0, 2).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-100 hover:text-indigo-400 transition-colors">
+                            {user.name}
+                          </p>
+                          <p className="text-[11px] text-slate-400">{user.email}</p>
+                        </div>
+                      </div>
+                    </td>
 
+                    <td className="py-3.5 px-4">
+                      {user.role === "ADMIN" ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          <Shield className="w-3 h-3" />
+                          <span>ADMIN</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                          <GraduationCap className="w-3 h-3" />
+                          <span>TEACHER</span>
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      {user.is_active ? (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Hoạt động
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          Bị khóa
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-slate-400">{user.last_active}</td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setActiveNavItem(`admin-user-edit:${user.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setModalUser(user);
+                            setModalAction(user.is_active ? "ban" : "unban");
+                          }}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            user.is_active
+                              ? "hover:bg-rose-500/10 text-slate-400 hover:text-rose-400"
+                              : "hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-400"
+                          }`}
+                          title={user.is_active ? "Khóa tài khoản" : "Mở khóa"}
+                        >
+                          {user.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="border-t border-slate-800 p-2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
+            totalItems={filteredAdmins.length}
+          />
+        </div>
+      </div>
+
+      {/* Confirm Modal */}
       <ConfirmModal
-        isOpen={!!banModalAdmin}
-        onClose={() => setBanModalAdmin(null)}
-        onConfirm={confirmBanAdmin}
-        type={banModalAdmin?.is_active ? "danger" : "success"}
-        icon={banModalAdmin?.is_active ? "ban" : "warning"}
+        isOpen={Boolean(modalUser && modalAction)}
+        onClose={() => {
+          setModalUser(null);
+          setModalAction(null);
+        }}
+        onConfirm={handleStatusChangeConfirm}
         title={
-          banModalAdmin?.is_active
-            ? isVi ? "Khóa tài khoản" : "Deactivate Account"
-            : isVi ? "Mở khóa tài khoản" : "Activate Account"
+          modalAction === "ban"
+            ? `Vô hiệu hóa quyền của ${modalUser?.name}?`
+            : `Kích hoạt lại tài khoản ${modalUser?.name}?`
         }
-        message={
-          banModalAdmin?.is_active
-            ? `${
-                isVi
-                  ? "Bạn có chắc muốn khóa tài khoản"
-                  : "Are you sure you want to deactivate"
-              } "${banModalAdmin?.name}"? ${
-                isVi
-                  ? "Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa."
-                  : "The user will not be able to log in until reactivated."
-              }`
-            : `${
-                isVi
-                  ? "Bạn có chắc muốn mở khóa tài khoản"
-                  : "Are you sure you want to activate"
-              } "${banModalAdmin?.name}"?`
+        description={
+          modalAction === "ban"
+            ? "Tài khoản quản trị này sẽ bị tước quyền đăng nhập vào hệ thống Admin Console."
+            : "Tài khoản sẽ được khôi phục quyền quản trị theo vai trò tương ứng."
         }
-        confirmText={
-          banModalAdmin?.is_active
-            ? isVi ? "Khóa tài khoản" : "Deactivate"
-            : isVi ? "Mở khóa" : "Activate"
-        }
-        cancelText={isVi ? "Hủy" : "Cancel"}
+        confirmText={modalAction === "ban" ? "Vô hiệu hóa" : "Kích hoạt"}
+        cancelText="Hủy bỏ"
+        variant={modalAction === "ban" ? "danger" : "success"}
+        isLoading={isUpdatingStatus}
       />
-
-      <ConfirmModal
-        isOpen={!!roleChangeTarget}
-        onClose={() => setRoleChangeTarget(null)}
-        onConfirm={confirmRoleChange}
-        type="warning"
-        icon="warning"
-        title={isVi ? "Xác nhận nâng quyền Quản trị viên" : "Confirm Admin Promotion"}
-        message={
-          roleChangeTarget
-            ? isVi
-              ? `Bạn có chắc chắn muốn nâng quyền tài khoản "${roleChangeTarget.admin.name}" thành Quản trị viên không?`
-              : `Are you sure you want to promote account "${roleChangeTarget.admin.name}" to Admin?`
-            : ""
-        }
-        confirmText={isVi ? "Xác nhận" : "Confirm"}
-        cancelText={isVi ? "Hủy" : "Cancel"}
-      />
-    </main>
+    </div>
   );
 }

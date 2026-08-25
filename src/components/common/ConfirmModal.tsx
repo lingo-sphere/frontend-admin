@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { AlertTriangle, Ban, CheckCircle, Trash2 } from 'lucide-react'
+import { AlertTriangle, Ban, Trash2 } from 'lucide-react'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -32,7 +32,7 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const modalType = type || variant
   const modalMessage = message || description || ''
-  
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -59,54 +59,73 @@ export function ConfirmModal({
   const getIcon = () => {
     switch (icon) {
       case 'ban':
-        return <Ban className="modal-icon" />
+        return <Ban className="w-6 h-6" />
       case 'delete':
-        return <Trash2 className="modal-icon" />
+        return <Trash2 className="w-6 h-6" />
       default:
-        return <AlertTriangle className="modal-icon" />
+        return <AlertTriangle className="w-6 h-6" />
     }
   }
 
-  const getIconClass = () => {
+  const getIconColorClasses = () => {
     switch (modalType) {
       case 'danger':
-        return 'modal-icon-danger'
+        return 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
       case 'warning':
-        return 'modal-icon-warning'
+        return 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
       case 'success':
-        return 'modal-icon-success'
+        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
       default:
-        return 'modal-icon-danger'
+        return 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+    }
+  }
+
+  const getConfirmButtonClasses = () => {
+    switch (modalType) {
+      case 'danger':
+        return 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
+      case 'warning':
+        return 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
+      case 'success':
+        return 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+      default:
+        return 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
     }
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-icon-wrapper">
-          <div className={`modal-icon-box ${getIconClass()}`}>
-            {getIcon()}
-          </div>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative z-10 flex flex-col items-center text-center gap-4 animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getIconColorClasses()}`}>
+          {getIcon()}
         </div>
 
-        <h2 className="modal-title">{title}</h2>
-        <p className="modal-message">{modalMessage}</p>
+        <div className="space-y-1">
+          <h2 className="text-lg font-bold text-slate-100">{title}</h2>
+          {modalMessage && <p className="text-xs text-slate-400 leading-relaxed">{modalMessage}</p>}
+        </div>
 
-        <div className="modal-actions">
+        <div className="grid grid-cols-2 gap-3 w-full pt-2">
           <button
-            className="modal-btn modal-btn-cancel"
+            className="h-10 px-4 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-slate-300 transition-colors disabled:opacity-50 cursor-pointer"
             onClick={onClose}
             disabled={isLoading}
           >
             {cancelText}
           </button>
           <button
-            className={`modal-btn modal-btn-confirm ${modalType}`}
+            className={`h-10 px-4 rounded-xl text-white text-xs font-semibold shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${getConfirmButtonClasses()}`}
             onClick={onConfirm}
             disabled={isLoading}
           >
             {isLoading ? (
-              <span className="modal-spinner" />
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               confirmText
             )}

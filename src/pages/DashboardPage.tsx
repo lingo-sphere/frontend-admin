@@ -2,27 +2,24 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   CalendarDays,
-  Download,
   Sparkles,
   TrendingUp,
-  CircleCheck,
   Target,
   Activity,
   GraduationCap,
   Mic,
-  Flame,
   BookOpenCheck,
-  MoreHorizontal,
   ChevronDown,
   Check,
   ChevronRight,
   RefreshCw,
+  Users,
+  HardDrive,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
 import { courseService } from '@/services/course.service'
 import { mediaService } from '@/services/media.service'
-import { toast } from '@/store/toast-store'
 import { recentUserActivityLogs } from '@/data/statistics-data'
 import type { SystemAnalyticsOverview, StorageUsageReport } from '@/types/api.types'
 
@@ -74,7 +71,7 @@ export function DashboardPage() {
   const isVietnamese = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1]) 
+  const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1])
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [customFromDate, setCustomFromDate] = useState('')
   const [customToDate, setCustomToDate] = useState('')
@@ -129,433 +126,278 @@ export function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const chartItems = useMemo<ChartItem[]>(() => {
-    if (selectedRange.id === 'custom') {
-      if (!customFromDate || !customToDate) {
-        const values = base30DaysData.slice(-14)
-        const now = new Date()
-        return values.map((val, idx) => {
-          const d = new Date(now)
-          d.setDate(d.getDate() - (14 - 1 - idx))
-          const dayStr = String(d.getDate()).padStart(2, '0')
-          const monthStr = String(d.getMonth() + 1).padStart(2, '0')
-          const dayOfWeekVi = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getDay()]
-          const dayOfWeekEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
-          let label = `${dayStr}/${monthStr}`
-          label = `${isVietnamese ? dayOfWeekVi : dayOfWeekEn} ${dayStr}`
-          return {
-            value: val,
-            label,
-            fullDate: d.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US'),
-          }
-        })
-      }
-      const from = new Date(customFromDate)
-      const to = new Date(customToDate)
-      const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1
-      return base30DaysData.slice(-diffDays).map((val, idx) => {
-        const d = new Date(from)
-        d.setDate(d.getDate() + idx)
-        const dayStr = String(d.getDate()).padStart(2, '0')
-        const monthStr = String(d.getMonth() + 1).padStart(2, '0')
-        const dayOfWeekVi = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getDay()]
-        const dayOfWeekEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
-        let label = `${dayStr}/${monthStr}`
-        if (diffDays <= 7) {
-          label = `${isVietnamese ? dayOfWeekVi : dayOfWeekEn} ${dayStr}`
-        }
-        return {
-          value: val,
-          label,
-          fullDate: d.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US'),
-        }
-      })
-    }
-    const count = selectedRange.days
-    const values = base30DaysData.slice(-count)
+  const chartData = useMemo<ChartItem[]>(() => {
+    const count = selectedRange.id === 'custom' ? 14 : selectedRange.days
+    const slice = base30DaysData.slice(-count)
     const now = new Date()
 
-    return values.map((val, idx) => {
+    return slice.map((val, idx) => {
       const d = new Date(now)
       d.setDate(d.getDate() - (count - 1 - idx))
-      const dayStr = String(d.getDate()).padStart(2, '0')
-      const monthStr = String(d.getMonth() + 1).padStart(2, '0')
-      const dayOfWeekVi = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getDay()]
-      const dayOfWeekEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
-
-      let label = `${dayStr}/${monthStr}`
-      if (count === 7) {
-        label = `${isVietnamese ? dayOfWeekVi : dayOfWeekEn} ${dayStr}`
-      } else if (count === 30) {
-        label = `${dayStr}`
-      }
-
+      const day = d.getDate()
+      const month = d.getMonth() + 1
       return {
         value: val,
-        label,
-        fullDate: d.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US'),
+        label: count <= 7 ? `${day}/${month}` : idx % 2 === 0 ? `${day}/${month}` : '',
+        fullDate: `${day}/${month}/${d.getFullYear()}`,
       }
     })
-  }, [selectedRange, isVietnamese])
-
-  const totalSessions = useMemo(() => {
-    return chartItems.reduce((acc, curr) => acc + curr.value, 0).toLocaleString('en-US')
-  }, [chartItems])
-
-  const recentActivity = [
-    {
-      id: 1,
-      name: 'Lê Minh',
-      email: 'leminh@email.com',
-      initials: 'LM',
-      avatarColor: '',
-      event: t('page.dashboard.completedCourse'),
-      eventIcon: GraduationCap,
-      eventColor: '',
-      time: '2 phút trước',
-      status: t('page.dashboard.recorded'),
-      statusType: 'success',
-    },
-    {
-      id: 2,
-      name: 'Ngọc Trâm',
-      email: 'ngoctram@email.com',
-      initials: 'NT',
-      avatarColor: 'blue',
-      event: t('page.dashboard.aiSpeakingReview'),
-      eventIcon: Mic,
-      eventColor: 'blue',
-      time: '18 phút trước',
-      status: t('page.dashboard.sent'),
-      statusType: 'info',
-    },
-    {
-      id: 3,
-      name: 'Phúc Hoàng',
-      email: 'phuchoang@email.com',
-      initials: 'PH',
-      avatarColor: 'warning',
-      event: t('page.dashboard.streakMilestone'),
-      eventIcon: Flame,
-      eventColor: 'warning',
-      time: '42 phút trước',
-      status: t('page.dashboard.syncing'),
-      statusType: 'warning',
-    },
-    {
-      id: 4,
-      name: 'Thu Hà',
-      email: 'thuha@email.com',
-      initials: 'TH',
-      avatarColor: 'ai',
-      event: t('page.dashboard.vocabularyCards'),
-      eventIcon: BookOpenCheck,
-      eventColor: 'ai',
-      time: '1 giờ trước',
-      status: t('page.dashboard.completed'),
-      statusType: 'success',
-    },
-  ]
+  }, [selectedRange])
 
   return (
-    <main className="page-content">
-      
-      <div className="page-heading">
+    <div className="space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">{t('page.dashboard.title')}</h1>
-          <p className="page-subtitle">{t('page.dashboard.subtitle')}</p>
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            {t('page.dashboard.title') || 'Bảng Điều Khiển Quản Trị'}
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            {currentTime.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}{' '}
+            · {currentTime.toLocaleTimeString()}
+          </p>
         </div>
-        <div className="heading-actions">
-          <div className="date-picker-wrapper" ref={pickerRef}>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={fetchDashboardData}
+            className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+            title="Làm mới dữ liệu"
+            type="button"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoadingStats ? 'animate-spin text-teal-400' : ''}`} />
+          </button>
+
+          {/* Date Picker Dropdown */}
+          <div className="relative" ref={pickerRef}>
             <button
-              className="date-control"
-              type="button"
               onClick={() => setShowDatePicker(!showDatePicker)}
+              className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+              type="button"
             >
-              <CalendarDays className="icon" />
-              <span>
-                {selectedRange.id === 'custom'
-                  ? `${customFromDate || '...'} - ${customToDate || '...'}`
-                  : formatDateRange(selectedRange, isVietnamese)}
-              </span>
-              <ChevronDown className="icon" style={{ width: 14, height: 14 }} />
+              <CalendarDays className="w-4 h-4 text-teal-400" />
+              <span>{isVietnamese ? selectedRange.labelVi : selectedRange.label}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
+
             {showDatePicker && (
-              <div className="date-picker-dropdown" style={{ minWidth: '220px' }}>
-                {dateRanges.filter(r => r.id !== 'custom').map((range) => (
-                  <button
-                    key={range.id}
-                    className={`date-picker-option${selectedRange.id === range.id ? ' selected' : ''}`}
-                    onClick={() => {
-                      setSelectedRange(range)
-                      setShowDatePicker(false)
-                    }}
-                    type="button"
-                  >
-                    <span>{isVietnamese ? range.labelVi : range.label}</span>
-                    {selectedRange.id === range.id && <Check className="check-icon" />}
-                  </button>
-                ))}
-                <div className="date-picker-divider" />
-                <div className="date-picker-custom">
-                  <span className="date-picker-custom-label">{isVietnamese ? 'Tùy chỉnh khoảng thời gian' : 'Custom date range'}</span>
-                  <div className="date-picker-custom-inputs">
-                    <input
-                      type="date"
-                      className="toolbar-date-input"
-                      value={customFromDate}
-                      onChange={(e) => {
-                        setCustomFromDate(e.target.value)
-                        if (e.target.value && customToDate) {
-                          setSelectedRange({ id: 'custom', label: 'Custom', labelVi: 'Tùy chỉnh', days: 0 })
-                          setShowDatePicker(false)
-                        }
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-3 z-40 animate-in fade-in zoom-in-95 duration-150">
+                <div className="space-y-1">
+                  {dateRanges.map((range) => (
+                    <button
+                      key={range.id}
+                      onClick={() => {
+                        setSelectedRange(range)
+                        setShowDatePicker(false)
                       }}
-                      placeholder={isVietnamese ? 'Từ ngày' : 'From date'}
-                    />
-                    <span className="date-range-sep">~</span>
-                    <input
-                      type="date"
-                      className="toolbar-date-input"
-                      value={customToDate}
-                      onChange={(e) => {
-                        setCustomToDate(e.target.value)
-                        if (customFromDate && e.target.value) {
-                          setSelectedRange({ id: 'custom', label: 'Custom', labelVi: 'Tùy chỉnh', days: 0 })
-                          setShowDatePicker(false)
-                        }
-                      }}
-                      placeholder={isVietnamese ? 'Đến ngày' : 'To date'}
-                    />
-                  </div>
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                        selectedRange.id === range.id
+                          ? 'bg-teal-500/10 text-teal-300 font-bold'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <span>{isVietnamese ? range.labelVi : range.label}</span>
+                      {selectedRange.id === range.id && <Check className="w-3.5 h-3.5 text-teal-400" />}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
-          <button
-            className="icon-button"
-            onClick={fetchDashboardData}
-            title="Làm mới dữ liệu"
-            type="button"
-          >
-            <RefreshCw className={`icon ${isLoadingStats ? 'animate-spin text-indigo-400' : ''}`} />
-          </button>
-          <button className="primary-button" type="button" onClick={() => toast.success('Báo cáo thống kê đã sẵn sàng tải xuống')}>
-            <Download className="icon" />
-            {t('page.dashboard.exportReport')}
-          </button>
         </div>
       </div>
 
-      <section className="overview-grid">
-        
-        <article className="card chart-card">
-          <div className="card-header">
-            <div>
-              <h2 className="card-title">{t('page.dashboard.activityTitle')}</h2>
-              <p className="card-meta">
-                {isVietnamese
-                  ? `Dữ liệu ${selectedRange.labelVi.toLowerCase()} (${formatDateRange(selectedRange, isVietnamese)})`
-                  : `Data for ${selectedRange.label.toLowerCase()} (${formatDateRange(selectedRange, isVietnamese)})`}
-              </p>
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Learners */}
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex flex-col justify-between shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
+              <Users className="w-5 h-5" />
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="chart-total">{totalSessions}</div>
-              <div className="chart-total-label">{t('page.dashboard.totalSessions')}</div>
-              <div className="chart-legend" style={{ justifyContent: 'flex-end', marginTop: 9 }}>
-                <span className="legend-item">
-                  <span className="legend-dot teal" />
-                  {t('page.dashboard.sessionsLabel')}
-                </span>
-                <span className="legend-item">
-                  <span className="legend-dot blue" />
-                  {isVietnamese ? 'Mục tiêu' : 'Target'}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="chart-wrap">
-            <SimpleChart items={chartItems} />
-          </div>
-        </article>
-
-        <article className="card pulse-card">
-          <div className="card-header">
-            <div>
-              <h2 className="card-title">{t('page.dashboard.platformHealth')}</h2>
-              <p className="card-meta">{t('page.dashboard.liveUpdate')}</p>
-            </div>
-            <Activity style={{ width: 18, height: 18, color: 'var(--primary)' }} />
-          </div>
-          <div className="pulse-topline">
-            <span className="pulse-status">
-              <span className="status-dot" />
-              {t('page.dashboard.allSystemsNormal')}
-            </span>
-            <span className="pulse-time">
-              {currentTime.toLocaleTimeString('vi-VN')}
+            <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <TrendingUp className="w-3 h-3" /> +12.4%
             </span>
           </div>
-          <div className="pulse-score">
-            <div className="pulse-score-number">99.98%</div>
-            <div className="pulse-score-label">{t('page.dashboard.uptimeLabel')}</div>
-          </div>
-          <div className="health-list">
-            <div className="health-row">
-              <span className="health-label">
-                <span className="status-dot" style={{ background: 'var(--success)' }} />
-                {t('page.dashboard.apiLatency')}
-              </span>
-              <span className="health-value">124ms</span>
-            </div>
-            <div className="health-row">
-              <span className="health-label">
-                <span className="status-dot" style={{ background: 'var(--success)' }} />
-                Khóa học & Bài giảng
-              </span>
-              <span className="health-value">{totalCoursesCount > 0 ? `${totalCoursesCount} khóa học` : '18 khóa học'}</span>
-            </div>
-            <div className="health-row">
-              <span className="health-label">
-                <span className="status-dot" style={{ background: 'var(--warning)' }} />
-                Cloudflare R2 Storage
-              </span>
-              <span className="health-value">
-                {storageUsage ? `${storageUsage.used_mb} MB (${storageUsage.used_percentage}%)` : '3.2 GB (32%)'}
-              </span>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section className="kpi-grid">
-        
-        <article className="kpi-card" onClick={() => setActiveNavItem('users-list')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top">
-            <span className="kpi-icon">
-              <TrendingUp className="icon" />
-            </span>
-            <span className="delta up">
-              <TrendingUp className="icon" />
-              {analytics?.overview?.total_vip_users ? `${analytics.overview.total_vip_users} VIP` : '8.4%'}
-            </span>
-          </div>
-          <p className="kpi-label">{t('page.dashboard.kpi.activeLearners')}</p>
-          <p className="kpi-value">
-            {analytics?.overview?.total_users ? analytics.overview.total_users.toLocaleString() : '8,920'}
-          </p>
-          <div className="kpi-foot">
-            <span className="kpi-footnote">
-              {analytics?.overview?.active_users_today ? `${analytics.overview.active_users_today} hoạt động hôm nay` : `+692 ${t('page.dashboard.kpi.previousPeriod')}`}
-            </span>
-            <div className="mini-bars">
-              <span style={{ height: 10 }} />
-              <span style={{ height: 14 }} />
-              <span style={{ height: 13 }} />
-              <span style={{ height: 18 }} />
-              <span style={{ height: 16 }} />
-              <span style={{ height: 22 }} />
-              <span style={{ height: 24 }} />
-            </div>
-          </div>
-        </article>
-
-        <article className="kpi-card" onClick={() => setActiveNavItem('courses')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top">
-            <span className="kpi-icon blue">
-              <CircleCheck className="icon" />
-            </span>
-            <span className="delta up">
-              <TrendingUp className="icon" />
-              {totalCoursesCount > 0 ? `${totalCoursesCount} khóa` : '5.1%'}
-            </span>
-          </div>
-          <p className="kpi-label">{t('page.dashboard.kpi.lessonCompletion')}</p>
-          <p className="kpi-value">74.8%</p>
-          <div className="progress-track">
-            <div className="progress-fill blue" style={{ width: '74.8%' }} />
-          </div>
-          <div className="kpi-foot">
-            <span className="kpi-footnote">{t('page.dashboard.kpi.monthlyGoal')} 78%</span>
-          </div>
-        </article>
-
-        <article className="kpi-card" onClick={() => setActiveNavItem('progress')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top">
-            <span className="kpi-icon green">
-              <Target className="icon" />
-            </span>
-            <span className="delta neutral">
-              {analytics?.overview?.total_system_xp ? `${(analytics.overview.total_system_xp / 1000).toFixed(1)}k XP` : '+2.3 điểm'}
-            </span>
-          </div>
-          <p className="kpi-label">{t('page.dashboard.kpi.accuracy')}</p>
-          <p className="kpi-value">81.6%</p>
-          <div className="gauge">
-            <span className="gauge-label">81.6</span>
-          </div>
-          <div className="kpi-foot">
-            <span className="kpi-footnote">
-              {analytics?.overview?.avg_user_streak ? `Chuỗi học TB: ${analytics.overview.avg_user_streak} ngày` : 'Listening leading · 86%'}
-            </span>
-          </div>
-        </article>
-
-        <article className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-icon ai">
-              <Sparkles className="icon" />
-            </span>
-            <span className="delta up" style={{ color: 'var(--ai)', background: 'rgba(138,104,168,.12)' }}>
-              <TrendingUp className="icon" />
-              18.7%
-            </span>
-          </div>
-          <p className="kpi-label">{t('page.dashboard.kpi.aiEvaluations')}</p>
-          <p className="kpi-value">2,416</p>
-          <div className="kpi-foot">
-            <span className="kpi-footnote">{isVietnamese ? 'Nghe · Nói · 42 ' : 'Speaking · Writing · 42 '}{t('page.dashboard.kpi.pending')}</span>
-          </div>
-        </article>
-      </section>
-
-      <section className="card activity-card">
-        <div className="card-header activity-header">
           <div>
-            <h2 className="card-title">{t('page.dashboard.recentActivity')}</h2>
+            <p className="text-xs text-slate-400 font-medium">Tổng người học</p>
+            <p className="text-2xl font-extrabold text-slate-100 mt-1">
+              {analytics?.overview?.total_users?.toLocaleString('vi-VN') || '12,840'}
+            </p>
+          </div>
+          <div className="pt-3 mt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
+            <span>Hoạt động: {analytics?.overview?.active_users_today || 428} hôm nay</span>
+            <span className="text-teal-400 font-semibold">98.2% Active</span>
+          </div>
+        </div>
+
+        {/* Card 2: Courses */}
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex flex-col justify-between shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <span className="flex items-center gap-1 text-[11px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+              <TrendingUp className="w-3 h-3" /> +8.5%
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">Khóa học hệ thống</p>
+            <p className="text-2xl font-extrabold text-slate-100 mt-1">
+              {totalCoursesCount || 18} Khóa
+            </p>
+          </div>
+          <div className="pt-3 mt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
+            <span>120+ bài giảng video</span>
+            <span className="text-indigo-400 font-semibold">4.8 ★ Đánh giá</span>
+          </div>
+        </div>
+
+        {/* Card 3: TOEIC Average */}
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex flex-col justify-between shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+              <Target className="w-5 h-5" />
+            </div>
+            <span className="flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+              <TrendingUp className="w-3 h-3" /> +15.2%
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">Điểm TOEIC trung bình</p>
+            <p className="text-2xl font-extrabold text-slate-100 mt-1">685 / 990</p>
+          </div>
+          <div className="pt-3 mt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
+            <span>3,420 lượt thi ETS</span>
+            <span className="text-amber-400 font-semibold">Đạt chuẩn 85%</span>
+          </div>
+        </div>
+
+        {/* Card 4: Cloud Storage */}
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex flex-col justify-between shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+              <HardDrive className="w-5 h-5" />
+            </div>
+            <span className="flex items-center gap-1 text-[11px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+              Cloudflare R2
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">Dung lượng media đã dùng</p>
+            <p className="text-2xl font-extrabold text-slate-100 mt-1">
+              {storageUsage ? `${storageUsage.used_mb} MB` : '3.2 GB'}
+            </p>
+          </div>
+          <div className="pt-3 mt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
+            <span>Giới hạn: 10 GB</span>
+            <span className="text-purple-400 font-semibold">32% Quota</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Chart & Services Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chart Column (2 cols) */}
+        <div className="lg:col-span-2 p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-base font-bold text-slate-100">Phiên Học & Luyện Tập Mỗi Ngày</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Số lượng học viên tham gia học từ vựng và làm bài TOEIC</p>
+            </div>
+            <span className="text-xs font-semibold text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">
+              {formatDateRange(selectedRange, isVietnamese)}
+            </span>
+          </div>
+
+          <div className="h-64 w-full">
+            <SimpleChart items={chartData} />
+          </div>
+        </div>
+
+        {/* Microservices Status Column (1 col) */}
+        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+          <h3 className="text-base font-bold text-slate-100 mb-4">Trạng Thái Hệ Thống Microservices</h3>
+          
+          <div className="space-y-3 flex-1">
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-200">User & Auth Gateway</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">24ms · Healthy</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-200">Course & Curriculum Service</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">38ms · Healthy</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-200">Vocabulary & Spaced Repetition</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">19ms · Healthy</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-200">AI Assessment (Gemini 2.5)</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">240ms · Online</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-200">TOEIC Exam Engine</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">32ms · Healthy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity Table */}
+      <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-base font-bold text-slate-100">Nhật Ký Hoạt Động Gần Đây</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Tiến trình học tập và làm bài của học viên trên toàn hệ thống</p>
           </div>
           <button
-            className="text-action"
-            type="button"
             onClick={() => setActiveNavItem('progress')}
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+            className="text-xs text-teal-400 hover:text-teal-300 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
           >
-            {t('page.dashboard.viewAll')} <ChevronRight size={16} />
+            <span>Xem tất cả</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="activity-table-wrap">
-          <table className="activity-table">
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr>
-                <th>{t('page.dashboard.user')}</th>
-                <th>{t('page.dashboard.event')}</th>
-                <th>{t('page.dashboard.detailsXP')}</th>
-                <th>{t('page.dashboard.time')}</th>
-                <th>{t('page.dashboard.status')}</th>
-                <th aria-label={t('page.dashboard.actions')} />
+              <tr className="border-b border-slate-800 text-slate-400 font-semibold">
+                <th className="pb-3 px-3">Học viên</th>
+                <th className="pb-3 px-3">Hành động</th>
+                <th className="pb-3 px-3">Điểm / XP</th>
+                <th className="pb-3 px-3">Thời gian</th>
+                <th className="pb-3 px-3">Trạng thái</th>
+                <th className="pb-3 px-3 text-right">Chi tiết</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-800/50 text-slate-200">
               {recentUserActivityLogs.slice(0, 5).map((log) => {
-                const getBadgeColor = (type: string) => {
-                  switch (type) {
-                    case 'TOEIC_TEST': return 'blue'
-                    case 'VOCAB_STUDY': return 'warning'
-                    case 'AI_CHAT': return 'ai'
-                    case 'PREMIUM_UPGRADE': return 'warning'
-                    default: return ''
-                  }
-                }
                 const getEventIcon = (type: string) => {
                   switch (type) {
                     case 'TOEIC_TEST': return Target
@@ -566,50 +408,44 @@ export function DashboardPage() {
                   }
                 }
                 const EventIcon = getEventIcon(log.actionType)
-                const badgeColor = getBadgeColor(log.actionType)
 
                 return (
-                  <tr key={log.id}>
-                    <td>
-                      <div className="user-cell" style={{ cursor: 'pointer' }} onClick={() => setActiveNavItem(`user-profile:${log.userId}`)}>
-                        {log.userAvatar ? (
-                          <img src={log.userAvatar} alt={log.userName} className="avatar table-avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                        ) : (
-                          <span className="avatar table-avatar">{log.userName.slice(0, 2).toUpperCase()}</span>
-                        )}
-                        <span>
-                          <span className="user-name">{log.userName}</span>
-                          <span className="user-email">{log.userEmail}</span>
-                        </span>
+                  <tr key={log.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 px-3">
+                      <div
+                        className="flex items-center gap-2.5 cursor-pointer"
+                        onClick={() => setActiveNavItem(`user-profile:${log.userId}`)}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-teal-400 text-xs">
+                          {log.userName.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-200 hover:text-teal-400 transition-colors">{log.userName}</p>
+                          <p className="text-[10px] text-slate-500">{log.userEmail}</p>
+                        </div>
                       </div>
                     </td>
-                    <td>
-                      <span className="event-cell">
-                        <span className={`event-icon ${badgeColor}`}>
-                          <EventIcon className="icon" />
-                        </span>
-                        {isVietnamese ? log.actionNameVi : log.actionNameEn}
-                      </span>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center">
+                          <EventIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <span>{isVietnamese ? log.actionNameVi : log.actionNameEn}</span>
+                      </div>
                     </td>
-                    <td>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--primary)' }}>
-                        {log.scoreOrXP}
-                      </span>
-                    </td>
-                    <td>{log.timestamp}</td>
-                    <td>
-                      <span className={`status-pill ${log.status === 'SUCCESS' ? 'success' : 'completed'}`}>
+                    <td className="py-3 px-3 font-bold text-teal-400">{log.scoreOrXP}</td>
+                    <td className="py-3 px-3 text-slate-400">{log.timestamp}</td>
+                    <td className="py-3 px-3">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {log.status}
                       </span>
                     </td>
-                    <td>
+                    <td className="py-3 px-3 text-right">
                       <button
-                        className="table-more"
-                        type="button"
                         onClick={() => setActiveNavItem(`user-profile:${log.userId}`)}
-                        title={isVietnamese ? 'Xem thông tin học viên' : 'View Learner Profile'}
+                        className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                       >
-                        <ChevronRight className="icon" />
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
@@ -618,68 +454,43 @@ export function DashboardPage() {
             </tbody>
           </table>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   )
 }
 
 function SimpleChart({ items }: { items: ChartItem[] }) {
-  const maxValue = Math.max(...items.map((i) => i.value))
-  const minValue = Math.min(...items.map((i) => i.value))
+  const maxValue = Math.max(...items.map((i) => i.value), 1)
+  const minValue = Math.min(...items.map((i) => i.value), 0)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: items.length > 20 ? 3 : 8, flex: 1, paddingBottom: 4 }}>
-        {items.map((item, index) => (
-          <div
-            key={index}
-            title={`${item.fullDate}: ${item.value} phiên học`}
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              height: '100%',
-              position: 'relative',
-            }}
-          >
+    <div className="flex flex-col h-full justify-between">
+      <div className="flex items-end gap-1.5 sm:gap-2 flex-1 pb-2">
+        {items.map((item, index) => {
+          const heightPercent = Math.max(12, Math.round(((item.value - minValue + 20) / (maxValue - minValue + 40)) * 100))
+          const isLatest = index === items.length - 1
+
+          return (
             <div
-              style={{
-                width: '100%',
-                height: `${((item.value - minValue + 30) / (maxValue - minValue + 60)) * 100}%`,
-                background: index === items.length - 1 ? 'var(--primary)' : 'rgba(47, 127, 120, 0.45)',
-                borderRadius: '4px 4px 0 0',
-                transition: 'all 300ms ease',
-                minHeight: 8,
-              }}
-            />
-          </div>
-        ))}
-      </div>
-      
-      <div style={{ display: 'flex', gap: items.length > 20 ? 3 : 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-        {items.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              flex: 1,
-              display: 'flex',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <span
-              style={{
-                fontSize: items.length > 20 ? 9 : 10,
-                color: 'var(--text-tertiary)',
-                fontWeight: 500,
-                whiteSpace: 'nowrap',
-              }}
+              key={index}
+              title={`${item.fullDate}: ${item.value} phiên học`}
+              className="flex-1 flex flex-col justify-end items-center h-full group relative"
             >
-              {item.label}
-            </span>
+              <div
+                style={{ height: `${heightPercent}%` }}
+                className={`w-full rounded-t-md transition-all duration-300 group-hover:bg-teal-300 ${
+                  isLatest ? 'bg-teal-500 shadow-lg shadow-teal-500/30' : 'bg-teal-500/30'
+                }`}
+              />
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="flex gap-1.5 sm:gap-2 pt-3 border-t border-slate-800/80">
+        {items.map((item, index) => (
+          <div key={index} className="flex-1 text-center truncate">
+            <span className="text-[10px] text-slate-500 font-medium">{item.label}</span>
           </div>
         ))}
       </div>

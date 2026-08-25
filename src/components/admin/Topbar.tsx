@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Moon, Sun, Bell, Menu, LogOut, User as UserIcon, Shield, ChevronDown } from 'lucide-react'
+import { Search, Moon, Sun, Bell, Menu, LogOut, User as UserIcon, Shield, ChevronDown, Users, CheckCircle } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useTranslation } from 'react-i18next'
@@ -49,7 +49,6 @@ export function Topbar() {
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
   useEffect(() => {
-    // Load real notifications from backend
     const loadNotifications = async () => {
       try {
         const items = await notificationService.getMyNotifications()
@@ -61,7 +60,6 @@ export function Topbar() {
       }
     }
 
-    // Load total user stats
     const loadUserStats = async () => {
       try {
         const analytics = await userService.getSystemAnalytics()
@@ -131,84 +129,102 @@ export function Topbar() {
 
   return (
     <>
-      <header className="topbar">
-        <div className="topbar-left">
+      <header className="sticky top-0 z-20 w-full h-16 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-4">
+        {/* Left Side: Mobile Menu & Search */}
+        <div className="flex items-center gap-3 flex-1 max-w-md">
           <button
-            className="mobile-menu"
+            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
             onClick={() => setMobileSidebarOpen(true)}
             type="button"
             aria-label="Mở menu"
           >
-            <Menu className="icon" />
+            <Menu className="w-5 h-5" />
           </button>
 
-          <div className="search-box" role="search">
-            <Search className="icon" />
-            <span className="search-placeholder">{t('header.search')}</span>
-            <span className="search-kbd">⌘ K</span>
+          <div className="hidden sm:flex items-center gap-2.5 w-full h-9 px-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 focus-within:border-indigo-500/80 transition-all">
+            <Search className="w-4 h-4 text-slate-500 shrink-0" />
+            <input
+              type="text"
+              placeholder={t('header.search') || 'Tìm kiếm nhanh (Người dùng, Khóa học, Từ vựng)...'}
+              className="w-full bg-transparent border-0 outline-none text-slate-200 placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+            />
+            <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono shrink-0">⌘K</span>
           </div>
         </div>
 
-        <div className="header-actions">
-          <span className="utility-pill info">
-            <UsersIcon />
-            <span className="utility-text">
+        {/* Right Side: Status Badges & Controls */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
+            <Users className="w-3.5 h-3.5" />
+            <span>
               {totalLearnersCount !== null ? `${totalLearnersCount} ` : '12.4k '}
-              {t('header.learnersCount')}
+              {t('header.learnersCount') || 'Học viên'}
             </span>
-          </span>
+          </div>
 
-          <span className="utility-pill success">
-            <span className="status-dot" />
-            <span className="utility-text">{t('header.systemStable')}</span>
-          </span>
+          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{t('header.systemStable') || 'Hệ thống ổn định'}</span>
+          </div>
 
+          {/* Language Toggle */}
           <button
-            className="icon-button lang-button"
+            className="h-9 px-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-xs font-bold text-slate-200 transition-colors cursor-pointer"
             onClick={toggleLanguage}
             type="button"
-            aria-label={`Ngôn ngữ hiện tại: ${isVietnamese ? 'Tiếng Việt' : 'English'}`}
+            title="Đổi ngôn ngữ Tiếng Việt / English"
           >
             {isVietnamese ? 'VI' : 'EN'}
           </button>
 
+          {/* Theme Toggle */}
           <button
-            className="icon-button"
+            className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 transition-colors cursor-pointer"
             onClick={toggleTheme}
             type="button"
-            aria-label={theme === 'dark' ? t('header.lightMode') : t('header.darkMode')}
+            title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
           >
-            {theme === 'dark' ? <Sun className="icon" /> : <Moon className="icon" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-300" />}
           </button>
 
           {/* Notifications Dropdown */}
-          <div className="notification-wrapper" ref={notificationRef}>
+          <div className="relative" ref={notificationRef}>
             <button
-              className="icon-button"
+              className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 transition-colors relative cursor-pointer"
               onClick={() => setNotificationOpen(!notificationOpen)}
               type="button"
-              aria-label={t('header.notifications')}
+              aria-label="Thông báo"
             >
-              <Bell className="icon" />
-              {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-slate-900 animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
             </button>
 
             {notificationOpen && (
-              <div className="notification-dropdown">
-                <div className="notification-header">
-                  <h3>{t('header.notifications')}</h3>
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-indigo-400" />
+                    <span>{t('header.notifications') || 'Thông báo hệ thống'}</span>
+                  </h3>
                   {unreadCount > 0 && (
-                    <button className="mark-all-btn" onClick={markAllAsRead}>
-                      Đánh dấu đã đọc
+                    <button
+                      className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                      onClick={markAllAsRead}
+                    >
+                      Đọc tất cả
                     </button>
                   )}
                 </div>
 
-                <div className="notification-list">
+                <div className="py-2 max-h-72 overflow-y-auto space-y-2 divide-y divide-slate-800/50">
                   {notifications.length === 0 ? (
-                    <div className="notification-empty">
-                      <Bell className="empty-icon" />
-                      <p>Không có thông báo</p>
+                    <div className="py-8 text-center text-xs text-slate-500">
+                      <CheckCircle className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+                      <p>Không có thông báo mới</p>
                     </div>
                   ) : (
                     notifications.map((notif) => {
@@ -223,27 +239,30 @@ export function Topbar() {
                       return (
                         <div
                           key={notifId}
-                          className={`notification-item${!notif.is_read ? ' unread' : ''}`}
+                          className={`pt-2 first:pt-0 cursor-pointer p-2 rounded-xl transition-colors ${
+                            !notif.is_read ? 'bg-indigo-950/30' : 'hover:bg-slate-800/40'
+                          }`}
                           onClick={() => markAsRead(notifId)}
                         >
-                          <div className="notification-content">
-                            <div className="notification-title-row">
-                              <span className="notification-title">{title}</span>
-                              {!notif.is_read && <span className="unread-dot" />}
-                            </div>
-                            <p className="notification-body">{content}</p>
-                            <span className="notification-time">
-                              {formatTimeAgo(createdAt, isVietnamese)}
-                            </span>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-semibold text-slate-200 line-clamp-1">{title}</span>
+                            {!notif.is_read && <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0 mt-1" />}
                           </div>
+                          <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{content}</p>
+                          <span className="text-[10px] text-slate-500 mt-1 block">
+                            {formatTimeAgo(createdAt, isVietnamese)}
+                          </span>
                         </div>
                       )
                     })
                   )}
                 </div>
 
-                <div className="notification-footer">
-                  <button className="view-all-btn" onClick={goToNotifications}>
+                <div className="pt-2 border-t border-slate-800">
+                  <button
+                    className="w-full py-2 rounded-xl text-center text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-slate-800/50 transition-colors"
+                    onClick={goToNotifications}
+                  >
                     Xem tất cả thông báo →
                   </button>
                 </div>
@@ -255,10 +274,10 @@ export function Topbar() {
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-700/60"
+              className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-700/60 cursor-pointer"
               type="button"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm ring-1 ring-white/20">
                 {profile?.full_name
                   ? profile.full_name
                       .split(' ')
@@ -274,7 +293,7 @@ export function Topbar() {
                 <span className="text-xs font-semibold text-slate-200 leading-tight">
                   {profile?.full_name || user?.email?.split('@')[0] || 'Admin'}
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-teal-400">
                   {user?.role === 'ADMIN' ? 'Quản trị viên' : user?.role || 'Admin'}
                 </span>
               </div>
@@ -295,7 +314,7 @@ export function Topbar() {
                     setActiveNavItem(`admin-profile:${user?.user_id || 'me'}`)
                     setUserDropdownOpen(false)
                   }}
-                  className="w-full px-3.5 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2.5 transition-colors"
+                  className="w-full px-3.5 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <UserIcon className="w-3.5 h-3.5 text-indigo-400" />
                   <span>Hồ sơ cá nhân</span>
@@ -306,7 +325,7 @@ export function Topbar() {
                     setActiveNavItem('settings')
                     setUserDropdownOpen(false)
                   }}
-                  className="w-full px-3.5 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2.5 transition-colors"
+                  className="w-full px-3.5 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Shield className="w-3.5 h-3.5 text-violet-400" />
                   <span>Cài đặt hệ thống</span>
@@ -319,7 +338,7 @@ export function Topbar() {
                     setUserDropdownOpen(false)
                     setShowLogoutConfirm(true)
                   }}
-                  className="w-full px-3.5 py-2 text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors"
+                  className="w-full px-3.5 py-2 text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Đăng xuất</span>
@@ -342,26 +361,5 @@ export function Topbar() {
         variant="danger"
       />
     </>
-  )
-}
-
-function UsersIcon() {
-  return (
-    <svg
-      className="icon"
-      fill="none"
-      height="14"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-      width="14"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
   )
 }

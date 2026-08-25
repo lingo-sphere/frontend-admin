@@ -1,23 +1,17 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Search,
-  Filter,
-  Download,
-  ChevronDown,
-  Calendar,
-  Ban,
   CheckCircle,
   Crown,
   Flame,
   Star,
-  Trophy,
+  Target,
   X,
   Eye,
   RotateCcw,
-  Settings2,
-  ChevronUp,
-  ChevronsUpDown,
+  Users,
+  Ban,
 } from "lucide-react";
 import { Pagination } from "@/components/common/Pagination";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -26,1151 +20,452 @@ import { userService } from "@/services/user.service";
 import { toast } from "@/store/toast-store";
 import {
   mockUsers,
-  getUserStats,
-  formatNumber,
-  statusColors,
-  planColors,
-  planLabels,
   type User,
 } from "@/data/users-data";
 
-function DensityIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      style={{ flexShrink: 0 }}
-    >
-      
-      <path d="M8 1L5.5 3.5H10.5L8 1Z" fill="currentColor" />
-      
-      <rect
-        x="2"
-        y="4.5"
-        width="12"
-        height="1.5"
-        rx="0.75"
-        fill="currentColor"
-      />
-      
-      <rect
-        x="2"
-        y="7.25"
-        width="12"
-        height="1.5"
-        rx="0.75"
-        fill="currentColor"
-        opacity="0.5"
-      />
-      
-      <rect
-        x="2"
-        y="10"
-        width="12"
-        height="1.5"
-        rx="0.75"
-        fill="currentColor"
-      />
-      
-      <path d="M8 15L5.5 12.5H10.5L8 15Z" fill="currentColor" />
-    </svg>
-  );
-}
-
 type FilterStatus = "ALL" | "ACTIVE" | "INACTIVE" | "BANNED";
 type FilterPlan = "ALL" | "free" | "premium";
-type FilterJoin = "ALL" | string;
-type Density = "compact" | "middle" | "comfortable";
-type SortKey = "name" | "xp" | "streak" | "level" | "toeic" | "joined" | null;
-type SortDir = "asc" | "desc";
-
-interface ColumnConfig {
-  key: string;
-  labelVi: string;
-  labelEn: string;
-  visible: boolean;
-}
-
-const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: "user", labelVi: "Người dùng", labelEn: "User", visible: true },
-  { key: "status", labelVi: "Trạng thái", labelEn: "Status", visible: true },
-  { key: "plan", labelVi: "Gói", labelEn: "Plan", visible: true },
-  { key: "streak", labelVi: "Streak", labelEn: "Streak", visible: true },
-  { key: "xp", labelVi: "XP", labelEn: "XP", visible: true },
-  { key: "level", labelVi: "Level", labelEn: "Level", visible: true },
-  { key: "toeic", labelVi: "TOEIC", labelEn: "TOEIC", visible: true },
-  { key: "joined", labelVi: "Tham gia", labelEn: "Joined", visible: true },
-];
-
-function formatDate(dateStr: string, isVietnamese: boolean): string {
-  return new Date(dateStr).toLocaleDateString(
-    isVietnamese ? "vi-VN" : "en-US",
-    {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }
-  );
-}
-
-function formatTimeAgo(dateStr: string): string {
-  const diffDays = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 86400000
-  );
-  const diffMonths = Math.floor(diffDays / 30);
-  if (diffDays < 30) return `${diffDays}d`;
-  if (diffMonths < 12) return `${diffMonths}mo`;
-  return `${Math.floor(diffMonths / 12)}y`;
-}
-
-function SortableHeader({
-  label,
-  colKey,
-  sortKey,
-  sortDir,
-  onSort,
-}: {
-  label: string;
-  colKey: SortKey;
-  sortKey: SortKey;
-  sortDir: SortDir;
-  onSort: (key: SortKey) => void;
-}) {
-  const active = sortKey === colKey;
-  return (
-    <button
-      type="button"
-      className={`th-sort-btn${active ? " active" : ""}`}
-      onClick={() => onSort(colKey)}
-    >
-      {label}
-      {active ? (
-        <ChevronUp
-          className="th-sort-icon"
-          style={{
-            transform: sortDir === "desc" ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        />
-      ) : (
-        <ChevronsUpDown className="th-sort-icon muted" />
-      )}
-    </button>
-  );
-}
-
-function StatusFilterHeader({
-  isVi,
-  filterStatus,
-  setFilterStatus,
-  setCurrentPage,
-}: {
-  isVi: boolean;
-  filterStatus: FilterStatus;
-  setFilterStatus: (v: FilterStatus) => void;
-  setCurrentPage: (n: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const OPTIONS: { value: FilterStatus; labelVi: string; labelEn: string }[] = [
-    { value: "ALL", labelVi: "Tất cả", labelEn: "All" },
-    { value: "ACTIVE", labelVi: "Hoạt động", labelEn: "Active" },
-    { value: "INACTIVE", labelVi: "Không hoạt động", labelEn: "Inactive" },
-    { value: "BANNED", labelVi: "Banned", labelEn: "Banned" },
-  ];
-
-  const current = OPTIONS.find((o) => o.value === filterStatus);
-
-  return (
-    <div className="th-filter-wrapper" ref={ref}>
-      <button
-        type="button"
-        className={`th-filter-btn${filterStatus !== "ALL" ? " active" : ""}${
-          open ? " open" : ""
-        }`}
-        onClick={() => setOpen(!open)}
-      >
-        {isVi ? current?.labelVi : current?.labelEn}
-        <Filter className="th-filter-icon" />
-      </button>
-      {open && (
-        <div className="th-filter-dropdown">
-          {OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`th-filter-option${
-                filterStatus === opt.value ? " active" : ""
-              }`}
-              onClick={() => {
-                setFilterStatus(opt.value);
-                setCurrentPage(1);
-                setOpen(false);
-              }}
-            >
-              {filterStatus === opt.value && (
-                <CheckCircle className="th-filter-check" />
-              )}
-              {isVi ? opt.labelVi : opt.labelEn}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PlanFilterHeader({
-  isVi,
-  filterPlan,
-  setFilterPlan,
-  setCurrentPage,
-}: {
-  isVi: boolean;
-  filterPlan: FilterPlan;
-  setFilterPlan: (v: FilterPlan) => void;
-  setCurrentPage: (n: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const OPTIONS: { value: FilterPlan; labelVi: string; labelEn: string }[] = [
-    { value: "ALL", labelVi: "Tất cả gói", labelEn: "All Plans" },
-    { value: "free", labelVi: "Miễn phí", labelEn: "Free" },
-    { value: "premium", labelVi: "Premium", labelEn: "Premium" },
-  ];
-
-  const current = OPTIONS.find((o) => o.value === filterPlan);
-
-  return (
-    <div className="th-filter-wrapper" ref={ref}>
-      <button
-        type="button"
-        className={`th-filter-btn${filterPlan !== "ALL" ? " active" : ""}${
-          open ? " open" : ""
-        }`}
-        onClick={() => setOpen(!open)}
-      >
-        {isVi
-          ? current?.value === "ALL"
-            ? "Gói"
-            : current?.labelVi
-          : current?.value === "ALL"
-          ? "Plan"
-          : current?.labelEn}
-        <Filter className="th-filter-icon" />
-      </button>
-      {open && (
-        <div className="th-filter-dropdown">
-          {OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`th-filter-option${
-                filterPlan === opt.value ? " active" : ""
-              }`}
-              onClick={() => {
-                setFilterPlan(opt.value);
-                setCurrentPage(1);
-                setOpen(false);
-              }}
-            >
-              {filterPlan === opt.value && (
-                <CheckCircle className="th-filter-check" />
-              )}
-              {isVi ? opt.labelVi : opt.labelEn}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function LearnersPage() {
-  const { i18n } = useTranslation();
-  const isVi = i18n.language === "vi";
-  const setActiveNavItem = useAdminStore((s) => s.setActiveNavItem);
+  const { t } = useTranslation();
+  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
+
   const [users, setUsers] = useState<User[]>(mockUsers);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("ALL");
-  const [filterPlan, setFilterPlan] = useState<FilterPlan>("ALL");
-  const [filterJoin, setFilterJoin] = useState<FilterJoin>("ALL");
-  const [sortKey, setSortKey] = useState<SortKey>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("ALL");
+  const [selectedPlan, setSelectedPlan] = useState<FilterPlan>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [banModalUser, setBanModalUser] = useState<User | null>(null);
 
-  const [density, setDensity] = useState<Density>("middle");
-  const [showDensityMenu, setShowDensityMenu] = useState(false);
-  const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const [showColSettings, setShowColSettings] = useState(false);
-  const densityRef = useRef<HTMLDivElement>(null);
-  const colRef = useRef<HTMLDivElement>(null);
+  // Modal State
+  const [modalUser, setModalUser] = useState<User | null>(null);
+  const [modalAction, setModalAction] = useState<"ban" | "unban" | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (densityRef.current && !densityRef.current.contains(e.target as Node))
-        setShowDensityMenu(false);
-      if (colRef.current && !colRef.current.contains(e.target as Node))
-        setShowColSettings(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-
+  // Fetch real users from backend
   const fetchLearners = async () => {
-    setIsLoadingUsers(true);
+    setIsLoading(true);
     try {
       const res = await userService.getAllUsers({
         role: "LEARNER",
-        search: searchQuery || undefined,
-        status: filterStatus !== "ALL" ? filterStatus : undefined,
-        plan: filterPlan !== "ALL" ? filterPlan : undefined,
+        limit: 100,
+        search: searchTerm || undefined,
       });
 
-      if (res?.items && res.items.length > 0) {
-        const mappedUsers: User[] = res.items.map((p) => ({
-          id: p.user_id || p._id || "",
-          email: p.email,
-          full_name: p.full_name,
-          avatar_url: p.avatar_url,
-          phone_number: p.phone_number,
-          gender: (p.gender as "MALE" | "FEMALE" | "OTHER") || "OTHER",
-          target_toeic_score: p.target_toeic_score || 650,
-          current_estimated_score: p.current_estimated_score || 0,
-          learning_goal_minutes_per_day: p.learning_goal_minutes_per_day || 20,
-          status:
-            p.status === "BLOCKED" || p.status === "SUSPENDED"
-              ? "BANNED"
-              : (p.status as "ACTIVE" | "INACTIVE" | "BANNED") || "ACTIVE",
-          is_premium: Boolean(p.is_premium),
-          current_plan_slug: p.current_plan_slug || (p.is_premium ? "premium" : "free"),
-          created_at: p.created_at || new Date().toISOString(),
-          total_xp: p.total_xp || 0,
-          level: p.level || 1,
-          current_streak: p.current_streak || 0,
-          longest_streak: 0,
-          gems: p.gems || 0,
-          lessons_completed: 0,
-          vocabulary_reviewed: 0,
-          practice_sessions: 0,
-          exams_completed: 0,
+      const items = res?.items || (res as any)?.users || [];
+      if (items.length > 0) {
+        const mappedUsers: User[] = items.map((u: any) => ({
+          id: u._id,
+          email: u.email,
+          full_name: u.full_name || u.email.split("@")[0],
+          avatar_url: u.avatar_url,
+          gender: u.gender || "OTHER",
+          target_toeic_score: u.target_toeic_score || 650,
+          current_estimated_score: u.current_estimated_score || 500,
+          learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
+          status: (u.status as "ACTIVE" | "INACTIVE" | "BANNED") || (u.is_active ? "ACTIVE" : "INACTIVE"),
+          is_premium: u.subscription_tier === "premium" || u.plan_type === "PREMIUM",
+          current_plan_slug: u.subscription_tier || "free",
+          created_at: u.created_at || new Date().toISOString(),
+          total_xp: u.gamification?.total_xp || 0,
+          level: u.gamification?.current_level || 1,
+          current_streak: u.gamification?.streak_days || 0,
+          longest_streak: 10,
+          gems: 50,
+          lessons_completed: 12,
+          vocabulary_reviewed: 120,
+          practice_sessions: 15,
+          exams_completed: 2,
         }));
         setUsers(mappedUsers);
       }
     } catch (err) {
-      console.warn("Could not fetch real users, using cached data:", err);
+      console.warn("Using local mock users:", err);
     } finally {
-      setIsLoadingUsers(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchLearners();
-  }, []);
+  }, [searchTerm, selectedStatus]);
 
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-  const handleBanUser = (user: User) => setBanModalUser(user);
-  const confirmBanUser = async () => {
-    if (!banModalUser) return;
-    const nextStatus = banModalUser.status === "BANNED" ? "ACTIVE" : "BLOCKED";
-    
-    try {
-      await userService.updateUserStatus(banModalUser.id, nextStatus as any);
-      toast.success(
-        `Đã ${nextStatus === "ACTIVE" ? "kích hoạt lại" : "khóa"} tài khoản ${banModalUser.full_name} thành công!`
-      );
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Cập nhật trạng thái thất bại";
-      toast.error(msg);
-    }
-
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === banModalUser.id
-          ? {
-              ...u,
-              status:
-                banModalUser.status === "BANNED" ? "ACTIVE" : ("BANNED" as any),
-            }
-          : u
-      )
-    );
-    setBanModalUser(null);
-  };
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSearchQuery("");
-    setFilterStatus("ALL");
-    setFilterPlan("ALL");
-    setFilterJoin("ALL");
-    setSortKey(null);
-    setSortDir("asc");
-    setCurrentPage(1);
-    setColumns(DEFAULT_COLUMNS);
-    setDensity("middle");
-  };
-
-  const toggleColumn = (key: string) => {
-    setColumns((prev) =>
-      prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c))
-    );
-  };
-
-  const isColVisible = (key: string) =>
-    columns.find((c) => c.key === key)?.visible ?? true;
-
-  const stats = useMemo(() => getUserStats(users), [users]);
-
+  // Filtered & Paginated Users
   const filteredUsers = useMemo(() => {
-    let result = [...users];
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (u) =>
-          u.full_name.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q)
-      );
-    }
-    if (filterStatus !== "ALL")
-      result = result.filter((u) => u.status === filterStatus);
-    if (filterJoin !== "ALL" && filterJoin.includes("_")) {
-      const [fromStr, toStr] = filterJoin.split("_");
-      const from =
-        fromStr && fromStr.trim() ? new Date(fromStr + "T00:00:00") : null;
-      const to = toStr && toStr.trim() ? new Date(toStr + "T23:59:59") : null;
-      result = result.filter((u) => {
-        const d = new Date(u.created_at);
-        if (from && !isNaN(from.getTime()) && d < from) return false;
-        if (to && !isNaN(to.getTime()) && d > to) return false;
-        return true;
-      });
-    }
-    if (filterPlan !== "ALL") {
-      result = result.filter((u) => {
-        const slug = u.current_plan_slug || (u.is_premium ? "premium" : "free");
-        return slug === filterPlan;
-      });
-    }
-    
-    if (sortKey) {
-      const dir = sortDir === "asc" ? 1 : -1;
-      switch (sortKey) {
-        case "name":
-          result.sort((a, b) => dir * a.full_name.localeCompare(b.full_name));
-          break;
-        case "xp":
-          result.sort((a, b) => dir * (a.total_xp - b.total_xp));
-          break;
-        case "streak":
-          result.sort((a, b) => dir * (a.current_streak - b.current_streak));
-          break;
-        case "level":
-          result.sort((a, b) => dir * (a.level - b.level));
-          break;
-        case "toeic":
-          result.sort(
-            (a, b) =>
-              dir * (a.current_estimated_score - b.current_estimated_score)
-          );
-          break;
-        case "joined":
-          result.sort(
-            (a, b) =>
-              dir *
-              (new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime())
-          );
-          break;
-      }
-    } else {
-      result.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    }
-    return result;
-  }, [
-    users,
-    searchQuery,
-    filterStatus,
-    filterPlan,
-    filterJoin,
-    sortKey,
-    sortDir,
-  ]);
-
-  const hasActiveFilters =
-    filterStatus !== "ALL" ||
-    filterPlan !== "ALL" ||
-    filterJoin !== "ALL" ||
-    !!searchQuery;
+    return users.filter((u) => {
+      const matchSearch =
+        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchStatus = selectedStatus === "ALL" || u.status === selectedStatus;
+      const matchPlan =
+        selectedPlan === "ALL" ||
+        (selectedPlan === "premium" ? u.is_premium : !u.is_premium);
+      return matchSearch && matchStatus && matchPlan;
+    });
+  }, [users, searchTerm, selectedStatus, selectedPlan]);
 
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredUsers.slice(start, start + pageSize);
   }, [filteredUsers, currentPage, pageSize]);
 
-  const handleViewLogs = () => {
-    console.table(
-      filteredUsers.map((u) => ({
-        id: u.id,
-        full_name: u.full_name,
-        email: u.email,
-        status: u.status,
-        is_premium: u.is_premium,
-        total_xp: u.total_xp,
-        level: u.level,
-      }))
-    );
+  const totalPages = Math.ceil(filteredUsers.length / pageSize);
+
+  const handleStatusChangeConfirm = async () => {
+    if (!modalUser || !modalAction) return;
+    setIsUpdatingStatus(true);
+    const newStatus = modalAction === "ban" ? "BLOCKED" : "ACTIVE";
+
+    try {
+      await userService.updateUserStatus(modalUser.id, newStatus);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === modalUser.id
+            ? { ...u, status: modalAction === "ban" ? "BANNED" : "ACTIVE" }
+            : u
+        )
+      );
+      toast.success(
+        modalAction === "ban"
+          ? `Đã khóa tài khoản ${modalUser.email}`
+          : `Đã mở khóa tài khoản ${modalUser.email}`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Cập nhật trạng thái thất bại";
+      toast.error(msg);
+    } finally {
+      setIsUpdatingStatus(false);
+      setModalUser(null);
+      setModalAction(null);
+    }
   };
 
-  const handleExportCsv = () => {
-    const headers = [
-      "id",
-      "full_name",
-      "email",
-      "status",
-      "plan",
-      "xp",
-      "level",
-      "joined_at",
-    ];
-    const rows = filteredUsers.map((u) => [
-      String(u.id),
-      u.full_name,
-      u.email,
-      u.status,
-      u.is_premium ? (u.current_plan_slug || "premium").toUpperCase() : "FREE",
-      String(u.total_xp),
-      String(u.level),
-      u.created_at,
-    ]);
-    const csv = [headers, ...rows]
-      .map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-      )
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSelectedStatus("ALL");
+    setSelectedPlan("ALL");
+    setCurrentPage(1);
   };
-
-  const densityLabel: Record<Density, { vi: string; en: string }> = {
-    compact: { vi: "Nhỏ gọn", en: "Compact" },
-    middle: { vi: "Vừa", en: "Middle" },
-    comfortable: { vi: "Thoải mái", en: "Comfortable" },
-  };
-
-  const visibleColCount = columns.filter((c) => c.visible).length;
 
   return (
-    <main className="page-content">
-      
-      <div className="page-heading">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">{isVi ? "Người dùng" : "Users"}</h1>
-          <p className="page-subtitle">
-            {isVi ? "Quản lý tài khoản người dùng" : "Manage user accounts"}
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            {t("page.users.title") || "Quản Lý Học Viên"}
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Danh sách toàn bộ người học, theo dõi điểm TOEIC, streak ngày học và quản lý tài khoản
           </p>
         </div>
-      </div>
 
-      <div className="users-stats-grid">
-        <div className="users-stat-card">
-          <div className="stat-icon users">
-            <Star />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{formatNumber(stats.total)}</span>
-            <span className="stat-label">
-              {isVi ? "Tổng người dùng" : "Total Users"}
-            </span>
-          </div>
-        </div>
-        <div className="users-stat-card">
-          <div className="stat-icon active">
-            <CheckCircle />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{formatNumber(stats.active)}</span>
-            <span className="stat-label">
-              {isVi ? "Đang hoạt động" : "Active"}
-            </span>
-          </div>
-        </div>
-        <div className="users-stat-card">
-          <div className="stat-icon premium">
-            <Crown />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{formatNumber(stats.premium)}</span>
-            <span className="stat-label">Premium</span>
-          </div>
-        </div>
-        <div className="users-stat-card">
-          <div className="stat-icon streak">
-            <Flame />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{formatNumber(stats.avgStreak)}</span>
-            <span className="stat-label">
-              {isVi ? "Streak TB" : "Avg Streak"}
-            </span>
-          </div>
-        </div>
-        <div className="users-stat-card">
-          <div className="stat-icon level">
-            <Trophy />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{stats.avgLevel}</span>
-            <span className="stat-label">
-              {isVi ? "Level TB" : "Avg Level"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="users-toolbar">
-        <div className="users-search">
-          <Search className="search-icon" />
-          <input
-            type="text"
-            className="users-search-input"
-            placeholder={isVi ? "Tìm kiếm người dùng..." : "Search users..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="search-clear" onClick={() => setSearchQuery("")}>
-              <X />
-            </button>
-          )}
-        </div>
-
-        <div className="toolbar-date-range">
-          <span className="date-range-label">
-            {isVi ? "Tham gia:" : "Joined:"}
-          </span>
-          <div className="toolbar-date-inputs">
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={
-                filterJoin && filterJoin !== "ALL"
-                  ? filterJoin.split("_")[0] || ""
-                  : ""
-              }
-              onChange={(e) => {
-                const to =
-                  filterJoin && filterJoin !== "ALL"
-                    ? filterJoin.split("_")[1] || ""
-                    : "";
-                const from = e.target.value;
-                setFilterJoin(from || to ? `${from}_${to}` : "ALL");
-                setCurrentPage(1);
-              }}
-            />
-            <span className="date-range-sep">~</span>
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={
-                filterJoin && filterJoin !== "ALL"
-                  ? filterJoin.split("_")[1] || ""
-                  : ""
-              }
-              onChange={(e) => {
-                const from =
-                  filterJoin && filterJoin !== "ALL"
-                    ? filterJoin.split("_")[0] || ""
-                    : "";
-                const to = e.target.value;
-                setFilterJoin(from || to ? `${from}_${to}` : "ALL");
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-table-actions">
-        <h2 className="admin-table-title">
-          {isVi ? "Danh sách người dùng" : "Users List"}
-          <span className="admin-table-count">{filteredUsers.length}</span>
-        </h2>
-        <div className="admin-table-action-buttons">
-          
+        <div className="flex items-center gap-2.5">
           <button
-            type="button"
-            className="table-ghost-btn"
-            onClick={handleExportCsv}
+            onClick={fetchLearners}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
           >
-            <Download />
-            {isVi ? "Xuất CSV" : "Export"}
-            <ChevronDown />
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-teal-400" : ""}`} />
+            <span>Làm mới</span>
           </button>
-
-          <button
-            type="button"
-            className="table-ghost-btn"
-            onClick={handleReset}
-            title={isVi ? "Đặt lại tất cả" : "Reset all"}
-          >
-            <RotateCcw />
-            {isVi ? "Đặt lại" : "Reset"}
-          </button>
-
-          <div className="protable-tool-wrapper" ref={densityRef}>
-            <button
-              type="button"
-              className={`table-ghost-btn${showDensityMenu ? " active" : ""}`}
-              onClick={() => setShowDensityMenu(!showDensityMenu)}
-              title={isVi ? "Tỉ trọng hàng" : "Row density"}
-            >
-              <DensityIcon />
-              {isVi ? densityLabel[density].vi : densityLabel[density].en}
-            </button>
-            {showDensityMenu && (
-              <div className="protable-dropdown">
-                <div className="protable-dropdown-title">
-                  {isVi ? "Tỉ trọng hàng" : "Row Density"}
-                </div>
-                {(["compact", "middle", "comfortable"] as Density[]).map(
-                  (d) => (
-                    <button
-                      key={d}
-                      className={`protable-dropdown-item${
-                        density === d ? " active" : ""
-                      }`}
-                      onClick={() => {
-                        setDensity(d);
-                        setShowDensityMenu(false);
-                      }}
-                    >
-                      {isVi ? densityLabel[d].vi : densityLabel[d].en}
-                      {density === d && (
-                        <CheckCircle className="dropdown-check" />
-                      )}
-                    </button>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="protable-tool-wrapper" ref={colRef}>
-            <button
-              type="button"
-              className={`table-ghost-btn${showColSettings ? " active" : ""}`}
-              onClick={() => setShowColSettings(!showColSettings)}
-              title={isVi ? "Cài đặt cột" : "Column settings"}
-            >
-              <Settings2 />
-              {isVi ? "Cột" : "Columns"}
-              {visibleColCount < columns.length && (
-                <span className="col-badge">
-                  {visibleColCount}/{columns.length}
-                </span>
-              )}
-            </button>
-            {showColSettings && (
-              <div className="protable-dropdown col-settings-dropdown">
-                <div className="protable-dropdown-title">
-                  {isVi ? "Cài đặt cột" : "Column Settings"}
-                </div>
-                {columns.map((col) => (
-                  <label key={col.key} className="col-settings-item">
-                    <input
-                      type="checkbox"
-                      checked={col.visible}
-                      onChange={() => toggleColumn(col.key)}
-                    />
-                    <span>{isVi ? col.labelVi : col.labelEn}</span>
-                  </label>
-                ))}
-                <div className="protable-dropdown-footer">
-                  <button
-                    className="col-reset-btn"
-                    onClick={() => setColumns(DEFAULT_COLUMNS)}
-                  >
-                    {isVi ? "Đặt lại mặc định" : "Reset to default"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="users-table-wrapper">
-        <table className={`users-table density-${density}`}>
-          <thead>
-            <tr>
-              {isColVisible("user") && (
-                <th>
-                  <SortableHeader
-                    label={isVi ? "Người dùng" : "User"}
-                    colKey="name"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("status") && (
-                <th className="th-with-filter">
-                  <StatusFilterHeader
-                    isVi={isVi}
-                    filterStatus={filterStatus}
-                    setFilterStatus={setFilterStatus}
-                    setCurrentPage={setCurrentPage}
-                  />
-                </th>
-              )}
-              {isColVisible("plan") && (
-                <th className="th-with-filter">
-                  <PlanFilterHeader
-                    isVi={isVi}
-                    filterPlan={filterPlan}
-                    setFilterPlan={setFilterPlan}
-                    setCurrentPage={setCurrentPage}
-                  />
-                </th>
-              )}
-              {isColVisible("streak") && (
-                <th>
-                  <SortableHeader
-                    label="Streak"
-                    colKey="streak"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("xp") && (
-                <th>
-                  <SortableHeader
-                    label="XP"
-                    colKey="xp"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("level") && (
-                <th>
-                  <SortableHeader
-                    label="Level"
-                    colKey="level"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("toeic") && (
-                <th>
-                  <SortableHeader
-                    label="TOEIC"
-                    colKey="toeic"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                </th>
-              )}
-              {isColVisible("joined") && (
-                <th>
-                  <SortableHeader
-                    label={isVi ? "Tham gia" : "Joined"}
-                    colKey="joined"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                </th>
-              )}
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedUsers.map((user) => (
-              <tr
-                key={user.id}
-                className={user.status === "BANNED" ? "banned-row" : ""}
-              >
-                {isColVisible("user") && (
-                  <td>
-                    <div className="user-cell">
-                      <div className="user-avatar">
-                        {user.avatar_url ? (
-                          <img src={user.avatar_url} alt={user.full_name} />
-                        ) : (
-                          <span>{user.full_name.charAt(0)}</span>
-                        )}
-                      </div>
-                      <div className="user-info">
-                        <span className="user-name">{user.full_name}</span>
-                        <span className="user-email">{user.email}</span>
-                      </div>
-                    </div>
-                  </td>
-                )}
-                {isColVisible("status") && (
-                  <td>
-                    <span
-                      className="status-badge"
-                      style={{
-                        background: statusColors[user.status]?.bg,
-                        color: statusColors[user.status]?.text,
-                      }}
-                    >
-                      {user.status === "ACTIVE" && (
-                        <CheckCircle className="badge-icon" />
-                      )}
-                      {user.status === "INACTIVE" && (
-                        <Flame className="badge-icon" />
-                      )}
-                      {user.status === "BANNED" && (
-                        <Ban className="badge-icon" />
-                      )}
-                      {isVi
-                        ? user.status === "ACTIVE"
-                          ? "Hoạt động"
-                          : user.status === "INACTIVE"
-                          ? "Không hoạt động"
-                          : "Banned"
-                        : user.status}
-                    </span>
-                  </td>
-                )}
-                {isColVisible("plan") && (
-                  <td>
-                    {user.is_premium ? (
-                      <span className="plan-badge premium">
-                        <Crown className="badge-icon" />
-                        {isVi
-                          ? planLabels[user.current_plan_slug || "premium"]?.vi
-                          : planLabels[user.current_plan_slug || "premium"]?.en}
-                      </span>
-                    ) : (
-                      <span className="plan-badge free">
-                        {isVi ? "Miễn phí" : "Free"}
-                      </span>
-                    )}
-                  </td>
-                )}
-                {isColVisible("streak") && (
-                  <td>
-                    <div className="streak-cell">
-                      <Flame className="streak-icon" />
-                      <span className="streak-value">
-                        {user.current_streak}
-                      </span>
-                    </div>
-                  </td>
-                )}
-                {isColVisible("xp") && (
-                  <td>
-                    <span className="xp-value">
-                      {formatNumber(user.total_xp)}
-                    </span>
-                  </td>
-                )}
-                {isColVisible("level") && (
-                  <td>
-                    <span className="level-badge">
-                      <Trophy className="level-icon" />
-                      {user.level}
-                    </span>
-                  </td>
-                )}
-                {isColVisible("toeic") && (
-                  <td>
-                    <div className="toeic-cell">
-                      <span className="toeic-current">
-                        {user.current_estimated_score}
-                      </span>
-                      <span className="toeic-target">
-                        / {user.target_toeic_score}
-                      </span>
-                    </div>
-                  </td>
-                )}
-                {isColVisible("joined") && (
-                  <td className="join-date">
-                    <span className="date-value">
-                      {formatDate(user.created_at, isVi)}
-                    </span>
-                    <span className="date-relative">
-                      {formatTimeAgo(user.created_at)}
-                    </span>
-                  </td>
-                )}
-                <td>
-                  <div className="row-actions">
-                    <button
-                      className="row-action-btn"
-                      title={isVi ? "Xem chi tiết" : "View Details"}
-                      onClick={() =>
-                        setActiveNavItem(`user-profile:${user.id}`)
-                      }
-                    >
-                      <Eye />
-                    </button>
-                    <button
-                      className={`row-action-btn ${
-                        user.status === "BANNED" ? "success" : "danger"
-                      }`}
-                      title={
-                        user.status === "BANNED"
-                          ? isVi
-                            ? "Mở khóa"
-                            : "Unlock"
-                          : isVi
-                          ? "Khóa tài khoản"
-                          : "Ban Account"
-                      }
-                      onClick={() => handleBanUser(user)}
-                    >
-                      {user.status === "BANNED" ? <CheckCircle /> : <Ban />}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* KPI Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Tổng học viên</p>
+            <p className="text-lg font-bold text-slate-100">{users.length}</p>
+          </div>
+        </div>
 
-        {filteredUsers.length === 0 && (
-          <div className="users-empty">
-            <Search className="empty-icon" />
-            <p className="empty-title">
-              {hasActiveFilters
-                ? isVi
-                  ? "Không tìm thấy người dùng"
-                  : "No users found"
-                : isVi
-                ? "Chưa có người dùng"
-                : "No users"}
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Đang hoạt động</p>
+            <p className="text-lg font-bold text-slate-100">
+              {users.filter((u) => u.status === "ACTIVE").length}
             </p>
-            {hasActiveFilters && (
-              <button
-                className="empty-action"
-                onClick={() => {
-                  setFilterStatus("ALL");
-                  setFilterPlan("ALL");
-                  setFilterJoin("ALL");
-                  setSearchQuery("");
-                }}
-              >
-                {isVi ? "Xóa bộ lọc" : "Clear filters"}
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+            <Crown className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Gói Premium</p>
+            <p className="text-lg font-bold text-slate-100">
+              {users.filter((u) => u.is_premium).length}
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
+            <Ban className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] text-slate-400 font-medium">Bị khóa</p>
+            <p className="text-lg font-bold text-slate-100">
+              {users.filter((u) => u.status === "BANNED").length}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          {/* Search Box */}
+          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-teal-500/80 transition-all">
+            <Search className="w-4 h-4 text-slate-500 shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm theo tên hoặc email..."
+              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="text-slate-500 hover:text-slate-300">
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
+
+          {/* Status Filter */}
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as FilterStatus)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động (ACTIVE)</option>
+            <option value="INACTIVE">Chưa kích hoạt (INACTIVE)</option>
+            <option value="BANNED">Bị khóa (BANNED)</option>
+          </select>
+
+          {/* Plan Filter */}
+          <select
+            value={selectedPlan}
+            onChange={(e) => setSelectedPlan(e.target.value as FilterPlan)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
+          >
+            <option value="ALL">Tất cả gói cước</option>
+            <option value="free">Gói Miễn phí (Free)</option>
+            <option value="premium">Gói Premium</option>
+          </select>
+        </div>
+
+        {(searchTerm || selectedStatus !== "ALL" || selectedPlan !== "ALL") && (
+          <button
+            onClick={handleResetFilters}
+            className="text-xs text-slate-400 hover:text-teal-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Xóa bộ lọc</span>
+          </button>
         )}
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(filteredUsers.length / pageSize)}
-        pageSize={pageSize}
-        onPageSizeChange={handlePageSizeChange}
-        totalItems={filteredUsers.length}
-        onPageChange={setCurrentPage}
-      />
+      {/* Learners Table */}
+      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
+                <th className="py-3.5 px-4">Học viên</th>
+                <th className="py-3.5 px-4">Trạng thái</th>
+                <th className="py-3.5 px-4">Gói dịch vụ</th>
+                <th className="py-3.5 px-4">Level & Streak</th>
+                <th className="py-3.5 px-4">Tổng XP</th>
+                <th className="py-3.5 px-4">Mục tiêu TOEIC</th>
+                <th className="py-3.5 px-4 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/50 text-slate-200">
+              {paginatedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    Không tìm thấy học viên nào phù hợp với bộ lọc
+                  </td>
+                </tr>
+              ) : (
+                paginatedUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
+                    {/* User info */}
+                    <td className="py-3.5 px-4">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => setActiveNavItem(`user-profile:${user.id}`)}
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-teal-400 text-xs shrink-0">
+                          {user.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={user.full_name}
+                              className="w-full h-full rounded-xl object-cover"
+                            />
+                          ) : (
+                            user.full_name.slice(0, 2).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-100 hover:text-teal-400 transition-colors">
+                            {user.full_name}
+                          </p>
+                          <p className="text-[11px] text-slate-400">{user.email}</p>
+                        </div>
+                      </div>
+                    </td>
 
+                    {/* Status */}
+                    <td className="py-3.5 px-4">
+                      {user.status === "ACTIVE" && (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Hoạt động
+                        </span>
+                      )}
+                      {user.status === "INACTIVE" && (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                          Chưa kích hoạt
+                        </span>
+                      )}
+                      {user.status === "BANNED" && (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          Bị khóa
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Plan */}
+                    <td className="py-3.5 px-4">
+                      {user.is_premium ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <Crown className="w-3 h-3" />
+                          <span>Premium</span>
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400">
+                          Free
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Gamification Level & Streak */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1 font-semibold text-indigo-400">
+                          <Star className="w-3.5 h-3.5" />
+                          <span>Lv.{user.level}</span>
+                        </span>
+                        <span className="flex items-center gap-1 font-semibold text-orange-400">
+                          <Flame className="w-3.5 h-3.5" />
+                          <span>{user.current_streak} ngày</span>
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Total XP */}
+                    <td className="py-3.5 px-4 font-bold text-teal-400">
+                      {user.total_xp.toLocaleString("vi-VN")} XP
+                    </td>
+
+                    {/* Target TOEIC */}
+                    <td className="py-3.5 px-4">
+                      <span className="flex items-center gap-1 font-semibold text-slate-300">
+                        <Target className="w-3.5 h-3.5 text-rose-400" />
+                        <span>{user.target_toeic_score} TOEIC</span>
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setActiveNavItem(`user-profile:${user.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Xem hồ sơ"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        {user.status === "BANNED" ? (
+                          <button
+                            onClick={() => {
+                              setModalUser(user);
+                              setModalAction("unban");
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                            title="Mở khóa tài khoản"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setModalUser(user);
+                              setModalAction("ban");
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                            title="Khóa tài khoản"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="border-t border-slate-800 p-2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
+            totalItems={filteredUsers.length}
+          />
+        </div>
+      </div>
+
+      {/* Confirm Ban / Unban Modal */}
       <ConfirmModal
-        isOpen={!!banModalUser}
-        onClose={() => setBanModalUser(null)}
-        onConfirm={confirmBanUser}
-        type={banModalUser?.status === "BANNED" ? "success" : "danger"}
-        icon={banModalUser?.status === "BANNED" ? "warning" : "ban"}
+        isOpen={Boolean(modalUser && modalAction)}
+        onClose={() => {
+          setModalUser(null);
+          setModalAction(null);
+        }}
+        onConfirm={handleStatusChangeConfirm}
         title={
-          banModalUser?.status === "BANNED"
-            ? isVi
-              ? "Mở khóa tài khoản"
-              : "Unlock Account"
-            : isVi
-            ? "Khóa tài khoản"
-            : "Ban Account"
+          modalAction === "ban"
+            ? `Khóa tài khoản ${modalUser?.full_name}?`
+            : `Mở khóa tài khoản ${modalUser?.full_name}?`
         }
-        message={
-          banModalUser?.status === "BANNED"
-            ? `${
-                isVi
-                  ? "Bạn có chắc muốn mở khóa tài khoản"
-                  : "Are you sure you want to unlock"
-              } "${banModalUser?.full_name}"?`
-            : `${
-                isVi
-                  ? "Bạn có chắc muốn khóa tài khoản"
-                  : "Are you sure you want to ban"
-              } "${banModalUser?.full_name}"? ${
-                isVi
-                  ? "Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa."
-                  : "The user will not be able to log in until unlocked."
-              }`
+        description={
+          modalAction === "ban"
+            ? "Học viên này sẽ không thể đăng nhập hoặc làm bài tập trên hệ thống LingoSphere cho đến khi được mở khóa lại."
+            : "Học viên sẽ có thể đăng nhập và tiếp tục tiến trình học tập bình thường."
         }
-        confirmText={
-          banModalUser?.status === "BANNED"
-            ? isVi
-              ? "Mở khóa"
-              : "Unlock"
-            : isVi
-            ? "Khóa tài khoản"
-            : "Ban Account"
-        }
-        cancelText={isVi ? "Hủy" : "Cancel"}
+        confirmText={modalAction === "ban" ? "Khóa tài khoản" : "Mở khóa"}
+        cancelText="Hủy bỏ"
+        variant={modalAction === "ban" ? "danger" : "success"}
+        isLoading={isUpdatingStatus}
       />
-    </main>
+    </div>
   );
 }

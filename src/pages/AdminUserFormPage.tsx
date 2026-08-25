@@ -7,12 +7,13 @@ import {
   Lock,
   Shield,
   GraduationCap,
-  Check,
   Eye,
   EyeOff,
+  User,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { adminUsers } from '@/data/settings-data'
+import { toast } from '@/store/toast-store'
 
 interface AdminUserFormData {
   email: string
@@ -41,14 +42,15 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (editUserId) {
-      const user = adminUsers.find(u => u.id === editUserId)
+      const user = adminUsers.find((u) => u.id === editUserId)
       if (user) {
         setFormData({
           email: user.email,
-          password: '', 
+          password: '',
           full_name: user.name,
           role: user.role,
           status: user.is_active ? 'ACTIVE' : 'BLOCKED',
@@ -59,234 +61,233 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
-
-    if (!formData.email) {
-      newErrors.email = isVietnamese ? 'Email là bắt buộc' : 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = isVietnamese ? 'Email không hợp lệ' : 'Invalid email'
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = 'Vui lòng nhập họ và tên'
     }
-
-    if (!isEditing && !formData.password) {
-      newErrors.password = isVietnamese ? 'Mật khẩu là bắt buộc' : 'Password is required'
-    } else if (formData.password && formData.password.length < 8) {
-      newErrors.password = isVietnamese ? 'Mật khẩu phải có ít nhất 8 ký tự' : 'Password must be at least 8 characters'
+    if (!formData.email.trim() || !formData.email.includes('@')) {
+      newErrors.email = 'Vui lòng nhập email hợp lệ'
     }
-
-    if (!formData.full_name) {
-      newErrors.full_name = isVietnamese ? 'Họ tên là bắt buộc' : 'Full name is required'
+    if (!isEditing && (!formData.password || formData.password.length < 6)) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
     }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSave = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!validateForm()) return
 
-    console.log('Saving admin user:', formData)
-    alert(isEditing
-      ? (isVietnamese ? 'Đã cập nhật người dùng!' : 'User updated!')
-      : (isVietnamese ? 'Đã thêm người dùng!' : 'User added!')
-    )
-    setActiveNavItem('admins')
+    setIsSubmitting(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      toast.success(
+        isEditing
+          ? 'Cập nhật tài khoản quản trị viên thành công!'
+          : 'Tạo tài khoản quản trị viên mới thành công!'
+      )
+      setActiveNavItem('admins')
+    } catch {
+      toast.error('Có lỗi xảy ra khi lưu thông tin')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const roleOptions = [
-    {
-      id: 'ADMIN' as const,
-      label: isVietnamese ? 'Quản trị viên' : 'Admin',
-      description: isVietnamese ? 'Toàn quyền quản lý hệ thống' : 'Full system management access',
-      icon: Shield,
-    },
-    {
-      id: 'TEACHER' as const,
-      label: isVietnamese ? 'Giáo viên' : 'Teacher',
-      description: isVietnamese ? 'Quản lý khóa học và nội dung' : 'Manage courses and content',
-      icon: GraduationCap,
-    },
-  ]
-
-  const statusOptions = [
-    { id: 'ACTIVE' as const, label: isVietnamese ? 'Hoạt động' : 'Active', color: 'var(--success)' },
-    { id: 'BLOCKED' as const, label: isVietnamese ? 'Bị khóa' : 'Blocked', color: 'var(--error)' },
-  ]
-
   return (
-    <main className="page-content">
-      
-      <div className="form-header">
-        <button className="back-button" onClick={() => setActiveNavItem('admins')}>
-          <ChevronLeft />
-          {isVietnamese ? 'Quay lại' : 'Back'}
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Back Button & Title */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setActiveNavItem('admins')}
+          className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          type="button"
+        >
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="form-title">
-          {isEditing
-            ? (isVietnamese ? 'Chỉnh sửa người dùng' : 'Edit User')
-            : (isVietnamese ? 'Thêm người dùng' : 'Add User')
-          }
-        </h1>
-        <button className="primary-button" onClick={handleSave}>
-          <Save />
-          {isVietnamese ? 'Lưu' : 'Save'}
-        </button>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            {isEditing ? 'Chỉnh Sửa Quản Trị Viên' : 'Thêm Quản Trị Viên Mới'}
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Cấp quyền quản trị viên tối cao hoặc giáo viên biên soạn khóa học
+          </p>
+        </div>
       </div>
 
-      <div className="user-form-content">
-        
-        <div className="form-section">
-          <h2 className="section-title">{isVietnamese ? 'Thông tin tài khoản' : 'Account Information'}</h2>
-
-          <div className="form-group">
-            <label className="form-label">
-              Email <span className="required">*</span>
-            </label>
-            <div className="input-with-icon">
-              <Mail className="input-icon" />
-              <input
-                type="email"
-                className={`form-input with-icon ${errors.email ? 'error' : ''}`}
-                placeholder="email@example.com"
-                value={formData.email}
-                onChange={e => {
-                  setFormData(prev => ({ ...prev, email: e.target.value }))
-                  if (errors.email) setErrors(prev => ({ ...prev, email: '' }))
-                }}
-              />
-            </div>
-            {errors.email && <span className="error-message">{errors.email}</span>}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              {isVietnamese ? 'Mật khẩu' : 'Password'}
-              {!isEditing && <span className="required">*</span>}
-              {isEditing && <span className="form-hint-inline">{isVietnamese ? '(để trống nếu không đổi)' : '(leave blank to keep)'}</span>}
-            </label>
-            <div className="input-with-icon">
-              <Lock className="input-icon" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className={`form-input with-icon ${errors.password ? 'error' : ''}`}
-                placeholder={isVietnamese ? 'Nhập mật khẩu...' : 'Enter password...'}
-                value={formData.password}
-                onChange={e => {
-                  setFormData(prev => ({ ...prev, password: e.target.value }))
-                  if (errors.password) setErrors(prev => ({ ...prev, password: '' }))
-                }}
-              />
-              <button
-                type="button"
-                className="input-icon-right"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </button>
-            </div>
-            {errors.password && <span className="error-message">{errors.password}</span>}
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h2 className="section-title">{isVietnamese ? 'Thông tin cá nhân' : 'Personal Information'}</h2>
-
-          <div className="form-group">
-            <label className="form-label">
-              {isVietnamese ? 'Họ và tên' : 'Full Name'} <span className="required">*</span>
-            </label>
+      {/* Form Card */}
+      <form
+        onSubmit={handleSubmit}
+        className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6"
+      >
+        {/* Full Name */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Họ và tên <span className="text-rose-400">*</span>
+          </label>
+          <div className="flex items-center w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 focus-within:border-indigo-500 transition-all gap-3">
+            <User className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="text"
-              className={`form-input ${errors.full_name ? 'error' : ''}`}
-              placeholder={isVietnamese ? 'Nhập họ tên...' : 'Enter full name...'}
               value={formData.full_name}
-              onChange={e => {
-                setFormData(prev => ({ ...prev, full_name: e.target.value }))
-                if (errors.full_name) setErrors(prev => ({ ...prev, full_name: '' }))
-              }}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              placeholder="VD: Nguyễn Văn A"
+              className="w-full bg-transparent border-0 outline-none text-sm text-slate-100 placeholder:text-slate-500 p-0 focus:ring-0"
             />
-            {errors.full_name && <span className="error-message">{errors.full_name}</span>}
+          </div>
+          {errors.full_name && <p className="text-[11px] text-rose-400 mt-1">{errors.full_name}</p>}
+        </div>
+
+        {/* Email */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Địa chỉ Email <span className="text-rose-400">*</span>
+          </label>
+          <div className="flex items-center w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 focus-within:border-indigo-500 transition-all gap-3">
+            <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="admin@lingosphere.local"
+              className="w-full bg-transparent border-0 outline-none text-sm text-slate-100 placeholder:text-slate-500 p-0 focus:ring-0"
+            />
+          </div>
+          {errors.email && <p className="text-[11px] text-rose-400 mt-1">{errors.email}</p>}
+        </div>
+
+        {/* Password */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            {isEditing ? 'Mật khẩu mới (Bỏ trống nếu không đổi)' : 'Mật khẩu khởi tạo'} {!isEditing && <span className="text-rose-400">*</span>}
+          </label>
+          <div className="flex items-center w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 focus-within:border-indigo-500 transition-all gap-3">
+            <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="••••••••"
+              className="w-full bg-transparent border-0 outline-none text-sm text-slate-100 placeholder:text-slate-500 p-0 focus:ring-0"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-slate-400 hover:text-slate-200 p-1"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {errors.password && <p className="text-[11px] text-rose-400 mt-1">{errors.password}</p>}
+        </div>
+
+        {/* Role Selection Cards */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Vai trò quản trị <span className="text-rose-400">*</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div
+              onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col gap-2 ${
+                formData.role === 'ADMIN'
+                  ? 'bg-rose-500/10 border-rose-500/40 text-rose-300 ring-1 ring-rose-500/30'
+                  : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40 text-slate-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-rose-400" />
+                  ADMIN
+                </span>
+                {formData.role === 'ADMIN' && <span className="text-xs font-bold text-rose-400">Đã chọn</span>}
+              </div>
+              <p className="text-xs text-slate-400">
+                Toàn quyền quản trị học viên, khóa học, doanh thu, cài đặt hệ thống và bảo mật.
+              </p>
+            </div>
+
+            <div
+              onClick={() => setFormData({ ...formData, role: 'TEACHER' })}
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col gap-2 ${
+                formData.role === 'TEACHER'
+                  ? 'bg-teal-500/10 border-teal-500/40 text-teal-300 ring-1 ring-teal-500/30'
+                  : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40 text-slate-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-teal-400" />
+                  TEACHER
+                </span>
+                {formData.role === 'TEACHER' && <span className="text-xs font-bold text-teal-400">Đã chọn</span>}
+              </div>
+              <p className="text-xs text-slate-400">
+                Quyền tạo và biên soạn bài giảng khóa học, đề thi TOEIC, và quản lý học viên khóa học.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="form-section">
-          <h2 className="section-title">{isVietnamese ? 'Vai trò' : 'Role'}</h2>
-
-          <div className="role-options">
-            {roleOptions.map(option => {
-              const Icon = option.icon
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`role-option ${formData.role === option.id ? 'selected' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, role: option.id }))}
-                >
-                  <div className="role-icon">
-                    <Icon />
-                  </div>
-                  <div className="role-info">
-                    <span className="role-label">{option.label}</span>
-                    <span className="role-description">{option.description}</span>
-                  </div>
-                  {formData.role === option.id && <Check className="role-check" />}
-                </button>
-              )
-            })}
+        {/* Status */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Trạng thái tài khoản
+          </label>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-xs text-slate-200 cursor-pointer">
+              <input
+                type="radio"
+                name="status"
+                value="ACTIVE"
+                checked={formData.status === 'ACTIVE'}
+                onChange={() => setFormData({ ...formData, status: 'ACTIVE' })}
+                className="accent-indigo-600 w-4 h-4"
+              />
+              <span>Hoạt động ngay</span>
+            </label>
+            <label className="flex items-center gap-2 text-xs text-slate-200 cursor-pointer">
+              <input
+                type="radio"
+                name="status"
+                value="BLOCKED"
+                checked={formData.status === 'BLOCKED'}
+                onChange={() => setFormData({ ...formData, status: 'BLOCKED' })}
+                className="accent-indigo-600 w-4 h-4"
+              />
+              <span>Tạm khóa tài khoản</span>
+            </label>
           </div>
         </div>
 
-        <div className="form-section">
-          <h2 className="section-title">{isVietnamese ? 'Trạng thái' : 'Status'}</h2>
-
-          <div className="status-options">
-            {statusOptions.map(option => (
-              <button
-                key={option.id}
-                type="button"
-                className={`status-option ${formData.status === option.id ? 'selected' : ''}`}
-                style={{
-                  '--status-color': option.color,
-                } as React.CSSProperties}
-                onClick={() => setFormData(prev => ({ ...prev, status: option.id }))}
-              >
-                {formData.status === option.id && <Check className="status-check" />}
-                {option.label}
-              </button>
-            ))}
-          </div>
+        {/* Form Actions */}
+        <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setActiveNavItem('admins')}
+            className="h-11 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Đang lưu...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>{isEditing ? 'Cập nhật tài khoản' : 'Tạo tài khoản'}</span>
+              </>
+            )}
+          </button>
         </div>
-
-        <div className="form-summary">
-          <h3>{isVietnamese ? 'Tóm tắt' : 'Summary'}</h3>
-          <div className="summary-items">
-            <div className="summary-item">
-              <span className="summary-label">{isVietnamese ? 'Email' : 'Email'}</span>
-              <span className="summary-value">{formData.email || '-'}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">{isVietnamese ? 'Họ tên' : 'Full Name'}</span>
-              <span className="summary-value">{formData.full_name || '-'}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">{isVietnamese ? 'Vai trò' : 'Role'}</span>
-              <span className="summary-value">
-                {formData.role === 'ADMIN'
-                  ? (isVietnamese ? 'Quản trị viên' : 'Admin')
-                  : (isVietnamese ? 'Giáo viên' : 'Teacher')
-                }
-              </span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">{isVietnamese ? 'Trạng thái' : 'Status'}</span>
-              <span className="summary-value">
-                {formData.status === 'ACTIVE'
-                  ? (isVietnamese ? 'Hoạt động' : 'Active')
-                  : (isVietnamese ? 'Bị khóa' : 'Blocked')
-                }
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+      </form>
+    </div>
   )
 }

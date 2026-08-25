@@ -2,11 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
-  Download,
   Plus,
-  Eye,
   Edit2,
-  Copy,
   Trash2,
   BookOpen,
   Users,
@@ -16,19 +13,17 @@ import {
   RotateCcw,
   LayoutGrid,
   List,
-  RefreshCw,
+  Target,
 } from 'lucide-react'
 import { Pagination } from '@/components/common/Pagination'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 import {
   mockCourses,
   formatPrice,
-  formatDate,
   categoryLabels,
-  categoryColors,
   levelLabels,
-  levelColors,
   type Course,
 } from '@/data/courses-data'
 import { useAdminStore } from '@/store/admin-store'
@@ -36,7 +31,6 @@ import { useAdminStore } from '@/store/admin-store'
 type FilterCategory = 'ALL' | 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY'
 type FilterLevel = 'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 type FilterStatus = 'ALL' | 'PUBLISHED' | 'DRAFT'
-type SortOption = 'latest' | 'oldest' | 'enrollments' | 'price_desc' | 'price_asc' | 'title'
 type ViewMode = 'grid' | 'table'
 
 export function CoursesPage() {
@@ -50,28 +44,26 @@ export function CoursesPage() {
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('ALL')
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
-  const [filterJoin, setFilterJoin] = useState<string>('ALL')
-  const [sortOption, setSortOption] = useState<SortOption>('latest')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
-
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(6)
+
+  // Delete modal
+  const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchCourses = async () => {
     setIsLoading(true)
     try {
-      const realCourses = await courseService.getAllCourses({
-        category: filterCategory !== 'ALL' ? filterCategory : undefined,
-      })
-
+      const realCourses = await courseService.getAllCourses()
       if (realCourses && realCourses.length > 0) {
         const mappedCourses: Course[] = realCourses.map((c) => ({
           id: c._id,
           title: c.title,
           slug: c.slug || c._id,
           description: c.description || '',
-          category: (c.category as any) || 'TOEIC_LISTENING',
-          level: (c.level as any) || 'BEGINNER',
+          category: (c.category as 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY') || 'TOEIC_LISTENING',
+          level: (c.level as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED') || 'BEGINNER',
           target_score: c.target_score || 500,
           price: c.price || 0,
           thumbnail_url: c.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60',
@@ -88,7 +80,7 @@ export function CoursesPage() {
         setCourses(mappedCourses)
       }
     } catch (err) {
-      console.warn('Could not fetch real courses, using cached data:', err)
+      console.warn('Using local mock courses:', err)
     } finally {
       setIsLoading(false)
     }
@@ -98,551 +90,339 @@ export function CoursesPage() {
     fetchCourses()
   }, [])
 
-  const handleDeleteCourse = async (courseId: string) => {
-    try {
-      await courseService.deleteCourse(courseId)
-      toast.success('Đã xóa khóa học thành công')
-      setCourses((prev) => prev.filter((c) => c.id !== courseId))
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Xóa khóa học thất bại'
-      toast.error(msg)
-    }
-  }
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size)
-    setCurrentPage(1)
-  }
-
-  const handleReset = () => {
-    setSearchQuery('')
-    setFilterCategory('ALL')
-    setFilterLevel('ALL')
-    setFilterStatus('ALL')
-    setFilterJoin('ALL')
-    setSortOption('latest')
-    setCurrentPage(1)
-  }
-
-  const hasActiveFilters =
-    filterCategory !== 'ALL' ||
-    filterLevel !== 'ALL' ||
-    filterStatus !== 'ALL' ||
-    filterJoin !== 'ALL' ||
-    searchQuery !== '' ||
-    sortOption !== 'latest'
-
   const filteredCourses = useMemo(() => {
-    let result = [...courses]
+    return courses.filter((course) => {
+      const matchesSearch =
+        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.description.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesCategory = filterCategory === 'ALL' || course.category === filterCategory
+      const matchesLevel = filterLevel === 'ALL' || course.level === filterLevel
+      const matchesStatus =
+        filterStatus === 'ALL' ||
+        (filterStatus === 'PUBLISHED' ? course.is_published : !course.is_published)
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      result = result.filter(
-        c =>
-          c.title.toLowerCase().includes(q) ||
-          c.author_name.toLowerCase().includes(q) ||
-          c.description.toLowerCase().includes(q)
-      )
-    }
-
-    if (filterCategory !== 'ALL') {
-      result = result.filter(c => c.category === filterCategory)
-    }
-
-    if (filterLevel !== 'ALL') {
-      result = result.filter(c => c.level === filterLevel)
-    }
-
-    if (filterStatus === 'PUBLISHED') {
-      result = result.filter(c => c.is_published)
-    } else if (filterStatus === 'DRAFT') {
-      result = result.filter(c => !c.is_published)
-    }
-
-    if (filterJoin !== 'ALL' && filterJoin.includes('_')) {
-      const [fromStr, toStr] = filterJoin.split('_')
-      const from = fromStr && fromStr.trim() ? new Date(fromStr + 'T00:00:00') : null
-      const to = toStr && toStr.trim() ? new Date(toStr + 'T23:59:59') : null
-      result = result.filter(c => {
-        const d = new Date(c.created_at)
-        if (from && !isNaN(from.getTime()) && d < from) return false
-        if (to && !isNaN(to.getTime()) && d > to) return false
-        return true
-      })
-    }
-
-    switch (sortOption) {
-      case 'latest':
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        break
-      case 'oldest':
-        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        break
-      case 'enrollments':
-        result.sort((a, b) => b.enrollments - a.enrollments)
-        break
-      case 'price_desc':
-        result.sort((a, b) => b.price - a.price)
-        break
-      case 'price_asc':
-        result.sort((a, b) => a.price - b.price)
-        break
-      case 'title':
-        result.sort((a, b) => a.title.localeCompare(b.title))
-        break
-    }
-
-    return result
-  }, [courses, searchQuery, filterCategory, filterLevel, filterStatus, filterJoin, sortOption])
+      return matchesSearch && matchesCategory && matchesLevel && matchesStatus
+    })
+  }, [courses, searchQuery, filterCategory, filterLevel, filterStatus])
 
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * pageSize
     return filteredCourses.slice(start, start + pageSize)
   }, [filteredCourses, currentPage, pageSize])
 
-  const stats = useMemo(() => {
-    return {
-      total: courses.length,
-      published: courses.filter(c => c.is_published).length,
-      draft: courses.filter(c => !c.is_published).length,
-      totalEnrollments: courses.reduce((sum, c) => sum + c.enrollments, 0),
+  const totalPages = Math.ceil(filteredCourses.length / pageSize)
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteCourseId) return
+    setIsDeleting(true)
+    try {
+      await courseService.deleteCourse(deleteCourseId)
+      setCourses((prev) => prev.filter((c) => c.id !== deleteCourseId))
+      toast.success('Đã xóa khóa học thành công!')
+    } catch {
+      toast.error('Xóa khóa học thất bại')
+    } finally {
+      setIsDeleting(false)
+      setDeleteCourseId(null)
     }
-  }, [courses])
-
-  const handleExportCsv = () => {
-    const headers = ['id', 'title', 'category', 'level', 'price', 'is_published', 'enrollments', 'created_at']
-    const rows = filteredCourses.map(c => [
-      String(c.id),
-      c.title,
-      c.category,
-      c.level,
-      c.price,
-      c.is_published ? 'PUBLISHED' : 'DRAFT',
-      c.enrollments,
-      c.created_at,
-    ])
-
-    const csv = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      .join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `courses-${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
   }
 
   return (
-    <main className="page-content">
-      
-      <div className="page-heading">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">{isVi ? 'Khóa học' : 'Courses'}</h1>
-          <p className="page-subtitle">
-            {isVi ? 'Quản lý khóa học và nội dung học tập' : 'Manage courses and learning content'}
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            Quản Lý Khóa Học & Lộ Trình
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi
           </p>
         </div>
-      </div>
 
-      <div className="courses-stats-grid">
-        <div className="courses-stat-card">
-          <div className="stat-icon total">
-            <BookOpen />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{stats.total}</span>
-            <span className="stat-label">{isVi ? 'Tổng khóa học' : 'Total Courses'}</span>
-          </div>
-        </div>
-        <div className="courses-stat-card">
-          <div className="stat-icon published">
-            <CheckCircle />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{stats.published}</span>
-            <span className="stat-label">{isVi ? 'Đã xuất bản' : 'Published'}</span>
-          </div>
-        </div>
-        <div className="courses-stat-card">
-          <div className="stat-icon draft">
-            <XCircle />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{stats.draft}</span>
-            <span className="stat-label">{isVi ? 'Bản nháp' : 'Draft'}</span>
-          </div>
-        </div>
-        <div className="courses-stat-card">
-          <div className="stat-icon users">
-            <Users />
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{stats.totalEnrollments.toLocaleString()}</span>
-            <span className="stat-label">{isVi ? 'Lượt ghi danh' : 'Enrollments'}</span>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={fetchCourses}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-400' : ''}`} />
+            <span>Làm mới</span>
+          </button>
+          <button
+            onClick={() => setActiveNavItem('course-create')}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tạo Khóa Học Mới</span>
+          </button>
         </div>
       </div>
 
-      <div className="users-toolbar">
-        <div className="users-search">
-          <Search className="search-icon" />
-          <input
-            type="text"
-            className="users-search-input"
-            placeholder={isVi ? 'Tìm kiếm khóa học...' : 'Search courses...'}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="search-clear" onClick={() => setSearchQuery('')}>
-              <X />
-            </button>
-          )}
-        </div>
-
-        <div className="toolbar-date-range">
-          <span className="date-range-label">{isVi ? 'Ngày tạo:' : 'Created:'}</span>
-          <div className="toolbar-date-inputs">
+      {/* Filter & Controls Bar */}
+      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-teal-500 transition-all">
+            <Search className="w-4 h-4 text-slate-500 shrink-0" />
             <input
-              type="date"
-              className="toolbar-date-input"
-              value={filterJoin && filterJoin !== 'ALL' ? filterJoin.split('_')[0] || '' : ''}
-              onChange={e => {
-                const to = filterJoin && filterJoin !== 'ALL' ? filterJoin.split('_')[1] || '' : ''
-                const from = e.target.value
-                setFilterJoin(from || to ? `${from}_${to}` : 'ALL')
-                setCurrentPage(1)
-              }}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm kiếm khóa học..."
+              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
             />
-            <span className="date-range-sep">~</span>
-            <input
-              type="date"
-              className="toolbar-date-input"
-              value={filterJoin && filterJoin !== 'ALL' ? filterJoin.split('_')[1] || '' : ''}
-              onChange={e => {
-                const from = filterJoin && filterJoin !== 'ALL' ? filterJoin.split('_')[0] || '' : ''
-                const to = e.target.value
-                setFilterJoin(from || to ? `${from}_${to}` : 'ALL')
-                setCurrentPage(1)
-              }}
-            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="text-slate-500 hover:text-slate-300">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-        </div>
-      </div>
 
-      <div className="admin-table-actions">
-        <h2 className="admin-table-title">
-          {isVi ? 'Danh sách khóa học' : 'Course List'}
-          <span className="admin-table-count">{filteredCourses.length}</span>
-        </h2>
-        <div className="admin-table-action-buttons">
-          
           <select
-            className="admin-select"
             value={filterCategory}
-            onChange={e => {
-              setFilterCategory(e.target.value as FilterCategory)
-              setCurrentPage(1)
-            }}
+            onChange={(e) => setFilterCategory(e.target.value as FilterCategory)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
           >
-            <option value="ALL">{isVi ? 'Tất cả danh mục' : 'All Categories'}</option>
-            <option value="TOEIC_LISTENING">{categoryLabels.TOEIC_LISTENING?.[isVi ? 'vi' : 'en']}</option>
-            <option value="TOEIC_READING">{categoryLabels.TOEIC_READING?.[isVi ? 'vi' : 'en']}</option>
-            <option value="GRAMMAR">{categoryLabels.GRAMMAR?.[isVi ? 'vi' : 'en']}</option>
-            <option value="VOCABULARY">{categoryLabels.VOCABULARY?.[isVi ? 'vi' : 'en']}</option>
+            <option value="ALL">Tất cả danh mục</option>
+            <option value="TOEIC_LISTENING">TOEIC Listening</option>
+            <option value="TOEIC_READING">TOEIC Reading</option>
+            <option value="GRAMMAR">Ngữ pháp (Grammar)</option>
+            <option value="VOCABULARY">Từ vựng (Vocabulary)</option>
           </select>
 
           <select
-            className="admin-select"
             value={filterLevel}
-            onChange={e => {
-              setFilterLevel(e.target.value as FilterLevel)
-              setCurrentPage(1)
-            }}
+            onChange={(e) => setFilterLevel(e.target.value as FilterLevel)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
           >
-            <option value="ALL">{isVi ? 'Tất cả cấp độ' : 'All Levels'}</option>
-            <option value="BEGINNER">{levelLabels.BEGINNER?.[isVi ? 'vi' : 'en']}</option>
-            <option value="INTERMEDIATE">{levelLabels.INTERMEDIATE?.[isVi ? 'vi' : 'en']}</option>
-            <option value="ADVANCED">{levelLabels.ADVANCED?.[isVi ? 'vi' : 'en']}</option>
+            <option value="ALL">Tất cả trình độ</option>
+            <option value="BEGINNER">Sơ cấp (Beginner)</option>
+            <option value="INTERMEDIATE">Trung cấp (Intermediate)</option>
+            <option value="ADVANCED">Nâng cao (Advanced)</option>
           </select>
 
           <select
-            className="admin-select"
             value={filterStatus}
-            onChange={e => {
-              setFilterStatus(e.target.value as FilterStatus)
-              setCurrentPage(1)
-            }}
+            onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
+            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
           >
-            <option value="ALL">{isVi ? 'Tất cả trạng thái' : 'All Status'}</option>
-            <option value="PUBLISHED">{isVi ? 'Đã xuất bản' : 'Published'}</option>
-            <option value="DRAFT">{isVi ? 'Bản nháp' : 'Draft'}</option>
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="PUBLISHED">Đã xuất bản (Public)</option>
+            <option value="DRAFT">Bản nháp (Draft)</option>
           </select>
+        </div>
 
-          <select
-            className="admin-select"
-            value={sortOption}
-            onChange={e => {
-              setSortOption(e.target.value as SortOption)
-              setCurrentPage(1)
-            }}
-          >
-            <option value="latest">{isVi ? 'Sắp xếp: Mới nhất' : 'Sort: Latest'}</option>
-            <option value="oldest">{isVi ? 'Sắp xếp: Cũ nhất' : 'Sort: Oldest'}</option>
-            <option value="enrollments">{isVi ? 'Nhiều học viên nhất' : 'Most Enrolled'}</option>
-            <option value="price_desc">{isVi ? 'Giá giảm dần' : 'Price High-Low'}</option>
-            <option value="price_asc">{isVi ? 'Giá tăng dần' : 'Price Low-High'}</option>
-            <option value="title">{isVi ? 'Tên A-Z' : 'Title A-Z'}</option>
-          </select>
-
-          <button type="button" className="table-ghost-btn" onClick={handleExportCsv}>
-            <Download />
-            {isVi ? 'Xuất CSV' : 'Export'}
-          </button>
-
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
           <button
-            type="button"
-            className="table-ghost-btn"
-            onClick={handleReset}
-            title={isVi ? 'Đặt lại tất cả' : 'Reset all'}
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+              viewMode === 'grid' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Dạng lưới"
           >
-            <RotateCcw />
-            {isVi ? 'Đặt lại' : 'Reset'}
+            <LayoutGrid className="w-4 h-4" />
           </button>
-
-          <div className="view-mode-toggle" style={{ display: 'flex', gap: 2, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 2 }}>
-            <button
-              type="button"
-              className={`table-ghost-btn${viewMode === 'grid' ? ' active' : ''}`}
-              style={{ padding: '4px 8px', borderRadius: 6 }}
-              onClick={() => setViewMode('grid')}
-              title={isVi ? 'Xem dạng Thẻ' : 'Card View'}
-            >
-              <LayoutGrid style={{ width: 15, height: 15 }} />
-            </button>
-            <button
-              type="button"
-              className={`table-ghost-btn${viewMode === 'table' ? ' active' : ''}`}
-              style={{ padding: '4px 8px', borderRadius: 6 }}
-              onClick={() => setViewMode('table')}
-              title={isVi ? 'Xem dạng Bảng' : 'Table View'}
-            >
-              <List style={{ width: 15, height: 15 }} />
-            </button>
-          </div>
-
           <button
-            type="button"
-            className="primary-button"
-            onClick={() => setActiveNavItem('course-form')}
+            onClick={() => setViewMode('table')}
+            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+              viewMode === 'table' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Dạng bảng"
           >
-            <Plus />
-            {isVi ? 'Thêm khóa học' : 'Add Course'}
+            <List className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {viewMode === 'grid' ? (
-        <div className="courses-grid">
-          {paginatedCourses.map(course => (
-            <div key={course.id} className={`course-card${!course.is_published ? ' draft' : ''}`}>
-              <div className="course-thumbnail">
-                {course.thumbnail_url ? (
-                  <img src={course.thumbnail_url} alt={course.title} />
-                ) : (
-                  <div className="thumbnail-placeholder">
-                    <BookOpen />
+      {/* Grid View */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paginatedCourses.map((course) => (
+            <div
+              key={course.id}
+              className="rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden flex flex-col justify-between shadow-sm hover:border-slate-700 transition-all group"
+            >
+              <div>
+                <div className="relative h-44 w-full overflow-hidden bg-slate-950">
+                  <img
+                    src={course.thumbnail_url}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-teal-300 border border-teal-500/30">
+                      {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-amber-300 border border-amber-500/30">
+                      {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
+                    </span>
                   </div>
-                )}
-                {!course.is_published && (
-                  <div className="draft-overlay">
-                    <span>{isVi ? 'Bản nháp' : 'Draft'}</span>
-                  </div>
-                )}
-                <div className="course-badges">
                   <span
-                    className="category-badge"
-                    style={{
-                      background: categoryColors[course.category]?.bg,
-                      color: categoryColors[course.category]?.text,
-                    }}
+                    className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                      course.is_published
+                        ? 'bg-emerald-500/80 text-white backdrop-blur-md'
+                        : 'bg-slate-800/80 text-slate-300 backdrop-blur-md'
+                    }`}
                   >
-                    {categoryLabels[course.category]?.[isVi ? 'vi' : 'en']}
+                    {course.is_published ? 'Đã xuất bản' : 'Bản nháp'}
                   </span>
                 </div>
-              </div>
 
-              <div className="course-content">
-                <div className="course-header">
-                  <h3 className="course-title">{course.title}</h3>
-                  <div className="course-meta">
-                    <span
-                      className="level-badge"
-                      style={{
-                        background: levelColors[course.level]?.bg,
-                        color: levelColors[course.level]?.text,
-                      }}
-                    >
-                      {levelLabels[course.level]?.[isVi ? 'vi' : 'en']}
-                    </span>
-                    <span className="target-score">
-                      {isVi ? 'Mục tiêu:' : 'Target:'} {course.target_score}
-                    </span>
-                  </div>
-                </div>
+                <div className="p-5">
+                  <h3 className="text-base font-bold text-slate-100 group-hover:text-teal-400 transition-colors line-clamp-1">
+                    {course.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
+                    {course.description}
+                  </p>
 
-                <p className="course-description">{course.description}</p>
-
-                <div className="course-stats">
-                  <div className="course-stat">
-                    <BookOpen className="stat-icon" />
-                    <span>{course.total_modules} modules, {course.total_lessons} {isVi ? 'bài' : 'lessons'}</span>
-                  </div>
-                  <div className="course-stat">
-                    <Users className="stat-icon" />
-                    <span>{course.enrollments.toLocaleString()} {isVi ? 'học viên' : 'students'}</span>
-                  </div>
-                </div>
-
-                <div className="course-footer">
-                  <div className="course-author">
-                    <span className="author-name">{course.author_name}</span>
-                    <span className="course-date">{formatDate(course.created_at)}</span>
-                  </div>
-                  <div className="course-price">
-                    {formatPrice(course.price)}
+                  <div className="grid grid-cols-3 gap-2 py-3.5 my-3.5 border-y border-slate-800 text-center">
+                    <div>
+                      <p className="text-[10px] text-slate-500">Mục tiêu</p>
+                      <p className="text-xs font-bold text-slate-200 mt-0.5">{course.target_score}+</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500">Chương / Bài</p>
+                      <p className="text-xs font-bold text-slate-200 mt-0.5">
+                        {course.total_modules}m · {course.total_lessons}b
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500">Học viên</p>
+                      <p className="text-xs font-bold text-slate-200 mt-0.5">{course.enrollments}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="course-actions">
-                <button className="course-action-btn" title={isVi ? 'Xem' : 'View'}>
-                  <Eye />
-                </button>
-                <button className="course-action-btn" title={isVi ? 'Sửa' : 'Edit'}>
-                  <Edit2 />
-                </button>
-                <button className="course-action-btn" title={isVi ? 'Nhân bản' : 'Duplicate'}>
-                  <Copy />
-                </button>
-                <button className="course-action-btn danger" title={isVi ? 'Xóa' : 'Delete'}>
-                  <Trash2 />
-                </button>
+              <div className="p-5 pt-0 flex items-center justify-between">
+                <span className="text-sm font-extrabold text-teal-400">{formatPrice(course.price)}</span>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    title="Chỉnh sửa giáo trình"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteCourseId(course.id)}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                    title="Xóa khóa học"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="users-table-wrapper">
-          <table className="users-table density-middle">
-            <thead>
-              <tr>
-                <th>{isVi ? 'Tên khóa học' : 'Course Title'}</th>
-                <th>{isVi ? 'Danh mục' : 'Category'}</th>
-                <th>{isVi ? 'Cấp độ' : 'Level'}</th>
-                <th>{isVi ? 'Học viên' : 'Students'}</th>
-                <th>{isVi ? 'Học phí' : 'Price'}</th>
-                <th>{isVi ? 'Trạng thái' : 'Status'}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedCourses.map(course => (
-                <tr key={course.id} className={!course.is_published ? 'banned-row' : ''}>
-                  <td>
-                    <div className="admin-user-cell">
-                      <div className="admin-user-info">
-                        <span className="admin-name">{course.title}</span>
-                        <span className="admin-email">{course.author_name} • {formatDate(course.created_at)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className="role-badge"
-                      style={{
-                        background: categoryColors[course.category]?.bg,
-                        color: categoryColors[course.category]?.text,
-                      }}
-                    >
-                      {categoryLabels[course.category]?.[isVi ? 'vi' : 'en']}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className="level-badge"
-                      style={{
-                        background: levelColors[course.level]?.bg,
-                        color: levelColors[course.level]?.text,
-                      }}
-                    >
-                      {levelLabels[course.level]?.[isVi ? 'vi' : 'en']}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 600 }}>{course.enrollments.toLocaleString()}</span>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 600 }}>{formatPrice(course.price)}</span>
-                  </td>
-                  <td>
-                    <span className={`status-pill ${course.is_published ? 'success' : 'inactive'}`}>
-                      {course.is_published ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="row-actions">
-                      <button className="row-action-btn" title={isVi ? 'Xem' : 'View'}>
-                        <Eye />
-                      </button>
-                      <button className="row-action-btn" title={isVi ? 'Sửa' : 'Edit'}>
-                        <Edit2 />
-                      </button>
-                      <button className="row-action-btn" title={isVi ? 'Nhân bản' : 'Duplicate'}>
-                        <Copy />
-                      </button>
-                      <button className="row-action-btn danger" title={isVi ? 'Xóa' : 'Delete'}>
-                        <Trash2 />
-                      </button>
-                    </div>
-                  </td>
+      )}
+
+      {/* Table View */}
+      {viewMode === 'table' && (
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
+                  <th className="py-3.5 px-4">Khóa học</th>
+                  <th className="py-3.5 px-4">Danh mục</th>
+                  <th className="py-3.5 px-4">Trình độ</th>
+                  <th className="py-3.5 px-4">Giá tiền</th>
+                  <th className="py-3.5 px-4">Học viên</th>
+                  <th className="py-3.5 px-4">Trạng thái</th>
+                  <th className="py-3.5 px-4 text-right">Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50 text-slate-200">
+                {paginatedCourses.map((course) => (
+                  <tr key={course.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={course.thumbnail_url}
+                          alt={course.title}
+                          className="w-12 h-9 rounded-lg object-cover shrink-0"
+                        />
+                        <div>
+                          <p className="font-semibold text-slate-100">{course.title}</p>
+                          <p className="text-[10px] text-slate-400">
+                            {course.total_modules} chương · {course.total_lessons} bài học
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="text-teal-400 font-medium">
+                        {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="text-amber-400 font-medium">
+                        {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-slate-200">{formatPrice(course.price)}</td>
+                    <td className="py-3.5 px-4 text-slate-300">{course.enrollments}</td>
+                    <td className="py-3.5 px-4">
+                      {course.is_published ? (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Đã xuất bản
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                          Bản nháp
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteCourseId(course.id)}
+                          className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {filteredCourses.length === 0 ? (
-        <div className="courses-empty">
-          <BookOpen className="empty-icon" />
-          <p className="empty-title">
-            {hasActiveFilters
-              ? (isVi ? 'Không tìm thấy khóa học nào khớp với bộ lọc' : 'No courses found matching filters')
-              : (isVi ? 'Chưa có khóa học nào' : 'No courses yet')
-            }
-          </p>
-          {hasActiveFilters && (
-            <button className="empty-action" onClick={handleReset}>
-              {isVi ? 'Xóa bộ lọc' : 'Clear filters'}
-            </button>
-          )}
-        </div>
-      ) : (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(filteredCourses.length / pageSize)}
-          pageSize={pageSize}
-          onPageSizeChange={handlePageSizeChange}
-          totalItems={filteredCourses.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
-    </main>
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        totalItems={filteredCourses.length}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteCourseId)}
+        onClose={() => setDeleteCourseId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Xóa khóa học này?"
+        description="Khóa học và toàn bộ danh sách bài giảng, video liên quan sẽ bị gỡ khỏi hệ thống."
+        confirmText="Xóa khóa học"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        isLoading={isDeleting}
+      />
+    </div>
   )
 }

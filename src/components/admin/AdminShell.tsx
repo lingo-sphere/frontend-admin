@@ -13,17 +13,21 @@ export function AdminShell({ children }: AdminShellProps) {
   const sidebarCollapsed = useAdminStore((state) => state.sidebarCollapsed)
 
   return (
-    <div className="admin-app">
-      
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 font-sans flex flex-col relative selection:bg-indigo-500/30 selection:text-indigo-200">
+      {/* Desktop Persistent Sidebar */}
       <Sidebar />
 
+      {/* Mobile Drawer Sidebar */}
       <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <Sidebar mobile />
       </Sheet>
 
-      <div className={`main-frame${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'md:pl-[72px]' : 'md:pl-64'}`}>
         <Topbar />
-        {children}
+        <div className="flex-1 w-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+          {children}
+        </div>
       </div>
     </div>
   )

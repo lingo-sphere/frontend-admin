@@ -1,15 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   Save,
   Plus,
   Trash2,
-  Volume2,
-  Star,
-  GripVertical,
-  ChevronDown,
-  ChevronUp,
+  BookOpen,
 } from "lucide-react";
 import { useAdminStore } from "@/store/admin-store";
 import {
@@ -17,6 +13,7 @@ import {
   cefrLevelLabels,
   wordTypeLabels,
 } from "@/data/vocabulary-data";
+import { toast } from "@/store/toast-store";
 
 const WORD_TYPES = [
   "NOUN",
@@ -37,887 +34,296 @@ interface Meaning {
   definition_en: string;
   definition_vi: string;
   short_meaning_vi: string;
-  synonyms: string[];
-  antonyms: string[];
-  collocations: string[];
   examples: string[];
-  cefr_level: string;
-  domain: string;
-  is_primary: boolean;
 }
 
-interface VocabularyFormData {
-  word: string;
-  word_type: string;
-  cefr_level: string;
-  pronunciation_us: string;
-  pronunciation_uk: string;
-  syllables: number | null;
-  stress_pattern: string;
-  is_root_word: boolean;
-  is_irregular: boolean;
-  is_verified: boolean;
-  topic_ids: string[];
-  meanings: Meaning[];
-}
-
-interface FormErrors {
-  word?: string;
-  meanings?: string;
-}
-
-export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
+export function VocabularyFormPage({ editWordId, editId }: { editWordId?: string; editId?: string }) {
   const { i18n } = useTranslation();
-  const isVietnamese = i18n.language === "vi";
+  const isVi = i18n.language === "vi";
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
-  const isEditing = !!editWordId;
+  const currentEditId = editWordId || editId;
+  const isEditing = !!currentEditId;
 
-  const [formData, setFormData] = useState<VocabularyFormData>({
-    word: "",
-    word_type: "NOUN",
-    cefr_level: "B1",
-    pronunciation_us: "",
-    pronunciation_uk: "",
-    syllables: null,
-    stress_pattern: "",
-    is_root_word: false,
-    is_irregular: false,
-    is_verified: false,
-    topic_ids: [],
-    meanings: [
+  const [word, setWord] = useState("");
+  const [wordType, setWordType] = useState("NOUN");
+  const [cefrLevel, setCefrLevel] = useState("B1");
+  const [pronunciationUs, setPronunciationUs] = useState("");
+  const [pronunciationUk, setPronunciationUk] = useState("");
+  const [audioUrlUs, setAudioUrlUs] = useState("");
+  const [meanings, setMeanings] = useState<Meaning[]>([
+    {
+      id: "mean-1",
+      part_of_speech: "NOUN",
+      definition_en: "",
+      definition_vi: "",
+      short_meaning_vi: "",
+      examples: [""],
+    },
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addMeaning = () => {
+    setMeanings([
+      ...meanings,
       {
-        id: "1",
-        part_of_speech: "NOUN",
+        id: `mean-${Date.now()}`,
+        part_of_speech: wordType,
         definition_en: "",
         definition_vi: "",
         short_meaning_vi: "",
-        synonyms: [],
-        antonyms: [],
-        collocations: [],
-        examples: [],
-        cefr_level: "B1",
-        domain: "",
-        is_primary: true,
+        examples: [""],
       },
-    ],
-  });
-
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [expandedMeanings, setExpandedMeanings] = useState<string[]>(["1"]);
-  const [synonymInputs, setSynonymInputs] = useState<Record<string, string>>(
-    {}
-  );
-  const [collocationsInputs, setCollocationsInputs] = useState<
-    Record<string, string>
-  >({});
-  const [exampleInputs, setExampleInputs] = useState<Record<string, string>>(
-    {}
-  );
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.word.trim()) {
-      newErrors.word = isVietnamese
-        ? "Từ vựng là bắt buộc"
-        : "Word is required";
-    }
-
-    const hasValidMeaning = formData.meanings.some(
-      (m) => m.definition_en.trim() || m.definition_vi.trim()
-    );
-
-    if (!hasValidMeaning) {
-      newErrors.meanings = isVietnamese
-        ? "Cần ít nhất một nghĩa"
-        : "At least one meaning is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validateForm()) return;
-
-    console.log("Saving vocabulary:", formData);
-    alert(
-      isEditing
-        ? isVietnamese
-          ? "Đã cập nhật từ vựng!"
-          : "Vocabulary updated!"
-        : isVietnamese
-        ? "Đã thêm từ vựng!"
-        : "Vocabulary added!"
-    );
-    setActiveNavItem("vocabulary");
-  };
-
-  const addMeaning = () => {
-    const newId = Date.now().toString();
-    setFormData((prev) => ({
-      ...prev,
-      meanings: [
-        ...prev.meanings,
-        {
-          id: newId,
-          part_of_speech: "NOUN",
-          definition_en: "",
-          definition_vi: "",
-          short_meaning_vi: "",
-          synonyms: [],
-          antonyms: [],
-          collocations: [],
-          examples: [],
-          cefr_level: prev.cefr_level,
-          domain: "",
-          is_primary: prev.meanings.length === 0,
-        },
-      ],
-    }));
-    setExpandedMeanings((prev) => [...prev, newId]);
+    ]);
   };
 
   const removeMeaning = (id: string) => {
-    if (formData.meanings.length <= 1) return;
-    setFormData((prev) => ({
-      ...prev,
-      meanings: prev.meanings.filter((m) => m.id !== id),
-    }));
-    setExpandedMeanings((prev) => prev.filter((i) => i !== id));
+    setMeanings(meanings.filter((m) => m.id !== id));
   };
 
-  const updateMeaning = (id: string, field: keyof Meaning, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      meanings: prev.meanings.map((m) =>
-        m.id === id ? { ...m, [field]: value } : m
-      ),
-    }));
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!word.trim()) {
+      toast.error("Vui lòng nhập từ vựng");
+      return;
+    }
 
-  const toggleMeaningExpand = (id: string) => {
-    setExpandedMeanings((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const addSynonym = (meaningId: string) => {
-    const input = synonymInputs[meaningId];
-    if (!input?.trim()) return;
-
-    updateMeaning(meaningId, "synonyms", [
-      ...formData.meanings.find((m) => m.id === meaningId)!.synonyms,
-      input.trim(),
-    ]);
-    setSynonymInputs((prev) => ({ ...prev, [meaningId]: "" }));
-  };
-
-  const removeSynonym = (meaningId: string, index: number) => {
-    const meaning = formData.meanings.find((m) => m.id === meaningId);
-    if (!meaning) return;
-    updateMeaning(
-      meaningId,
-      "synonyms",
-      meaning.synonyms.filter((_, i) => i !== index)
-    );
-  };
-
-  const addCollocations = (meaningId: string) => {
-    const input = collocationsInputs[meaningId];
-    if (!input?.trim()) return;
-
-    updateMeaning(meaningId, "collocations", [
-      ...formData.meanings.find((m) => m.id === meaningId)!.collocations,
-      input.trim(),
-    ]);
-    setCollocationsInputs((prev) => ({ ...prev, [meaningId]: "" }));
-  };
-
-  const removeCollocations = (meaningId: string, index: number) => {
-    const meaning = formData.meanings.find((m) => m.id === meaningId);
-    if (!meaning) return;
-    updateMeaning(
-      meaningId,
-      "collocations",
-      meaning.collocations.filter((_, i) => i !== index)
-    );
-  };
-
-  const addExample = (meaningId: string) => {
-    const input = exampleInputs[meaningId];
-    if (!input?.trim()) return;
-
-    updateMeaning(meaningId, "examples", [
-      ...formData.meanings.find((m) => m.id === meaningId)!.examples,
-      input.trim(),
-    ]);
-    setExampleInputs((prev) => ({ ...prev, [meaningId]: "" }));
-  };
-
-  const removeExample = (meaningId: string, index: number) => {
-    const meaning = formData.meanings.find((m) => m.id === meaningId);
-    if (!meaning) return;
-    updateMeaning(
-      meaningId,
-      "examples",
-      meaning.examples.filter((_, i) => i !== index)
-    );
-  };
-
-  const toggleTopic = (topicId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      topic_ids: prev.topic_ids.includes(topicId)
-        ? prev.topic_ids.filter((id) => id !== topicId)
-        : [...prev.topic_ids, topicId],
-    }));
-  };
-
-  const setPrimaryMeaning = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      meanings: prev.meanings.map((m) => ({
-        ...m,
-        is_primary: m.id === id,
-      })),
-    }));
+    setIsSubmitting(true);
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      toast.success(
+        isEditing
+          ? "Cập nhật từ vựng thành công!"
+          : "Đã thêm từ vựng mới vào từ điển!"
+      );
+      setActiveNavItem("vocabulary");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <main className="page-content">
-      
-      <div className="form-header">
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Back Button & Title */}
+      <div className="flex items-center gap-3">
         <button
-          className="back-button"
           onClick={() => setActiveNavItem("vocabulary")}
+          className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          type="button"
         >
-          <ChevronLeft />
-          {isVietnamese ? "Quay lại" : "Back"}
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="form-title">
-          {isEditing
-            ? isVietnamese
-              ? "Chỉnh sửa từ vựng"
-              : "Edit Vocabulary"
-            : isVietnamese
-            ? "Thêm từ vựng mới"
-            : "Add New Vocabulary"}
-        </h1>
-        <button className="primary-button" onClick={handleSave}>
-          <Save />
-          {isVietnamese ? "Lưu" : "Save"}
-        </button>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            {isEditing ? "Chỉnh Sửa Từ Vựng" : "Thêm Từ Vựng Mới"}
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Cấu hình phiên âm IPA, định nghĩa đa ngữ nghĩa và câu ví dụ minh họa
+          </p>
+        </div>
       </div>
 
-      <div className="vocab-form-content">
-        
-        <div className="vocab-form-section">
-          <h2 className="section-title">
-            {isVietnamese ? "Thông tin cơ bản" : "Basic Information"}
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Word Info */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-5">
+          <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-teal-400" />
+            <span>Thông tin từ vựng căn bản</span>
           </h2>
 
-          <div className="form-grid-2">
-            
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? "Từ vựng" : "Word"}{" "}
-                <span className="required">*</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Từ vựng (English) <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
-                className={`form-input ${errors.word ? "error" : ""}`}
-                placeholder="e.g., accomplish"
-                value={formData.word}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, word: e.target.value }));
-                  if (errors.word) setErrors((prev) => ({ ...prev, word: "" }));
-                }}
+                value={word}
+                onChange={(e) => setWord(e.target.value)}
+                placeholder="VD: comprehensive"
+                required
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
               />
-              {errors.word && (
-                <span className="error-message">{errors.word}</span>
-              )}
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? "Loại từ" : "Word Type"}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Khung CEFR
               </label>
               <select
-                className="form-select"
-                value={formData.word_type}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    word_type: e.target.value,
-                  }))
-                }
+                value={cefrLevel}
+                onChange={(e) => setCefrLevel(e.target.value)}
+                className="w-full h-11 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
               >
-                {WORD_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {wordTypeLabels[type]?.[isVietnamese ? "vi" : "en"] || type}
+                {CEFR_LEVELS.map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    {lvl} - {cefrLevelLabels[lvl]?.[isVi ? "vi" : "en"]}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? "Cấp độ CEFR" : "CEFR Level"}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Loại từ (Part of Speech)
               </label>
               <select
-                className="form-select"
-                value={formData.cefr_level}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    cefr_level: e.target.value,
-                  }))
-                }
+                value={wordType}
+                onChange={(e) => setWordType(e.target.value)}
+                className="w-full h-11 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
               >
-                {CEFR_LEVELS.map((level) => (
-                  <option key={level} value={level}>
-                    {cefrLevelLabels[level]?.[isVietnamese ? "vi" : "en"] ||
-                      level}
+                {WORD_TYPES.map((wt) => (
+                  <option key={wt} value={wt}>
+                    {wordTypeLabels[wt]?.[isVi ? "vi" : "en"] || wt}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? "Số âm tiết" : "Syllables"}
-              </label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="e.g., 3"
-                min="1"
-                value={formData.syllables || ""}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    syllables: e.target.value ? parseInt(e.target.value) : null,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese
-                  ? "Audio phát âm (US)"
-                  : "Audio Pronunciation (US)"}
-              </label>
-              <div className="audio-upload-group">
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="/əˈkʌm.plɪʃ/ (IPA)"
-                  value={formData.pronunciation_us}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      pronunciation_us: e.target.value,
-                    }))
-                  }
-                />
-                <label className="audio-upload-btn">
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        console.log("US Audio file:", file.name);
-                      }
-                    }}
-                  />
-                  <Volume2 />
-                  {isVietnamese ? "Upload audio" : "Upload audio"}
-                </label>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese
-                  ? "Audio phát âm (UK)"
-                  : "Audio Pronunciation (UK)"}
-              </label>
-              <div className="audio-upload-group">
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="/əˈkʌm.plɪʃ/ (IPA)"
-                  value={formData.pronunciation_uk}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      pronunciation_uk: e.target.value,
-                    }))
-                  }
-                />
-                <label className="audio-upload-btn">
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        console.log("UK Audio file:", file.name);
-                      }
-                    }}
-                  />
-                  {isVietnamese ? "Upload audio" : "Upload audio"}
-                </label>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? "Trọng âm" : "Stress Pattern"}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Phiên âm Mỹ (IPA US)
               </label>
               <input
                 type="text"
-                className="form-input"
-                placeholder="e.g., 1-2-3"
-                value={formData.stress_pattern}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    stress_pattern: e.target.value,
-                  }))
-                }
+                value={pronunciationUs}
+                onChange={(e) => setPronunciationUs(e.target.value)}
+                placeholder="/ˌkɑːm.prəˈhen.sɪv/"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 font-mono focus:outline-none focus:border-teal-500"
               />
             </div>
-          </div>
 
-          <div className="form-checkboxes">
-            <label className="form-checkbox">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Phiên âm Anh (IPA UK)
+              </label>
               <input
-                type="checkbox"
-                checked={formData.is_root_word}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    is_root_word: e.target.checked,
-                  }))
-                }
+                type="text"
+                value={pronunciationUk}
+                onChange={(e) => setPronunciationUk(e.target.value)}
+                placeholder="/ˌkɒm.prɪˈhen.sɪv/"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 font-mono focus:outline-none focus:border-teal-500"
               />
-              <span>{isVietnamese ? "Từ gốc" : "Root Word"}</span>
-            </label>
-            <label className="form-checkbox">
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Audio phát âm (URL)
+              </label>
               <input
-                type="checkbox"
-                checked={formData.is_irregular}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    is_irregular: e.target.checked,
-                  }))
-                }
+                type="url"
+                value={audioUrlUs}
+                onChange={(e) => setAudioUrlUs(e.target.value)}
+                placeholder="https://..."
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-teal-500"
               />
-              <span>{isVietnamese ? "Bất quy tắc" : "Irregular"}</span>
-            </label>
-            <label className="form-checkbox">
-              <input
-                type="checkbox"
-                checked={formData.is_verified}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    is_verified: e.target.checked,
-                  }))
-                }
-              />
-              <span>{isVietnamese ? "Đã xác minh" : "Verified"}</span>
-            </label>
+            </div>
           </div>
         </div>
 
-        <div className="vocab-form-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              {isVietnamese ? "Nghĩa & Định nghĩa" : "Meanings & Definitions"}
+        {/* Meanings Card */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-100">
+              Định nghĩa & Nghĩa tiếng Việt
             </h2>
-            <button className="primary-button" onClick={addMeaning}>
-              <Plus /> {isVietnamese ? "Thêm nghĩa" : "Add Meaning"}
+            <button
+              type="button"
+              onClick={addMeaning}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Thêm nét nghĩa</span>
             </button>
           </div>
 
-          {errors.meanings && (
-            <div className="error-message" style={{ marginBottom: 16 }}>
-              {errors.meanings}
-            </div>
-          )}
-
-          <div className="meanings-list">
-            {formData.meanings.map((meaning, index) => (
-              <div key={meaning.id} className="meaning-card">
-                <div className="meaning-header">
-                  <div className="meaning-drag">
-                    <GripVertical />
-                  </div>
-                  <div className="meaning-title">
-                    <span className="meaning-number">#{index + 1}</span>
-                    <span className="meaning-pos">
-                      {wordTypeLabels[meaning.part_of_speech]?.[
-                        isVietnamese ? "vi" : "en"
-                      ] || meaning.part_of_speech}
-                    </span>
-                    {meaning.is_primary && (
-                      <span className="primary-badge">
-                        <Star /> {isVietnamese ? "Chính" : "Primary"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="meaning-actions">
-                    {!meaning.is_primary && (
-                      <button
-                        className="btn-text"
-                        onClick={() => setPrimaryMeaning(meaning.id)}
-                        title={
-                          isVietnamese
-                            ? "Đặt làm nghĩa chính"
-                            : "Set as primary"
-                        }
-                      >
-                        <Star />
-                      </button>
-                    )}
+          <div className="space-y-4">
+            {meanings.map((meaning, mIdx) => (
+              <div
+                key={meaning.id}
+                className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3 relative"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-teal-400">Nét nghĩa #{mIdx + 1}</span>
+                  {meanings.length > 1 && (
                     <button
-                      className="btn-text"
-                      onClick={() => toggleMeaningExpand(meaning.id)}
+                      type="button"
+                      onClick={() => removeMeaning(meaning.id)}
+                      className="text-slate-500 hover:text-rose-400 p-1 cursor-pointer"
                     >
-                      {expandedMeanings.includes(meaning.id) ? (
-                        <ChevronUp />
-                      ) : (
-                        <ChevronDown />
-                      )}
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                    {formData.meanings.length > 1 && (
-                      <button
-                        className="btn-text danger"
-                        onClick={() => removeMeaning(meaning.id)}
-                      >
-                        <Trash2 />
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                {expandedMeanings.includes(meaning.id) && (
-                  <div className="meaning-body">
-                    <div className="form-grid-2">
-                      
-                      <div className="form-group">
-                        <label className="form-label">
-                          {isVietnamese ? "Loại từ" : "Part of Speech"}
-                        </label>
-                        <select
-                          className="form-select"
-                          value={meaning.part_of_speech}
-                          onChange={(e) =>
-                            updateMeaning(
-                              meaning.id,
-                              "part_of_speech",
-                              e.target.value
-                            )
-                          }
-                        >
-                          {WORD_TYPES.map((type) => (
-                            <option key={type} value={type}>
-                              {wordTypeLabels[type]?.[
-                                isVietnamese ? "vi" : "en"
-                              ] || type}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">
-                          {isVietnamese ? "Cấp độ CEFR" : "CEFR Level"}
-                        </label>
-                        <select
-                          className="form-select"
-                          value={meaning.cefr_level}
-                          onChange={(e) =>
-                            updateMeaning(
-                              meaning.id,
-                              "cefr_level",
-                              e.target.value
-                            )
-                          }
-                        >
-                          {CEFR_LEVELS.map((level) => (
-                            <option key={level} value={level}>
-                              {level}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="form-group full-width">
-                        <label className="form-label">
-                          {isVietnamese ? "Định nghĩa (EN)" : "Definition (EN)"}
-                        </label>
-                        <textarea
-                          className="form-textarea"
-                          placeholder={
-                            isVietnamese
-                              ? "Nhập định nghĩa tiếng Anh..."
-                              : "Enter English definition..."
-                          }
-                          rows={2}
-                          value={meaning.definition_en}
-                          onChange={(e) =>
-                            updateMeaning(
-                              meaning.id,
-                              "definition_en",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div className="form-group full-width">
-                        <label className="form-label">
-                          {isVietnamese ? "Định nghĩa (VI)" : "Definition (VI)"}
-                        </label>
-                        <textarea
-                          className="form-textarea"
-                          placeholder={
-                            isVietnamese
-                              ? "Nhập định nghĩa tiếng Việt..."
-                              : "Enter Vietnamese definition..."
-                          }
-                          rows={2}
-                          value={meaning.definition_vi}
-                          onChange={(e) =>
-                            updateMeaning(
-                              meaning.id,
-                              "definition_vi",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">
-                          {isVietnamese ? "Nghĩa ngắn" : "Short Meaning"}
-                        </label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder={
-                            isVietnamese
-                              ? "VD: hoàn thành"
-                              : "e.g., to complete"
-                          }
-                          value={meaning.short_meaning_vi}
-                          onChange={(e) =>
-                            updateMeaning(
-                              meaning.id,
-                              "short_meaning_vi",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">
-                          {isVietnamese ? "Lĩnh vực" : "Domain"}
-                        </label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder={
-                            isVietnamese ? "VD: Kinh doanh" : "e.g., Business"
-                          }
-                          value={meaning.domain}
-                          onChange={(e) =>
-                            updateMeaning(meaning.id, "domain", e.target.value)
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="meaning-sub-section">
-                      <label className="form-label">
-                        {isVietnamese ? "Từ đồng nghĩa" : "Synonyms"}
-                      </label>
-                      <div className="tag-input-row">
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder={
-                            isVietnamese
-                              ? "Thêm từ đồng nghĩa..."
-                              : "Add synonym..."
-                          }
-                          value={synonymInputs[meaning.id] || ""}
-                          onChange={(e) =>
-                            setSynonymInputs((prev) => ({
-                              ...prev,
-                              [meaning.id]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" &&
-                            (e.preventDefault(), addSynonym(meaning.id))
-                          }
-                        />
-                        <button
-                          className="btn-add"
-                          onClick={() => addSynonym(meaning.id)}
-                        >
-                          <Plus />
-                        </button>
-                      </div>
-                      <div className="tags-list">
-                        {meaning.synonyms.map((syn, i) => (
-                          <span key={i} className="tag">
-                            {syn}
-                            <button
-                              onClick={() => removeSynonym(meaning.id, i)}
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="meaning-sub-section">
-                      <label className="form-label">
-                        {isVietnamese ? "Cụm từ đi kèm" : "Collocations"}
-                      </label>
-                      <div className="tag-input-row">
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder={
-                            isVietnamese
-                              ? "Thêm cụm từ..."
-                              : "Add collocation..."
-                          }
-                          value={collocationsInputs[meaning.id] || ""}
-                          onChange={(e) =>
-                            setCollocationsInputs((prev) => ({
-                              ...prev,
-                              [meaning.id]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" &&
-                            (e.preventDefault(), addCollocations(meaning.id))
-                          }
-                        />
-                        <button
-                          className="btn-add"
-                          onClick={() => addCollocations(meaning.id)}
-                        >
-                          <Plus />
-                        </button>
-                      </div>
-                      <div className="tags-list">
-                        {meaning.collocations.map((col, i) => (
-                          <span key={i} className="tag">
-                            {col}
-                            <button
-                              onClick={() => removeCollocations(meaning.id, i)}
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="meaning-sub-section">
-                      <label className="form-label">
-                        {isVietnamese ? "Ví dụ" : "Examples"}
-                      </label>
-                      <div className="tag-input-row">
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder={
-                            isVietnamese
-                              ? "Thêm câu ví dụ..."
-                              : "Add example sentence..."
-                          }
-                          value={exampleInputs[meaning.id] || ""}
-                          onChange={(e) =>
-                            setExampleInputs((prev) => ({
-                              ...prev,
-                              [meaning.id]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" &&
-                            (e.preventDefault(), addExample(meaning.id))
-                          }
-                        />
-                        <button
-                          className="btn-add"
-                          onClick={() => addExample(meaning.id)}
-                        >
-                          <Plus />
-                        </button>
-                      </div>
-                      <div className="examples-list">
-                        {meaning.examples.map((ex, i) => (
-                          <div key={i} className="example-item">
-                            <span>{ex}</span>
-                            <button
-                              className="btn-icon-sm"
-                              onClick={() => removeExample(meaning.id, i)}
-                            >
-                              <Trash2 />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-400">Nghĩa ngắn tiếng Việt</label>
+                    <input
+                      type="text"
+                      value={meaning.short_meaning_vi}
+                      onChange={(e) =>
+                        setMeanings(
+                          meanings.map((m) =>
+                            m.id === meaning.id ? { ...m, short_meaning_vi: e.target.value } : m
+                          )
+                        )
+                      }
+                      placeholder="VD: toàn diện, bao hàm"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-100"
+                    />
                   </div>
-                )}
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-400">Định nghĩa chi tiết (English)</label>
+                    <input
+                      type="text"
+                      value={meaning.definition_en}
+                      onChange={(e) =>
+                        setMeanings(
+                          meanings.map((m) =>
+                            m.id === meaning.id ? { ...m, definition_en: e.target.value } : m
+                          )
+                        )
+                      }
+                      placeholder="Complete and including everything that is necessary"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-100"
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="vocab-form-section">
-          <h2 className="section-title">
-            {isVietnamese ? "Chủ đề" : "Topics"}
-          </h2>
-          <div className="topics-grid">
-            {mockTopics
-              .filter((t) => t.status === "ACTIVE")
-              .map((topic) => (
-                <label key={topic.id} className="topic-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.topic_ids.includes(topic.id)}
-                    onChange={() => toggleTopic(topic.id)}
-                  />
-                  <span className="topic-name">
-                    {isVietnamese ? topic.name_vi : topic.name_en}
-                  </span>
-                  <span className="topic-count">
-                    {topic.lexical_count} {isVietnamese ? "từ" : "words"}
-                  </span>
-                </label>
-              ))}
-          </div>
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setActiveNavItem("vocabulary")}
+            className="h-11 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Đang lưu...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Lưu từ vựng</span>
+              </>
+            )}
+          </button>
         </div>
-      </div>
-    </main>
+      </form>
+    </div>
   );
 }

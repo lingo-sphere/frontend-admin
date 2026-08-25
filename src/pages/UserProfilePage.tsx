@@ -7,12 +7,10 @@ import {
   Crown,
   Flame,
   Star,
-  Trophy,
-  BookOpen,
   Target,
-  TrendingUp,
   Clock,
   Award,
+  BookOpen,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
@@ -28,7 +26,6 @@ interface UserProfileData {
   is_premium: boolean
   created_at: string
   last_active: string
-  
   total_xp: number
   level: number
   current_streak: number
@@ -39,11 +36,9 @@ interface UserProfileData {
   accuracy_rate: number
   avg_session_time: number
   total_sessions: number
-  
   total_courses_enrolled: number
   total_courses_completed: number
   total_decks_studied: number
-  total_reviews: number
 }
 
 export function UserProfilePage() {
@@ -52,47 +47,43 @@ export function UserProfilePage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
 
-  const userId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : mockUsers[0]?.id
-  const user = mockUsers.find(u => u.id === userId) || mockUsers[0]
+  const userId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : (mockUsers[0]?.id || 'u-1')
+  const user = mockUsers.find((u) => u.id === userId) || mockUsers[0]
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
 
   useEffect(() => {
-    const loadUserProfile = async () => {
+    const loadData = async () => {
       try {
-        if (userId) {
-          const prof = await userService.getProfileById(userId)
-          if (prof) {
-            setProfileData({
-              id: prof.user_id || prof._id || userId,
-              full_name: prof.full_name || 'Learner',
-              email: prof.email || '',
-              avatar_url: prof.avatar_url,
-              phone: prof.phone_number,
-              status: prof.status || 'ACTIVE',
-              is_premium: Boolean(prof.is_premium),
-              created_at: prof.created_at || new Date().toISOString(),
-              last_active: prof.updated_at || new Date().toISOString(),
-              total_xp: prof.total_xp || 3450,
-              level: prof.level || 5,
-              current_streak: prof.current_streak || 14,
-              longest_streak: 28,
-              total_lessons_completed: 48,
-              total_words_learned: 520,
-              toeic_score: prof.current_estimated_score || prof.target_toeic_score || 750,
-              accuracy_rate: 84.5,
-              avg_session_time: prof.learning_goal_minutes_per_day || 25,
-              total_sessions: 92,
-              total_courses_enrolled: 3,
-              total_courses_completed: 1,
-              total_decks_studied: 6,
-              total_reviews: 1240,
-            })
-            return
-          }
+        const u = await userService.getProfileById(userId)
+        if (u) {
+          setProfileData({
+            id: u._id || userId,
+            full_name: u.full_name || u.email.split('@')[0],
+            email: u.email,
+            avatar_url: u.avatar_url,
+            status: u.status || 'ACTIVE',
+            is_premium: (u as any).subscription_tier === 'premium' || (u as any).plan_type === 'PREMIUM',
+            created_at: u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '12/01/2026',
+            last_active: 'Vừa xong',
+            total_xp: (u as any).gamification?.total_xp || 3420,
+            level: (u as any).gamification?.current_level || 8,
+            current_streak: (u as any).gamification?.streak_days || 14,
+            longest_streak: 28,
+            total_lessons_completed: 36,
+            total_words_learned: 480,
+            toeic_score: u.target_toeic_score || 685,
+            accuracy_rate: 86.4,
+            avg_session_time: 25,
+            total_sessions: 42,
+            total_courses_enrolled: 4,
+            total_courses_completed: 2,
+            total_decks_studied: 8,
+          })
+          return
         }
       } catch (err) {
-        console.warn('Using cached user profile data:', err)
+        console.warn('Using local learner profile:', err)
       }
 
       if (user) {
@@ -101,266 +92,157 @@ export function UserProfilePage() {
           full_name: user.full_name,
           email: user.email,
           avatar_url: user.avatar_url,
-          phone: user.phone_number,
           status: user.status,
           is_premium: user.is_premium,
-          created_at: user.created_at,
-          last_active: '2026-02-24T10:30:00Z',
+          created_at: '12/01/2026',
+          last_active: 'Hôm nay',
           total_xp: user.total_xp,
           level: user.level,
           current_streak: user.current_streak,
-          longest_streak: user.longest_streak,
-          total_lessons_completed: user.lessons_completed,
-          total_words_learned: user.vocabulary_reviewed,
-          toeic_score: user.current_estimated_score,
-          accuracy_rate: 82.5,
-          avg_session_time: 25,
-          total_sessions: 84,
-          total_courses_enrolled: 4,
-          total_courses_completed: 2,
-          total_decks_studied: 8,
-          total_reviews: 1560,
+          longest_streak: user.longest_streak || 24,
+          total_lessons_completed: user.lessons_completed || 28,
+          total_words_learned: user.vocabulary_reviewed || 320,
+          toeic_score: user.target_toeic_score || 650,
+          accuracy_rate: 84.5,
+          avg_session_time: 20,
+          total_sessions: user.practice_sessions || 35,
+          total_courses_enrolled: 3,
+          total_courses_completed: 1,
+          total_decks_studied: 5,
         })
       }
     }
 
-    loadUserProfile()
-  }, [user, userId])
+    loadData()
+  }, [userId, user])
 
-  if (!user || !profileData) {
+  if (!profileData) {
     return (
-      <main className="page-content">
-        <div className="form-header">
-          <button className="back-button" onClick={() => setActiveNavItem('users-list')}>
-            <ChevronLeft />
-            {isVietnamese ? 'Quay lại' : 'Back'}
-          </button>
-        </div>
-        <div className="not-found">
-          <p>{isVietnamese ? 'Không tìm thấy người dùng' : 'User not found'}</p>
-        </div>
-      </main>
+      <div className="py-20 text-center text-xs text-slate-500">
+        Đang tải thông tin học viên...
+      </div>
     )
   }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-  }
-
-  const xpToNextLevel = (profileData.level + 1) * 1000
-  const xpProgress = (profileData.total_xp % 1000) / 10
-
   return (
-    <main className="page-content">
-      
-      <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="back-button" onClick={() => setActiveNavItem('users-list')}>
-            <ChevronLeft />
-            {isVietnamese ? 'Quay lại' : 'Back'}
-          </button>
-          <h1 className="form-title" style={{ margin: 0 }}>
-            {isVietnamese ? 'Chi tiết người dùng' : 'User Details'}
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setActiveNavItem('users')}
+          className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          type="button"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            Hồ Sơ Chi Tiết Học Viên
           </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Theo dõi tiến trình học từ vựng, điểm thi TOEIC và chỉ số chuyên cần
+          </p>
         </div>
       </div>
 
-      <div className="profile-content">
-        
-        <div className="profile-header-card">
-          <div className="profile-avatar">
-            {user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.full_name} />
-            ) : (
-              <span>{user.full_name.charAt(0)}</span>
-            )}
-          </div>
-          <div className="profile-info">
-            <h2 className="profile-name">{user.full_name}</h2>
-            <p className="profile-email">
-              <Mail /> {user.email}
-            </p>
-            <div className="profile-badges">
-              <span className={`status-badge ${user.status.toLowerCase()}`}>
-                {user.status === 'ACTIVE'
-                  ? (isVietnamese ? 'Hoạt động' : 'Active')
-                  : user.status === 'INACTIVE'
-                    ? (isVietnamese ? 'Không hoạt động' : 'Inactive')
-                    : (isVietnamese ? 'Bị cấm' : 'Banned')
-                }
-              </span>
-              {user.is_premium && (
-                <span className="premium-badge">
-                  <Crown /> Premium
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="profile-grid">
-          
-          <div className="profile-card">
-            <h3 className="card-title">
-              <Award /> {isVietnamese ? 'Cấp độ & Kinh nghiệm' : 'Level & Experience'}
-            </h3>
-            <div className="level-display">
-              <div className="level-badge-large">
-                <span className="level-number">{profileData.level}</span>
-              </div>
-              <div className="xp-info">
-                <div className="xp-bar">
-                  <div className="xp-progress" style={{ width: `${xpProgress}%` }} />
-                </div>
-                <p className="xp-text">
-                  {profileData.total_xp.toLocaleString()} XP
-                  <span> / {xpToNextLevel.toLocaleString()}</span>
-                </p>
-              </div>
-            </div>
-            <div className="stat-row">
-              <div className="stat-item">
-                <Flame className="stat-icon" />
-                <div>
-                  <span className="stat-value">{profileData.current_streak}</span>
-                  <span className="stat-label">{isVietnamese ? 'Streak hiện tại' : 'Current streak'}</span>
-                </div>
-              </div>
-              <div className="stat-item">
-                <TrendingUp className="stat-icon" />
-                <div>
-                  <span className="stat-value">{profileData.longest_streak}</span>
-                  <span className="stat-label">{isVietnamese ? 'Streak dài nhất' : 'Longest streak'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="profile-card">
-            <h3 className="card-title">
-              <BookOpen /> {isVietnamese ? 'Tiến độ học tập' : 'Learning Progress'}
-            </h3>
-            <div className="stats-grid">
-              <div className="stat-box">
-                <BookOpen className="stat-box-icon" />
-                <span className="stat-box-value">{profileData.total_lessons_completed}</span>
-                <span className="stat-box-label">{isVietnamese ? 'Bài học hoàn thành' : 'Lessons completed'}</span>
-              </div>
-              <div className="stat-box">
-                <Star className="stat-box-icon" />
-                <span className="stat-box-value">{profileData.total_words_learned}</span>
-                <span className="stat-box-label">{isVietnamese ? 'Từ đã học' : 'Words learned'}</span>
-              </div>
-              <div className="stat-box">
-                <Target className="stat-box-icon" />
-                <span className="stat-box-value">{profileData.total_reviews}</span>
-                <span className="stat-box-label">{isVietnamese ? 'Lần ôn tập' : 'Reviews'}</span>
-              </div>
-              <div className="stat-box">
-                <TrendingUp className="stat-box-icon" />
-                <span className="stat-box-value">{profileData.accuracy_rate}%</span>
-                <span className="stat-box-label">{isVietnamese ? 'Độ chính xác' : 'Accuracy'}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="profile-card">
-            <h3 className="card-title">
-              <BookOpen /> {isVietnamese ? 'Khóa học' : 'Courses'}
-            </h3>
-            <div className="course-progress-list">
-              <div className="course-progress-item">
-                <div className="course-progress-header">
-                  <span>{isVietnamese ? 'Đã đăng ký' : 'Enrolled'}</span>
-                  <span className="progress-value">{profileData.total_courses_enrolled}</span>
-                </div>
-              </div>
-              <div className="course-progress-item">
-                <div className="course-progress-header">
-                  <span>{isVietnamese ? 'Hoàn thành' : 'Completed'}</span>
-                  <span className="progress-value success">{profileData.total_courses_completed}</span>
-                </div>
-              </div>
-              <div className="course-progress-item">
-                <div className="course-progress-header">
-                  <span>{isVietnamese ? 'Bộ thẻ đã học' : 'Decks studied'}</span>
-                  <span className="progress-value">{profileData.total_decks_studied}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {profileData.toeic_score && (
-            <div className="profile-card">
-              <h3 className="card-title">
-                <Target /> {isVietnamese ? 'Điểm TOEIC' : 'TOEIC Score'}
-              </h3>
-              <div className="toeic-score-display">
-                <span className="toeic-score">{profileData.toeic_score}</span>
-                <span className="toeic-max">/ 990</span>
-              </div>
-              <div className="toeic-breakdown">
-                <div className="toeic-part">
-                  <span className="part-label">{isVietnamese ? 'Nghe' : 'Listening'}</span>
-                  <div className="part-bar">
-                    <div className="part-progress" style={{ width: '75%' }} />
-                  </div>
-                  <span className="part-value">495</span>
-                </div>
-                <div className="toeic-part">
-                  <span className="part-label">{isVietnamese ? 'Đọc' : 'Reading'}</span>
-                  <div className="part-bar">
-                    <div className="part-progress" style={{ width: '70%' }} />
-                  </div>
-                  <span className="part-value">470</span>
-                </div>
-              </div>
-            </div>
+      {/* Main Info Card */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div className="w-24 h-24 rounded-3xl bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 text-3xl font-extrabold shadow-xl shrink-0">
+          {profileData.avatar_url ? (
+            <img
+              src={profileData.avatar_url}
+              alt={profileData.full_name}
+              className="w-full h-full rounded-3xl object-cover"
+            />
+          ) : (
+            profileData.full_name.slice(0, 2).toUpperCase()
           )}
+        </div>
 
-          <div className="profile-card">
-            <h3 className="card-title">
-              <Clock /> {isVietnamese ? 'Phiên học' : 'Sessions'}
-            </h3>
-            <div className="session-stats">
-              <div className="session-stat">
-                <span className="session-value">{profileData.total_sessions}</span>
-                <span className="session-label">{isVietnamese ? 'Tổng phiên' : 'Total sessions'}</span>
-              </div>
-              <div className="session-stat">
-                <span className="session-value">{profileData.avg_session_time} {isVietnamese ? 'phút' : 'min'}</span>
-                <span className="session-label">{isVietnamese ? 'Trung bình/phiên' : 'Avg per session'}</span>
-              </div>
-            </div>
+        <div className="space-y-3 flex-1 text-center sm:text-left">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <h2 className="text-xl font-bold text-slate-100">{profileData.full_name}</h2>
+            {profileData.is_premium ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <Crown className="w-3 h-3" />
+                <span>PREMIUM VIP</span>
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400">
+                FREE PLAN
+              </span>
+            )}
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              {profileData.status}
+            </span>
           </div>
 
-          <div className="profile-card">
-            <h3 className="card-title">
-              <Calendar /> {isVietnamese ? 'Thông tin tài khoản' : 'Account Info'}
-            </h3>
-            <div className="account-info">
-              <div className="info-row">
-                <span className="info-label">{isVietnamese ? 'Ngày tham gia' : 'Join date'}</span>
-                <span className="info-value">{formatDate(profileData.created_at)}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">{isVietnamese ? 'Hoạt động cuối' : 'Last active'}</span>
-                <span className="info-value">{formatDate(profileData.last_active)}</span>
-              </div>
-              {profileData.phone && (
-                <div className="info-row">
-                  <span className="info-label">{isVietnamese ? 'Số điện thoại' : 'Phone'}</span>
-                  <span className="info-value">{profileData.phone}</span>
-                </div>
-              )}
-            </div>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <Mail className="w-4 h-4 text-slate-500" />
+              <span>{profileData.email}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-slate-500" />
+              <span>Gia nhập: {profileData.created_at}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-slate-500" />
+              <span>Hoạt động: {profileData.last_active}</span>
+            </span>
           </div>
         </div>
       </div>
-    </main>
+
+      {/* Gamification Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <Star className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">Cấp độ (Level)</p>
+          <p className="text-xl font-bold text-slate-100 mt-1">Lv. {profileData.level}</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <Flame className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">Chuỗi ngày học (Streak)</p>
+          <p className="text-xl font-bold text-slate-100 mt-1">{profileData.current_streak} ngày</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <Award className="w-6 h-6 text-teal-400 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">Tổng điểm tích lũy</p>
+          <p className="text-xl font-bold text-teal-400 mt-1">
+            {profileData.total_xp.toLocaleString('vi-VN')} XP
+          </p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <Target className="w-6 h-6 text-rose-400 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">Mục tiêu TOEIC</p>
+          <p className="text-xl font-bold text-rose-400 mt-1">{profileData.toeic_score} / 990</p>
+        </div>
+      </div>
+
+      {/* Progress Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+          <p className="text-xs text-slate-400">Bài giảng đã hoàn thành</p>
+          <p className="text-xl font-bold text-slate-200">{profileData.total_lessons_completed} bài</p>
+          <p className="text-[10px] text-teal-400">Trên tổng số {profileData.total_courses_enrolled} khóa học tham gia</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+          <p className="text-xs text-slate-400">Từ vựng đã ghi nhớ</p>
+          <p className="text-xl font-bold text-slate-200">{profileData.total_words_learned} từ</p>
+          <p className="text-[10px] text-indigo-400">{profileData.total_decks_studied} bộ thẻ Flashcard</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+          <p className="text-xs text-slate-400">Độ chính xác luyện tập</p>
+          <p className="text-xl font-bold text-slate-200">{profileData.accuracy_rate}%</p>
+          <p className="text-[10px] text-emerald-400">{profileData.total_sessions} phiên làm bài</p>
+        </div>
+      </div>
+    </div>
   )
 }

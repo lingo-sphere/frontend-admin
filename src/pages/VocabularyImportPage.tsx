@@ -6,21 +6,20 @@ import {
   FileText,
   Download,
   CheckCircle,
-  XCircle,
   Clock,
-  AlertCircle,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
+import { toast } from '@/store/toast-store'
 
 interface ImportBatch {
   id: string
   name: string
-  source_type: 'CSV' | 'JSON' | 'EXCEL' | 'DOCX'
+  source_type: 'CSV' | 'JSON' | 'EXCEL'
   total_items: number
   items_success: number
   items_failed: number
   items_duplicate: number
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  status: 'COMPLETED' | 'FAILED'
   created_at: string
 }
 
@@ -28,9 +27,9 @@ export function VocabularyImportPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
-  const [dragActive, setDragActive] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('CSV')
+  const [isImporting, setIsImporting] = useState(false)
 
   const importHistory: ImportBatch[] = [
     {
@@ -42,242 +41,153 @@ export function VocabularyImportPage() {
       items_failed: 10,
       items_duplicate: 5,
       status: 'COMPLETED',
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: '22/08/2026',
     },
     {
       id: 'imp-002',
-      name: 'Tech Terms August',
+      name: 'TOEIC Essential 600 Words',
       source_type: 'EXCEL',
-      total_items: 200,
-      items_success: 200,
+      total_items: 600,
+      items_success: 600,
       items_failed: 0,
       items_duplicate: 0,
       status: 'COMPLETED',
-      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'imp-003',
-      name: 'Medical Vocabulary',
-      source_type: 'JSON',
-      total_items: 150,
-      items_success: 0,
-      items_failed: 0,
-      items_duplicate: 0,
-      status: 'PROCESSING',
-      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: '19/08/2026',
     },
   ]
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
+  const handleStartImport = async () => {
+    if (!selectedFile) {
+      toast.error('Vui lòng chọn file dữ liệu để import')
+      return
     }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0])
+    setIsImporting(true)
+    try {
+      await new Promise((r) => setTimeout(r, 1200))
+      toast.success(`Đã nạp thành công dữ liệu từ file ${selectedFile.name}!`)
+      setSelectedFile(null)
+    } finally {
+      setIsImporting(false)
     }
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0])
-    }
-  }
-
-  const handleImport = () => {
-    if (!selectedFile) return
-    alert(isVietnamese ? 'Đang import...' : 'Importing...')
-  }
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
   }
 
   return (
-    <main className="page-content">
-      
-      <div className="form-header">
-        <button className="back-button" onClick={() => setActiveNavItem('vocabulary')}>
-          <ChevronLeft />
-          {isVietnamese ? 'Quay lại' : 'Back'}
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setActiveNavItem('vocabulary')}
+          className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          type="button"
+        >
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="form-title">{isVietnamese ? 'Import từ vựng' : 'Import Vocabulary'}</h1>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            Nhập Dữ Liệu Từ Vựng Hàng Loạt
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Hỗ trợ nhập kho từ vựng từ tệp CSV, Excel (XLSX) hoặc JSON có sẵn phiên âm và ví dụ
+          </p>
+        </div>
       </div>
 
-      <div className="import-content">
-        
-        <div className="import-upload-section">
-          <h2 className="section-title">{isVietnamese ? 'Tải lên file' : 'Upload File'}</h2>
-
-          <div className="file-type-selection">
-            <span className="file-type-label">{isVietnamese ? 'Định dạng:' : 'Format:'}</span>
-            <div className="file-type-options">
-              {(['CSV', 'JSON', 'EXCEL'] as const).map(type => (
-                <button
-                  key={type}
-                  className={`file-type-btn${importType === type ? ' active' : ''}`}
-                  onClick={() => setImportType(type)}
-                >
-                  {type === 'CSV' && <FileText />}
-                  {type === 'JSON' && <FileText />}
-                  {type === 'EXCEL' && <FileText />}
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className={`drop-zone${dragActive ? ' drag-active' : ''}${selectedFile ? ' has-file' : ''}`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            {selectedFile ? (
-              <div className="selected-file">
-                <FileText className="file-icon" />
-                <div className="file-info">
-                  <span className="file-name">{selectedFile.name}</span>
-                  <span className="file-size">
-                    {(selectedFile.size / 1024).toFixed(1)} KB
-                  </span>
-                </div>
-                <button
-                  className="remove-file"
-                  onClick={() => setSelectedFile(null)}
-                >
-                  <XCircle />
-                </button>
-              </div>
-            ) : (
-              <>
-                <Upload className="upload-icon" />
-                <p className="upload-text">
-                  {isVietnamese ? 'Kéo thả file vào đây' : 'Drag and drop file here'}
-                </p>
-                <p className="upload-subtext">
-                  {isVietnamese ? 'hoặc' : 'or'} &nbsp;
-                  <label className="upload-link">
-                    <input
-                      type="file"
-                      accept=".csv,.json,.xlsx,.xls"
-                      onChange={handleFileSelect}
-                      style={{ display: 'none' }}
-                    />
-                    {isVietnamese ? 'chọn file' : 'select file'}
-                  </label>
-                </p>
-              </>
-            )}
-          </div>
-
-          <div className="import-options">
-            <h3>{isVietnamese ? 'Tùy chọn import' : 'Import Options'}</h3>
-            <div className="option-row">
-              <label className="option-checkbox">
-                <input type="checkbox" defaultChecked />
-                <span>{isVietnamese ? 'Bỏ qua từ trùng lặp' : 'Skip duplicate words'}</span>
-              </label>
-            </div>
-            <div className="option-row">
-              <label className="option-checkbox">
-                <input type="checkbox" defaultChecked />
-                <span>{isVietnamese ? 'Tự động gán CEFR level' : 'Auto-assign CEFR level'}</span>
-              </label>
-            </div>
-            <div className="option-row">
-              <label className="option-checkbox">
-                <input type="checkbox" />
-                <span>{isVietnamese ? 'Tạo chủ đề mới nếu chưa có' : 'Create new topic if not exists'}</span>
-              </label>
-            </div>
+      {/* Upload Box */}
+      <div className="p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-300">Định dạng tệp:</span>
+            {(['CSV', 'EXCEL', 'JSON'] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setImportType(type)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  importType === type
+                    ? 'bg-teal-500 text-slate-950'
+                    : 'bg-slate-950/60 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
           </div>
 
           <button
-            className="primary-button import-btn"
-            onClick={handleImport}
-            disabled={!selectedFile}
+            type="button"
+            onClick={() => toast.info('Đang tải file mẫu...')}
+            className="flex items-center gap-1.5 text-xs text-teal-400 hover:text-teal-300 font-semibold cursor-pointer"
           >
-            <Upload />
-            {isVietnamese ? 'Bắt đầu Import' : 'Start Import'}
+            <Download className="w-3.5 h-3.5" />
+            <span>Tải template mẫu (.csv)</span>
           </button>
         </div>
 
-        <div className="import-history-section">
-          <h2 className="section-title">{isVietnamese ? 'Lịch sử import' : 'Import History'}</h2>
-
-          <div className="import-history-list">
-            {importHistory.map(batch => (
-              <div key={batch.id} className="import-batch-card">
-                <div className="batch-header">
-                  <div className="batch-info">
-                    <span className="batch-name">{batch.name}</span>
-                    <span className="batch-date">{formatDate(batch.created_at)}</span>
-                  </div>
-                  <span className={`batch-status ${batch.status.toLowerCase()}`}>
-                    {batch.status === 'COMPLETED' && <CheckCircle />}
-                    {batch.status === 'PROCESSING' && <Clock />}
-                    {batch.status === 'FAILED' && <XCircle />}
-                    {batch.status === 'PENDING' && <Clock />}
-                    {batch.status}
-                  </span>
-                </div>
-
-                <div className="batch-stats">
-                  <div className="batch-stat">
-                    <span className="stat-value">{batch.total_items}</span>
-                    <span className="stat-label">{isVietnamese ? 'Tổng' : 'Total'}</span>
-                  </div>
-                  <div className="batch-stat success">
-                    <span className="stat-value">{batch.items_success}</span>
-                    <span className="stat-label">{isVietnamese ? 'Thành công' : 'Success'}</span>
-                  </div>
-                  <div className="batch-stat error">
-                    <span className="stat-value">{batch.items_failed}</span>
-                    <span className="stat-label">{isVietnamese ? 'Thất bại' : 'Failed'}</span>
-                  </div>
-                  <div className="batch-stat duplicate">
-                    <span className="stat-value">{batch.items_duplicate}</span>
-                    <span className="stat-label">{isVietnamese ? 'Trùng lặp' : 'Duplicate'}</span>
-                  </div>
-                </div>
-
-                <div className="batch-actions">
-                  <span className="file-type-badge">{batch.source_type}</span>
-                  {batch.status === 'COMPLETED' && (
-                    <button className="batch-action-btn">
-                      <Download />
-                      {isVietnamese ? 'Tải log' : 'Download log'}
-                    </button>
-                  )}
-                  {batch.items_failed > 0 && (
-                    <button className="batch-action-btn">
-                      <AlertCircle />
-                      {isVietnamese ? 'Xem lỗi' : 'View errors'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+        {/* Drag & Drop Zone */}
+        <label className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-800 hover:border-teal-500/50 rounded-2xl bg-slate-950/50 cursor-pointer transition-colors group">
+          <div className="w-14 h-14 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <Upload className="w-7 h-7" />
           </div>
+          <p className="text-sm font-semibold text-slate-200">
+            {selectedFile ? selectedFile.name : 'Kéo thả file từ vựng vào đây hoặc bấm để chọn'}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">Hỗ trợ .csv, .xlsx, .json (Dung lượng tối đa 20MB)</p>
+          <input
+            type="file"
+            accept=".csv,.xlsx,.json"
+            onChange={(e) => e.target.files?.[0] && setSelectedFile(e.target.files[0])}
+            className="hidden"
+          />
+        </label>
+
+        {selectedFile && (
+          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center gap-3">
+              <FileText className="w-6 h-6 text-teal-400" />
+              <div>
+                <p className="text-xs font-semibold text-slate-200">{selectedFile.name}</p>
+                <p className="text-[10px] text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+              </div>
+            </div>
+            <button
+              onClick={handleStartImport}
+              disabled={isImporting}
+              className="h-10 px-5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {isImporting ? 'Đang import...' : 'Bắt đầu Import'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* History */}
+      <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-slate-400" />
+          <span>Lịch sử các đợt nạp từ vựng</span>
+        </h3>
+
+        <div className="divide-y divide-slate-800/60">
+          {importHistory.map((item) => (
+            <div key={item.id} className="py-3 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold text-slate-200">{item.name}</p>
+                <p className="text-[11px] text-slate-500">
+                  {item.source_type} · {item.created_at}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-teal-400 font-bold">
+                  {item.items_success} / {item.total_items} từ
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  {item.status}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </main>
+    </div>
   )
 }

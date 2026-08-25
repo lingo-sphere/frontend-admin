@@ -5,17 +5,13 @@ import {
   Save,
   Plus,
   Trash2,
-  GripVertical,
   Image,
-  X,
-  Check,
   Video,
   FileText,
-  Layers,
   HelpCircle,
   ChevronDown,
   ChevronRight,
-  Edit2,
+  BookOpen,
 } from 'lucide-react'
 import {
   categoryLabels,
@@ -60,568 +56,467 @@ interface CourseFormData {
   title: string
   slug: string
   description: string
-  thumbnail_url: string
+  category: 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY'
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
   target_score: number
-  category: string
-  level: string
   price: number
+  thumbnail_url: string
   is_published: boolean
-}
-
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[đĐ]/g, 'd')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
-
-const lessonTypeLabels: Record<LessonType, { vi: string; en: string; icon: typeof Video }> = {
-  VIDEO: { vi: 'Video', en: 'Video', icon: Video },
-  READING: { vi: 'Bài đọc', en: 'Reading', icon: FileText },
-  FLASHCARD: { vi: 'Flashcard', en: 'Flashcard', icon: Layers },
-  PRACTICE_QUIZ: { vi: 'Bài tập', en: 'Quiz', icon: HelpCircle },
-}
-
-const questionTypeLabels: Record<string, { vi: string; en: string }> = {
-  MULTIPLE_CHOICE: { vi: 'Trắc nghiệm', en: 'Multiple Choice' },
-  FILL_IN_BLANK: { vi: 'Điền từ', en: 'Fill in Blank' },
-  AUDIO_LISTENING: { vi: 'Nghe', en: 'Audio Listening' },
+  modules: CourseModule[]
 }
 
 export function CourseFormPage() {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<CourseFormData>({
     title: '',
     slug: '',
     description: '',
-    thumbnail_url: '',
-    target_score: 650,
-    category: 'VOCABULARY',
+    category: 'TOEIC_LISTENING',
     level: 'BEGINNER',
-    price: 0,
-    is_published: false,
+    target_score: 500,
+    price: 299000,
+    thumbnail_url: '',
+    is_published: true,
+    modules: [
+      {
+        id: 'mod-1',
+        title: 'Chương 1: Tổng quan và Phương pháp học',
+        description: 'Làm quen với cấu trúc đề và lộ trình chinh phục điểm cao',
+        order_index: 1,
+        is_free_preview: true,
+        lessons: [
+          {
+            id: 'les-1',
+            title: 'Bài 1: Chiến thuật xử lý dạng bài nhanh',
+            lesson_type: 'VIDEO',
+            video_url: 'https://example.com/video1.mp4',
+            duration_seconds: 900,
+            content_html: '<p>Tóm tắt các bẫy thường gặp trong đề thi TOEIC ETS.</p>',
+            order_index: 1,
+            questions: [],
+          },
+        ],
+      },
+    ],
   })
-  const [modules, setModules] = useState<CourseModule[]>([
-    {
-      id: '1',
-      title: '',
-      description: '',
-      order_index: 1,
-      is_free_preview: false,
-      lessons: [],
-    },
-  ])
-  const [expandedModules, setExpandedModules] = useState<string[]>(['1'])
-  const [activeSection, setActiveSection] = useState('basic')
 
-  const sections = [
-    { id: 'basic', label: isVietnamese ? 'Thông tin cơ bản' : 'Basic Info' },
-    { id: 'category', label: isVietnamese ? 'Phân loại' : 'Category' },
-    { id: 'content', label: isVietnamese ? 'Nội dung' : 'Content' },
-    { id: 'pricing', label: isVietnamese ? 'Giá & Trạng thái' : 'Pricing & Status' },
-  ]
+  const [expandedModules, setExpandedModules] = useState<string[]>(['mod-1'])
 
-  const targetScoreOptions = [300, 450, 500, 550, 650, 750, 850, 900]
-
-  const handleTitleChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      title: value,
-      slug: generateSlug(value),
-    }))
+  const handleTitleChange = (val: string) => {
+    const slugVal = val
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+    setFormData({ ...formData, title: val, slug: slugVal })
   }
 
-  const toggleModule = (id: string) => {
-    setExpandedModules(prev =>
-      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+  const toggleModuleExpand = (modId: string) => {
+    setExpandedModules((prev) =>
+      prev.includes(modId) ? prev.filter((id) => id !== modId) : [...prev, modId]
     )
   }
 
-  const handleAddModule = () => {
-    const newModule: CourseModule = {
-      id: Date.now().toString(),
-      title: '',
+  const addModule = () => {
+    const newModId = `mod-${Date.now()}`
+    const newMod: CourseModule = {
+      id: newModId,
+      title: `Chương ${formData.modules.length + 1}: Chủ đề mới`,
       description: '',
-      order_index: modules.length + 1,
+      order_index: formData.modules.length + 1,
       is_free_preview: false,
       lessons: [],
     }
-    setModules([...modules, newModule])
-    setExpandedModules([...expandedModules, newModule.id])
+    setFormData({ ...formData, modules: [...formData.modules, newMod] })
+    setExpandedModules((prev) => [...prev, newModId])
   }
 
-  const handleRemoveModule = (id: string) => {
-    if (modules.length > 1) {
-      setModules(modules.filter(m => m.id !== id).map((m, idx) => ({ ...m, order_index: idx + 1 })))
-      setExpandedModules(expandedModules.filter(m => m !== id))
-    }
+  const removeModule = (modId: string) => {
+    setFormData({ ...formData, modules: formData.modules.filter((m) => m.id !== modId) })
   }
 
-  const handleModuleChange = (id: string, field: keyof CourseModule, value: string | boolean) => {
-    setModules(modules.map(m => m.id === id ? { ...m, [field]: value } : m))
-  }
-
-  const handleAddLesson = (moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId)
-    if (!module) return
-
+  const addLesson = (modId: string) => {
     const newLesson: CourseLesson = {
-      id: Date.now().toString(),
-      title: '',
+      id: `les-${Date.now()}`,
+      title: 'Bài học mới',
       lesson_type: 'VIDEO',
       video_url: '',
-      duration_seconds: 0,
+      duration_seconds: 600,
       content_html: '',
-      order_index: module.lessons.length + 1,
+      order_index: 1,
       questions: [],
     }
-    setModules(modules.map(m =>
-      m.id === moduleId ? { ...m, lessons: [...m.lessons, newLesson] } : m
-    ))
+
+    setFormData({
+      ...formData,
+      modules: formData.modules.map((m) =>
+        m.id === modId ? { ...m, lessons: [...m.lessons, newLesson] } : m
+      ),
+    })
   }
 
-  const handleRemoveLesson = (moduleId: string, lessonId: string) => {
-    setModules(modules.map(m =>
-      m.id === moduleId
-        ? {
-            ...m,
-            lessons: m.lessons.filter(l => l.id !== lessonId).map((l, idx) => ({ ...l, order_index: idx + 1 })),
-          }
-        : m
-    ))
+  const removeLesson = (modId: string, lesId: string) => {
+    setFormData({
+      ...formData,
+      modules: formData.modules.map((m) =>
+        m.id === modId ? { ...m, lessons: m.lessons.filter((l) => l.id !== lesId) } : m
+      ),
+    })
   }
 
-  const handleLessonChange = (moduleId: string, lessonId: string, field: keyof CourseLesson, value: string | number | LessonType) => {
-    setModules(modules.map(m =>
-      m.id === moduleId
-        ? { ...m, lessons: m.lessons.map(l => l.id === lessonId ? { ...l, [field]: value } : l) }
-        : m
-    ))
-  }
-
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!formData.title.trim()) {
       toast.error('Vui lòng nhập tên khóa học')
       return
     }
 
+    setIsSubmitting(true)
     try {
       await courseService.createCourse({
         title: formData.title,
+        slug: formData.slug || `course-${Date.now()}`,
         description: formData.description,
-        category: formData.category as any,
-        level: formData.level as any,
+        category: formData.category,
+        level: formData.level,
         target_score: formData.target_score,
         price: formData.price,
-        thumbnail_url: formData.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60',
-        approval_status: formData.is_published ? 'APPROVED' : 'PENDING',
+        thumbnail_url:
+          formData.thumbnail_url ||
+          'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60',
         is_published: formData.is_published,
+        modules: formData.modules.map((m) => ({
+          title: m.title,
+          description: m.description,
+          order_index: m.order_index,
+          is_free_preview: m.is_free_preview,
+          lessons: m.lessons.map((l) => ({
+            title: l.title,
+            lesson_type: l.lesson_type,
+            video_url: l.video_url,
+            duration_seconds: l.duration_seconds,
+            content_html: l.content_html,
+            order_index: l.order_index,
+          })),
+        })) as any,
       })
-      toast.success(isVietnamese ? 'Tạo khóa học thành công!' : 'Course created successfully!')
+
+      toast.success('Tạo khóa học mới thành công!')
       setActiveNavItem('courses')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Tạo khóa học thất bại'
       toast.error(msg)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  const totalLessons = modules.reduce((sum, m) => sum + m.lessons.length, 0)
-
   return (
-    <main className="page-content">
-      
-      <div className="form-header">
-        <button className="back-button" onClick={() => setActiveNavItem('courses')}>
-          <ChevronLeft />
-          {isVietnamese ? 'Quay lại' : 'Back'}
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setActiveNavItem('courses')}
+          className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          type="button"
+        >
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="form-title">{isVietnamese ? 'Thêm khóa học' : 'Add Course'}</h1>
-        <button className="primary-button" onClick={handleSave}>
-          <Save />
-          {isVietnamese ? 'Lưu' : 'Save'}
-        </button>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+            Soạn Thảo Khóa Học & Giáo Trình
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Cấu hình thông tin khóa học, cây chương mục (Modules) và các bài giảng đa phương tiện
+          </p>
+        </div>
       </div>
 
-      <div className="form-sections-nav">
-        {sections.map(section => (
-          <button
-            key={section.id}
-            className={`section-nav-btn${activeSection === section.id ? ' active' : ''}`}
-            onClick={() => setActiveSection(section.id)}
-          >
-            {section.label}
-          </button>
-        ))}
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Info Card */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-5">
+          <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-teal-400" />
+            <span>Thông tin cơ bản khóa học</span>
+          </h2>
 
-      <div className="form-content">
-        
-        {activeSection === 'basic' && (
-          <div className="form-section">
-            <h2 className="section-title">{isVietnamese ? 'Thông tin cơ bản' : 'Basic Information'}</h2>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Tên khóa học' : 'Course Title'} <span className="required">*</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Tên khóa học <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
-                className="form-input"
-                placeholder={isVietnamese ? 'Nhập tên khóa học...' : 'Enter course title...'}
                 value={formData.title}
-                onChange={e => handleTitleChange(e.target.value)}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                placeholder="VD: Luyện thi TOEIC Cấp tốc 750+"
+                required
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500 transition-all"
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                Slug <span className="required">*</span>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Đường dẫn tĩnh (Slug)
               </label>
               <input
                 type="text"
-                className="form-input slug-input"
-                placeholder="course-slug"
                 value={formData.slug}
-                onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                placeholder="luyen-thi-toeic-cap-toc-750"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-300 font-mono text-xs focus:outline-none focus:border-teal-500"
               />
-              <span className="form-hint">URL: /courses/{formData.slug || 'course-slug'}</span>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Mô tả' : 'Description'}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Danh mục khóa học
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                className="w-full h-11 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
+              >
+                {Object.entries(categoryLabels).map(([key, val]) => (
+                  <option key={key} value={key}>
+                    {val[isVi ? 'vi' : 'en']}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Trình độ mục tiêu
+              </label>
+              <select
+                value={formData.level}
+                onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
+                className="w-full h-11 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-teal-500 cursor-pointer"
+              >
+                {Object.entries(levelLabels).map(([key, val]) => (
+                  <option key={key} value={key}>
+                    {val[isVi ? 'vi' : 'en']}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Điểm mục tiêu (Target TOEIC)
+              </label>
+              <input
+                type="number"
+                value={formData.target_score}
+                onChange={(e) => setFormData({ ...formData, target_score: Number(e.target.value) })}
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Học phí (VND)
+              </label>
+              <input
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                placeholder="299000"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-teal-400 font-bold focus:outline-none focus:border-teal-500"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Ảnh bìa Thumbnail (URL)
+              </label>
+              <input
+                type="url"
+                value={formData.thumbnail_url}
+                onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
+                placeholder="https://..."
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Mô tả khóa học
               </label>
               <textarea
-                className="form-textarea"
-                placeholder={isVietnamese ? 'Nhập mô tả khóa học...' : 'Enter course description...'}
                 value={formData.description}
-                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={4}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                placeholder="Giới thiệu mục tiêu đầu ra và phương pháp học tập..."
+                className="w-full p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500 leading-relaxed"
               />
             </div>
+          </div>
+        </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Ảnh thumbnail' : 'Thumbnail'}
-              </label>
-              <div className="thumbnail-upload">
-                {formData.thumbnail_url ? (
-                  <div className="thumbnail-preview">
-                    <img src={formData.thumbnail_url} alt="Thumbnail" />
+        {/* Modules Curriculum Editor */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <Video className="w-5 h-5 text-indigo-400" />
+              <span>Chương trình giảng dạy (Modules & Bài học)</span>
+            </h2>
+            <button
+              type="button"
+              onClick={addModule}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Thêm Chương (Module)</span>
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {formData.modules.map((mod, modIdx) => {
+              const isExpanded = expandedModules.includes(mod.id)
+
+              return (
+                <div key={mod.id} className="rounded-2xl bg-slate-950/60 border border-slate-800 overflow-hidden">
+                  {/* Module Header */}
+                  <div className="p-4 flex items-center justify-between gap-3 bg-slate-900/40">
                     <button
-                      className="thumbnail-remove"
-                      onClick={() => setFormData(prev => ({ ...prev, thumbnail_url: '' }))}
+                      type="button"
+                      onClick={() => toggleModuleExpand(mod.id)}
+                      className="flex items-center gap-2 text-left flex-1 font-semibold text-slate-200 hover:text-teal-400 transition-colors"
                     >
-                      <X />
+                      {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      <span className="text-sm">{mod.title || `Chương ${modIdx + 1}`}</span>
+                      <span className="text-[11px] text-slate-500 font-normal">({mod.lessons.length} bài học)</span>
                     </button>
-                  </div>
-                ) : (
-                  <div className="thumbnail-placeholder">
-                    <Image />
-                    <span>{isVietnamese ? 'Chọn ảnh' : 'Select image'}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {activeSection === 'category' && (
-          <div className="form-section">
-            <h2 className="section-title">{isVietnamese ? 'Phân loại khóa học' : 'Course Category'}</h2>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Danh mục' : 'Category'} <span className="required">*</span>
-              </label>
-              <div className="category-options">
-                {Object.entries(categoryLabels).map(([key, labels]) => (
-                  <button
-                    key={key}
-                    className={`category-option${formData.category === key ? ' selected' : ''}`}
-                    onClick={() => setFormData(prev => ({ ...prev, category: key }))}
-                  >
-                    <span className="category-name">{labels[isVietnamese ? 'vi' : 'en']}</span>
-                    {formData.category === key && <Check className="check-icon" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Cấp độ' : 'Level'} <span className="required">*</span>
-              </label>
-              <div className="level-options">
-                {Object.entries(levelLabels).map(([key, labels]) => (
-                  <button
-                    key={key}
-                    className={`level-option${formData.level === key ? ' selected' : ''}`}
-                    onClick={() => setFormData(prev => ({ ...prev, level: key }))}
-                  >
-                    {labels[isVietnamese ? 'vi' : 'en']}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Điểm mục tiêu TOEIC' : 'Target TOEIC Score'}
-              </label>
-              <div className="score-options">
-                {targetScoreOptions.map(score => (
-                  <button
-                    key={score}
-                    className={`score-option${formData.target_score === score ? ' selected' : ''}`}
-                    onClick={() => setFormData(prev => ({ ...prev, target_score: score }))}
-                  >
-                    {score}+
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSection === 'content' && (
-          <div className="form-section">
-            <div className="section-header">
-              <h2 className="section-title">{isVietnamese ? 'Nội dung khóa học' : 'Course Content'}</h2>
-              <button className="primary-button" onClick={handleAddModule}>
-                <Plus />
-                {isVietnamese ? 'Thêm module' : 'Add Module'}
-              </button>
-            </div>
-
-            <div className="modules-list">
-              {modules.map((module, moduleIndex) => {
-                const isExpanded = expandedModules.includes(module.id)
-                const TypeIcon = isExpanded ? ChevronDown : ChevronRight
-
-                return (
-                  <div key={module.id} className="module-card">
-                    <div className="module-header" onClick={() => toggleModule(module.id)}>
-                      <button className="module-expand">
-                        <TypeIcon />
-                      </button>
-                      <span className="module-number">{moduleIndex + 1}</span>
-                      <input
-                        type="text"
-                        className="module-title-input"
-                        placeholder={isVietnamese ? 'Tên module...' : 'Module name...'}
-                        value={module.title}
-                        onChange={e => {
-                          e.stopPropagation()
-                          handleModuleChange(module.id, 'title', e.target.value)
-                        }}
-                        onClick={e => e.stopPropagation()}
-                      />
-                      <label className="module-toggle" onClick={e => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={module.is_free_preview}
-                          onChange={e => handleModuleChange(module.id, 'is_free_preview', e.target.checked)}
-                        />
-                        <span className="toggle-label">{isVietnamese ? 'Miễn phí' : 'Free'}</span>
-                      </label>
+                    <div className="flex items-center gap-2">
                       <button
-                        className="module-delete"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleRemoveModule(module.id)
-                        }}
-                        disabled={modules.length === 1}
+                        type="button"
+                        onClick={() => addLesson(mod.id)}
+                        className="px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-400 hover:bg-teal-500/20 text-xs font-semibold transition-colors cursor-pointer"
                       >
-                        <Trash2 />
+                        + Bài học
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeModule(mod.id)}
+                        className="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-
-                    {isExpanded && (
-                      <div className="module-body">
-                        <div className="module-description">
-                          <textarea
-                            className="module-desc-input"
-                            placeholder={isVietnamese ? 'Mô tả module (tùy chọn)...' : 'Module description (optional)...'}
-                            value={module.description}
-                            onChange={e => handleModuleChange(module.id, 'description', e.target.value)}
-                            rows={2}
-                          />
-                        </div>
-
-                        <div className="lessons-section">
-                          <div className="lessons-header">
-                            <span className="lessons-title">
-                              {isVietnamese ? 'Bài học' : 'Lessons'} ({module.lessons.length})
-                            </span>
-                            <button
-                              className="add-lesson-btn"
-                              onClick={() => handleAddLesson(module.id)}
-                            >
-                              <Plus />
-                              {isVietnamese ? 'Thêm bài' : 'Add Lesson'}
-                            </button>
-                          </div>
-
-                          {module.lessons.length === 0 ? (
-                            <div className="lessons-empty">
-                              <span>{isVietnamese ? 'Chưa có bài học nào' : 'No lessons yet'}</span>
-                            </div>
-                          ) : (
-                            <div className="lessons-list">
-                              {module.lessons.map((lesson, lessonIndex) => {
-                                const LessonTypeIcon = lessonTypeLabels[lesson.lesson_type].icon
-                                return (
-                                  <div key={lesson.id} className="lesson-item">
-                                    <div className="lesson-drag">
-                                      <GripVertical />
-                                    </div>
-                                    <span className="lesson-number">{lessonIndex + 1}</span>
-
-                                    <select
-                                      className="lesson-type-select"
-                                      value={lesson.lesson_type}
-                                      onChange={e => handleLessonChange(module.id, lesson.id, 'lesson_type', e.target.value as LessonType)}
-                                    >
-                                      {Object.entries(lessonTypeLabels).map(([type, labels]) => (
-                                        <option key={type} value={type}>
-                                          {labels[isVietnamese ? 'vi' : 'en']}
-                                        </option>
-                                      ))}
-                                    </select>
-
-                                    <input
-                                      type="text"
-                                      className="lesson-title-input"
-                                      placeholder={isVietnamese ? 'Tên bài học...' : 'Lesson title...'}
-                                      value={lesson.title}
-                                      onChange={e => handleLessonChange(module.id, lesson.id, 'title', e.target.value)}
-                                    />
-
-                                    <button
-                                      className="lesson-delete"
-                                      onClick={() => handleRemoveLesson(module.id, lesson.id)}
-                                    >
-                                      <X />
-                                    </button>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                )
-              })}
-            </div>
 
-            <div className="modules-summary">
-              <span>
-                {modules.length} {isVietnamese ? 'modules' : 'modules'} ·{' '}
-                {totalLessons} {isVietnamese ? 'bài học' : 'lessons'}
-              </span>
-            </div>
+                  {/* Module Lessons List */}
+                  {isExpanded && (
+                    <div className="p-4 space-y-3 border-t border-slate-800/80">
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={mod.title}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              modules: formData.modules.map((m) =>
+                                m.id === mod.id ? { ...m, title: e.target.value } : m
+                              ),
+                            })
+                          }
+                          placeholder="Tiêu đề chương..."
+                          className="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-100"
+                        />
+                      </div>
+
+                      {mod.lessons.length === 0 ? (
+                        <p className="text-center py-4 text-xs text-slate-500 italic">
+                          Chưa có bài học nào trong chương này
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {mod.lessons.map((les, lesIdx) => (
+                            <div
+                              key={les.id}
+                              className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3"
+                            >
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-400 text-xs font-bold flex items-center justify-center shrink-0">
+                                  {lesIdx + 1}
+                                </span>
+                                <input
+                                  type="text"
+                                  value={les.title}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      modules: formData.modules.map((m) =>
+                                        m.id === mod.id
+                                          ? {
+                                              ...m,
+                                              lessons: m.lessons.map((l) =>
+                                                l.id === les.id ? { ...l, title: e.target.value } : l
+                                              ),
+                                            }
+                                          : m
+                                      ),
+                                    })
+                                  }
+                                  className="w-full bg-transparent border-0 outline-none text-xs text-slate-200"
+                                />
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => removeLesson(mod.id, les.id)}
+                                className="text-slate-500 hover:text-rose-400 p-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        )}
+        </div>
 
-        {activeSection === 'pricing' && (
-          <div className="form-section">
-            <h2 className="section-title">{isVietnamese ? 'Giá & Trạng thái' : 'Pricing & Status'}</h2>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Giá khóa học' : 'Course Price'}
-              </label>
-              <div className="price-input-wrapper">
-                <input
-                  type="number"
-                  className="form-input price-input"
-                  placeholder="0"
-                  value={formData.price}
-                  onChange={e => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                />
-                <span className="price-currency">đ</span>
-              </div>
-              <span className="form-hint">
-                {formData.price === 0
-                  ? (isVietnamese ? 'Khóa học miễn phí' : 'Free course')
-                  : new Intl.NumberFormat('vi-VN').format(formData.price) + ' đ'
-                }
-              </span>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                {isVietnamese ? 'Trạng thái xuất bản' : 'Publish Status'}
-              </label>
-              <div className="publish-toggle">
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_published}
-                    onChange={e => setFormData(prev => ({ ...prev, is_published: e.target.checked }))}
-                  />
-                  <span className="toggle-slider" />
-                </label>
-                <span className="toggle-status">
-                  {formData.is_published
-                    ? (isVietnamese ? 'Đã xuất bản' : 'Published')
-                    : (isVietnamese ? 'Bản nháp' : 'Draft')
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div className="form-summary">
-              <h3>{isVietnamese ? 'Tóm tắt' : 'Summary'}</h3>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Tên khóa học' : 'Title'}</span>
-                  <span className="summary-value">{formData.title || '-'}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Danh mục' : 'Category'}</span>
-                  <span className="summary-value">{categoryLabels[formData.category]?.[isVietnamese ? 'vi' : 'en']}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Cấp độ' : 'Level'}</span>
-                  <span className="summary-value">{levelLabels[formData.level]?.[isVietnamese ? 'vi' : 'en']}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Điểm mục tiêu' : 'Target Score'}</span>
-                  <span className="summary-value">{formData.target_score}+</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Modules' : 'Modules'}</span>
-                  <span className="summary-value">{modules.length}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Bài học' : 'Lessons'}</span>
-                  <span className="summary-value">{totalLessons}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">{isVietnamese ? 'Giá' : 'Price'}</span>
-                  <span className="summary-value">
-                    {formData.price === 0
-                      ? (isVietnamese ? 'Miễn phí' : 'Free')
-                      : new Intl.NumberFormat('vi-VN').format(formData.price) + ' đ'
-                    }
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => setActiveNavItem('courses')}
+            className="h-11 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Đang lưu...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Lưu & Xuất Bản Khóa Học</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
