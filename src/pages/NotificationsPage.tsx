@@ -19,6 +19,7 @@ import {
   categoryLabels,
   type Notification,
 } from "@/data/notifications-data";
+import type { AppNotification } from "@/types/api.types";
 import { Pagination } from "@/components/common/Pagination";
 
 type FilterCategory = "ALL" | "AUTH" | "USER" | "SUBSCRIPTION" | "VOCABULARY" | "PRACTICE" | "EXAM" | "COURSE" | "AI" | "SYSTEM";
@@ -63,13 +64,13 @@ export function NotificationsPage() {
           recipient_id: 'admin',
           recipient_type: 'ADMIN',
           notification_type: 'SYSTEM_ALERT',
-          notification_category: n.category || 'SYSTEM',
+          notification_category: (n.category as Notification['notification_category']) || 'SYSTEM',
           channels: ['IN_APP'],
           title: n.title,
           title_vi: n.title_vi || n.title,
           content: n.content || '',
           content_vi: n.content_vi || n.content || '',
-          priority: n.priority || 'NORMAL',
+          priority: (n.priority as Notification['priority']) || 'NORMAL',
           is_read: Boolean(n.is_read),
           is_pinned: Boolean(n.is_pinned),
           created_at: n.created_at || new Date().toISOString(),

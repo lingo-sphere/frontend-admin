@@ -26,6 +26,7 @@ import {
   type Topic,
   type FlashcardDeck,
 } from "@/data/vocabulary-data";
+import type { LexicalItem as ApiLexicalItem, Topic as ApiTopic } from "@/types/api.types";
 
 type TabType = "words" | "topics" | "decks";
 
@@ -56,24 +57,38 @@ export function VocabularyPage() {
       ]);
 
       if (wordsRes.status === "fulfilled" && wordsRes.value && wordsRes.value.length > 0) {
-        const mapped: LexicalItem[] = wordsRes.value.map((w: LexicalItem) => ({
-          id: w._id || w.id,
+        const mapped: LexicalItem[] = wordsRes.value.map((w: ApiLexicalItem) => ({
+          id: w._id,
           word: w.word,
           word_type: w.word_type || "NOUN",
           cefr_level: w.cefr_level || "B1",
           pronunciation_us: w.pronunciation_us || "",
           audio_url_us: w.audio_url_us,
-          meanings_count: w.meanings?.length || 1,
+          meanings_count: 1,
           examples_count: 2,
           status: "ACTIVE",
           is_verified: true,
-          created_at: w.created_at || new Date().toISOString(),
+          created_at: new Date().toISOString(),
         }));
         setWords(mapped);
       }
 
       if (topicsRes.status === "fulfilled" && topicsRes.value && topicsRes.value.length > 0) {
-        setTopics(topicsRes.value);
+        const mappedTopics: Topic[] = topicsRes.value.map((t: ApiTopic) => ({
+          id: t._id,
+          name: t.name,
+          name_vi: t.name_vi || t.name,
+          name_en: t.name,
+          slug: t.slug || '',
+          description: t.description || '',
+          icon: t.icon_url || 'BookOpen',
+          cefr_level: 'B1',
+          lexical_count: t.words_count || 0,
+          is_featured: false,
+          status: 'ACTIVE',
+          created_at: t.created_at || new Date().toISOString(),
+        }));
+        setTopics(mappedTopics);
       }
     } catch (err) {
       console.warn("Using local mock vocabulary:", err);

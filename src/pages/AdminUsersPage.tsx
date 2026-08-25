@@ -18,6 +18,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useAdminStore } from "@/store/admin-store";
 import { userService } from "@/services/user.service";
 import { toast } from "@/store/toast-store";
+import type { UserProfile } from "@/types/api.types";
 
 export interface AdminUser {
   id: string;

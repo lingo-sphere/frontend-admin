@@ -10,6 +10,7 @@ export interface Course {
   total_modules: number
   total_lessons: number
   price: number
+  discount_price?: number
   is_published: boolean
   author_id: string
   author_name: string
@@ -18,6 +19,7 @@ export interface Course {
   enrollments: number
   completed_count: number
   avg_progress: number
+  modules?: CourseModule[]
 }
 
 export interface CourseModule {

@@ -14,6 +14,7 @@ import {
   levelLabels,
   type Course,
 } from '@/data/courses-data'
+import type { Course as ApiCourse, CourseModule as ApiCourseModule } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useAdminStore } from '@/store/admin-store'
@@ -48,21 +49,21 @@ export function CoursesPage() {
     try {
       const data = await courseService.getAllCourses()
       if (data && data.length > 0) {
-        const mappedCourses: Course[] = data.map((c: Course) => ({
-          id: c._id || c.id || '',
+        const mappedCourses: Course[] = data.map((c: ApiCourse) => ({
+          id: c._id || '',
           title: c.title,
           slug: c.slug || '',
           description: c.description || '',
           thumbnail_url: c.thumbnail_url || '',
           target_score: c.target_score || 500,
-          category: c.category || 'TOEIC_LISTENING',
-          level: c.level || 'BEGINNER',
+          category: (c.category as Course['category']) || 'TOEIC_LISTENING',
+          level: (c.level as Course['level']) || 'BEGINNER',
           total_modules: c.modules?.length || 1,
-          total_lessons: (c.modules || []).reduce((acc: number, m: CourseModule) => acc + (m.lessons?.length || 0), 0) || 1,
+          total_lessons: (c.modules || []).reduce((acc: number, m: ApiCourseModule) => acc + (m.lessons?.length || 0), 0) || 1,
           price: c.price || 0,
           is_published: c.is_published ?? true,
           author_id: c.author_id || '',
-          author_name: c.author_name || 'LingoSphere Instructor',
+          author_name: 'LingoSphere Instructor',
           created_at: c.created_at || new Date().toISOString(),
           enrollments: c.students_count || 120,
           completed_count: Math.round((c.students_count || 120) * 0.4),

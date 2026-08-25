@@ -22,6 +22,7 @@ import {
   Film,
 } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
+import type { Course as ApiCourse } from '@/types/api.types'
 import { useAdminStore } from '@/store/admin-store'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
@@ -293,7 +294,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
 
     setIsSubmitting(true)
     try {
-      const payload: Partial<Course> = {
+      const payload: Partial<ApiCourse> = {
         title: formData.title,
         slug: formData.slug,
         description: formData.description,
@@ -305,10 +306,14 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         thumbnail_url: formData.thumbnail_url,
         is_published: formData.is_published,
         modules: formData.modules.map((m, mIdx) => ({
+          _id: m.id || `mod-${mIdx}`,
+          course_id: currentCourseId || '',
           title: m.title,
           description: m.description,
           module_order: mIdx + 1,
           lessons: m.lessons.map((l, lIdx) => ({
+            _id: l.id || `les-${lIdx}`,
+            module_id: m.id || `mod-${mIdx}`,
             title: l.title,
             video_url: l.video_url,
             duration_minutes: Number(l.duration_minutes) || 10,
