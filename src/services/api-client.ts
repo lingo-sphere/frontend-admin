@@ -28,41 +28,99 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// Response Interceptor: Xử lý Format dữ liệu và Bắt lỗi 401
+// Quản lý hàng đợi khi refresh token đồng thời
+let isRefreshing = false
+let failedQueue: Array<{
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}> = []
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else if (token) {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
+// Response Interceptor: Xử lý Format dữ liệu và Bắt lỗi 401 tự động Refresh Token
 apiClient.interceptors.response.use(
   (response) => {
-    // Trả về dữ liệu từ response
     return response
   },
   async (error: AxiosError<{ message?: string | string[]; error?: string; statusCode?: number }>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status === 401 && !originalRequest?._retry) {
-      originalRequest._retry = true
-      try {
-        const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-        if (refreshToken) {
-          const res = await axios.post<ApiResponse<{ access_token: string }>>(
-            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
-            { refresh_token: refreshToken },
-          )
-          const newAccessToken = res.data?.data?.access_token || (res.data as unknown as { access_token: string })?.access_token
-          if (newAccessToken) {
-            localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+    // Kiểm tra mã lỗi 401 (Unauthorized - AccessToken hết hạn)
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Nếu đang có 1 request khác tiến hành refresh token, xếp request này vào hàng đợi
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        })
+          .then((token) => {
             if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+              originalRequest.headers.Authorization = `Bearer ${token}`
             }
             return apiClient(originalRequest)
+          })
+          .catch((err) => Promise.reject(err))
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
+        if (!refreshToken) {
+          throw new Error('No refresh token available')
+        }
+
+        // Gọi API cấp mới Access Token
+        const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
+          { refresh_token: refreshToken },
+        )
+
+        const payload = (res.data as ApiResponse<{ access_token: string; refresh_token?: string }>)?.data || (res.data as unknown as { access_token: string; refresh_token?: string })
+        const newAccessToken = payload?.access_token
+        const newRefreshToken = payload?.refresh_token
+
+        if (newAccessToken) {
+          // Lưu token mới vào Storage
+          localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+          if (newRefreshToken) {
+            localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
           }
+
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+          }
+
+          // Giải phóng hàng đợi các request đang chờ
+          processQueue(null, newAccessToken)
+
+          return apiClient(originalRequest)
+        } else {
+          throw new Error('Invalid token response structure')
         }
       } catch (refreshErr) {
-        console.warn('Session expired, logging out...', refreshErr)
+        // Nếu refresh token cũng hết hạn -> Hủy hàng đợi & Đăng xuất
+        processQueue(refreshErr, null)
+        console.warn('Phiên đăng nhập đã hết hạn. Đang đăng xuất...', refreshErr)
+
         if (typeof window !== 'undefined') {
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
           window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         }
+        return Promise.reject(refreshErr)
+      } finally {
+        isRefreshing = false
       }
     }
 
