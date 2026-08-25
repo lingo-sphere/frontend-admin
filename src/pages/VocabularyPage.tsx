@@ -9,14 +9,12 @@ import {
   Volume2,
   Bookmark,
   Layers,
-  Sparkles,
   RotateCcw,
   X,
   FileSpreadsheet,
 } from "lucide-react";
-import { Pagination } from "@/components/common/Pagination";
+import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
-import { TableControls, type TableDensity, type ColumnOption } from "@/components/common/TableControls";
 import { useAdminStore } from "@/store/admin-store";
 import { vocabularyService } from "@/services/vocabulary.service";
 import { toast } from "@/store/toast-store";
@@ -40,20 +38,6 @@ export function VocabularyPage() {
   const [topics, setTopics] = useState<Topic[]>(mockTopics);
   const [decks, setDecks] = useState<FlashcardDeck[]>(mockFlashcardDecks);
   const [isLoading, setIsLoading] = useState(false);
-  const [density, setDensity] = useState<TableDensity>("middle");
-
-  // Column Visibility Controls
-  const [columns, setColumns] = useState<ColumnOption[]>([
-    { key: "word", label: "Từ vựng", visible: true },
-    { key: "level", label: "Khung CEFR", visible: true },
-    { key: "pos", label: "Loại từ", visible: true },
-    { key: "ipa", label: "Phát âm IPA", visible: true },
-    { key: "meanings", label: "Số định nghĩa & Ví dụ", visible: true },
-    { key: "status", label: "Trạng thái", visible: true },
-    { key: "actions", label: "Thao tác", visible: true },
-  ]);
-
-  const isColVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
 
   // Search & Filter State
   const [searchWord, setSearchWord] = useState("");
@@ -113,8 +97,6 @@ export function VocabularyPage() {
     });
   }, [words, searchWord, filterLevel]);
 
-  const totalPages = Math.ceil(filteredWords.length / pageSize) || 1;
-
   // Paginated Words
   const paginatedWords = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -147,12 +129,100 @@ export function VocabularyPage() {
     setCurrentPage(1);
   };
 
-  // Row padding by density
-  const getCellPadding = () => {
-    if (density === "compact") return "py-2 px-4";
-    if (density === "comfortable") return "py-5 px-4";
-    return "py-3.5 px-4";
-  };
+  const columns: DataTableColumn<LexicalItem>[] = [
+    {
+      key: "word",
+      title: "Từ vựng",
+      render: (word) => (
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{word.word}</span>
+          {word.audio_url_us && (
+            <button
+              onClick={() => playAudio(word.audio_url_us)}
+              className="p-1 rounded-md text-teal-600 dark:text-teal-400 hover:bg-teal-500/10 transition-colors cursor-pointer"
+              title="Nghe phát âm"
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "level",
+      title: "Khung CEFR",
+      render: (word) => (
+        <span
+          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+            word.cefr_level === "C1" || word.cefr_level === "C2"
+              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+              : word.cefr_level === "B1" || word.cefr_level === "B2"
+              ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
+              : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
+          }`}
+        >
+          {word.cefr_level}
+        </span>
+      ),
+    },
+    {
+      key: "pos",
+      title: "Loại từ",
+      render: (word) => <span className="text-slate-600 dark:text-slate-400 font-medium">{word.word_type}</span>,
+    },
+    {
+      key: "ipa",
+      title: "Phát âm IPA",
+      render: (word) => <span className="font-mono text-slate-500 dark:text-slate-400">{word.pronunciation_us || "—"}</span>,
+    },
+    {
+      key: "meanings",
+      title: "Định nghĩa & Ví dụ",
+      render: (word) => (
+        <span className="font-semibold text-slate-800 dark:text-slate-200">
+          {word.meanings_count} định nghĩa · {word.examples_count} câu mẫu
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      title: "Trạng thái",
+      render: (word) => (
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+            word.status === "ACTIVE"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : "bg-slate-500/10 text-slate-500 border-slate-500/20"
+          }`}
+        >
+          {word.status === "ACTIVE" ? "Hoạt động" : "Tạm ẩn"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Thao tác",
+      align: "right",
+      render: (word) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => setActiveNavItem(`vocab-edit:${word.id}`)}
+            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            title="Chỉnh sửa từ vựng"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setDeleteWordId(word.id)}
+            className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
+            title="Xóa từ vựng"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -233,10 +303,14 @@ export function VocabularyPage() {
 
       {/* TAB 1: WORDS */}
       {activeTab === "words" && (
-        <div className="space-y-4">
-          {/* Filter Bar */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
-            <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+        <DataTable<LexicalItem>
+          columns={columns}
+          data={paginatedWords}
+          rowKey={(w) => w.id}
+          isLoading={isLoading}
+          onResetFilters={handleResetFilters}
+          filterSlot={
+            <>
               <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 transition-all">
                 <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                 <input
@@ -266,148 +340,19 @@ export function VocabularyPage() {
                 <option value="C1">C1 - Cao cấp</option>
                 <option value="C2">C2 - Thành thạo</option>
               </select>
-            </div>
-
-            {/* Table Controls (Density, Columns, Reset) */}
-            <TableControls
-              density={density}
-              onDensityChange={setDensity}
-              columns={columns}
-              onColumnsChange={setColumns}
-              onResetFilters={handleResetFilters}
-              totalCount={filteredWords.length}
-            />
-          </div>
-
-          {/* Words Table */}
-          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-semibold">
-                    {isColVisible("word") && <th className="py-3.5 px-4">Từ vựng</th>}
-                    {isColVisible("level") && <th className="py-3.5 px-4">Khung CEFR</th>}
-                    {isColVisible("pos") && <th className="py-3.5 px-4">Loại từ</th>}
-                    {isColVisible("ipa") && <th className="py-3.5 px-4">Phát âm IPA</th>}
-                    {isColVisible("meanings") && <th className="py-3.5 px-4">Định nghĩa & Ví dụ</th>}
-                    {isColVisible("status") && <th className="py-3.5 px-4">Trạng thái</th>}
-                    {isColVisible("actions") && <th className="py-3.5 px-4 text-right">Thao tác</th>}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-200">
-                  {paginatedWords.length === 0 ? (
-                    <tr>
-                      <td colSpan={columns.filter((c) => c.visible).length} className="py-12 text-center text-slate-400">
-                        Không tìm thấy từ vựng nào
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedWords.map((word) => (
-                      <tr key={word.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                        {isColVisible("word") && (
-                          <td className={getCellPadding()}>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{word.word}</span>
-                              {word.audio_url_us && (
-                                <button
-                                  onClick={() => playAudio(word.audio_url_us)}
-                                  className="p-1 rounded-md text-teal-600 dark:text-teal-400 hover:bg-teal-500/10 transition-colors cursor-pointer"
-                                  title="Nghe phát âm"
-                                >
-                                  <Volume2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        )}
-
-                        {isColVisible("level") && (
-                          <td className={getCellPadding()}>
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                word.cefr_level === "C1" || word.cefr_level === "C2"
-                                  ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
-                                  : word.cefr_level === "B1" || word.cefr_level === "B2"
-                                  ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
-                                  : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
-                              }`}
-                            >
-                              {word.cefr_level}
-                            </span>
-                          </td>
-                        )}
-
-                        {isColVisible("pos") && (
-                          <td className={`${getCellPadding()} text-slate-600 dark:text-slate-400 font-medium`}>{word.word_type}</td>
-                        )}
-
-                        {isColVisible("ipa") && (
-                          <td className={`${getCellPadding()} font-mono text-slate-500 dark:text-slate-400`}>{word.pronunciation_us || "—"}</td>
-                        )}
-
-                        {isColVisible("meanings") && (
-                          <td className={getCellPadding()}>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">
-                              {word.meanings_count} định nghĩa · {word.examples_count} câu mẫu
-                            </span>
-                          </td>
-                        )}
-
-                        {isColVisible("status") && (
-                          <td className={getCellPadding()}>
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                word.status === "ACTIVE"
-                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                  : "bg-slate-500/10 text-slate-500 border-slate-500/20"
-                              }`}
-                            >
-                              {word.status === "ACTIVE" ? "Hoạt động" : "Tạm ẩn"}
-                            </span>
-                          </td>
-                        )}
-
-                        {isColVisible("actions") && (
-                          <td className={`${getCellPadding()} text-right`}>
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => setActiveNavItem(`vocab-edit:${word.id}`)}
-                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-                                title="Chỉnh sửa từ vựng"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => setDeleteWordId(word.id)}
-                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
-                                title="Xóa từ vựng"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filteredWords.length}
-            onPageChange={setCurrentPage}
-            pageSize={pageSize}
-            onPageSizeChange={(size: number) => {
+            </>
+          }
+          pagination={{
+            currentPage,
+            pageSize,
+            totalItems: filteredWords.length,
+            onPageChange: setCurrentPage,
+            onPageSizeChange: (size) => {
               setPageSize(size);
               setCurrentPage(1);
-            }}
-          />
-        </div>
+            },
+          }}
+        />
       )}
 
       {/* TAB 2: TOPICS */}

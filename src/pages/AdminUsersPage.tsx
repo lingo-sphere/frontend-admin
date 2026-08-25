@@ -13,9 +13,8 @@ import {
   Lock,
   Ban,
 } from "lucide-react";
-import { Pagination } from "@/components/common/Pagination";
+import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
-import { TableControls, type TableDensity, type ColumnOption } from "@/components/common/TableControls";
 import { useAdminStore } from "@/store/admin-store";
 import { userService } from "@/services/user.service";
 import { toast } from "@/store/toast-store";
@@ -69,18 +68,6 @@ export function AdminUsersPage() {
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [density, setDensity] = useState<TableDensity>("middle");
-
-  // Column Visibility Controls
-  const [columns, setColumns] = useState<ColumnOption[]>([
-    { key: "admin", label: "Quản trị viên", visible: true },
-    { key: "role", label: "Vai trò (Role)", visible: true },
-    { key: "status", label: "Trạng thái", visible: true },
-    { key: "last_active", label: "Hoạt động gần nhất", visible: true },
-    { key: "actions", label: "Thao tác", visible: true },
-  ]);
-
-  const isColVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
 
   // Modal State
   const [modalUser, setModalUser] = useState<AdminUser | null>(null);
@@ -143,8 +130,6 @@ export function AdminUsersPage() {
     });
   }, [admins, searchTerm, selectedRole, selectedStatus]);
 
-  const totalPages = Math.ceil(filteredAdmins.length / pageSize) || 1;
-
   const paginatedAdmins = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredAdmins.slice(start, start + pageSize);
@@ -184,261 +169,233 @@ export function AdminUsersPage() {
     setCurrentPage(1);
   };
 
-  // Row padding by density
-  const getCellPadding = () => {
-    if (density === "compact") return "py-2 px-4";
-    if (density === "comfortable") return "py-5 px-4";
-    return "py-3.5 px-4";
-  };
+  const columns: DataTableColumn<AdminUser>[] = [
+    {
+      key: "admin",
+      title: "Quản trị viên",
+      render: (user) => (
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => setActiveNavItem(`admin-profile:${user.id}`)}
+        >
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-teal-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full rounded-xl object-cover"
+              />
+            ) : (
+              user.name.slice(0, 2).toUpperCase()
+            )}
+          </div>
+          <div>
+            <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              {user.name}
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{user.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "role",
+      title: "Vai trò (Role)",
+      render: (user) => (
+        <>
+          {user.role === "ADMIN" ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+              <Shield className="w-3 h-3" />
+              <span>ADMIN</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+              <GraduationCap className="w-3 h-3" />
+              <span>TEACHER</span>
+            </span>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "status",
+      title: "Trạng thái",
+      render: (user) => (
+        <>
+          {user.is_active ? (
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              Hoạt động
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+              Bị khóa
+            </span>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "last_active",
+      title: "Hoạt động gần nhất",
+      dataIndex: "last_active",
+    },
+    {
+      key: "actions",
+      title: "Thao tác",
+      align: "right",
+      render: (user) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => setActiveNavItem(`admin-user-edit:${user.id}`)}
+            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            title="Chỉnh sửa"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              setModalUser(user);
+              setModalAction(user.is_active ? "ban" : "unban");
+            }}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              user.is_active
+                ? "bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500"
+                : "bg-slate-100 hover:bg-emerald-500/20 dark:bg-slate-800 text-slate-500 hover:text-emerald-600"
+            }`}
+            title={user.is_active ? "Khóa tài khoản" : "Mở khóa"}
+          >
+            {user.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4 text-emerald-500" />}
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Ban Quản Trị & Giảng Viên
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý đội ngũ giảng viên biên soạn khóa học và phân quyền quản trị hệ thống
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={fetchAdmins}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
-          >
-            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-teal-500" : ""}`} />
-            <span>Làm mới</span>
-          </button>
-          <button
-            onClick={() => setActiveNavItem("admin-user-create")}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Thêm Quản Trị Viên</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-            <Shield className="w-5 h-5" />
-          </div>
+      {/* Header & KPI Stats */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Tổng ban quản trị</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{admins.length} nhân sự</p>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Quyền tối cao (ADMIN)</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              {admins.filter((a) => a.role === "ADMIN").length} tài khoản
+            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              Ban Quản Trị & Giảng Viên
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Quản lý đội ngũ giảng viên biên soạn khóa học và phân quyền quản trị hệ thống
             </p>
           </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={fetchAdmins}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-teal-500" : ""}`} />
+              <span>Làm mới</span>
+            </button>
+            <button
+              onClick={() => setActiveNavItem("admin-user-create")}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Thêm Quản Trị Viên</span>
+            </button>
+          </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-5 h-5" />
+        {/* KPI Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Tổng ban quản trị</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{admins.length} nhân sự</p>
+            </div>
           </div>
-          <div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Giảng viên (TEACHER)</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              {admins.filter((a) => a.role === "TEACHER").length} tài khoản
-            </p>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Quyền tối cao (ADMIN)</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                {admins.filter((a) => a.role === "ADMIN").length} tài khoản
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Giảng viên (TEACHER)</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                {admins.filter((a) => a.role === "TEACHER").length} tài khoản
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Filter & Table Controls Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 transition-all">
-            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo tên hoặc email admin..."
-              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm("")} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value as FilterRole)}
-            className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
-          >
-            <option value="ALL">Tất cả vai trò</option>
-            <option value="ADMIN">Quản trị viên tối cao (ADMIN)</option>
-            <option value="TEACHER">Giảng viên (TEACHER)</option>
-          </select>
-
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value as FilterStatus)}
-            className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="ACTIVE">Đang hoạt động</option>
-            <option value="INACTIVE">Đã khóa / Tạm dừng</option>
-          </select>
-        </div>
-
-        {/* Table Controls (Density, Columns, Reset) */}
-        <TableControls
-          density={density}
-          onDensityChange={setDensity}
-          columns={columns}
-          onColumnsChange={setColumns}
-          onResetFilters={handleResetFilters}
-          totalCount={filteredAdmins.length}
-        />
-      </div>
-
-      {/* Admin Table */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-semibold">
-                {isColVisible("admin") && <th className="py-3.5 px-4">Quản trị viên</th>}
-                {isColVisible("role") && <th className="py-3.5 px-4">Vai trò (Role)</th>}
-                {isColVisible("status") && <th className="py-3.5 px-4">Trạng thái</th>}
-                {isColVisible("last_active") && <th className="py-3.5 px-4">Hoạt động gần nhất</th>}
-                {isColVisible("actions") && <th className="py-3.5 px-4 text-right">Thao tác</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-200">
-              {paginatedAdmins.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.filter((c) => c.visible).length} className="py-12 text-center text-slate-400">
-                    Không tìm thấy quản trị viên nào
-                  </td>
-                </tr>
-              ) : (
-                paginatedAdmins.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    {isColVisible("admin") && (
-                      <td className={getCellPadding()}>
-                        <div
-                          className="flex items-center gap-3 cursor-pointer"
-                          onClick={() => setActiveNavItem(`admin-profile:${user.id}`)}
-                        >
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-teal-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                            {user.avatar ? (
-                              <img
-                                src={user.avatar}
-                                alt={user.name}
-                                className="w-full h-full rounded-xl object-cover"
-                              />
-                            ) : (
-                              user.name.slice(0, 2).toUpperCase()
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                              {user.name}
-                            </p>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{user.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                    )}
-
-                    {isColVisible("role") && (
-                      <td className={getCellPadding()}>
-                        {user.role === "ADMIN" ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                            <Shield className="w-3 h-3" />
-                            <span>ADMIN</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
-                            <GraduationCap className="w-3 h-3" />
-                            <span>TEACHER</span>
-                          </span>
-                        )}
-                      </td>
-                    )}
-
-                    {isColVisible("status") && (
-                      <td className={getCellPadding()}>
-                        {user.is_active ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            Hoạt động
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                            Bị khóa
-                          </span>
-                        )}
-                      </td>
-                    )}
-
-                    {isColVisible("last_active") && (
-                      <td className={`${getCellPadding()} text-slate-500 dark:text-slate-400`}>{user.last_active}</td>
-                    )}
-
-                    {isColVisible("actions") && (
-                      <td className={`${getCellPadding()} text-right`}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setActiveNavItem(`admin-user-edit:${user.id}`)}
-                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-                            title="Chỉnh sửa"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setModalUser(user);
-                              setModalAction(user.is_active ? "ban" : "unban");
-                            }}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              user.is_active
-                                ? "bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500"
-                                : "bg-slate-100 hover:bg-emerald-500/20 dark:bg-slate-800 text-slate-500 hover:text-emerald-600"
-                            }`}
-                            title={user.is_active ? "Khóa tài khoản" : "Mở khóa"}
-                          >
-                            {user.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4 text-emerald-500" />}
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))
+      {/* Reusable Generic DataTable */}
+      <DataTable<AdminUser>
+        columns={columns}
+        data={paginatedAdmins}
+        rowKey={(a) => a.id}
+        isLoading={isLoading}
+        onResetFilters={handleResetFilters}
+        filterSlot={
+          <>
+            <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 transition-all">
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm theo tên hoặc email admin..."
+                className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm("")} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <X className="w-3.5 h-3.5" />
+                </button>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </div>
 
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={filteredAdmins.length}
-        onPageChange={setCurrentPage}
-        pageSize={pageSize}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setCurrentPage(1);
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value as FilterRole)}
+              className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+            >
+              <option value="ALL">Tất cả vai trò</option>
+              <option value="ADMIN">Quản trị viên tối cao (ADMIN)</option>
+              <option value="TEACHER">Giảng viên (TEACHER)</option>
+            </select>
+
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value as FilterStatus)}
+              className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="ACTIVE">Đang hoạt động</option>
+              <option value="INACTIVE">Đã khóa / Tạm dừng</option>
+            </select>
+          </>
+        }
+        pagination={{
+          currentPage,
+          pageSize,
+          totalItems: filteredAdmins.length,
+          onPageChange: setCurrentPage,
+          onPageSizeChange: (size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          },
         }}
       />
 
