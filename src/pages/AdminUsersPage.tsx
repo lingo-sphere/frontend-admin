@@ -69,7 +69,6 @@ export function AdminUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Modal State
   const [modalUser, setModalUser] = useState<AdminUser | null>(null);
   const [modalAction, setModalAction] = useState<"ban" | "unban" | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -82,7 +81,7 @@ export function AdminUsersPage() {
         userService.getAllUsers({ role: "INSTRUCTOR", limit: 50 }),
       ]);
 
-      const items: any[] = [];
+      const items: UserProfile[] = [];
       if (adminRes.status === "fulfilled" && adminRes.value?.items) {
         items.push(...adminRes.value.items);
       }
@@ -91,12 +90,12 @@ export function AdminUsersPage() {
       }
 
       if (items.length > 0) {
-        const mapped: AdminUser[] = items.map((u: any) => ({
-          id: u._id,
+        const mapped: AdminUser[] = items.map((u: UserProfile) => ({
+          id: u._id || u.user_id,
           name: u.full_name || u.email.split("@")[0],
           email: u.email,
           role: u.role === "INSTRUCTOR" ? "TEACHER" : "ADMIN",
-          is_active: u.status === "ACTIVE" || u.is_active,
+          is_active: u.status === "ACTIVE",
           avatar: u.avatar_url,
           created_at: u.created_at || new Date().toISOString(),
           last_active: "Vừa xong",

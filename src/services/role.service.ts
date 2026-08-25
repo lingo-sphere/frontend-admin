@@ -3,7 +3,7 @@ import { API_CONFIG } from '@/config/api.config'
 import type { Role, Permission } from '@/types/api.types'
 
 export const roleService = {
-  // ==================== ROLES ====================
+
   async getAllRoles(): Promise<Role[]> {
     return api.get<Role[]>(API_CONFIG.ENDPOINTS.ROLES.LIST)
   },
@@ -32,7 +32,6 @@ export const roleService = {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.ROLES.SEED_DEFAULT)
   },
 
-  // ==================== PERMISSIONS ====================
   async getAllPermissions(module?: string): Promise<Permission[]> {
     return api.get<Permission[]>(API_CONFIG.ENDPOINTS.PERMISSIONS.LIST, module ? { module } : undefined)
   },

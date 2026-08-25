@@ -65,7 +65,6 @@ export const authStore = createStore<AuthState>()((set, get) => ({
         error: null,
       })
 
-      // Fetch full profile in background
       try {
         const profile = await userService.getMyProfile()
         set({ profile })

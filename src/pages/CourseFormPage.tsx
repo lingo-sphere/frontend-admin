@@ -77,7 +77,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
 
-  // Extract ID from prop or activeNavItem or window location
   const currentCourseId =
     editCourseId ||
     (activeNavItem.startsWith('course-edit:') ? activeNavItem.split(':')[1] : undefined) ||
@@ -202,7 +201,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     )
   }
 
-  // Add Chapter (Module)
   const addModule = () => {
     const newModId = `mod-${Date.now()}`
     const newMod: CourseModule = {
@@ -227,12 +225,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     toast.info('Đã thêm một Chương mới vào khóa học')
   }
 
-  // Remove Chapter (Module)
   const removeModule = (modId: string) => {
     setFormData({ ...formData, modules: formData.modules.filter((m) => m.id !== modId) })
   }
 
-  // Add Video Lesson to Module
   const addLesson = (modId: string) => {
     const targetMod = formData.modules.find((m) => m.id === modId)
     const nextOrder = (targetMod?.lessons.length || 0) + 1
@@ -255,7 +251,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     })
   }
 
-  // Remove Lesson
   const removeLesson = (modId: string, lesId: string) => {
     setFormData({
       ...formData,
@@ -270,12 +265,11 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     })
   }
 
-  // Update Lesson Field
   const updateLessonField = (
     modId: string,
     lesId: string,
     field: keyof CourseLesson,
-    val: any
+    val: CourseLesson[keyof CourseLesson]
   ) => {
     setFormData({
       ...formData,
@@ -299,7 +293,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
 
     setIsSubmitting(true)
     try {
-      const payload: Partial<any> = {
+      const payload: Partial<Course> = {
         title: formData.title,
         slug: formData.slug,
         description: formData.description,
@@ -342,7 +336,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     }
   }
 
-  // Calculate totals
   const totalLessons = formData.modules.reduce((acc, m) => acc + m.lessons.length, 0)
   const totalDuration = formData.modules.reduce(
     (acc, m) => acc + m.lessons.reduce((lAcc, l) => lAcc + (Number(l.duration_minutes) || 0), 0),

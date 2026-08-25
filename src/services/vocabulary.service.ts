@@ -9,22 +9,19 @@ export interface SearchVocabParams {
 }
 
 export const vocabularyService = {
-  // Tra cứu & tìm kiếm từ vựng
+
   async searchVocabulary(params?: SearchVocabParams): Promise<LexicalItem[]> {
     return api.get<LexicalItem[]>(API_CONFIG.ENDPOINTS.VOCABULARY.SEARCH, params as Record<string, unknown>)
   },
 
-  // Chi tiết từ vựng
   async getLexicalItemById(id: string): Promise<LexicalItem> {
     return api.get<LexicalItem>(API_CONFIG.ENDPOINTS.VOCABULARY.BY_ID(id))
   },
 
-  // Tạo từ vựng mới
   async createLexicalItem(payload: Partial<LexicalItem>): Promise<LexicalItem> {
     return api.post<LexicalItem>(API_CONFIG.ENDPOINTS.VOCABULARY.CREATE, payload)
   },
 
-  // ==================== TOPICS ====================
   async getAllTopics(): Promise<Topic[]> {
     return api.get<Topic[]>(API_CONFIG.ENDPOINTS.VOCABULARY.TOPICS)
   },
@@ -37,7 +34,6 @@ export const vocabularyService = {
     return api.post<Topic>(API_CONFIG.ENDPOINTS.VOCABULARY.TOPICS, payload)
   },
 
-  // ==================== IPA SYMBOLS ====================
   async getAllIpaSymbols(symbolType?: string): Promise<IpaSymbol[]> {
     return api.get<IpaSymbol[]>(API_CONFIG.ENDPOINTS.VOCABULARY.IPA_SYMBOLS, symbolType ? { symbolType } : undefined)
   },
@@ -50,7 +46,6 @@ export const vocabularyService = {
     return api.post<IpaSymbol>(API_CONFIG.ENDPOINTS.VOCABULARY.IPA_SYMBOLS, payload)
   },
 
-  // ==================== GRAMMAR POINTS ====================
   async getAllGrammarPoints(): Promise<GrammarPoint[]> {
     return api.get<GrammarPoint[]>(API_CONFIG.ENDPOINTS.VOCABULARY.GRAMMAR_POINTS)
   },
@@ -63,7 +58,6 @@ export const vocabularyService = {
     return api.post<GrammarPoint>(API_CONFIG.ENDPOINTS.VOCABULARY.GRAMMAR_POINTS, payload)
   },
 
-  // ==================== FLASHCARD DECKS ====================
   async getAllFlashcardDecks(): Promise<FlashcardDeck[]> {
     return api.get<FlashcardDeck[]>(API_CONFIG.ENDPOINTS.VOCABULARY.DECKS)
   },

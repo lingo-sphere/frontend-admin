@@ -363,7 +363,7 @@ export function DashboardPage() {
         {/* Microservices Status Column (1 col) */}
         <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">Trạng Thái Hệ Thống Microservices</h3>
-          
+
           <div className="space-y-3 flex-1">
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
               <div className="flex items-center gap-2.5">

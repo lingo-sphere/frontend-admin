@@ -162,7 +162,6 @@ export function PracticePage() {
   const isVi = i18n.language === 'vi'
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
 
-  // Map activeNavItem to initial tab if child nav item was clicked
   const getInitialTab = (): PracticeTab => {
     if (activeNavItem === 'practice-listening') return 'listening'
     if (activeNavItem === 'practice-speaking') return 'speaking'
@@ -176,21 +175,18 @@ export function PracticePage() {
   const [filterDifficulty, setFilterDifficulty] = useState<string>('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Data states
   const [practiceSets, setPracticeSets] = useState<PracticeSet[]>(mockSets)
   const [listeningList, setListeningList] = useState<ListeningExercise[]>(mockListening)
   const [speakingList, setSpeakingList] = useState<SpeakingExercise[]>(mockSpeaking)
   const [writingList, setWritingList] = useState<WritingExercise[]>(mockWriting)
   const [examList, setExamList] = useState<ToeicExam[]>(mockExams)
 
-  // Modals
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newDifficulty, setNewDifficulty] = useState('INTERMEDIATE')
 
-  // Load real data from APIs
   const loadData = async () => {
     setIsLoading(true)
     try {

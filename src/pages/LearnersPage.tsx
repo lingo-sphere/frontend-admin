@@ -35,12 +35,10 @@ export function LearnersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Modal State
   const [modalUser, setModalUser] = useState<User | null>(null);
   const [modalAction, setModalAction] = useState<"ban" | "unban" | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Fetch real users from backend
   const fetchLearners = async () => {
     setIsLoading(true);
     try {
@@ -88,7 +86,6 @@ export function LearnersPage() {
     fetchLearners();
   }, [searchTerm, selectedStatus]);
 
-  // Filtered Users
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const matchSearch =
@@ -109,7 +106,6 @@ export function LearnersPage() {
     return filteredUsers.slice(start, start + pageSize);
   }, [filteredUsers, currentPage, pageSize]);
 
-  // Stats Counters
   const stats = useMemo(() => {
     return {
       total: users.length,
@@ -119,7 +115,6 @@ export function LearnersPage() {
     };
   }, [users]);
 
-  // Handle Ban / Unban
   const handleConfirmStatusChange = async () => {
     if (!modalUser || !modalAction) return;
 
@@ -157,7 +152,6 @@ export function LearnersPage() {
     setCurrentPage(1);
   };
 
-  // DataTable Column Definitions
   const columns: DataTableColumn<User>[] = [
     {
       key: "user",

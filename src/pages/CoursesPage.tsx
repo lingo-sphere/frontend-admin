@@ -37,11 +37,9 @@ export function CoursesPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  // Delete State
   const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -83,7 +81,6 @@ export function CoursesPage() {
     fetchCourses()
   }, [])
 
-  // Filter Courses
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
       const matchSearch =
@@ -100,7 +97,6 @@ export function CoursesPage() {
     })
   }, [courses, searchQuery, filterCategory, filterLevel, filterStatus])
 
-  // Paginated Courses
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filteredCourses.slice(start, start + itemsPerPage)
@@ -129,7 +125,6 @@ export function CoursesPage() {
     }
   }
 
-  // Column definitions for DataTable
   const columns: DataTableColumn<Course>[] = [
     {
       key: 'info',
@@ -229,7 +224,6 @@ export function CoursesPage() {
     },
   ]
 
-  // Render Card Grid Item
   const renderGridCard = (course: Course) => (
     <div className="rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs flex flex-col group h-full">
       <div className="relative aspect-video w-full bg-slate-100 dark:bg-slate-950 overflow-hidden">

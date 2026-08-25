@@ -24,19 +24,16 @@ export interface DataTableProps<T> {
   isLoading?: boolean
   emptyText?: string
 
-  // Toolbar & Controls
   title?: React.ReactNode
   subtitle?: React.ReactNode
   filterSlot?: React.ReactNode
   extraActions?: React.ReactNode
   onResetFilters?: () => void
 
-  // View Mode Switcher
   viewMode?: 'table' | 'grid'
   onViewModeChange?: (mode: 'table' | 'grid') => void
   renderGridItem?: (record: T, index: number) => React.ReactNode
 
-  // Pagination
   pagination?: {
     currentPage: number
     pageSize: number
@@ -45,14 +42,13 @@ export interface DataTableProps<T> {
     onPageSizeChange?: (size: number) => void
   }
 
-  // Row Interaction
   onRowClick?: (record: T) => void
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends object>({
   columns,
   data,
-  rowKey = (record) => record._id || record.id || String(Math.random()),
+  rowKey = (record) => (record as { _id?: string; id?: string })._id || (record as { _id?: string; id?: string }).id || String(Math.random()),
   isLoading = false,
   emptyText = 'Không tìm thấy dữ liệu nào phù hợp',
   title,
@@ -66,10 +62,9 @@ export function DataTable<T extends Record<string, any>>({
   pagination,
   onRowClick,
 }: DataTableProps<T>) {
-  // Density state
+
   const [density, setDensity] = useState<TableDensity>('middle')
 
-  // Column Visibility state
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
     columns.map((col) => ({
       key: col.key,
@@ -78,7 +73,6 @@ export function DataTable<T extends Record<string, any>>({
     }))
   )
 
-  // Visible columns mapped
   const visibleColumns = useMemo(() => {
     const visibleKeys = new Set(
       columnOptions.filter((c) => c.visible).map((c) => c.key)
@@ -86,7 +80,6 @@ export function DataTable<T extends Record<string, any>>({
     return columns.filter((col) => visibleKeys.has(col.key))
   }, [columns, columnOptions])
 
-  // Cell padding based on density
   const getCellPadding = () => {
     if (density === 'compact') return 'py-2 px-4'
     if (density === 'comfortable') return 'py-5 px-4'

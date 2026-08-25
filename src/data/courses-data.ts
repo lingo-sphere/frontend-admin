@@ -14,7 +14,7 @@ export interface Course {
   author_id: string
   author_name: string
   created_at: string
-  
+
   enrollments: number
   completed_count: number
   avg_progress: number

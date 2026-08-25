@@ -14,13 +14,13 @@ export interface User {
   is_premium: boolean
   current_plan_slug?: string
   created_at: string
-  
+
   total_xp: number
   level: number
   current_streak: number
   longest_streak: number
   gems: number
-  
+
   lessons_completed: number
   vocabulary_reviewed: number
   practice_sessions: number

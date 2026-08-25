@@ -39,13 +39,11 @@ export function VocabularyPage() {
   const [decks, setDecks] = useState<FlashcardDeck[]>(mockFlashcardDecks);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Search & Filter State
   const [searchWord, setSearchWord] = useState("");
   const [filterLevel, setFilterLevel] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Delete State
   const [deleteWordId, setDeleteWordId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -88,7 +86,6 @@ export function VocabularyPage() {
     fetchVocabularyData();
   }, []);
 
-  // Filtered Words
   const filteredWords = useMemo(() => {
     return words.filter((w) => {
       const matchSearch = w.word.toLowerCase().includes(searchWord.toLowerCase());
@@ -97,7 +94,6 @@ export function VocabularyPage() {
     });
   }, [words, searchWord, filterLevel]);
 
-  // Paginated Words
   const paginatedWords = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredWords.slice(start, start + pageSize);

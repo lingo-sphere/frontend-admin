@@ -12,17 +12,15 @@ export interface StudentProgressItem {
 }
 
 export const progressService = {
-  // Lấy danh sách tiến độ toàn bộ học viên trong khóa học
+
   async getCourseStudentsProgress(courseId: string): Promise<StudentProgressItem[]> {
     return api.get<StudentProgressItem[]>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
   },
 
-  // Lấy biểu đồ tăng trưởng năng lực của học viên theo khóa học
   async getGrowthChart(courseId: string): Promise<unknown> {
     return api.get(API_CONFIG.ENDPOINTS.PROGRESS.GROWTH_CHART(courseId))
   },
 
-  // Lấy tiến độ học tập các khóa học
   async getMyProgress(): Promise<unknown[]> {
     return api.get<unknown[]>(API_CONFIG.ENDPOINTS.PROGRESS.MY_COURSES)
   },

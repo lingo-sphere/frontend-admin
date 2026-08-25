@@ -54,7 +54,6 @@ export function ProgressPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [chartMetric, setChartMetric] = useState<'dau' | 'sessions' | 'minutesSpent' | 'xpGained'>('dau')
 
-  // Logs filter
   const [logSearch, setLogSearch] = useState('')
   const [logActionFilter, setLogActionFilter] = useState('ALL')
   const [logPage, setLogPage] = useState(1)
@@ -83,7 +82,6 @@ export function ProgressPage() {
     toast.success('Đã xuất báo cáo CSV thành công!')
   }
 
-  // Filtered Logs
   const filteredLogs = useMemo(() => {
     return recentUserActivityLogs.filter((log) => {
       const matchSearch =
@@ -99,12 +97,10 @@ export function ProgressPage() {
     return filteredLogs.slice(start, start + logPageSize)
   }, [filteredLogs, logPage, logPageSize])
 
-  // Max value for visual bar chart calculation
   const maxChartValue = useMemo(() => {
     return Math.max(...activityTimeSeriesData.map((d) => d[chartMetric])) * 1.15
   }, [chartMetric])
 
-  // Columns for Activity Logs DataTable
   const logColumns: DataTableColumn<UserActivityLog>[] = [
     {
       key: 'user',

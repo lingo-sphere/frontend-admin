@@ -24,12 +24,12 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
 
   return (
     <div className="fixed inset-0 z-50">
-      
+
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm"
         onClick={() => onOpenChange?.(false)}
       />
-      
+
       <div
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex h-full w-3/4 max-w-sm flex-col',

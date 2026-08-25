@@ -3,7 +3,7 @@ import { API_CONFIG } from '@/config/api.config'
 import type { PracticeSet, PracticeQuestion, ListeningExercise, SpeakingExercise, WritingExercise } from '@/types/api.types'
 
 export const practiceService = {
-  // Practice Sets
+
   async getAllPracticeSets(): Promise<PracticeSet[]> {
     return api.get<PracticeSet[]>(API_CONFIG.ENDPOINTS.PRACTICE.SETS)
   },
@@ -24,7 +24,6 @@ export const practiceService = {
     return api.post<PracticeQuestion>(API_CONFIG.ENDPOINTS.PRACTICE.QUESTIONS, payload)
   },
 
-  // Listening Exercises
   async getAllListeningExercises(): Promise<ListeningExercise[]> {
     return api.get<ListeningExercise[]>(API_CONFIG.ENDPOINTS.PRACTICE.LISTENING)
   },
@@ -37,7 +36,6 @@ export const practiceService = {
     return api.post<ListeningExercise>(API_CONFIG.ENDPOINTS.PRACTICE.LISTENING, payload)
   },
 
-  // Speaking Exercises
   async getAllSpeakingExercises(): Promise<SpeakingExercise[]> {
     return api.get<SpeakingExercise[]>(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING)
   },
@@ -50,7 +48,6 @@ export const practiceService = {
     return api.post<SpeakingExercise>(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING, payload)
   },
 
-  // Writing Exercises
   async getAllWritingExercises(): Promise<WritingExercise[]> {
     return api.get<WritingExercise[]>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING)
   },

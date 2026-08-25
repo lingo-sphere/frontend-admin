@@ -72,7 +72,6 @@ export function useToastStore<T>(selector: (state: ToastState) => T): T {
   )
 }
 
-// Global helper
 export const toast = {
   success: (msg: string, title?: string) => toastStore.getState().success(msg, title),
   error: (msg: string, title?: string) => toastStore.getState().error(msg, title),

@@ -1,6 +1,3 @@
-// ==========================================
-// Base API Types
-// ==========================================
 
 export interface ApiResponse<T = unknown> {
   statusCode: number
@@ -28,10 +25,6 @@ export interface ApiError {
   timestamp?: string
   path?: string
 }
-
-// ==========================================
-// Auth & User Types
-// ==========================================
 
 export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER' | 'GUEST'
 
@@ -88,10 +81,6 @@ export interface SystemAnalyticsOverview {
   timestamp: string
 }
 
-// ==========================================
-// Role & Permission Types
-// ==========================================
-
 export interface Permission {
   _id: string
   name: string
@@ -111,10 +100,6 @@ export interface Role {
   is_system?: boolean
   created_at?: string
 }
-
-// ==========================================
-// Course Types
-// ==========================================
 
 export type CourseCategory = 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY' | 'FULL_TEST' | 'GENERAL'
 export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
@@ -173,10 +158,6 @@ export interface Course {
   created_at?: string
   updated_at?: string
 }
-
-// ==========================================
-// Vocabulary Types
-// ==========================================
 
 export type WordType = 'NOUN' | 'VERB' | 'ADJECTIVE' | 'ADVERB' | 'PREPOSITION' | 'CONJUNCTION' | 'PRONOUN' | 'PHRASE'
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
@@ -262,10 +243,6 @@ export interface FlashcardDeck {
   created_at?: string
 }
 
-// ==========================================
-// Practice & Exam Types
-// ==========================================
-
 export interface PracticeQuestion {
   _id?: string
   question_text: string
@@ -344,10 +321,6 @@ export interface ToeicExam {
   created_at?: string
 }
 
-// ==========================================
-// Notification Types
-// ==========================================
-
 export type NotificationCategory =
   | 'AUTH'
   | 'USER'
@@ -376,10 +349,6 @@ export interface AppNotification {
   action_url?: string
   created_at: string
 }
-
-// ==========================================
-// AI & Media & Subscription Types
-// ==========================================
 
 export interface AiModelConfig {
   _id?: string

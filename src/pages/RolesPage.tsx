@@ -34,21 +34,18 @@ export function RolesPage() {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Modals
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [deleteRoleId, setDeleteRoleId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Role Form State
   const [roleForm, setRoleForm] = useState({
     name: '',
     description: '',
     permissions: [] as string[],
   })
 
-  // Permission Form State
   const [permForm, setPermForm] = useState({
     name: '',
     api_path: '',
@@ -56,11 +53,9 @@ export function RolesPage() {
     module: 'COURSES',
   })
 
-  // Permissions filter
   const [permSearch, setPermSearch] = useState('')
   const [selectedModule, setSelectedModule] = useState<string>('ALL')
 
-  // User Role Assignment Tab
   const [users, setUsers] = useState<UserProfile[]>([])
   const [userSearch, setUserSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
@@ -97,13 +92,11 @@ export function RolesPage() {
     loadData()
   }, [])
 
-  // Modules list for filtering
   const modulesList = useMemo(() => {
     const set = new Set(permissions.map((p) => p.module))
     return Array.from(set).filter(Boolean)
   }, [permissions])
 
-  // Filtered permissions
   const filteredPermissions = useMemo(() => {
     return permissions.filter((p) => {
       const matchSearch =
@@ -114,7 +107,6 @@ export function RolesPage() {
     })
   }, [permissions, permSearch, selectedModule])
 
-  // Seed default roles & perms
   const handleSeedRBAC = async () => {
     setIsLoading(true)
     try {
@@ -129,7 +121,6 @@ export function RolesPage() {
     }
   }
 
-  // Open Create / Edit Role Modal
   const openCreateRole = () => {
     setEditingRole(null)
     setRoleForm({
@@ -200,7 +191,6 @@ export function RolesPage() {
     }
   }
 
-  // Permission Save
   const handleSavePermission = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!permForm.name.trim() || !permForm.api_path.trim()) {
@@ -227,7 +217,6 @@ export function RolesPage() {
     }
   }
 
-  // Assign user role
   const handleAssignRole = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) {

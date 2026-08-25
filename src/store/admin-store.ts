@@ -76,7 +76,6 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
 
 export const adminStore = useAdminStore
 
-// Listen to browser Back / Forward buttons
 if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => {
     const navItem = pathToNavItem(window.location.pathname)

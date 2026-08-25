@@ -8,7 +8,7 @@ export const API_CONFIG = {
     THEME: 'lingosphere-admin-theme',
   },
   ENDPOINTS: {
-    // Auth
+
     AUTH: {
       LOGIN: '/auth/login',
       REGISTER: '/auth/register',
@@ -19,7 +19,7 @@ export const API_CONFIG = {
       FORGOT_PASSWORD: '/auth/forgot-password',
       RESET_PASSWORD: '/auth/reset-password',
     },
-    // Users & Gamification & Subscriptions
+
     USERS: {
       ADMIN_USERS: '/users/admin/users',
       ADMIN_ANALYTICS: '/users/admin/analytics/overview',
@@ -35,7 +35,7 @@ export const API_CONFIG = {
       MY_SUBSCRIPTION: '/users/subscriptions/my',
       SUBSCRIPTION_HISTORY: '/users/subscriptions/history',
     },
-    // Roles & RBAC
+
     ROLES: {
       LIST: '/roles',
       BY_ID: (id: string) => `/roles/${id}`,
@@ -46,7 +46,7 @@ export const API_CONFIG = {
       LIST: '/permissions',
       BY_ID: (id: string) => `/permissions/${id}`,
     },
-    // Courses
+
     COURSES: {
       LIST: '/courses',
       BY_ID: (id: string) => `/courses/${id}`,
@@ -60,7 +60,7 @@ export const API_CONFIG = {
       LESSON_QUESTIONS: (lessonId: string) => `/courses/lessons/${lessonId}/questions`,
       QUESTION_BY_ID: (questionId: string) => `/courses/questions/${questionId}`,
     },
-    // Vocabulary
+
     VOCABULARY: {
       SEARCH: '/vocabulary/lexical-items/search',
       BY_ID: (id: string) => `/vocabulary/lexical-items/${id}`,
@@ -76,7 +76,7 @@ export const API_CONFIG = {
       DECK_BY_ID: (id: string) => `/vocabulary/flashcards/decks/${id}`,
       ADD_CARD: (deckId: string) => `/vocabulary/flashcards/decks/${deckId}/cards`,
     },
-    // Practice & Tests
+
     PRACTICE: {
       SETS: '/practice/sets',
       SET_BY_ID: (id: string) => `/practice/sets/${id}`,
@@ -91,7 +91,7 @@ export const API_CONFIG = {
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       JOURNAL_PROMPT: '/practice/writing/journal/daily-prompt',
     },
-    // TOEIC Exams
+
     EXAMS: {
       LIST: '/exams',
       BY_ID: (id: string) => `/exams/${id}`,
@@ -100,7 +100,7 @@ export const API_CONFIG = {
       QUESTIONS: '/exams/questions',
       ADD_QUESTIONS: (id: string) => `/exams/${id}/questions`,
     },
-    // Notifications
+
     NOTIFICATIONS: {
       MY: '/notifications/my',
       CREATE: '/notifications',
@@ -111,7 +111,7 @@ export const API_CONFIG = {
       CAMPAIGNS: '/notifications/campaigns',
       CRON_DAILY_REMINDERS: '/notifications/cron/run-daily-reminders',
     },
-    // Media & Cloudflare R2
+
     MEDIA: {
       UPLOAD: '/media/upload',
       PRESIGNED_URL: '/media/presigned-url',
@@ -120,14 +120,14 @@ export const API_CONFIG = {
       COLLECTIONS: '/media/collections',
       COLLECTION_BY_ID: (id: string) => `/media/collections/${id}`,
     },
-    // AI Services
+
     AI: {
       MODELS: '/ai/models',
       PROMPTS: '/ai/prompts',
       GENERATE: '/ai/generate',
       TEACHER_GENERATE_QUIZ: '/ai/teacher/generate-quiz',
     },
-    // Progress
+
     PROGRESS: {
       MY_COURSES: '/progress/courses',
       STUDENTS: (courseId: string) => `/progress/teacher/courses/${courseId}/students`,
