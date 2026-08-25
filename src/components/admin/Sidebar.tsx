@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { useAdminStore } from "@/store/admin-store";
+import { useAuthStore } from "@/store/auth-store";
 import { useTranslation } from "react-i18next";
 
 interface NavSubItem {
@@ -111,6 +112,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const setMobileSidebarOpen = useAdminStore(
     (state) => state.setMobileSidebarOpen
   );
+  const user = useAuthStore((state) => state.user);
+  const profile = useAuthStore((state) => state.profile);
 
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -241,13 +244,33 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
       <button
         className="admin-profile"
-        onClick={() => handleNavigate("admin-profile:admin-001")}
+        onClick={() => handleNavigate(`admin-profile:${user?.user_id || 'me'}`)}
         type="button"
+        title="Xem hồ sơ cá nhân"
       >
-        <span className="avatar">VA</span>
+        <span className="avatar">
+          {profile?.full_name
+            ? profile.full_name
+                .split(' ')
+                .map((n) => n[0])
+                .slice(-2)
+                .join('')
+                .toUpperCase()
+            : user?.email
+              ? user.email.substring(0, 2).toUpperCase()
+              : 'AD'}
+        </span>
         <span className="profile-copy">
-          <span className="profile-name">Vân Anh</span>
-          <span className="profile-role">Quản trị viên</span>
+          <span className="profile-name">
+            {profile?.full_name || user?.email?.split('@')[0] || 'Quản trị viên'}
+          </span>
+          <span className="profile-role">
+            {user?.role === 'ADMIN'
+              ? 'Quản trị viên'
+              : user?.role === 'INSTRUCTOR'
+                ? 'Giáo viên'
+                : user?.role || 'Admin'}
+          </span>
         </span>
         <ChevronDown className="profile-chevron" />
       </button>

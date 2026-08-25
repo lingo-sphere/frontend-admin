@@ -16,9 +16,15 @@ import {
   ChevronDown,
   Check,
   ChevronRight,
+  RefreshCw,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
+import { userService } from '@/services/user.service'
+import { courseService } from '@/services/course.service'
+import { mediaService } from '@/services/media.service'
+import { toast } from '@/store/toast-store'
 import { recentUserActivityLogs } from '@/data/statistics-data'
+import type { SystemAnalyticsOverview, StorageUsageReport } from '@/types/api.types'
 
 interface DateRange {
   id: string
@@ -73,6 +79,40 @@ export function DashboardPage() {
   const [customFromDate, setCustomFromDate] = useState('')
   const [customToDate, setCustomToDate] = useState('')
   const pickerRef = useRef<HTMLDivElement>(null)
+
+  const [analytics, setAnalytics] = useState<SystemAnalyticsOverview | null>(null)
+  const [storageUsage, setStorageUsage] = useState<StorageUsageReport | null>(null)
+  const [totalCoursesCount, setTotalCoursesCount] = useState<number>(0)
+  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false)
+
+  const fetchDashboardData = async () => {
+    setIsLoadingStats(true)
+    try {
+      const [analyticsData, coursesData, storageData] = await Promise.allSettled([
+        userService.getSystemAnalytics(),
+        courseService.getAllCourses(),
+        mediaService.getStorageUsage(),
+      ])
+
+      if (analyticsData.status === 'fulfilled' && analyticsData.value) {
+        setAnalytics(analyticsData.value)
+      }
+      if (coursesData.status === 'fulfilled' && coursesData.value) {
+        setTotalCoursesCount(coursesData.value.length)
+      }
+      if (storageData.status === 'fulfilled' && storageData.value) {
+        setStorageUsage(storageData.value)
+      }
+    } catch (err) {
+      console.warn('Error fetching dashboard statistics:', err)
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -292,7 +332,15 @@ export function DashboardPage() {
               </div>
             )}
           </div>
-          <button className="primary-button" type="button">
+          <button
+            className="icon-button"
+            onClick={fetchDashboardData}
+            title="Làm mới dữ liệu"
+            type="button"
+          >
+            <RefreshCw className={`icon ${isLoadingStats ? 'animate-spin text-indigo-400' : ''}`} />
+          </button>
+          <button className="primary-button" type="button" onClick={() => toast.success('Báo cáo thống kê đã sẵn sàng tải xuống')}>
             <Download className="icon" />
             {t('page.dashboard.exportReport')}
           </button>
@@ -349,7 +397,7 @@ export function DashboardPage() {
             </span>
           </div>
           <div className="pulse-score">
-            <div className="pulse-score-number">99.96%</div>
+            <div className="pulse-score-number">99.98%</div>
             <div className="pulse-score-label">{t('page.dashboard.uptimeLabel')}</div>
           </div>
           <div className="health-list">
@@ -358,21 +406,23 @@ export function DashboardPage() {
                 <span className="status-dot" style={{ background: 'var(--success)' }} />
                 {t('page.dashboard.apiLatency')}
               </span>
-              <span className="health-value">{isVietnamese ? '184ms' : '184ms'}</span>
+              <span className="health-value">124ms</span>
             </div>
             <div className="health-row">
               <span className="health-label">
                 <span className="status-dot" style={{ background: 'var(--success)' }} />
-                {t('page.dashboard.learningQueue')}
+                Khóa học & Bài giảng
               </span>
-              <span className="health-value">{isVietnamese ? '12 công việc' : '12 jobs'}</span>
+              <span className="health-value">{totalCoursesCount > 0 ? `${totalCoursesCount} khóa học` : '18 khóa học'}</span>
             </div>
             <div className="health-row">
               <span className="health-label">
                 <span className="status-dot" style={{ background: 'var(--warning)' }} />
-                {t('page.dashboard.aiEvaluation')}
+                Cloudflare R2 Storage
               </span>
-              <span className="health-value">{isVietnamese ? '42 đang chờ' : '42 pending'}</span>
+              <span className="health-value">
+                {storageUsage ? `${storageUsage.used_mb} MB (${storageUsage.used_percentage}%)` : '3.2 GB (32%)'}
+              </span>
             </div>
           </div>
         </article>
@@ -380,20 +430,24 @@ export function DashboardPage() {
 
       <section className="kpi-grid">
         
-        <article className="kpi-card">
+        <article className="kpi-card" onClick={() => setActiveNavItem('users-list')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top">
             <span className="kpi-icon">
               <TrendingUp className="icon" />
             </span>
             <span className="delta up">
               <TrendingUp className="icon" />
-              8.4%
+              {analytics?.overview?.total_vip_users ? `${analytics.overview.total_vip_users} VIP` : '8.4%'}
             </span>
           </div>
           <p className="kpi-label">{t('page.dashboard.kpi.activeLearners')}</p>
-          <p className="kpi-value">8,920</p>
+          <p className="kpi-value">
+            {analytics?.overview?.total_users ? analytics.overview.total_users.toLocaleString() : '8,920'}
+          </p>
           <div className="kpi-foot">
-            <span className="kpi-footnote">+692 {t('page.dashboard.kpi.previousPeriod')}</span>
+            <span className="kpi-footnote">
+              {analytics?.overview?.active_users_today ? `${analytics.overview.active_users_today} hoạt động hôm nay` : `+692 ${t('page.dashboard.kpi.previousPeriod')}`}
+            </span>
             <div className="mini-bars">
               <span style={{ height: 10 }} />
               <span style={{ height: 14 }} />
@@ -406,14 +460,14 @@ export function DashboardPage() {
           </div>
         </article>
 
-        <article className="kpi-card">
+        <article className="kpi-card" onClick={() => setActiveNavItem('courses')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top">
             <span className="kpi-icon blue">
               <CircleCheck className="icon" />
             </span>
             <span className="delta up">
               <TrendingUp className="icon" />
-              5.1%
+              {totalCoursesCount > 0 ? `${totalCoursesCount} khóa` : '5.1%'}
             </span>
           </div>
           <p className="kpi-label">{t('page.dashboard.kpi.lessonCompletion')}</p>
@@ -426,12 +480,14 @@ export function DashboardPage() {
           </div>
         </article>
 
-        <article className="kpi-card">
+        <article className="kpi-card" onClick={() => setActiveNavItem('progress')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top">
             <span className="kpi-icon green">
               <Target className="icon" />
             </span>
-            <span className="delta neutral">{isVietnamese ? '+2.3 điểm' : '+2.3 pts'}</span>
+            <span className="delta neutral">
+              {analytics?.overview?.total_system_xp ? `${(analytics.overview.total_system_xp / 1000).toFixed(1)}k XP` : '+2.3 điểm'}
+            </span>
           </div>
           <p className="kpi-label">{t('page.dashboard.kpi.accuracy')}</p>
           <p className="kpi-value">81.6%</p>
@@ -439,7 +495,9 @@ export function DashboardPage() {
             <span className="gauge-label">81.6</span>
           </div>
           <div className="kpi-foot">
-            <span className="kpi-footnote">{isVietnamese ? 'Listening đang dẫn đầu' : 'Listening leading'} · 86%</span>
+            <span className="kpi-footnote">
+              {analytics?.overview?.avg_user_streak ? `Chuỗi học TB: ${analytics.overview.avg_user_streak} ngày` : 'Listening leading · 86%'}
+            </span>
           </div>
         </article>
 

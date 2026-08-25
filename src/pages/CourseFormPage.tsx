@@ -22,6 +22,8 @@ import {
   levelLabels,
 } from '@/data/courses-data'
 import { useAdminStore } from '@/store/admin-store'
+import { courseService } from '@/services/course.service'
+import { toast } from '@/store/toast-store'
 
 type LessonType = 'VIDEO' | 'READING' | 'FLASHCARD' | 'PRACTICE_QUIZ'
 
@@ -204,9 +206,30 @@ export function CourseFormPage() {
     ))
   }
 
-  const handleSave = () => {
-    console.log('Saving course:', { formData, modules })
-    alert(isVietnamese ? 'Đã lưu khóa học!' : 'Course saved!')
+  const handleSave = async () => {
+    if (!formData.title.trim()) {
+      toast.error('Vui lòng nhập tên khóa học')
+      return
+    }
+
+    try {
+      await courseService.createCourse({
+        title: formData.title,
+        description: formData.description,
+        category: formData.category as any,
+        level: formData.level as any,
+        target_score: formData.target_score,
+        price: formData.price,
+        thumbnail_url: formData.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60',
+        approval_status: formData.is_published ? 'APPROVED' : 'PENDING',
+        is_published: formData.is_published,
+      })
+      toast.success(isVietnamese ? 'Tạo khóa học thành công!' : 'Course created successfully!')
+      setActiveNavItem('courses')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Tạo khóa học thất bại'
+      toast.error(msg)
+    }
   }
 
   const totalLessons = modules.reduce((sum, m) => sum + m.lessons.length, 0)

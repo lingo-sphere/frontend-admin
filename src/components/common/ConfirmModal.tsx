@@ -6,9 +6,11 @@ interface ConfirmModalProps {
   onClose: () => void
   onConfirm: () => void
   type?: 'danger' | 'warning' | 'success'
+  variant?: 'danger' | 'warning' | 'success'
   icon?: 'ban' | 'delete' | 'warning'
   title: string
-  message: string
+  message?: string
+  description?: string
   confirmText?: string
   cancelText?: string
   isLoading?: boolean
@@ -18,14 +20,18 @@ export function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  type = 'danger',
+  type,
+  variant = 'danger',
   icon = 'warning',
   title,
   message,
+  description,
   confirmText = 'Xác nhận',
   cancelText = 'Hủy',
   isLoading = false,
 }: ConfirmModalProps) {
+  const modalType = type || variant
+  const modalMessage = message || description || ''
   
   useEffect(() => {
     if (isOpen) {
@@ -62,7 +68,7 @@ export function ConfirmModal({
   }
 
   const getIconClass = () => {
-    switch (type) {
+    switch (modalType) {
       case 'danger':
         return 'modal-icon-danger'
       case 'warning':
@@ -84,7 +90,7 @@ export function ConfirmModal({
         </div>
 
         <h2 className="modal-title">{title}</h2>
-        <p className="modal-message">{message}</p>
+        <p className="modal-message">{modalMessage}</p>
 
         <div className="modal-actions">
           <button
@@ -95,7 +101,7 @@ export function ConfirmModal({
             {cancelText}
           </button>
           <button
-            className={`modal-btn modal-btn-confirm ${type}`}
+            className={`modal-btn modal-btn-confirm ${modalType}`}
             onClick={onConfirm}
             disabled={isLoading}
           >

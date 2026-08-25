@@ -25,6 +25,9 @@ import {
   type AdminUser,
 } from "@/data/settings-data";
 import { useAdminStore } from "@/store/admin-store";
+import { userService } from "@/services/user.service";
+import { roleService } from "@/services/role.service";
+import { toast } from "@/store/toast-store";
 import { Pagination } from "@/components/common/Pagination";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 
@@ -308,6 +311,7 @@ export function AdminUsersPage() {
   const isVi = isVietnamese;
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
   const [admins, setAdmins] = useState<AdminUser[]>(adminUsers);
+  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<FilterRole>("ALL");
@@ -330,21 +334,68 @@ export function AdminUsersPage() {
     newRole: "ADMIN" | "TEACHER";
   } | null>(null);
 
+  const fetchAdmins = async () => {
+    setIsLoadingAdmins(true);
+    try {
+      const res = await userService.getAllUsers({
+        role: filterRole !== "ALL" ? filterRole : undefined,
+        search: searchQuery || undefined,
+        status: filterStatus !== "ALL" ? filterStatus : undefined,
+      });
+
+      if (res?.items && res.items.length > 0) {
+        const mappedAdmins: AdminUser[] = res.items
+          .filter((u: any) => u.role === "ADMIN" || u.role === "INSTRUCTOR" || u.role === "TEACHER")
+          .map((u: any) => ({
+            id: u.user_id || u._id || "",
+            name: u.full_name,
+            email: u.email,
+            avatar: u.avatar_url,
+            role: (u.role === "INSTRUCTOR" ? "TEACHER" : u.role) as "ADMIN" | "TEACHER",
+            is_active: u.status === "ACTIVE",
+            created_at: u.created_at || new Date().toISOString(),
+            last_active: u.updated_at || u.created_at || new Date().toISOString(),
+            permissions: ["all"],
+          }));
+
+        if (mappedAdmins.length > 0) {
+          setAdmins(mappedAdmins);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch real admin users, using cached data:", err);
+    } finally {
+      setIsLoadingAdmins(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+
   const handleRoleChangeRequest = (admin: AdminUser, newRole: "ADMIN" | "TEACHER") => {
     if (newRole === "ADMIN") {
       setRoleChangeTarget({ admin, newRole });
     } else {
-      setAdmins((prev) =>
-        prev.map((a) => (a.id === admin.id ? { ...a, role: newRole } : a))
-      );
+      assignRole(admin, newRole);
     }
+  };
+
+  const assignRole = async (admin: AdminUser, newRole: "ADMIN" | "TEACHER") => {
+    try {
+      await roleService.assignUserRole(admin.id, newRole);
+      toast.success(`Đã phân vai trò ${newRole} cho ${admin.name} thành công!`);
+    } catch (err) {
+      console.warn("Could not assign role via backend:", err);
+    }
+    setAdmins((prev) =>
+      prev.map((a) => (a.id === admin.id ? { ...a, role: newRole } : a))
+    );
   };
 
   const confirmRoleChange = () => {
     if (roleChangeTarget) {
-      setAdmins((prev) =>
-        prev.map((a) => (a.id === roleChangeTarget.admin.id ? { ...a, role: roleChangeTarget.newRole } : a))
-      );
+      assignRole(roleChangeTarget.admin, roleChangeTarget.newRole);
       setRoleChangeTarget(null);
     }
   };

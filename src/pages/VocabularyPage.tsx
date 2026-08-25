@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Pagination } from "@/components/common/Pagination";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { vocabularyService } from "@/services/vocabulary.service";
+import { toast } from "@/store/toast-store";
 import {
   mockLexicalItems,
   mockTopics,
@@ -305,6 +307,44 @@ export function VocabularyPage() {
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
   const [deleteModalWord, setDeleteModalWord] = useState<string | null>(null);
   const [deleteMultipleModal, setDeleteMultipleModal] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchVocabData = async () => {
+    setIsLoading(true);
+    try {
+      const realWords = await vocabularyService.searchVocabulary({
+        q: searchQuery || undefined,
+        cefr_level: filterLevel !== "ALL" ? filterLevel : undefined,
+      });
+
+      if (realWords && realWords.length > 0) {
+        const mappedWords: LexicalItem[] = realWords.map((w) => ({
+          id: w._id,
+          word: w.word,
+          word_type: w.word_type || "NOUN",
+          cefr_level: w.cefr_level || "A1",
+          pronunciation_us: w.pronunciation_us || `/${w.word}/`,
+          pronunciation_uk: w.pronunciation_uk || `/${w.word}/`,
+          audio_url_us: w.audio_url_us,
+          meanings_count: w.meanings?.length || 1,
+          examples_count: w.meanings?.reduce((acc, m) => acc + (m.examples?.length || 0), 0) || 2,
+          status: w.is_active !== false ? "ACTIVE" : "INACTIVE",
+          is_verified: true,
+          created_at: w.created_at || new Date().toISOString(),
+        }));
+        setWords(mappedWords);
+      }
+    } catch (err) {
+      console.warn("Could not fetch real vocabulary, using cached dataset:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVocabData();
+  }, []);
 
   const stats = useMemo(() => getVocabularyStats(), []);
 

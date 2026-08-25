@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bell,
@@ -14,6 +14,8 @@ import {
   Download,
   Plus,
 } from "lucide-react";
+import { notificationService } from "@/services/notification.service";
+import { toast } from "@/store/toast-store";
 import {
   mockNotifications,
   getNotificationStats,
@@ -64,6 +66,7 @@ export function NotificationsPage() {
   const isVietnamese = i18n.language === "vi";
 
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<FilterCategory>("ALL");
   const [filterPriority, setFilterPriority] = useState<FilterPriority>("ALL");
@@ -71,6 +74,42 @@ export function NotificationsPage() {
   const [filterJoin, setFilterJoin] = useState<string>("ALL");
   const [sortOption, setSortOption] = useState<SortOption>("latest");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const list = await notificationService.getMyNotifications();
+      if (list && list.length > 0) {
+        const mapped: Notification[] = list.map((n) => ({
+          id: (n as any)._id || (n as any).id || '',
+          recipient_id: (n as any).recipient_id || 'admin',
+          recipient_type: 'ADMIN',
+          notification_type: (n as any).notification_type || 'SYSTEM_ALERT',
+          notification_category: ((n as any).category as any) || 'SYSTEM',
+          channels: ['IN_APP'],
+          title: n.title,
+          title_vi: (n as any).title_vi || n.title,
+          content: (n as any).content || '',
+          content_vi: (n as any).content_vi || (n as any).content || '',
+          priority: ((n as any).priority as any) || 'NORMAL',
+          is_read: Boolean(n.is_read),
+          is_pinned: Boolean((n as any).is_pinned),
+          created_at: (n as any).created_at || new Date().toISOString(),
+          read_at: (n as any).read_at,
+          action_url: (n as any).link,
+        }))
+        setNotifications(mapped)
+      }
+    } catch (err) {
+      console.warn("Could not fetch real notifications:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const stats = useMemo(
     () => getNotificationStats(notifications),
@@ -96,28 +135,20 @@ export function NotificationsPage() {
 
   const filteredNotifications = useMemo(() => {
     let result = notifications.filter((n) => {
-      
       if (searchQuery) {
-        const query = searchQuery.toLowerCase().trim();
-        const title = isVietnamese && n.title_vi ? n.title_vi : n.title;
-        const content = isVietnamese && n.content_vi ? n.content_vi : n.content;
-        if (
-          !title.toLowerCase().includes(query) &&
-          !content.toLowerCase().includes(query)
-        ) {
-          return false;
-        }
+        const q = searchQuery.toLowerCase();
+        const titleMatch =
+          n.title.toLowerCase().includes(q) ||
+          (n.title_vi && n.title_vi.toLowerCase().includes(q));
+        const contentMatch =
+          n.content.toLowerCase().includes(q) ||
+          (n.content_vi && n.content_vi.toLowerCase().includes(q));
+        if (!titleMatch && !contentMatch) return false;
       }
-      
-      if (
-        filterCategory !== "ALL" &&
-        n.notification_category !== filterCategory
-      )
-        return false;
-      
-      if (filterPriority !== "ALL" && n.priority !== filterPriority)
-        return false;
-      
+
+      if (filterCategory !== "ALL" && n.notification_category !== filterCategory) return false;
+      if (filterPriority !== "ALL" && n.priority !== filterPriority) return false;
+
       if (filterStatus === "UNREAD" && n.is_read) return false;
       if (filterStatus === "READ" && !n.is_read) return false;
       if (filterStatus === "PINNED" && !n.is_pinned) return false;
@@ -183,7 +214,7 @@ export function NotificationsPage() {
     }
   };
 
-  const markAsRead = () => {
+  const markAsRead = async () => {
     setNotifications((prev) =>
       prev.map((n) =>
         selectedIds.has(n.id)
@@ -191,10 +222,14 @@ export function NotificationsPage() {
           : n
       )
     );
+    for (const id of selectedIds) {
+      await notificationService.markAsRead(id).catch(() => {});
+    }
     setSelectedIds(new Set());
+    toast.success("Đã đánh dấu các thông báo đã chọn là đã đọc");
   };
 
-  const markSingleAsRead = (id: string) => {
+  const markSingleAsRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) =>
         n.id === id
@@ -202,9 +237,10 @@ export function NotificationsPage() {
           : n
       )
     );
+    await notificationService.markAsRead(id).catch(() => {});
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) =>
       prev.map((n) => ({
         ...n,
@@ -212,6 +248,8 @@ export function NotificationsPage() {
         read_at: new Date().toISOString(),
       }))
     );
+    await notificationService.markAllAsRead().catch(() => {});
+    toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
   };
 
   const togglePin = (id: string) => {

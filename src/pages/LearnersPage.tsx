@@ -22,6 +22,8 @@ import {
 import { Pagination } from "@/components/common/Pagination";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useAdminStore } from "@/store/admin-store";
+import { userService } from "@/services/user.service";
+import { toast } from "@/store/toast-store";
 import {
   mockUsers,
   getUserStats,
@@ -339,13 +341,78 @@ export function LearnersPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  const fetchLearners = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const res = await userService.getAllUsers({
+        role: "LEARNER",
+        search: searchQuery || undefined,
+        status: filterStatus !== "ALL" ? filterStatus : undefined,
+        plan: filterPlan !== "ALL" ? filterPlan : undefined,
+      });
+
+      if (res?.items && res.items.length > 0) {
+        const mappedUsers: User[] = res.items.map((p) => ({
+          id: p.user_id || p._id || "",
+          email: p.email,
+          full_name: p.full_name,
+          avatar_url: p.avatar_url,
+          phone_number: p.phone_number,
+          gender: (p.gender as "MALE" | "FEMALE" | "OTHER") || "OTHER",
+          target_toeic_score: p.target_toeic_score || 650,
+          current_estimated_score: p.current_estimated_score || 0,
+          learning_goal_minutes_per_day: p.learning_goal_minutes_per_day || 20,
+          status:
+            p.status === "BLOCKED" || p.status === "SUSPENDED"
+              ? "BANNED"
+              : (p.status as "ACTIVE" | "INACTIVE" | "BANNED") || "ACTIVE",
+          is_premium: Boolean(p.is_premium),
+          current_plan_slug: p.current_plan_slug || (p.is_premium ? "premium" : "free"),
+          created_at: p.created_at || new Date().toISOString(),
+          total_xp: p.total_xp || 0,
+          level: p.level || 1,
+          current_streak: p.current_streak || 0,
+          longest_streak: 0,
+          gems: p.gems || 0,
+          lessons_completed: 0,
+          vocabulary_reviewed: 0,
+          practice_sessions: 0,
+          exams_completed: 0,
+        }));
+        setUsers(mappedUsers);
+      }
+    } catch (err) {
+      console.warn("Could not fetch real users, using cached data:", err);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLearners();
+  }, []);
+
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   };
   const handleBanUser = (user: User) => setBanModalUser(user);
-  const confirmBanUser = () => {
+  const confirmBanUser = async () => {
     if (!banModalUser) return;
+    const nextStatus = banModalUser.status === "BANNED" ? "ACTIVE" : "BLOCKED";
+    
+    try {
+      await userService.updateUserStatus(banModalUser.id, nextStatus as any);
+      toast.success(
+        `Đã ${nextStatus === "ACTIVE" ? "kích hoạt lại" : "khóa"} tài khoản ${banModalUser.full_name} thành công!`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Cập nhật trạng thái thất bại";
+      toast.error(msg);
+    }
+
     setUsers((prev) =>
       prev.map((u) =>
         u.id === banModalUser.id

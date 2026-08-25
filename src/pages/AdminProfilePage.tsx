@@ -19,6 +19,10 @@ import {
   EyeOff,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
+import { useAuthStore } from '@/store/auth-store'
+import { userService } from '@/services/user.service'
+import { authService } from '@/services/auth.service'
+import { toast } from '@/store/toast-store'
 import { adminUsers } from '@/data/settings-data'
 
 interface AdminProfileData {
@@ -63,23 +67,55 @@ export function AdminProfilePage() {
     confirmPassword: '',
   })
 
+  const authUser = useAuthStore((state) => state.user)
+  const authProfile = useAuthStore((state) => state.profile)
+  const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
+
   useEffect(() => {
-    if (adminUser) {
-      setProfileData({
-        id: adminUser.id,
-        name: adminUser.name,
-        email: adminUser.email,
-        role: adminUser.role,
-        avatar: adminUser.avatar,
-        is_active: adminUser.is_active,
-        last_active: adminUser.last_active,
-        created_at: adminUser.created_at || new Date().toISOString(),
-        total_courses_created: 12,
-        total_lessons_created: 156,
-        total_users_managed: 1234,
-      })
+    const loadProfile = async () => {
+      try {
+        if (userId === 'me' || userId === authUser?.user_id) {
+          const prof = await userService.getMyProfile()
+          if (prof) {
+            setProfileData({
+              id: prof.user_id || authUser?.user_id || 'admin',
+              name: prof.full_name || authUser?.email || 'Admin',
+              email: prof.email || authUser?.email || '',
+              role: (authUser?.role === 'INSTRUCTOR' ? 'TEACHER' : authUser?.role) as any || 'ADMIN',
+              avatar: prof.avatar_url,
+              is_active: prof.status === 'ACTIVE',
+              last_active: prof.updated_at || new Date().toISOString(),
+              created_at: prof.created_at || new Date().toISOString(),
+              total_courses_created: 12,
+              total_lessons_created: 156,
+              total_users_managed: 1234,
+            })
+            return
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load real profile from API:', err)
+      }
+
+      if (adminUser) {
+        setProfileData({
+          id: adminUser.id,
+          name: adminUser.name,
+          email: adminUser.email,
+          role: adminUser.role,
+          avatar: adminUser.avatar,
+          is_active: adminUser.is_active,
+          last_active: adminUser.last_active,
+          created_at: adminUser.created_at || new Date().toISOString(),
+          total_courses_created: 12,
+          total_lessons_created: 156,
+          total_users_managed: 1234,
+        })
+      }
     }
-  }, [adminUser])
+
+    loadProfile()
+  }, [adminUser, userId, authUser])
 
   const handleOpenEdit = () => {
     if (profileData) {
@@ -96,21 +132,46 @@ export function AdminProfilePage() {
     }
   }
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!profileData) return
 
-    setProfileData({
-      ...profileData,
-      name: editForm.name,
-      email: editForm.email,
-      role: editForm.role,
-      is_active: editForm.is_active,
-    })
+    try {
+      if (editForm.newPassword) {
+        if (editForm.newPassword !== editForm.confirmPassword) {
+          toast.error('Mật khẩu xác nhận không khớp')
+          return
+        }
+        if (!editForm.currentPassword) {
+          toast.error('Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu')
+          return
+        }
+        await authService.changePassword(profileData.id, {
+          current_password: editForm.currentPassword,
+          new_password: editForm.newPassword,
+        })
+        toast.success('Đổi mật khẩu thành công!')
+      }
 
-    setIsEditModalOpen(false)
-    setToastMessage(isVietnamese ? 'Cập nhật thông tin quản trị viên thành công!' : 'Profile updated successfully!')
-    setTimeout(() => setToastMessage(null), 3000)
+      await userService.updateMyProfile({
+        full_name: editForm.name,
+      })
+
+      setProfileData({
+        ...profileData,
+        name: editForm.name,
+        email: editForm.email,
+        role: editForm.role,
+        is_active: editForm.is_active,
+      })
+
+      await fetchCurrentUser()
+      setIsEditModalOpen(false)
+      toast.success(isVietnamese ? 'Cập nhật thông tin quản trị viên thành công!' : 'Profile updated successfully!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Cập nhật thất bại'
+      toast.error(msg)
+    }
   }
 
   if (!adminUser || !profileData) {
