@@ -67,7 +67,8 @@ export function PageRouter() {
   }
 
   if (activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
-    return <CourseFormPage />
+    const courseId = activeNavItem.split(':')[1]
+    return <CourseFormPage editCourseId={courseId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || DashboardPage
