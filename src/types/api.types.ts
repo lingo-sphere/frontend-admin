@@ -402,12 +402,21 @@ export interface AiPromptTemplate {
 }
 
 export interface StorageUsageReport {
-  bucket_name: string
-  total_files: number
-  used_bytes: number
-  used_mb: number
-  quota_mb: number
-  used_percentage: number
+  bucket_name?: string
+  total_files?: number
+  used_bytes?: number
+  used_mb?: number
+  quota_mb?: number
+  used_percentage?: number
+  system_storage?: {
+    used_bytes: number
+    used_mb: number
+    used_gb: number
+    max_gb: number
+    usage_percent: number
+    total_files: number
+    is_quota_exceeded: boolean
+  }
 }
 
 export interface SubscriptionPlan {
