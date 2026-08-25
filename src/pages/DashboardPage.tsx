@@ -120,10 +120,10 @@ export function DashboardPage() {
   }, [])
 
   const storageInfo = useMemo(() => {
-    const sys = storageUsage?.system_storage || (storageUsage as any)
-    const usedMb = sys?.used_mb !== undefined ? sys.used_mb : 2.79
+    const sys = storageUsage?.system_storage
+    const usedMb = sys?.used_mb !== undefined ? sys.used_mb : (storageUsage?.used_mb ?? 2.79)
     const maxGb = sys?.max_gb !== undefined ? sys.max_gb : 10
-    const totalFiles = sys?.total_files !== undefined ? sys.total_files : 3
+    const totalFiles = sys?.total_files !== undefined ? sys.total_files : (storageUsage?.total_files ?? 3)
     const usagePercent = sys?.usage_percent !== undefined ? sys.usage_percent : Number(((usedMb / (maxGb * 1000)) * 100).toFixed(2))
 
     const formattedUsage = usedMb >= 1000

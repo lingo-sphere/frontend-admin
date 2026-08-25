@@ -56,24 +56,24 @@ export function VocabularyPage() {
       ]);
 
       if (wordsRes.status === "fulfilled" && wordsRes.value && wordsRes.value.length > 0) {
-        const mapped: LexicalItem[] = wordsRes.value.map((w: any) => ({
+        const mapped: LexicalItem[] = wordsRes.value.map((w: LexicalItem) => ({
           id: w._id || w.id,
           word: w.word,
-          word_type: w.part_of_speech || w.word_type || "NOUN",
+          word_type: w.word_type || "NOUN",
           cefr_level: w.cefr_level || "B1",
-          pronunciation_us: w.phonetic || w.pronunciation_us || "",
-          audio_url_us: w.audio_url || w.audio_url_us,
-          meanings_count: w.definitions?.length || 1,
-          examples_count: w.examples?.length || 2,
-          status: w.status || "ACTIVE",
-          is_verified: w.is_verified ?? true,
+          pronunciation_us: w.pronunciation_us || "",
+          audio_url_us: w.audio_url_us,
+          meanings_count: w.meanings?.length || 1,
+          examples_count: 2,
+          status: "ACTIVE",
+          is_verified: true,
           created_at: w.created_at || new Date().toISOString(),
         }));
         setWords(mapped);
       }
 
       if (topicsRes.status === "fulfilled" && topicsRes.value && topicsRes.value.length > 0) {
-        setTopics(topicsRes.value as any);
+        setTopics(topicsRes.value);
       }
     } catch (err) {
       console.warn("Using local mock vocabulary:", err);

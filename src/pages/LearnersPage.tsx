@@ -48,10 +48,10 @@ export function LearnersPage() {
         search: searchTerm || undefined,
       });
 
-      const items = res?.items || (res as any)?.users || [];
+      const items: UserProfile[] = res?.items || [];
       if (items.length > 0) {
-        const mappedUsers: User[] = items.map((u: any) => ({
-          id: u._id,
+        const mappedUsers: User[] = items.map((u: UserProfile) => ({
+          id: u._id || u.user_id,
           email: u.email,
           full_name: u.full_name || u.email.split("@")[0],
           avatar_url: u.avatar_url,
@@ -59,13 +59,13 @@ export function LearnersPage() {
           target_toeic_score: u.target_toeic_score || 650,
           current_estimated_score: u.current_estimated_score || 500,
           learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
-          status: (u.status as "ACTIVE" | "INACTIVE" | "BANNED") || (u.is_active ? "ACTIVE" : "INACTIVE"),
-          is_premium: u.subscription_tier === "premium" || u.plan_type === "PREMIUM",
-          current_plan_slug: u.subscription_tier || "free",
+          status: (u.status as "ACTIVE" | "INACTIVE" | "BANNED") || "ACTIVE",
+          is_premium: u.is_premium || false,
+          current_plan_slug: u.current_plan_slug || "free",
           created_at: u.created_at || new Date().toISOString(),
-          total_xp: u.gamification?.total_xp || 0,
-          level: u.gamification?.current_level || 1,
-          current_streak: u.gamification?.streak_days || 0,
+          total_xp: u.total_xp || 0,
+          level: u.level || 1,
+          current_streak: u.current_streak || 0,
           longest_streak: 10,
           gems: 50,
           lessons_completed: 12,

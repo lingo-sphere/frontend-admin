@@ -48,8 +48,8 @@ export function CoursesPage() {
     try {
       const data = await courseService.getAllCourses()
       if (data && data.length > 0) {
-        const mappedCourses: Course[] = data.map((c: any) => ({
-          id: c._id || c.id,
+        const mappedCourses: Course[] = data.map((c: Course) => ({
+          id: c._id || c.id || '',
           title: c.title,
           slug: c.slug || '',
           description: c.description || '',
@@ -58,7 +58,7 @@ export function CoursesPage() {
           category: c.category || 'TOEIC_LISTENING',
           level: c.level || 'BEGINNER',
           total_modules: c.modules?.length || 1,
-          total_lessons: (c.modules || []).reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0) || 1,
+          total_lessons: (c.modules || []).reduce((acc: number, m: CourseModule) => acc + (m.lessons?.length || 0), 0) || 1,
           price: c.price || 0,
           is_published: c.is_published ?? true,
           author_id: c.author_id || '',

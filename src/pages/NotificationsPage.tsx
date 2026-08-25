@@ -58,23 +58,23 @@ export function NotificationsPage() {
     try {
       const list = await notificationService.getMyNotifications();
       if (list && list.length > 0) {
-        const mapped: Notification[] = list.map((n) => ({
-          id: (n as any)._id || (n as any).id || '',
-          recipient_id: (n as any).recipient_id || 'admin',
+        const mapped: Notification[] = list.map((n: AppNotification) => ({
+          id: n._id || '',
+          recipient_id: 'admin',
           recipient_type: 'ADMIN',
-          notification_type: (n as any).notification_type || 'SYSTEM_ALERT',
-          notification_category: ((n as any).category as any) || 'SYSTEM',
+          notification_type: 'SYSTEM_ALERT',
+          notification_category: n.category || 'SYSTEM',
           channels: ['IN_APP'],
           title: n.title,
-          title_vi: (n as any).title_vi || n.title,
-          content: (n as any).content || '',
-          content_vi: (n as any).content_vi || (n as any).content || '',
-          priority: ((n as any).priority as any) || 'NORMAL',
+          title_vi: n.title_vi || n.title,
+          content: n.content || '',
+          content_vi: n.content_vi || n.content || '',
+          priority: n.priority || 'NORMAL',
           is_read: Boolean(n.is_read),
-          is_pinned: Boolean((n as any).is_pinned),
-          created_at: (n as any).created_at || new Date().toISOString(),
-          read_at: (n as any).read_at,
-          action_url: (n as any).link,
+          is_pinned: Boolean(n.is_pinned),
+          created_at: n.created_at || new Date().toISOString(),
+          read_at: undefined,
+          action_url: n.action_url,
         }));
         setNotifications(mapped);
       }

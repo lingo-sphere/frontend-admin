@@ -78,7 +78,7 @@ export function RolesPage() {
         setPermissions(permsRes.value)
       }
       if (usersRes.status === 'fulfilled' && usersRes.value) {
-        const uList = usersRes.value.items || (usersRes.value as any).users || []
+        const uList = usersRes.value.items || []
         setUsers(uList)
       }
     } catch (err) {
@@ -136,7 +136,7 @@ export function RolesPage() {
     setRoleForm({
       name: role.name,
       description: role.description || '',
-      permissions: role.permissions?.map((p: any) => (typeof p === 'string' ? p : p._id || p.id)) || [],
+      permissions: role.permissions?.map((p: Permission | string) => (typeof p === 'string' ? p : p._id)) || [],
     })
     setIsRoleModalOpen(true)
   }
@@ -226,7 +226,7 @@ export function RolesPage() {
 
     setIsAssigning(true)
     try {
-      const targetUserId = selectedUser._id || (selectedUser as any).id || (selectedUser as any).user_id
+      const targetUserId = selectedUser._id || selectedUser.user_id || ''
       await roleService.assignUserRole(targetUserId, assignRoleName)
       toast.success(`Đã gán vai trò ${assignRoleName} cho người dùng ${selectedUser.email}!`)
       setSelectedUser(null)
@@ -737,7 +737,7 @@ export function RolesPage() {
                   </label>
                   <select
                     value={permForm.method}
-                    onChange={(e) => setPermForm({ ...permForm, method: e.target.value as any })}
+                    onChange={(e) => setPermForm({ ...permForm, method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' })}
                     className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100"
                   >
                     <option value="GET">GET</option>
