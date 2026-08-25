@@ -37,14 +37,12 @@ const CurrentAppContext = createContext<IAppContext | null>(null);
 const STORAGE_KEYS = {
     ACCESS_TOKEN: 'access_token',
     USER: 'user',
-    CARTS: 'carts'
 } as const;
 
 export const AppProvider = ({ children }: IAppProvider) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [user, setUser] = useState<IUser | null>(null);
     const [isAppLoading, setIsAppLoading] = useState<boolean>(true);
-    const [carts, setCarts] = useState<any[]>([]);
 
     const hasRole = useCallback((requiredRole: string): boolean => {
         if (!user?.role) return false;
@@ -145,10 +143,6 @@ export const AppProvider = ({ children }: IAppProvider) => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-                const storedCarts = localStorage.getItem(STORAGE_KEYS.CARTS);
-                if (storedCarts) {
-                    setCarts(JSON.parse(storedCarts));
-                }
                 const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
                 const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
 
