@@ -1,5 +1,4 @@
-import { useSyncExternalStore } from 'react'
-import { createStore } from 'zustand/vanilla'
+import { create } from 'zustand'
 import { navItemToPath, pathToNavItem } from '@/utils/navigation'
 
 type ThemeMode = 'light' | 'dark'
@@ -16,10 +15,24 @@ interface AdminStore {
   setMobileSidebarOpen: (open: boolean) => void
 }
 
+const applyThemeToDOM = (theme: ThemeMode) => {
+  if (typeof window === 'undefined') return
+  document.documentElement.setAttribute('data-theme', theme)
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  } else {
+    document.documentElement.classList.add('light')
+    document.documentElement.classList.remove('dark')
+  }
+}
+
 const getInitialTheme = (): ThemeMode => {
   if (typeof window === 'undefined') return 'dark'
   const savedTheme = window.localStorage.getItem('lingosphere-admin-theme')
-  return savedTheme === 'light' ? 'light' : 'dark'
+  const theme = savedTheme === 'light' ? 'light' : 'dark'
+  applyThemeToDOM(theme)
+  return theme
 }
 
 const getInitialNavItem = (): string => {
@@ -27,18 +40,25 @@ const getInitialNavItem = (): string => {
   return pathToNavItem(window.location.pathname)
 }
 
-export const adminStore = createStore<AdminStore>()((set, get) => ({
+export const useAdminStore = create<AdminStore>((set, get) => ({
   theme: getInitialTheme(),
   activeNavItem: getInitialNavItem(),
   sidebarCollapsed: false,
   mobileSidebarOpen: false,
   setTheme: (theme) => {
-    if (typeof window !== 'undefined') window.localStorage.setItem('lingosphere-admin-theme', theme)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('lingosphere-admin-theme', theme)
+      applyThemeToDOM(theme)
+    }
     set({ theme })
   },
   toggleTheme: () => {
-    const nextTheme: ThemeMode = get().theme === 'light' ? 'dark' : 'light'
-    if (typeof window !== 'undefined') window.localStorage.setItem('lingosphere-admin-theme', nextTheme)
+    const current = get().theme
+    const nextTheme: ThemeMode = current === 'dark' ? 'light' : 'dark'
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('lingosphere-admin-theme', nextTheme)
+      applyThemeToDOM(nextTheme)
+    }
     set({ theme: nextTheme })
   },
   setActiveNavItem: (activeNavItem) => {
@@ -54,18 +74,12 @@ export const adminStore = createStore<AdminStore>()((set, get) => ({
   setMobileSidebarOpen: (mobileSidebarOpen) => set({ mobileSidebarOpen }),
 }))
 
+export const adminStore = useAdminStore
+
 // Listen to browser Back / Forward buttons
 if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => {
     const navItem = pathToNavItem(window.location.pathname)
-    adminStore.setState({ activeNavItem: navItem })
+    useAdminStore.setState({ activeNavItem: navItem })
   })
-}
-
-export function useAdminStore<T>(selector: (state: AdminStore) => T): T {
-  return useSyncExternalStore(
-    adminStore.subscribe,
-    () => selector(adminStore.getState()),
-    () => selector(adminStore.getInitialState()),
-  )
 }

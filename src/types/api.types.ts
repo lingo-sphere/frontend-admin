@@ -95,7 +95,9 @@ export interface SystemAnalyticsOverview {
 export interface Permission {
   _id: string
   name: string
-  code: string
+  code?: string
+  api_path?: string
+  method?: string
   module: string
   description?: string
   created_at?: string

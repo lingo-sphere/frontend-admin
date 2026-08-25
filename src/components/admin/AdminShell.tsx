@@ -13,7 +13,7 @@ export function AdminShell({ children }: AdminShellProps) {
   const sidebarCollapsed = useAdminStore((state) => state.sidebarCollapsed)
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 font-sans flex flex-col relative selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col relative selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
       {/* Desktop Persistent Sidebar */}
       <Sidebar />
 

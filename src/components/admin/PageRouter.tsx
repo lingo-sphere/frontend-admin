@@ -16,12 +16,15 @@ import { AdminUserFormPage } from '@/pages/AdminUserFormPage'
 import { VocabularyImportPage } from '@/pages/VocabularyImportPage'
 import { VocabularyFormPage } from '@/pages/VocabularyFormPage'
 import { AdminProfilePage } from '@/pages/AdminProfilePage'
+import { RolesPage } from '@/pages/RolesPage'
 
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
   'users-list': LearnersPage,
   users: LearnersPage,
   admins: AdminUsersPage,
+  roles: RolesPage,
+  permissions: RolesPage,
   'admin-user-create': AdminUserFormPage,
   courses: CoursesPage,
   'course-create': CourseFormPage,

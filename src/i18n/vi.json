@@ -25,6 +25,7 @@
     "publicDecks": "Bộ thẻ công khai",
     "progress": "Thống kê dữ liệu",
     "notifications": "Thông báo",
+    "roles": "Phân quyền (RBAC)",
     "settings": "Cài đặt"
   },
   "header": {

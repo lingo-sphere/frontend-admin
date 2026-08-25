@@ -129,11 +129,11 @@ export function Topbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 w-full h-16 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-20 w-full h-16 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-4 transition-colors">
         {/* Left Side: Mobile Menu & Search */}
         <div className="flex items-center gap-3 flex-1 max-w-md">
           <button
-            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             onClick={() => setMobileSidebarOpen(true)}
             type="button"
             aria-label="Mở menu"
@@ -141,20 +141,20 @@ export function Topbar() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="hidden sm:flex items-center gap-2.5 w-full h-9 px-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 focus-within:border-indigo-500/80 transition-all">
-            <Search className="w-4 h-4 text-slate-500 shrink-0" />
+          <div className="hidden sm:flex items-center gap-2.5 w-full h-9 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 focus-within:border-indigo-500 transition-all">
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             <input
               type="text"
               placeholder={t('header.search') || 'Tìm kiếm nhanh (Người dùng, Khóa học, Từ vựng)...'}
-              className="w-full bg-transparent border-0 outline-none text-slate-200 placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+              className="w-full bg-transparent border-0 outline-none text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
             />
-            <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono shrink-0">⌘K</span>
+            <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] text-slate-500 dark:text-slate-400 font-mono shrink-0">⌘K</span>
           </div>
         </div>
 
         {/* Right Side: Status Badges & Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-300">
             <Users className="w-3.5 h-3.5" />
             <span>
               {totalLearnersCount !== null ? `${totalLearnersCount} ` : '12.4k '}
@@ -162,14 +162,14 @@ export function Topbar() {
             </span>
           </div>
 
-          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             <span>{t('header.systemStable') || 'Hệ thống ổn định'}</span>
           </div>
 
           {/* Language Toggle */}
           <button
-            className="h-9 px-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-xs font-bold text-slate-200 transition-colors cursor-pointer"
+            className="h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             onClick={toggleLanguage}
             type="button"
             title="Đổi ngôn ngữ Tiếng Việt / English"
@@ -179,40 +179,40 @@ export function Topbar() {
 
           {/* Theme Toggle */}
           <button
-            className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             onClick={toggleTheme}
             type="button"
-            title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
+            title={theme === 'dark' ? 'Chuyển sang Chế độ Sáng' : 'Chuyển sang Chế độ Tối'}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-300" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
           </button>
 
           {/* Notifications Dropdown */}
           <div className="relative" ref={notificationRef}>
             <button
-              className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 transition-colors relative cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors relative cursor-pointer"
               onClick={() => setNotificationOpen(!notificationOpen)}
               type="button"
               aria-label="Thông báo"
             >
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-slate-900 animate-pulse">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {notificationOpen && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-indigo-400" />
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                     <span>{t('header.notifications') || 'Thông báo hệ thống'}</span>
                   </h3>
                   {unreadCount > 0 && (
                     <button
-                      className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium transition-colors cursor-pointer"
                       onClick={markAllAsRead}
                     >
                       Đọc tất cả
@@ -220,12 +220,9 @@ export function Topbar() {
                   )}
                 </div>
 
-                <div className="py-2 max-h-72 overflow-y-auto space-y-2 divide-y divide-slate-800/50">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/60 my-2 max-h-72 overflow-y-auto pr-1">
                   {notifications.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-500">
-                      <CheckCircle className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-                      <p>Không có thông báo mới</p>
-                    </div>
+                    <p className="py-6 text-center text-xs text-slate-400">Không có thông báo mới nào</p>
                   ) : (
                     notifications.map((notif) => {
                       const notifId = (notif as { _id?: string })._id || (notif as { id?: string }).id || ''
@@ -240,16 +237,18 @@ export function Topbar() {
                         <div
                           key={notifId}
                           className={`pt-2 first:pt-0 cursor-pointer p-2 rounded-xl transition-colors ${
-                            !notif.is_read ? 'bg-indigo-950/30' : 'hover:bg-slate-800/40'
+                            !notif.is_read
+                              ? 'bg-indigo-50 dark:bg-indigo-950/30'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
                           }`}
                           onClick={() => markAsRead(notifId)}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-semibold text-slate-200 line-clamp-1">{title}</span>
-                            {!notif.is_read && <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0 mt-1" />}
+                            <span className="text-xs font-semibold text-slate-900 dark:text-slate-200 line-clamp-1">{title}</span>
+                            {!notif.is_read && <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1" />}
                           </div>
-                          <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{content}</p>
-                          <span className="text-[10px] text-slate-500 mt-1 block">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{content}</p>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 block">
                             {formatTimeAgo(createdAt, isVietnamese)}
                           </span>
                         </div>
@@ -258,9 +257,9 @@ export function Topbar() {
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-slate-800">
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                   <button
-                    className="w-full py-2 rounded-xl text-center text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-slate-800/50 transition-colors"
+                    className="w-full py-2 rounded-xl text-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                     onClick={goToNotifications}
                   >
                     Xem tất cả thông báo →
@@ -274,7 +273,7 @@ export function Topbar() {
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-700/60 cursor-pointer"
+              className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700/60 cursor-pointer"
               type="button"
             >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm ring-1 ring-white/20">
@@ -290,10 +289,10 @@ export function Topbar() {
                     : 'AD'}
               </div>
               <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-semibold text-slate-200 leading-tight">
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-200 leading-tight">
                   {profile?.full_name || user?.email?.split('@')[0] || 'Admin'}
                 </span>
-                <span className="text-[10px] text-teal-400">
+                <span className="text-[10px] font-medium text-teal-600 dark:text-teal-400">
                   {user?.role === 'ADMIN' ? 'Quản trị viên' : user?.role || 'Admin'}
                 </span>
               </div>
@@ -301,12 +300,12 @@ export function Topbar() {
             </button>
 
             {userDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-52 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                <div className="px-3.5 py-2 border-b border-slate-800/80 mb-1">
-                  <p className="text-xs font-semibold text-slate-200 truncate">
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-200 truncate">
                     {profile?.full_name || 'Admin Console'}
                   </p>
-                  <p className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@lingosphere.local'}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user?.email || 'admin@lingosphere.local'}</p>
                 </div>
 
                 <button
@@ -314,9 +313,9 @@ export function Topbar() {
                     setActiveNavItem(`admin-profile:${user?.user_id || 'me'}`)
                     setUserDropdownOpen(false)
                   }}
-                  className="w-full px-3.5 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <UserIcon className="w-3.5 h-3.5 text-indigo-400" />
+                  <UserIcon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                   <span>Hồ sơ cá nhân</span>
                 </button>
 
@@ -325,20 +324,20 @@ export function Topbar() {
                     setActiveNavItem('settings')
                     setUserDropdownOpen(false)
                   }}
-                  className="w-full px-3.5 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <Shield className="w-3.5 h-3.5 text-violet-400" />
+                  <Shield className="w-3.5 h-3.5 text-teal-500 dark:text-teal-400" />
                   <span>Cài đặt hệ thống</span>
                 </button>
 
-                <div className="my-1 border-t border-slate-800/80" />
+                <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 
                 <button
                   onClick={() => {
                     setUserDropdownOpen(false)
                     setShowLogoutConfirm(true)
                   }}
-                  className="w-full px-3.5 py-2 text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 text-left text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Đăng xuất</span>
@@ -349,13 +348,13 @@ export function Topbar() {
         </div>
       </header>
 
-      {/* Logout Confirmation Modal */}
+      {/* Logout Confirm Modal */}
       <ConfirmModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={handleLogout}
-        title="Đăng xuất khỏi hệ thống?"
-        description="Bạn sẽ cần đăng nhập lại để tiếp tục quản trị hệ thống LingoSphere."
+        title="Xác nhận đăng xuất"
+        description="Bạn có chắc chắn muốn đăng xuất khỏi hệ thống LingoSphere Admin Console không?"
         confirmText="Đăng xuất"
         cancelText="Hủy bỏ"
         variant="danger"
