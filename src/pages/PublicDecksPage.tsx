@@ -1,22 +1,19 @@
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import {
-  Layers3,
-  Search,
-  Plus,
-  Star,
-  Users,
-  Eye,
-  Trash2,
-  CheckCircle,
-  RefreshCw,
-  Sparkles,
-  BookOpen,
-} from 'lucide-react'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { FlashcardDeck } from '@/types/api.types'
+import {
+  BookOpen,
+  Layers3,
+  Plus,
+  RefreshCw,
+  Search,
+  Star,
+  Trash2,
+  Users
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const mockPublicDecks: FlashcardDeck[] = [
   {

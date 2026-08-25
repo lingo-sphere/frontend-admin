@@ -291,7 +291,7 @@ export function DashboardPage() {
           <div>
             <p className="text-xs text-slate-400 font-medium">Dung lượng media đã dùng</p>
             <p className="text-2xl font-extrabold text-slate-100 mt-1">
-              {storageUsage ? `${storageUsage.used_mb} MB` : '3.2 GB'}
+              {storageUsage?.used_mb !== undefined && storageUsage.used_mb !== null ? `${storageUsage.used_mb} MB` : '3.2 GB'}
             </p>
           </div>
           <div className="pt-3 mt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">

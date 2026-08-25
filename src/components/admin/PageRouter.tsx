@@ -20,9 +20,14 @@ import { AdminProfilePage } from '@/pages/AdminProfilePage'
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
   'users-list': LearnersPage,
-  'admins': AdminUsersPage,
+  users: LearnersPage,
+  admins: AdminUsersPage,
+  'admin-user-create': AdminUserFormPage,
   courses: CoursesPage,
+  'course-create': CourseFormPage,
   vocabulary: VocabularyPage,
+  'vocab-create': VocabularyFormPage,
+  'vocabulary-import': VocabularyImportPage,
   practice: PracticePage,
   'practice-exercises': PracticePage,
   'practice-listening': PracticePage,
@@ -34,18 +39,13 @@ const pageMap: Record<string, React.ComponentType> = {
   progress: ProgressPage,
   notifications: NotificationsPage,
   settings: SettingsPage,
-  'user-profile': UserProfilePage,
-  'course-form': CourseFormPage,
-  'admin-user-form': AdminUserFormPage,
-  'vocabulary-import': VocabularyImportPage,
-  'vocabulary-form': VocabularyFormPage,
   'admin-profile': AdminProfilePage,
 }
 
 export function PageRouter() {
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
 
-  if (activeNavItem.startsWith('admin-user-form:')) {
+  if (activeNavItem.startsWith('admin-user-form:') || activeNavItem.startsWith('admin-user-edit:')) {
     const userId = activeNavItem.split(':')[1]
     return <AdminUserFormPage editUserId={userId} />
   }
@@ -58,9 +58,13 @@ export function PageRouter() {
     return <AdminProfilePage />
   }
 
-  if (activeNavItem.startsWith('vocabulary-form')) {
-    const wordId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : undefined
+  if (activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:')) {
+    const wordId = activeNavItem.split(':')[1]
     return <VocabularyFormPage editWordId={wordId} />
+  }
+
+  if (activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
+    return <CourseFormPage />
   }
 
   const PageComponent = pageMap[activeNavItem] || DashboardPage
