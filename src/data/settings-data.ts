@@ -55,6 +55,7 @@ export interface AdminUser {
   avatar?: string
   last_active: string
   is_active: boolean
+  created_at?: string
 }
 
 export const subscriptionPlans: SubscriptionPlan[] = [

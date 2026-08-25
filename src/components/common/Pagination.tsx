@@ -115,7 +115,7 @@ export function Pagination({
             onKeyDown={handleJump}
             className="ant-input"
           />
-          <button type="button" onClick={() => handleJump({ key: 'Enter' } as React.KeyboardEvent)}>
+          <button type="button" onClick={() => handleJump({ key: 'Enter' } as React.KeyboardEvent<HTMLInputElement>)}>
             OK
           </button>
         </div>

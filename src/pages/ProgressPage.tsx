@@ -471,7 +471,7 @@ export function ProgressPage() {
       const from = new Date(customFromDate)
       const to = new Date(customToDate)
       return activityTimeSeriesData.filter(d => {
-        const date = new Date(d.date)
+        const date = new Date(d.dateStr)
         return date >= from && date <= to
       })
     }
