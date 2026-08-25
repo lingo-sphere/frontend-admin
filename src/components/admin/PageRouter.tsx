@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// PageRouter - Render page based on activeNavItem from store
-
 import { useAdminStore } from '@/store/admin-store'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { LearnersPage } from '@/pages/LearnersPage'
@@ -48,23 +45,19 @@ const pageMap: Record<string, React.ComponentType> = {
 export function PageRouter() {
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
 
-  // Handle edit mode: admin-user-form:userId
   if (activeNavItem.startsWith('admin-user-form:')) {
     const userId = activeNavItem.split(':')[1]
     return <AdminUserFormPage editUserId={userId} />
   }
 
-  // Handle user profile: user-profile:userId
   if (activeNavItem.startsWith('user-profile:')) {
     return <UserProfilePage />
   }
 
-  // Handle admin profile: admin-profile:userId
   if (activeNavItem.startsWith('admin-profile:')) {
     return <AdminProfilePage />
   }
 
-  // Handle vocabulary form: vocabulary-form or vocabulary-form:wordId
   if (activeNavItem.startsWith('vocabulary-form')) {
     const wordId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : undefined
     return <VocabularyFormPage editWordId={wordId} />

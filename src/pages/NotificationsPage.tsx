@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Notifications page - Quản lý thông báo cho admin (Modern ProTable UI & Filter Sync)
-
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -99,7 +96,7 @@ export function NotificationsPage() {
 
   const filteredNotifications = useMemo(() => {
     let result = notifications.filter((n) => {
-      // Search
+      
       if (searchQuery) {
         const query = searchQuery.toLowerCase().trim();
         const title = isVietnamese && n.title_vi ? n.title_vi : n.title;
@@ -111,21 +108,20 @@ export function NotificationsPage() {
           return false;
         }
       }
-      // Category filter
+      
       if (
         filterCategory !== "ALL" &&
         n.notification_category !== filterCategory
       )
         return false;
-      // Priority filter
+      
       if (filterPriority !== "ALL" && n.priority !== filterPriority)
         return false;
-      // Status filter
+      
       if (filterStatus === "UNREAD" && n.is_read) return false;
       if (filterStatus === "READ" && !n.is_read) return false;
       if (filterStatus === "PINNED" && !n.is_pinned) return false;
 
-      // Date range filter
       if (filterJoin !== "ALL" && filterJoin.includes("_")) {
         const [fromStr, toStr] = filterJoin.split("_");
         const from = fromStr && fromStr.trim() ? new Date(fromStr + "T00:00:00") : null;
@@ -138,7 +134,6 @@ export function NotificationsPage() {
       return true;
     });
 
-    // Sorting
     switch (sortOption) {
       case "latest":
         result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -239,7 +234,6 @@ export function NotificationsPage() {
     setSelectedIds(new Set());
   };
 
-  // Export CSV
   const handleExportCsv = () => {
     const headers = ["id", "category", "priority", "title", "is_read", "is_pinned", "created_at"];
     const rows = filteredNotifications.map((n) => [
@@ -284,7 +278,7 @@ export function NotificationsPage() {
 
   return (
     <main className="page-content">
-      {/* Page Heading */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{t("page.notifications.title")}</h1>
@@ -298,7 +292,6 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="notif-stats-grid">
         <div className="notif-stat-card">
           <span className="notif-stat-value">{stats.total}</span>
@@ -320,7 +313,6 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      {/* Synchronized Toolbar */}
       <div className="users-toolbar">
         <div className="users-search">
           <Search className="search-icon" />
@@ -340,7 +332,6 @@ export function NotificationsPage() {
           )}
         </div>
 
-        {/* Date Range Filter beside Search */}
         <div className="toolbar-date-range">
           <span className="date-range-label">{isVietnamese ? "Thời gian:" : "Date:"}</span>
           <div className="toolbar-date-inputs">
@@ -369,14 +360,13 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      {/* ProTable-style Actions Bar */}
       <div className="admin-table-actions">
         <h2 className="admin-table-title">
           {isVietnamese ? "Danh sách thông báo" : "Notification List"}
           <span className="admin-table-count">{filteredNotifications.length}</span>
         </h2>
         <div className="admin-table-action-buttons">
-          {/* Category Filter */}
+          
           <select
             className="admin-select"
             value={filterCategory}
@@ -391,7 +381,6 @@ export function NotificationsPage() {
             ))}
           </select>
 
-          {/* Priority Filter */}
           <select
             className="admin-select"
             value={filterPriority}
@@ -409,7 +398,6 @@ export function NotificationsPage() {
             <option value="LOW">📄 Low</option>
           </select>
 
-          {/* Status Filter */}
           <select
             className="admin-select"
             value={filterStatus}
@@ -427,7 +415,6 @@ export function NotificationsPage() {
             </option>
           </select>
 
-          {/* Sort Selector */}
           <select
             className="admin-select"
             value={sortOption}
@@ -438,13 +425,11 @@ export function NotificationsPage() {
             <option value="priority_desc">{isVietnamese ? "Ưu tiên cao nhất" : "Highest Priority"}</option>
           </select>
 
-          {/* Export CSV */}
           <button type="button" className="table-ghost-btn" onClick={handleExportCsv}>
             <Download />
             {isVietnamese ? "Xuất CSV" : "Export"}
           </button>
 
-          {/* Reset button */}
           <button
             type="button"
             className="table-ghost-btn"
@@ -457,7 +442,6 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      {/* Bulk Actions */}
       {selectedIds.size > 0 && (
         <div className="bulk-actions-bar" style={{ marginBottom: 16 }}>
           <span className="bulk-count">
@@ -480,7 +464,6 @@ export function NotificationsPage() {
         </div>
       )}
 
-      {/* Notification List */}
       <div className="notif-list">
         {filteredNotifications.length === 0 ? (
           <div className="notif-empty">
@@ -502,7 +485,7 @@ export function NotificationsPage() {
           </div>
         ) : (
           <>
-            {/* Header */}
+            
             <div className="notif-list-header">
               <label className="notif-checkbox-wrapper">
                 <input
@@ -521,7 +504,6 @@ export function NotificationsPage() {
               </button>
             </div>
 
-            {/* Items */}
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}

@@ -1,11 +1,8 @@
-// Reusable DateRangeFilter component
-// UI matching the filter chip style
-
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 
 interface DateRangeFilterProps {
-  value: string // Format: 'YYYY-MM-DD_YYYY-MM-DD' or ''
+  value: string 
   onChange: (value: string) => void
   label?: string
 }

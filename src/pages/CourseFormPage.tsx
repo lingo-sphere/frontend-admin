@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Course Form Page - Trang thêm/sửa khóa học
-// Đồng bộ với course.dbml - courses, course_modules, course_lessons, lesson_questions
-
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -27,7 +23,6 @@ import {
 } from '@/data/courses-data'
 import { useAdminStore } from '@/store/admin-store'
 
-// Lesson types từ DB
 type LessonType = 'VIDEO' | 'READING' | 'FLASHCARD' | 'PRACTICE_QUIZ'
 
 interface LessonQuestion {
@@ -218,7 +213,7 @@ export function CourseFormPage() {
 
   return (
     <main className="page-content">
-      {/* Header */}
+      
       <div className="form-header">
         <button className="back-button" onClick={() => setActiveNavItem('courses')}>
           <ChevronLeft />
@@ -231,7 +226,6 @@ export function CourseFormPage() {
         </button>
       </div>
 
-      {/* Section Navigation */}
       <div className="form-sections-nav">
         {sections.map(section => (
           <button
@@ -244,9 +238,8 @@ export function CourseFormPage() {
         ))}
       </div>
 
-      {/* Form Content */}
       <div className="form-content">
-        {/* Basic Info Section */}
+        
         {activeSection === 'basic' && (
           <div className="form-section">
             <h2 className="section-title">{isVietnamese ? 'Thông tin cơ bản' : 'Basic Information'}</h2>
@@ -317,7 +310,6 @@ export function CourseFormPage() {
           </div>
         )}
 
-        {/* Category Section */}
         {activeSection === 'category' && (
           <div className="form-section">
             <h2 className="section-title">{isVietnamese ? 'Phân loại khóa học' : 'Course Category'}</h2>
@@ -376,7 +368,6 @@ export function CourseFormPage() {
           </div>
         )}
 
-        {/* Content Section - Module & Lessons */}
         {activeSection === 'content' && (
           <div className="form-section">
             <div className="section-header">
@@ -442,7 +433,6 @@ export function CourseFormPage() {
                           />
                         </div>
 
-                        {/* Lessons */}
                         <div className="lessons-section">
                           <div className="lessons-header">
                             <span className="lessons-title">
@@ -472,7 +462,6 @@ export function CourseFormPage() {
                                     </div>
                                     <span className="lesson-number">{lessonIndex + 1}</span>
 
-                                    {/* Lesson Type Selector */}
                                     <select
                                       className="lesson-type-select"
                                       value={lesson.lesson_type}
@@ -521,7 +510,6 @@ export function CourseFormPage() {
           </div>
         )}
 
-        {/* Pricing Section */}
         {activeSection === 'pricing' && (
           <div className="form-section">
             <h2 className="section-title">{isVietnamese ? 'Giá & Trạng thái' : 'Pricing & Status'}</h2>

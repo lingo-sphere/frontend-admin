@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Vocabulary Import Page - Trang import từ vựng
-// Đồng bộ với vocabulary-service.dbml - vocabulary_import_batches
-
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -36,7 +32,6 @@ export function VocabularyImportPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('CSV')
 
-  // Mock import history
   const importHistory: ImportBatch[] = [
     {
       id: 'imp-001',
@@ -115,7 +110,7 @@ export function VocabularyImportPage() {
 
   return (
     <main className="page-content">
-      {/* Header */}
+      
       <div className="form-header">
         <button className="back-button" onClick={() => setActiveNavItem('vocabulary')}>
           <ChevronLeft />
@@ -124,13 +119,11 @@ export function VocabularyImportPage() {
         <h1 className="form-title">{isVietnamese ? 'Import từ vựng' : 'Import Vocabulary'}</h1>
       </div>
 
-      {/* Import Section */}
       <div className="import-content">
-        {/* Upload Area */}
+        
         <div className="import-upload-section">
           <h2 className="section-title">{isVietnamese ? 'Tải lên file' : 'Upload File'}</h2>
 
-          {/* File Type Selection */}
           <div className="file-type-selection">
             <span className="file-type-label">{isVietnamese ? 'Định dạng:' : 'Format:'}</span>
             <div className="file-type-options">
@@ -149,7 +142,6 @@ export function VocabularyImportPage() {
             </div>
           </div>
 
-          {/* Drop Zone */}
           <div
             className={`drop-zone${dragActive ? ' drag-active' : ''}${selectedFile ? ' has-file' : ''}`}
             onDragEnter={handleDrag}
@@ -195,7 +187,6 @@ export function VocabularyImportPage() {
             )}
           </div>
 
-          {/* Import Options */}
           <div className="import-options">
             <h3>{isVietnamese ? 'Tùy chọn import' : 'Import Options'}</h3>
             <div className="option-row">
@@ -218,7 +209,6 @@ export function VocabularyImportPage() {
             </div>
           </div>
 
-          {/* Import Button */}
           <button
             className="primary-button import-btn"
             onClick={handleImport}
@@ -229,7 +219,6 @@ export function VocabularyImportPage() {
           </button>
         </div>
 
-        {/* Import History */}
         <div className="import-history-section">
           <h2 className="section-title">{isVietnamese ? 'Lịch sử import' : 'Import History'}</h2>
 

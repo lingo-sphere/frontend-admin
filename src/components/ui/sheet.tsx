@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Sheet component - Custom mobile sidebar overlay
-
 import React, { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -27,12 +24,12 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Overlay */}
+      
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm"
         onClick={() => onOpenChange?.(false)}
       />
-      {/* Content */}
+      
       <div
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex h-full w-3/4 max-w-sm flex-col',

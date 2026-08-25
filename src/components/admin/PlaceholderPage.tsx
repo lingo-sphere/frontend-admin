@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Placeholder component cho các trang chưa phát triển
-
 import { useTranslation } from 'react-i18next'
 import { FileQuestion } from 'lucide-react'
 

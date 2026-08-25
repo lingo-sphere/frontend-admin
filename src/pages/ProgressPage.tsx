@@ -1,11 +1,3 @@
-// Updated: 2026-08-23
-// Comprehensive "Thống kê dữ liệu" (Data Statistics) Page
-// Deeply integrated with LingoSphere Microservices DB Schemas:
-// - User & Auth (user.dbml, auth.dbml)
-// - Practice & Exam (practice-service.dbml, exam.dbml)
-// - Vocabulary (vocabulary-service.dbml)
-// - AI Engine (ai-service.dbml)
-
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -267,8 +259,7 @@ export function ProgressPage() {
 
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
-  // State Management
-  const [selectedTimeFilter, setSelectedTimeFilter] = useState(timeFilterOptions[2]) // Default 30 days
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState(timeFilterOptions[2]) 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [showTimeDropdown, setShowTimeDropdown] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -278,7 +269,6 @@ export function ProgressPage() {
   const [aiSearchQuery, setAiSearchQuery] = useState('')
   const [aiTypeFilter, setAiTypeFilter] = useState<string>('ALL')
 
-  // User Activity Log Filters & Pagination (ProTable Style)
   const [activitySearchQuery, setActivitySearchQuery] = useState('')
   const [activityTypeFilter, setActivityTypeFilter] = useState('ALL')
   const [activityPlatformFilter, setActivityPlatformFilter] = useState('ALL')
@@ -292,7 +282,6 @@ export function ProgressPage() {
   const [showActivityDensityMenu, setShowActivityDensityMenu] = useState(false)
   const [showActivityColSettings, setShowActivityColSettings] = useState(false)
 
-  // TOEIC Parts Table Filters
   const [toeicSectionFilter, setToeicSectionFilter] = useState('ALL')
   const toeicSectionRef = useRef<HTMLDivElement>(null)
   const [showToeicSectionFilter, setShowToeicSectionFilter] = useState(false)
@@ -350,7 +339,6 @@ export function ProgressPage() {
       return matchesQuery && matchesType && matchesPlatform && matchesStatus
     })
 
-    // Sort by user name
     if (activityUserSort) {
       result = [...result].sort((a, b) => {
         const nameA = a.userName.toLowerCase()
@@ -371,21 +359,17 @@ export function ProgressPage() {
     return filteredActivityLogs.slice(start, start + activityPageSize)
   }, [filteredActivityLogs, activityPage, activityPageSize])
 
-  // TOEIC Parts Filtered
   const filteredToeicParts = useMemo(() => {
     let result = toeicPartStats
 
-    // Filter by section
     if (toeicSectionFilter !== 'ALL') {
       result = result.filter(part => part.section === toeicSectionFilter)
     }
 
-    // Filter by part
     if (toeicPartFilter !== 'ALL') {
       result = result.filter(part => part.partNumber === parseInt(toeicPartFilter))
     }
 
-    // Sort by attempt count
     if (toeicAttemptSort) {
       result = [...result].sort((a, b) =>
         toeicAttemptSort === 'asc'
@@ -394,7 +378,6 @@ export function ProgressPage() {
       )
     }
 
-    // Sort by accuracy
     if (toeicAccuracySort) {
       result = [...result].sort((a, b) =>
         toeicAccuracySort === 'asc'
@@ -403,7 +386,6 @@ export function ProgressPage() {
       )
     }
 
-    // Sort by weak topics
     if (toeicWeakSort) {
       result = [...result].sort((a, b) =>
         toeicWeakSort === 'asc'
@@ -415,7 +397,6 @@ export function ProgressPage() {
     return result
   }, [toeicSectionFilter, toeicPartFilter, toeicAttemptSort, toeicAccuracySort, toeicWeakSort])
 
-  // Get unique part numbers from data
   const uniqueParts = useMemo(() => {
     return [...new Set(toeicPartStats.map(p => p.partNumber))].sort((a, b) => a - b)
   }, [])
@@ -464,7 +445,6 @@ export function ProgressPage() {
 
   const isActColVisible = (key: string) => activityColumns.find((c) => c.key === key)?.visible ?? true
 
-  // Dynamic Time Series calculation based on selected range
   const filteredTimeSeries = useMemo(() => {
     if (selectedTimeFilter.id === 'custom') {
       if (!customFromDate || !customToDate) return activityTimeSeriesData.slice(-30)
@@ -479,7 +459,6 @@ export function ProgressPage() {
     return activityTimeSeriesData.slice(-limit)
   }, [selectedTimeFilter, customFromDate, customToDate])
 
-  // Total summary metrics calculated from time series
   const timeSeriesTotals = useMemo(() => {
     const totalDau = Math.round(filteredTimeSeries.reduce((acc, c) => acc + c.dau, 0) / filteredTimeSeries.length)
     const totalSessions = filteredTimeSeries.reduce((acc, c) => acc + c.sessions, 0)
@@ -496,7 +475,6 @@ export function ProgressPage() {
     }
   }, [filteredTimeSeries])
 
-  // Filtered AI Logs
   const filteredAiLogs = useMemo(() => {
     return mockAIEvaluationLogs.filter((log) => {
       const matchQuery =
@@ -510,7 +488,6 @@ export function ProgressPage() {
     })
   }, [aiSearchQuery, aiTypeFilter])
 
-  // Manual Refresh Simulation
   const handleRefresh = () => {
     setIsRefreshing(true)
     setTimeout(() => {
@@ -520,7 +497,7 @@ export function ProgressPage() {
 
   return (
     <main className="page-content statistics-page">
-      {/* 1. Page Header */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{t('page.progress.title')}</h1>
@@ -528,7 +505,7 @@ export function ProgressPage() {
         </div>
 
         <div className="heading-actions">
-          {/* Refresh Button */}
+          
           <button
             className={`icon-button${isRefreshing ? ' spinning' : ''}`}
             type="button"
@@ -538,7 +515,6 @@ export function ProgressPage() {
             <RefreshCw className="icon" />
           </button>
 
-          {/* Time Filter Dropdown */}
           <div className="date-picker-wrapper" style={{ position: 'relative' }} ref={timeDropdownRef}>
             <button
               className="date-control"
@@ -605,7 +581,6 @@ export function ProgressPage() {
             )}
           </div>
 
-          {/* Export Report Button */}
           <button className="primary-button" type="button">
             <Download className="icon" />
             <span>{isVietnamese ? 'Xuất Báo Cáo' : 'Export Report'}</span>
@@ -613,7 +588,6 @@ export function ProgressPage() {
         </div>
       </div>
 
-      {/* 2. Top Executive Microservice DB Metric Cards */}
       <section className="kpi-grid stats-kpi-grid">
         {dbEntityMetrics.map((item) => {
           return (
@@ -638,7 +612,6 @@ export function ProgressPage() {
         })}
       </section>
 
-      {/* 3. Multi-Tab Navigation Bar */}
       <nav className="stats-tabs-nav" aria-label="Statistics Sections">
         <button
           className={`stats-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
@@ -677,10 +650,9 @@ export function ProgressPage() {
         </button>
       </nav>
 
-      {/* TAB 1: HOẠT ĐỘNG NGƯỜI DÙNG (USER ACTIVITY & GAMIFICATION) */}
       {activeTab === 'overview' && (
         <div className="tab-content-container overview-tab">
-          {/* Main Activity Chart Card */}
+          
           <article className="card chart-card full-width-card">
             <div className="card-header">
               <div>
@@ -709,15 +681,13 @@ export function ProgressPage() {
               </div>
             </div>
 
-            {/* Custom Interactive CSS Bar Visualizer */}
             <div className="chart-wrap stats-chart-wrap">
               <ActivityBarChart items={filteredTimeSeries} />
             </div>
           </article>
 
-          {/* Gamification & User Retention Grid */}
           <div className="stats-two-col-grid">
-            {/* Gamification Distribution Card */}
+            
             <article className="card gamification-card">
               <div className="card-header">
                 <div>
@@ -758,7 +728,6 @@ export function ProgressPage() {
               </div>
             </article>
 
-            {/* Device & Access Breakdown Card */}
             <article className="card device-card">
               <div className="card-header">
                 <div>
@@ -775,7 +744,6 @@ export function ProgressPage() {
             </article>
           </div>
 
-          {/* ProTable Toolbar & Recent User Activity Log Table */}
           <div className="activity-log-section">
             <div className="users-toolbar">
             <div className="users-search">
@@ -797,7 +765,6 @@ export function ProgressPage() {
               )}
             </div>
 
-            {/* Date Filter */}
             <div className="toolbar-date-range">
               <span className="date-range-label">{isVietnamese ? 'Thời gian:' : 'Time:'}</span>
               <div className="toolbar-date-inputs">
@@ -824,21 +791,19 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* Table Header Actions (ProTable-style) */}
           <div className="admin-table-actions">
             <h2 className="admin-table-title">
               {isVietnamese ? 'Nhật ký hoạt động người dùng' : 'User Activity Logs'}
               <span className="admin-table-count">{filteredActivityLogs.length}</span>
             </h2>
             <div className="admin-table-action-buttons">
-              {/* Export */}
+              
               <button type="button" className="table-ghost-btn" onClick={handleExportActivityCsv}>
                 <Download />
                 {isVietnamese ? 'Xuất CSV' : 'Export'}
                 <ChevronDown />
               </button>
 
-              {/* Reset */}
               <button
                 type="button"
                 className="table-ghost-btn"
@@ -849,7 +814,6 @@ export function ProgressPage() {
                 {isVietnamese ? 'Đặt lại' : 'Reset'}
               </button>
 
-              {/* Density */}
               <div className="protable-tool-wrapper" ref={actDensityRef}>
                 <button
                   type="button"
@@ -879,7 +843,6 @@ export function ProgressPage() {
                 )}
               </div>
 
-              {/* Column Settings */}
               <div className="protable-tool-wrapper" ref={actColRef}>
                 <button
                   type="button"
@@ -922,7 +885,6 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* Table View */}
           <div className="users-table-wrapper">
             <table className={`users-table density-${activityDensity}`}>
               <thead>
@@ -1104,7 +1066,6 @@ export function ProgressPage() {
             </table>
           </div>
 
-          {/* Standardized Pagination Component (ProTable-style) */}
           <Pagination
             currentPage={activityPage}
             totalPages={Math.ceil(filteredActivityLogs.length / activityPageSize) || 1}
@@ -1121,10 +1082,9 @@ export function ProgressPage() {
         </div>
       )}
 
-      {/* TAB 2: TIẾN ĐỘ HỌC TẬP & TOEIC (LEARNING & EXAM PERFORMANCE) */}
       {activeTab === 'learning' && (
         <div className="tab-content-container">
-          {/* Skill Performance Grid */}
+          
           <div className="section-title-wrap">
             <h2 className="section-main-title">Chỉ Số Hiệu Suất Học Theo Kỹ Năng</h2>
           </div>
@@ -1166,7 +1126,6 @@ export function ProgressPage() {
             ))}
           </div>
 
-          {/* TOEIC Score Distribution Chart */}
           <article className="card">
             <div className="card-header">
               <div>
@@ -1214,7 +1173,6 @@ export function ProgressPage() {
             </div>
           </article>
 
-          {/* TOEIC Score Summary */}
           <div className="toeic-summary-grid">
             <div className="toeic-summary-card">
               <div className="summary-icon listening"><TrendingUp /></div>
@@ -1239,7 +1197,6 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* TOEIC Part Breakdown Table */}
           <article className="card">
             <div className="card-header">
               <div>
@@ -1413,10 +1370,9 @@ export function ProgressPage() {
         </div>
       )}
 
-      {/* TAB 3: HIỆU NĂNG & CHI PHÍ AI (AI ENGINE ANALYTICS) */}
       {activeTab === 'ai' && (
         <div className="tab-content-container">
-          {/* AI Models Overview Table */}
+          
           <article className="card full-width-card">
             <div className="card-header">
               <div>
@@ -1470,7 +1426,6 @@ export function ProgressPage() {
             </div>
           </article>
 
-          {/* AI Stats Summary */}
           <div className="ai-stats-grid">
             <div className="ai-stat-card">
               <div className="ai-stat-icon"><Sparkles /></div>
@@ -1502,7 +1457,6 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* AI Evaluation Categories */}
           <article className="card">
             <div className="card-header">
               <div>
@@ -1527,14 +1481,13 @@ export function ProgressPage() {
             </div>
           </article>
 
-          {/* AI Audit Logs Searchable Table */}
           <article className="card full-width-card margin-top-lg">
             <div className="card-header activity-header">
               <div>
                 <h2 className="card-title">Nhật Ký Đánh Giá AI Gần Đây</h2>
               </div>
               <div className="filter-controls-row">
-                {/* Type Filter Select */}
+                
                 <div className="select-filter-wrap">
                   <select
                     className="table-select-filter"
@@ -1553,7 +1506,6 @@ export function ProgressPage() {
                   <ChevronDown className="select-arrow-icon" />
                 </div>
 
-                {/* Search Box */}
                 <div className="search-input-wrap">
                   <Search className="search-icon" />
                   <input
@@ -1634,7 +1586,6 @@ export function ProgressPage() {
         </div>
       )}
 
-      {/* TAB 4: CƠ SỞ DỮ LIỆU MICROSERVICES (DB SERVICE ARCHITECTURE) */}
       {activeTab === 'database' && (
         <div className="tab-content-container">
           <div className="section-title-wrap">
@@ -1763,7 +1714,6 @@ export function ProgressPage() {
   )
 }
 
-// Sub-component for CSS-based Bar Chart Visualizer
 function ActivityBarChart({ items }: { items: typeof activityTimeSeriesData }) {
   const maxVal = Math.max(...items.map((i) => i.sessions))
   const minVal = Math.min(...items.map((i) => i.sessions))
@@ -1804,7 +1754,6 @@ function ActivityBarChart({ items }: { items: typeof activityTimeSeriesData }) {
   )
 }
 
-// Icon helper component
 function MetricIcon({ iconName }: { iconName: string }) {
   switch (iconName) {
     case 'Users':
@@ -1824,7 +1773,6 @@ function MetricIcon({ iconName }: { iconName: string }) {
   }
 }
 
-// Sub-component for SVG Donut Chart Visualizer
 function DeviceDonutChart({ data }: { data: typeof gamificationStats.deviceDistribution }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const totalUsers = data.reduce((acc, curr) => acc + curr.count, 0)
@@ -1922,4 +1870,3 @@ function DeviceDonutChart({ data }: { data: typeof gamificationStats.deviceDistr
     </div>
   )
 }
-

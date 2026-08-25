@@ -1,7 +1,3 @@
-// Updated: 2026-08-23
-// Learners/Users page - Quản lý người dùng
-// Thêm: Reset, Density, Column Settings (ProTable-style)
-
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -36,7 +32,6 @@ import {
   type User,
 } from "@/data/users-data";
 
-// Custom icon - giống ColumnHeightOutlined của Ant Design ProTable
 function DensityIcon({ size = 14 }: { size?: number }) {
   return (
     <svg
@@ -47,9 +42,9 @@ function DensityIcon({ size = 14 }: { size?: number }) {
       aria-hidden="true"
       style={{ flexShrink: 0 }}
     >
-      {/* Mũi tên lên */}
+      
       <path d="M8 1L5.5 3.5H10.5L8 1Z" fill="currentColor" />
-      {/* Đường kẻ trên */}
+      
       <rect
         x="2"
         y="4.5"
@@ -58,7 +53,7 @@ function DensityIcon({ size = 14 }: { size?: number }) {
         rx="0.75"
         fill="currentColor"
       />
-      {/* Đường kẻ giữa */}
+      
       <rect
         x="2"
         y="7.25"
@@ -68,7 +63,7 @@ function DensityIcon({ size = 14 }: { size?: number }) {
         fill="currentColor"
         opacity="0.5"
       />
-      {/* Đường kẻ dưới */}
+      
       <rect
         x="2"
         y="10"
@@ -77,7 +72,7 @@ function DensityIcon({ size = 14 }: { size?: number }) {
         rx="0.75"
         fill="currentColor"
       />
-      {/* Mũi tên xuống */}
+      
       <path d="M8 15L5.5 12.5H10.5L8 15Z" fill="currentColor" />
     </svg>
   );
@@ -129,7 +124,6 @@ function formatTimeAgo(dateStr: string): string {
   return `${Math.floor(diffMonths / 12)}y`;
 }
 
-// Sortable column header
 function SortableHeader({
   label,
   colKey,
@@ -165,7 +159,6 @@ function SortableHeader({
   );
 }
 
-// Status filter header
 function StatusFilterHeader({
   isVi,
   filterStatus,
@@ -237,7 +230,6 @@ function StatusFilterHeader({
   );
 }
 
-// Plan filter header
 function PlanFilterHeader({
   isVi,
   filterPlan,
@@ -329,7 +321,6 @@ export function LearnersPage() {
   const [pageSize, setPageSize] = useState(10);
   const [banModalUser, setBanModalUser] = useState<User | null>(null);
 
-  // ProTable-style states
   const [density, setDensity] = useState<Density>("middle");
   const [showDensityMenu, setShowDensityMenu] = useState(false);
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
@@ -337,7 +328,6 @@ export function LearnersPage() {
   const densityRef = useRef<HTMLDivElement>(null);
   const colRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (densityRef.current && !densityRef.current.contains(e.target as Node))
@@ -370,7 +360,6 @@ export function LearnersPage() {
     setBanModalUser(null);
   };
 
-  // Column sort handler
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -381,7 +370,6 @@ export function LearnersPage() {
     setCurrentPage(1);
   };
 
-  // Reset all filters & settings
   const handleReset = () => {
     setSearchQuery("");
     setFilterStatus("ALL");
@@ -435,7 +423,7 @@ export function LearnersPage() {
         return slug === filterPlan;
       });
     }
-    // Column-level sort
+    
     if (sortKey) {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortKey) {
@@ -555,7 +543,7 @@ export function LearnersPage() {
 
   return (
     <main className="page-content">
-      {/* Page Heading */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{isVi ? "Người dùng" : "Users"}</h1>
@@ -565,7 +553,6 @@ export function LearnersPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="users-stats-grid">
         <div className="users-stat-card">
           <div className="stat-icon users">
@@ -622,7 +609,6 @@ export function LearnersPage() {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="users-toolbar">
         <div className="users-search">
           <Search className="search-icon" />
@@ -640,7 +626,6 @@ export function LearnersPage() {
           )}
         </div>
 
-        {/* Date Range Filter next to Search - 2 separate inputs */}
         <div className="toolbar-date-range">
           <span className="date-range-label">
             {isVi ? "Tham gia:" : "Joined:"}
@@ -687,14 +672,13 @@ export function LearnersPage() {
         </div>
       </div>
 
-      {/* Table Actions (ProTable-style) */}
       <div className="admin-table-actions">
         <h2 className="admin-table-title">
           {isVi ? "Danh sách người dùng" : "Users List"}
           <span className="admin-table-count">{filteredUsers.length}</span>
         </h2>
         <div className="admin-table-action-buttons">
-          {/* Export */}
+          
           <button
             type="button"
             className="table-ghost-btn"
@@ -705,7 +689,6 @@ export function LearnersPage() {
             <ChevronDown />
           </button>
 
-          {/* Reset */}
           <button
             type="button"
             className="table-ghost-btn"
@@ -716,7 +699,6 @@ export function LearnersPage() {
             {isVi ? "Đặt lại" : "Reset"}
           </button>
 
-          {/* Density */}
           <div className="protable-tool-wrapper" ref={densityRef}>
             <button
               type="button"
@@ -755,7 +737,6 @@ export function LearnersPage() {
             )}
           </div>
 
-          {/* Column Settings */}
           <div className="protable-tool-wrapper" ref={colRef}>
             <button
               type="button"
@@ -800,7 +781,6 @@ export function LearnersPage() {
         </div>
       </div>
 
-      {/* Users Table */}
       <div className="users-table-wrapper">
         <table className={`users-table density-${density}`}>
           <thead>

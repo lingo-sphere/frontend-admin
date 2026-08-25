@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Mock data cho courses admin
-// Đồng bộ với course.dbml - courses, course_modules, course_lessons
-
 export interface Course {
   id: string
   title: string
@@ -18,7 +14,7 @@ export interface Course {
   author_id: string
   author_name: string
   created_at: string
-  // Stats
+  
   enrollments: number
   completed_count: number
   avg_progress: number

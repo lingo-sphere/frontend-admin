@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Mock data cho vocabulary admin
-// Đồng bộ với vocabulary-service.dbml
-
 export interface LexicalItem {
   id: string
   word: string
@@ -60,7 +56,6 @@ export interface VocabularyStats {
   avgMastery: number
 }
 
-// Word types
 export const wordTypeLabels: Record<string, { vi: string; en: string }> = {
   NOUN: { vi: 'Danh từ', en: 'Noun' },
   VERB: { vi: 'Động từ', en: 'Verb' },
@@ -72,7 +67,6 @@ export const wordTypeLabels: Record<string, { vi: string; en: string }> = {
   PHRASE: { vi: 'Cụm từ', en: 'Phrase' },
 }
 
-// CEFR Levels
 export const cefrLevelLabels: Record<string, { vi: string; en: string }> = {
   A1: { vi: 'A1 - Sơ cấp', en: 'A1 - Beginner' },
   A2: { vi: 'A2 - Tiền trung cấp', en: 'A2 - Elementary' },
@@ -91,7 +85,6 @@ export const cefrLevelColors: Record<string, { bg: string; text: string }> = {
   C2: { bg: 'rgba(201, 92, 89, 0.1)', text: 'var(--error)' },
 }
 
-// Mock Data
 export const mockLexicalItems: LexicalItem[] = [
   {
     id: 'lex-001',

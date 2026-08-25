@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Mock data cho users admin
-// Đồng bộ với user.dbml - user_profiles, user_gamifications
-
 export interface User {
   id: string
   email: string
@@ -18,13 +14,13 @@ export interface User {
   is_premium: boolean
   current_plan_slug?: string
   created_at: string
-  // Gamification
+  
   total_xp: number
   level: number
   current_streak: number
   longest_streak: number
   gems: number
-  // Stats
+  
   lessons_completed: number
   vocabulary_reviewed: number
   practice_sessions: number

@@ -1,9 +1,3 @@
-// Updated: 2026-08-22
-// Settings page - Cài đặt hệ thống cho admin
-// - Subscription plans management
-// - System settings
-// - Admin users
-
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -61,7 +55,7 @@ export function SettingsPage() {
 
   return (
     <main className="page-content">
-      {/* Page Heading */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{t('page.settings.title')}</h1>
@@ -69,7 +63,6 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="settings-tabs">
         {tabs.map(tab => {
           const Icon = tab.icon
@@ -86,7 +79,6 @@ export function SettingsPage() {
         })}
       </div>
 
-      {/* Tab Content */}
       {activeTab === 'plans' && (
         <div className="settings-section">
           <div className="section-header">
@@ -100,7 +92,6 @@ export function SettingsPage() {
             </button>
           </div>
 
-          {/* Plans Grid */}
           <div className="plans-grid">
             {plans.sort((a, b) => a.tier - b.tier).map(plan => (
               <div key={plan.id} className={`plan-card${plan.is_featured ? ' featured' : ''}${!plan.is_active ? ' inactive' : ''}`}>
@@ -210,7 +201,6 @@ export function SettingsPage() {
             </button>
           </div>
 
-          {/* Settings by Category */}
           {['GENERAL', 'NOTIFICATION', 'SECURITY', 'AI'].map(category => {
             const categorySettings = settings.filter(s => s.category === category)
             const categoryIcons: Record<string, React.ReactNode> = {

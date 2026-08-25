@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Public Decks page - Bộ thẻ công khai
-
 import { useTranslation } from 'react-i18next'
 import { PlaceholderPage } from '@/components/admin/PlaceholderPage'
 

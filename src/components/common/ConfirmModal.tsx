@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Confirm Modal Component - Modal xác nhận với cảnh báo
-
 import { useEffect } from 'react'
 import { AlertTriangle, Ban, CheckCircle, Trash2 } from 'lucide-react'
 
@@ -29,7 +26,7 @@ export function ConfirmModal({
   cancelText = 'Hủy',
   isLoading = false,
 }: ConfirmModalProps) {
-  // Lock body scroll when modal is open
+  
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -41,7 +38,6 @@ export function ConfirmModal({
     }
   }, [isOpen])
 
-  // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {

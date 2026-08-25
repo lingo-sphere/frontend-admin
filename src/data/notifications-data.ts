@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Mock data cho notifications admin
-// Đồng bộ với notification-service.dbml
-
 export interface Notification {
   id: string
   recipient_id: string

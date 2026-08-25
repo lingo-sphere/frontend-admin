@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Vocabulary Form Page - Trang tạo/chỉnh sửa từ vựng
-// Đồng bộ với vocabulary-service.dbml - lexical_items, meanings, topics
-
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,7 +18,6 @@ import {
   wordTypeLabels,
 } from "@/data/vocabulary-data";
 
-// Word types matching DB
 const WORD_TYPES = [
   "NOUN",
   "VERB",
@@ -34,10 +29,8 @@ const WORD_TYPES = [
   "PHRASE",
 ];
 
-// CEFR levels
 const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
-// Meaning interface matching meanings table
 interface Meaning {
   id: string;
   part_of_speech: string;
@@ -53,7 +46,6 @@ interface Meaning {
   is_primary: boolean;
 }
 
-// Form data interface
 interface VocabularyFormData {
   word: string;
   word_type: string;
@@ -69,7 +61,6 @@ interface VocabularyFormData {
   meanings: Meaning[];
 }
 
-// Form validation
 interface FormErrors {
   word?: string;
   meanings?: string;
@@ -295,7 +286,7 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
 
   return (
     <main className="page-content">
-      {/* Header */}
+      
       <div className="form-header">
         <button
           className="back-button"
@@ -320,14 +311,14 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
       </div>
 
       <div className="vocab-form-content">
-        {/* Basic Info Section */}
+        
         <div className="vocab-form-section">
           <h2 className="section-title">
             {isVietnamese ? "Thông tin cơ bản" : "Basic Information"}
           </h2>
 
           <div className="form-grid-2">
-            {/* Word */}
+            
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese ? "Từ vựng" : "Word"}{" "}
@@ -348,7 +339,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
               )}
             </div>
 
-            {/* Word Type */}
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese ? "Loại từ" : "Word Type"}
@@ -371,7 +361,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
               </select>
             </div>
 
-            {/* CEFR Level */}
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese ? "Cấp độ CEFR" : "CEFR Level"}
@@ -395,7 +384,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
               </select>
             </div>
 
-            {/* Syllables */}
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese ? "Số âm tiết" : "Syllables"}
@@ -415,7 +403,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
               />
             </div>
 
-            {/* Pronunciation US */}
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese
@@ -453,7 +440,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
               </div>
             </div>
 
-            {/* Pronunciation UK */}
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese
@@ -490,7 +476,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
               </div>
             </div>
 
-            {/* Stress Pattern */}
             <div className="form-group">
               <label className="form-label">
                 {isVietnamese ? "Trọng âm" : "Stress Pattern"}
@@ -510,7 +495,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
             </div>
           </div>
 
-          {/* Checkboxes */}
           <div className="form-checkboxes">
             <label className="form-checkbox">
               <input
@@ -554,7 +538,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
           </div>
         </div>
 
-        {/* Meanings Section */}
         <div className="vocab-form-section">
           <div className="section-header">
             <h2 className="section-title">
@@ -629,7 +612,7 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                 {expandedMeanings.includes(meaning.id) && (
                   <div className="meaning-body">
                     <div className="form-grid-2">
-                      {/* Part of Speech */}
+                      
                       <div className="form-group">
                         <label className="form-label">
                           {isVietnamese ? "Loại từ" : "Part of Speech"}
@@ -655,7 +638,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                         </select>
                       </div>
 
-                      {/* CEFR Level */}
                       <div className="form-group">
                         <label className="form-label">
                           {isVietnamese ? "Cấp độ CEFR" : "CEFR Level"}
@@ -679,7 +661,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                         </select>
                       </div>
 
-                      {/* Definition EN */}
                       <div className="form-group full-width">
                         <label className="form-label">
                           {isVietnamese ? "Định nghĩa (EN)" : "Definition (EN)"}
@@ -703,7 +684,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                         />
                       </div>
 
-                      {/* Definition VI */}
                       <div className="form-group full-width">
                         <label className="form-label">
                           {isVietnamese ? "Định nghĩa (VI)" : "Definition (VI)"}
@@ -727,7 +707,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                         />
                       </div>
 
-                      {/* Short Meaning */}
                       <div className="form-group">
                         <label className="form-label">
                           {isVietnamese ? "Nghĩa ngắn" : "Short Meaning"}
@@ -751,7 +730,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                         />
                       </div>
 
-                      {/* Domain */}
                       <div className="form-group">
                         <label className="form-label">
                           {isVietnamese ? "Lĩnh vực" : "Domain"}
@@ -770,7 +748,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                       </div>
                     </div>
 
-                    {/* Synonyms */}
                     <div className="meaning-sub-section">
                       <label className="form-label">
                         {isVietnamese ? "Từ đồng nghĩa" : "Synonyms"}
@@ -817,7 +794,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                       </div>
                     </div>
 
-                    {/* Collocations */}
                     <div className="meaning-sub-section">
                       <label className="form-label">
                         {isVietnamese ? "Cụm từ đi kèm" : "Collocations"}
@@ -864,7 +840,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
                       </div>
                     </div>
 
-                    {/* Examples */}
                     <div className="meaning-sub-section">
                       <label className="form-label">
                         {isVietnamese ? "Ví dụ" : "Examples"}
@@ -918,7 +893,6 @@ export function VocabularyFormPage({ editWordId }: { editWordId?: string }) {
           </div>
         </div>
 
-        {/* Topics Section */}
         <div className="vocab-form-section">
           <h2 className="section-title">
             {isVietnamese ? "Chủ đề" : "Topics"}

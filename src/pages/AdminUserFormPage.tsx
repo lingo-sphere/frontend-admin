@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Admin User Form Page - Trang thêm/sửa quản trị viên và giáo viên
-// Đồng bộ với auth.dbml - auth_accounts
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -46,14 +42,13 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Load user data when editing
   useEffect(() => {
     if (editUserId) {
       const user = adminUsers.find(u => u.id === editUserId)
       if (user) {
         setFormData({
           email: user.email,
-          password: '', // Don't load password for security
+          password: '', 
           full_name: user.name,
           role: user.role,
           status: user.is_active ? 'ACTIVE' : 'BLOCKED',
@@ -71,7 +66,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
       newErrors.email = isVietnamese ? 'Email không hợp lệ' : 'Invalid email'
     }
 
-    // Password is optional when editing
     if (!isEditing && !formData.password) {
       newErrors.password = isVietnamese ? 'Mật khẩu là bắt buộc' : 'Password is required'
     } else if (formData.password && formData.password.length < 8) {
@@ -119,7 +113,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
 
   return (
     <main className="page-content">
-      {/* Header */}
+      
       <div className="form-header">
         <button className="back-button" onClick={() => setActiveNavItem('admins')}>
           <ChevronLeft />
@@ -137,9 +131,8 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         </button>
       </div>
 
-      {/* Form */}
       <div className="user-form-content">
-        {/* Account Info */}
+        
         <div className="form-section">
           <h2 className="section-title">{isVietnamese ? 'Thông tin tài khoản' : 'Account Information'}</h2>
 
@@ -193,7 +186,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </div>
         </div>
 
-        {/* Profile Info */}
         <div className="form-section">
           <h2 className="section-title">{isVietnamese ? 'Thông tin cá nhân' : 'Personal Information'}</h2>
 
@@ -215,7 +207,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </div>
         </div>
 
-        {/* Role Selection */}
         <div className="form-section">
           <h2 className="section-title">{isVietnamese ? 'Vai trò' : 'Role'}</h2>
 
@@ -243,7 +234,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </div>
         </div>
 
-        {/* Status Selection */}
         <div className="form-section">
           <h2 className="section-title">{isVietnamese ? 'Trạng thái' : 'Status'}</h2>
 
@@ -265,7 +255,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </div>
         </div>
 
-        {/* Summary */}
         <div className="form-summary">
           <h3>{isVietnamese ? 'Tóm tắt' : 'Summary'}</h3>
           <div className="summary-items">

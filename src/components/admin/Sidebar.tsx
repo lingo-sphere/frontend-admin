@@ -1,10 +1,3 @@
-// Updated: 2026-08-22
-// Sidebar cho admin dashboard
-// - Logo + brand name
-// - Navigation items với groups
-// - Admin profile button
-// - Collapse toggle button
-
 import { useState } from "react";
 import {
   LayoutDashboard,
@@ -132,11 +125,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     );
   };
 
-  // Helper to convert kebab-case to camelCase for i18n keys
   const toCamelCase = (str: string) =>
     str.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
-  // Localized nav groups
   const localizedGroups: NavGroup[] = navGroups.map((group) => ({
     ...group,
     label: t(`nav.${toCamelCase(group.id)}`),
@@ -154,7 +145,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   const content = (
     <>
-      {/* Brand */}
+      
       <div className="brand-lockup">
         <img
           alt="LingoSphere logo"
@@ -171,7 +162,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="sidebar-nav">
         {localizedGroups.map((group, groupIdx) => (
           <div key={group.id} className="nav-group">
@@ -249,7 +239,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Admin Profile */}
       <button
         className="admin-profile"
         onClick={() => handleNavigate("admin-profile:admin-001")}
@@ -263,7 +252,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         <ChevronDown className="profile-chevron" />
       </button>
 
-      {/* Collapse Button */}
       {!mobile && (
         <button
           className="sidebar-collapse"

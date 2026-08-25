@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Vocabulary Page - Quản lý từ vựng (Header Filter, Topics/Decks Filters & Modern Sync)
-
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -37,23 +34,19 @@ import { useAdminStore } from "@/store/admin-store";
 
 type TabType = "words" | "topics" | "decks";
 
-// Word Filters
 type FilterStatus = "ALL" | "ACTIVE" | "INACTIVE";
 type FilterLevel = "ALL" | "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 type FilterType = "ALL" | "NOUN" | "VERB" | "ADJECTIVE" | "ADVERB" | "PREPOSITION" | "CONJUNCTION" | "PRONOUN" | "PHRASE";
 type SortKey = "word" | "meanings" | "created_at" | null;
 type SortDir = "asc" | "desc";
 
-// Topic Filters
 type FilterTopicFeatured = "ALL" | "FEATURED" | "NORMAL";
 type SortTopic = "latest" | "oldest" | "words_desc" | "name";
 
-// Deck Filters
 type FilterDeckPlan = "ALL" | "FREE" | "PREMIUM";
 type FilterDeckVisibility = "ALL" | "PUBLIC" | "PRIVATE";
 type SortDeck = "latest" | "oldest" | "cards_desc" | "mastery_desc";
 
-// Sortable Header Helper
 function SortableHeader({
   title,
   sortKey,
@@ -87,7 +80,6 @@ function SortableHeader({
   );
 }
 
-// Word Type Filter Header
 function WordTypeFilterHeader({
   isVi,
   filterType,
@@ -154,7 +146,6 @@ function WordTypeFilterHeader({
   );
 }
 
-// CEFR Level Filter Header
 function CefrFilterHeader({
   isVi,
   filterLevel,
@@ -220,7 +211,6 @@ function CefrFilterHeader({
   );
 }
 
-// Vocab Status Filter Header
 function VocabStatusFilterHeader({
   isVi,
   filterStatus,
@@ -292,7 +282,6 @@ export function VocabularyPage() {
   const [words, setWords] = useState<LexicalItem[]>(mockLexicalItems);
   const [activeTab, setActiveTab] = useState<TabType>("words");
 
-  // Word Filters & Sort
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("ALL");
   const [filterLevel, setFilterLevel] = useState<FilterLevel>("ALL");
@@ -301,19 +290,16 @@ export function VocabularyPage() {
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  // Topic Filters & Sort
   const [filterTopicLevel, setFilterTopicLevel] = useState<FilterLevel>("ALL");
   const [filterTopicStatus, setFilterTopicStatus] = useState<FilterStatus>("ALL");
   const [filterTopicFeatured, setFilterTopicFeatured] = useState<FilterTopicFeatured>("ALL");
   const [sortTopic, setSortTopic] = useState<SortTopic>("latest");
 
-  // Deck Filters & Sort
   const [filterDeckLevel, setFilterDeckLevel] = useState<FilterLevel>("ALL");
   const [filterDeckPlan, setFilterDeckPlan] = useState<FilterDeckPlan>("ALL");
   const [filterDeckVisibility, setFilterDeckVisibility] = useState<FilterDeckVisibility>("ALL");
   const [sortDeck, setSortDeck] = useState<SortDeck>("latest");
 
-  // Pagination & Selections
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
@@ -428,7 +414,6 @@ export function VocabularyPage() {
     setDeleteMultipleModal(false);
   };
 
-  // Filtered Lexical Items
   const filteredWords = useMemo(() => {
     let result = [...words];
 
@@ -446,7 +431,6 @@ export function VocabularyPage() {
       result = result.filter((w) => w.word_type === filterType);
     }
 
-    // Date range filter
     if (filterJoin !== "ALL" && filterJoin.includes("_")) {
       const [fromStr, toStr] = filterJoin.split("_");
       const from = fromStr && fromStr.trim() ? new Date(fromStr + "T00:00:00") : null;
@@ -459,7 +443,6 @@ export function VocabularyPage() {
       });
     }
 
-    // Sorting
     if (sortKey) {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortKey) {
@@ -485,7 +468,6 @@ export function VocabularyPage() {
     return filteredWords.slice(start, start + pageSize);
   }, [filteredWords, currentPage, pageSize]);
 
-  // Filtered Topics
   const filteredTopics = useMemo(() => {
     let result = [...mockTopics];
 
@@ -540,7 +522,6 @@ export function VocabularyPage() {
     return result;
   }, [searchQuery, filterTopicLevel, filterTopicStatus, filterTopicFeatured, filterJoin, sortTopic, isVi]);
 
-  // Filtered Decks
   const filteredDecks = useMemo(() => {
     let result = [...mockFlashcardDecks];
 
@@ -595,7 +576,6 @@ export function VocabularyPage() {
     return result;
   }, [searchQuery, filterDeckLevel, filterDeckPlan, filterDeckVisibility, filterJoin, sortDeck, isVi]);
 
-  // Export CSV
   const handleExportCsv = () => {
     const headers = ["id", "word", "word_type", "cefr_level", "meanings_count", "status", "created_at"];
     const rows = filteredWords.map((w) => [
@@ -625,7 +605,7 @@ export function VocabularyPage() {
 
   return (
     <main className="page-content">
-      {/* Header */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{isVi ? "Từ vựng" : "Vocabulary"}</h1>
@@ -635,7 +615,6 @@ export function VocabularyPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="vocab-tabs">
         <button
           className={`vocab-tab${activeTab === "words" ? " active" : ""}`}
@@ -660,7 +639,6 @@ export function VocabularyPage() {
         </button>
       </div>
 
-      {/* Toolbar */}
       <div className="users-toolbar">
         <div className="users-search">
           <Search className="search-icon" />
@@ -684,7 +662,6 @@ export function VocabularyPage() {
           )}
         </div>
 
-        {/* Date Range Filter beside Search */}
         <div className="toolbar-date-range">
           <span className="date-range-label">{isVi ? "Ngày tạo:" : "Created:"}</span>
           <div className="toolbar-date-inputs">
@@ -715,7 +692,6 @@ export function VocabularyPage() {
         </div>
       </div>
 
-      {/* ProTable-style Actions Bar */}
       <div className="admin-table-actions">
         <h2 className="admin-table-title">
           {activeTab === "words"
@@ -732,10 +708,10 @@ export function VocabularyPage() {
           </span>
         </h2>
         <div className="admin-table-action-buttons">
-          {/* Filters for Topics Tab */}
+          
           {activeTab === "topics" && (
             <>
-              {/* CEFR Level Filter */}
+              
               <select
                 className="admin-select"
                 value={filterTopicLevel}
@@ -749,7 +725,6 @@ export function VocabularyPage() {
                 ))}
               </select>
 
-              {/* Status Filter */}
               <select
                 className="admin-select"
                 value={filterTopicStatus}
@@ -760,7 +735,6 @@ export function VocabularyPage() {
                 <option value="INACTIVE">{isVi ? "Không hoạt động" : "Inactive"}</option>
               </select>
 
-              {/* Featured Filter */}
               <select
                 className="admin-select"
                 value={filterTopicFeatured}
@@ -771,7 +745,6 @@ export function VocabularyPage() {
                 <option value="NORMAL">{isVi ? "Thường" : "Normal"}</option>
               </select>
 
-              {/* Sort Select */}
               <select
                 className="admin-select"
                 value={sortTopic}
@@ -785,10 +758,9 @@ export function VocabularyPage() {
             </>
           )}
 
-          {/* Filters for Decks Tab */}
           {activeTab === "decks" && (
             <>
-              {/* CEFR Level Filter */}
+              
               <select
                 className="admin-select"
                 value={filterDeckLevel}
@@ -802,7 +774,6 @@ export function VocabularyPage() {
                 ))}
               </select>
 
-              {/* Plan Filter */}
               <select
                 className="admin-select"
                 value={filterDeckPlan}
@@ -813,7 +784,6 @@ export function VocabularyPage() {
                 <option value="PREMIUM">Premium</option>
               </select>
 
-              {/* Visibility Filter */}
               <select
                 className="admin-select"
                 value={filterDeckVisibility}
@@ -824,7 +794,6 @@ export function VocabularyPage() {
                 <option value="PRIVATE">{isVi ? "Riêng tư" : "Private"}</option>
               </select>
 
-              {/* Sort Select */}
               <select
                 className="admin-select"
                 value={sortDeck}
@@ -845,7 +814,6 @@ export function VocabularyPage() {
             </button>
           )}
 
-          {/* Reset button */}
           <button
             type="button"
             className="table-ghost-btn"
@@ -856,7 +824,6 @@ export function VocabularyPage() {
             {isVi ? "Đặt lại" : "Reset"}
           </button>
 
-          {/* Import */}
           <button
             type="button"
             className="table-ghost-btn"
@@ -866,7 +833,6 @@ export function VocabularyPage() {
             {isVi ? "Nhập CSV" : "Import"}
           </button>
 
-          {/* Add Word */}
           <button
             type="button"
             className="primary-button"
@@ -878,7 +844,6 @@ export function VocabularyPage() {
         </div>
       </div>
 
-      {/* Words Tab Content */}
       {activeTab === "words" && (
         <>
           {selectedWords.size > 0 && (
@@ -1087,7 +1052,6 @@ export function VocabularyPage() {
         </>
       )}
 
-      {/* Topics Tab */}
       {activeTab === "topics" && (
         <>
           <div className="vocab-topics-grid">
@@ -1132,7 +1096,6 @@ export function VocabularyPage() {
         </>
       )}
 
-      {/* Decks Tab */}
       {activeTab === "decks" && (
         <>
           <div className="vocab-decks-grid">
@@ -1184,7 +1147,6 @@ export function VocabularyPage() {
         </>
       )}
 
-      {/* Delete Single Word Modal */}
       <ConfirmModal
         isOpen={!!deleteModalWord}
         onClose={() => setDeleteModalWord(null)}
@@ -1201,7 +1163,6 @@ export function VocabularyPage() {
         cancelText={isVi ? "Hủy" : "Cancel"}
       />
 
-      {/* Delete Multiple Words Modal */}
       <ConfirmModal
         isOpen={deleteMultipleModal}
         onClose={() => setDeleteMultipleModal(false)}

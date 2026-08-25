@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Admin Users page - Quản lý tài khoản quản trị viên và giáo viên (Modern ProTable UI)
-
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -81,7 +78,6 @@ function formatTimeAgo(dateStr: string, isVietnamese: boolean): string {
   return date.toLocaleDateString(isVietnamese ? "vi-VN" : "en-US");
 }
 
-// Sortable header component
 function SortableHeader({
   label, colKey, sortKey, sortDir, onSort,
 }: {
@@ -111,7 +107,6 @@ function SortableHeader({
   );
 }
 
-// Role filter header
 function RoleFilterHeader({
   isVi, filterRole, setFilterRole, setCurrentPage,
 }: {
@@ -172,7 +167,6 @@ function RoleFilterHeader({
   );
 }
 
-// Status filter header
 function StatusFilterHeader({
   isVi, filterStatus, setFilterStatus, setCurrentPage,
 }: {
@@ -233,7 +227,6 @@ function StatusFilterHeader({
   );
 }
 
-// Inline editable role dropdown cell
 function RoleCellDropdown({
   admin,
   isVi,
@@ -316,23 +309,19 @@ export function AdminUsersPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
   const [admins, setAdmins] = useState<AdminUser[]>(adminUsers);
 
-  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<FilterRole>("ALL");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("ALL");
   const [filterJoin, setFilterJoin] = useState<string>("ALL");
 
-  // Sorting
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  // ProTable Tools State
   const [density, setDensity] = useState<Density>("middle");
   const [showDensityMenu, setShowDensityMenu] = useState(false);
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [showColSettings, setShowColSettings] = useState(false);
 
-  // Pagination & Modals
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [banModalAdmin, setBanModalAdmin] = useState<AdminUser | null>(null);
@@ -399,7 +388,6 @@ export function AdminUsersPage() {
   const filteredAdmins = useMemo(() => {
     let result = [...admins];
 
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -407,17 +395,14 @@ export function AdminUsersPage() {
       );
     }
 
-    // Role filter
     if (filterRole !== "ALL") {
       result = result.filter((admin) => admin.role === filterRole);
     }
 
-    // Status filter
     if (filterStatus !== "ALL") {
       result = result.filter((admin) => (filterStatus === "ACTIVE" ? admin.is_active : !admin.is_active));
     }
 
-    // Date range filter
     if (filterJoin !== "ALL" && filterJoin.includes("_")) {
       const [fromStr, toStr] = filterJoin.split("_");
       const from = fromStr && fromStr.trim() ? new Date(fromStr + "T00:00:00") : null;
@@ -430,7 +415,6 @@ export function AdminUsersPage() {
       });
     }
 
-    // Sorting
     if (sortKey) {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortKey) {
@@ -516,7 +500,7 @@ export function AdminUsersPage() {
 
   return (
     <main className="page-content">
-      {/* Page Heading */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">
@@ -530,7 +514,6 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="admin-stats-grid">
         <div className="admin-stat-card">
           <span className="admin-stat-value">{admins.length}</span>
@@ -556,7 +539,6 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="users-toolbar">
         <div className="users-search">
           <Search className="search-icon" />
@@ -572,7 +554,6 @@ export function AdminUsersPage() {
           )}
         </div>
 
-        {/* Date Range Filter next to Search */}
         <div className="toolbar-date-range">
           <span className="date-range-label">{isVi ? "Hoạt động:" : "Active:"}</span>
           <div className="toolbar-date-inputs">
@@ -603,21 +584,19 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Table Actions (ProTable-style) */}
       <div className="admin-table-actions">
         <h2 className="admin-table-title">
           {isVi ? "Danh sách quản trị viên" : "Admin Users List"}
           <span className="admin-table-count">{filteredAdmins.length}</span>
         </h2>
         <div className="admin-table-action-buttons">
-          {/* Export */}
+          
           <button type="button" className="table-ghost-btn" onClick={handleExportCsv}>
             <Download />
             {isVi ? "Xuất CSV" : "Export"}
             <ChevronDown />
           </button>
 
-          {/* Reset */}
           <button
             type="button"
             className="table-ghost-btn"
@@ -628,7 +607,6 @@ export function AdminUsersPage() {
             {isVi ? "Đặt lại" : "Reset"}
           </button>
 
-          {/* Density */}
           <div className="protable-tool-wrapper" ref={densityRef}>
             <button
               type="button"
@@ -656,7 +634,6 @@ export function AdminUsersPage() {
             )}
           </div>
 
-          {/* Column Settings */}
           <div className="protable-tool-wrapper" ref={colRef}>
             <button
               type="button"
@@ -695,7 +672,6 @@ export function AdminUsersPage() {
             )}
           </div>
 
-          {/* Add Admin */}
           <button
             type="button"
             className="primary-button"
@@ -707,7 +683,6 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="users-table-wrapper">
         <table className={`users-table density-${density}`}>
           <thead>
@@ -872,7 +847,6 @@ export function AdminUsersPage() {
         onPageChange={setCurrentPage}
       />
 
-      {/* Ban Admin Modal */}
       <ConfirmModal
         isOpen={!!banModalAdmin}
         onClose={() => setBanModalAdmin(null)}
@@ -909,7 +883,6 @@ export function AdminUsersPage() {
         cancelText={isVi ? "Hủy" : "Cancel"}
       />
 
-      {/* Confirm Change Role Modal when promoting to Admin */}
       <ConfirmModal
         isOpen={!!roleChangeTarget}
         onClose={() => setRoleChangeTarget(null)}

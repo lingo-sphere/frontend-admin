@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Courses Page - Quản lý khóa học (Modern ProTable UI & Filter Sync)
-
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -82,7 +79,6 @@ export function CoursesPage() {
   const filteredCourses = useMemo(() => {
     let result = [...courses]
 
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
       result = result.filter(
@@ -93,24 +89,20 @@ export function CoursesPage() {
       )
     }
 
-    // Category filter
     if (filterCategory !== 'ALL') {
       result = result.filter(c => c.category === filterCategory)
     }
 
-    // Level filter
     if (filterLevel !== 'ALL') {
       result = result.filter(c => c.level === filterLevel)
     }
 
-    // Status filter
     if (filterStatus === 'PUBLISHED') {
       result = result.filter(c => c.is_published)
     } else if (filterStatus === 'DRAFT') {
       result = result.filter(c => !c.is_published)
     }
 
-    // Date range filter
     if (filterJoin !== 'ALL' && filterJoin.includes('_')) {
       const [fromStr, toStr] = filterJoin.split('_')
       const from = fromStr && fromStr.trim() ? new Date(fromStr + 'T00:00:00') : null
@@ -123,7 +115,6 @@ export function CoursesPage() {
       })
     }
 
-    // Sorting
     switch (sortOption) {
       case 'latest':
         result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -148,7 +139,6 @@ export function CoursesPage() {
     return result
   }, [courses, searchQuery, filterCategory, filterLevel, filterStatus, filterJoin, sortOption])
 
-  // Paginated courses
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * pageSize
     return filteredCourses.slice(start, start + pageSize)
@@ -193,7 +183,7 @@ export function CoursesPage() {
 
   return (
     <main className="page-content">
-      {/* Page Heading */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{isVi ? 'Khóa học' : 'Courses'}</h1>
@@ -203,7 +193,6 @@ export function CoursesPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="courses-stats-grid">
         <div className="courses-stat-card">
           <div className="stat-icon total">
@@ -243,7 +232,6 @@ export function CoursesPage() {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="users-toolbar">
         <div className="users-search">
           <Search className="search-icon" />
@@ -261,7 +249,6 @@ export function CoursesPage() {
           )}
         </div>
 
-        {/* Date Range Filter next to Search */}
         <div className="toolbar-date-range">
           <span className="date-range-label">{isVi ? 'Ngày tạo:' : 'Created:'}</span>
           <div className="toolbar-date-inputs">
@@ -292,14 +279,13 @@ export function CoursesPage() {
         </div>
       </div>
 
-      {/* Table & Grid Actions (ProTable-style) */}
       <div className="admin-table-actions">
         <h2 className="admin-table-title">
           {isVi ? 'Danh sách khóa học' : 'Course List'}
           <span className="admin-table-count">{filteredCourses.length}</span>
         </h2>
         <div className="admin-table-action-buttons">
-          {/* Quick Select Category */}
+          
           <select
             className="admin-select"
             value={filterCategory}
@@ -315,7 +301,6 @@ export function CoursesPage() {
             <option value="VOCABULARY">{categoryLabels.VOCABULARY?.[isVi ? 'vi' : 'en']}</option>
           </select>
 
-          {/* Quick Select Level */}
           <select
             className="admin-select"
             value={filterLevel}
@@ -330,7 +315,6 @@ export function CoursesPage() {
             <option value="ADVANCED">{levelLabels.ADVANCED?.[isVi ? 'vi' : 'en']}</option>
           </select>
 
-          {/* Quick Select Status */}
           <select
             className="admin-select"
             value={filterStatus}
@@ -344,7 +328,6 @@ export function CoursesPage() {
             <option value="DRAFT">{isVi ? 'Bản nháp' : 'Draft'}</option>
           </select>
 
-          {/* Sort Selector */}
           <select
             className="admin-select"
             value={sortOption}
@@ -361,13 +344,11 @@ export function CoursesPage() {
             <option value="title">{isVi ? 'Tên A-Z' : 'Title A-Z'}</option>
           </select>
 
-          {/* Export */}
           <button type="button" className="table-ghost-btn" onClick={handleExportCsv}>
             <Download />
             {isVi ? 'Xuất CSV' : 'Export'}
           </button>
 
-          {/* Reset */}
           <button
             type="button"
             className="table-ghost-btn"
@@ -378,7 +359,6 @@ export function CoursesPage() {
             {isVi ? 'Đặt lại' : 'Reset'}
           </button>
 
-          {/* View Mode Toggle (Grid / Table) */}
           <div className="view-mode-toggle" style={{ display: 'flex', gap: 2, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 2 }}>
             <button
               type="button"
@@ -400,7 +380,6 @@ export function CoursesPage() {
             </button>
           </div>
 
-          {/* Add Course */}
           <button
             type="button"
             className="primary-button"
@@ -412,7 +391,6 @@ export function CoursesPage() {
         </div>
       </div>
 
-      {/* Content Rendering: Grid vs Table */}
       {viewMode === 'grid' ? (
         <div className="courses-grid">
           {paginatedCourses.map(course => (

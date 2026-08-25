@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Mock data cho settings admin
-// Đồng bộ với user.dbml - subscription_plans, user_profiles
-
 export interface SubscriptionPlan {
   id: string
   name_en: string
@@ -124,7 +120,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
 ]
 
 export const systemSettings: SystemSetting[] = [
-  // General
+  
   {
     id: 'setting-01',
     category: 'GENERAL',
@@ -147,7 +143,7 @@ export const systemSettings: SystemSetting[] = [
     description_en: 'Allow new users to register',
     description_vi: 'Cho phép người dùng mới đăng ký',
   },
-  // Notifications
+  
   {
     id: 'setting-03',
     category: 'NOTIFICATION',
@@ -172,7 +168,7 @@ export const systemSettings: SystemSetting[] = [
       { value: 'en', label_en: 'English', label_vi: 'English' },
     ],
   },
-  // Security
+  
   {
     id: 'setting-05',
     category: 'SECURITY',
@@ -202,7 +198,7 @@ export const systemSettings: SystemSetting[] = [
     value: 24,
     type: 'number',
   },
-  // AI
+  
   {
     id: 'setting-08',
     category: 'AI',

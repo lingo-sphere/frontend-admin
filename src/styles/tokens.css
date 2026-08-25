@@ -1,4 +1,4 @@
-/* Admin Design Tokens - Match frontend design system */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -36,7 +36,6 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Dark Mode */
 [data-theme='dark'] {
   --background: #121a1a;
   --foreground: #e8eeee;

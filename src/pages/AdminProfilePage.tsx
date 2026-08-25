@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Admin Profile Page - Chi tiết quản trị viên
-// Đồng bộ với auth.dbml - auth_accounts
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -34,7 +30,7 @@ interface AdminProfileData {
   is_active: boolean
   last_active: string
   created_at: string
-  // Stats
+  
   total_courses_created: number
   total_lessons_created: number
   total_users_managed: number
@@ -159,7 +155,7 @@ export function AdminProfilePage() {
 
   return (
     <main className="page-content">
-      {/* Toast Notification */}
+      
       {toastMessage && (
         <div className="toast-notification success" style={{
           position: 'fixed',
@@ -182,7 +178,6 @@ export function AdminProfilePage() {
         </div>
       )}
 
-      {/* Header */}
       <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="back-button" onClick={() => setActiveNavItem('dashboard')}>
@@ -201,7 +196,7 @@ export function AdminProfilePage() {
       </div>
 
       <div className="profile-content">
-        {/* Profile Header */}
+        
         <div className="profile-header-card">
           <div className="profile-avatar admin">
             <RoleIcon />
@@ -230,7 +225,7 @@ export function AdminProfilePage() {
         </div>
 
         <div className="profile-grid">
-          {/* Activity Stats */}
+          
           <div className="profile-card">
             <h3 className="card-title">
               {isVietnamese ? 'Hoạt động' : 'Activity'}
@@ -257,7 +252,6 @@ export function AdminProfilePage() {
             </div>
           </div>
 
-          {/* Role Permissions */}
           <div className="profile-card">
             <h3 className="card-title">
               {profileData.role === 'ADMIN' ? (isVietnamese ? 'Quyền quản trị' : 'Admin Permissions') : (isVietnamese ? 'Quyền giáo viên' : 'Teacher Permissions')}
@@ -309,7 +303,6 @@ export function AdminProfilePage() {
             </div>
           </div>
 
-          {/* Account Info */}
           <div className="profile-card">
             <h3 className="card-title">
               <Calendar /> {isVietnamese ? 'Thông tin tài khoản' : 'Account Info'}
@@ -328,7 +321,6 @@ export function AdminProfilePage() {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
       {isEditModalOpen && (
         <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
           <div className="modal-container edit-profile-modal" onClick={(e) => e.stopPropagation()}>

@@ -1,11 +1,3 @@
-// Updated: 2026-08-23
-// Comprehensive Data Statistics Mock Data
-// Directly mapped to microservices DB schemas:
-// - auth.dbml & user.dbml (Users, Gamification, Subscriptions, Daily Activities)
-// - practice-service.dbml & exam.dbml (Practice Sets, Listening/Speaking/Writing Attempts, TOEIC Exams)
-// - vocabulary-service.dbml (Lexical Items, Decks, SRS Progress, Topic Distribution)
-// - ai-service.dbml (AI Models, AI Evaluations, AI Recommendations, AI Quotas, AI Usage Logs, RAG Collections)
-
 export interface TimeFilterOption {
   id: string
   labelVi: string
@@ -21,7 +13,6 @@ export const timeFilterOptions: TimeFilterOption[] = [
   { id: 'custom', labelVi: 'Tùy chỉnh', labelEn: 'Custom', days: 0 },
 ]
 
-// 1. Overview Database Entity Counters (Cross-Service DB Metrics)
 export interface DBEntityMetric {
   id: string
   serviceName: string
@@ -103,14 +94,13 @@ export const dbEntityMetrics: DBEntityMetric[] = [
   },
 ]
 
-// 2. User Activity Time Series Data (DAU, Sessions, Minutes Spent, XP)
 export interface ActivityDayPoint {
   dateStr: string
   dayLabel: string
-  dau: number // Daily Active Users
-  sessions: number // Total Practice & Course Sessions
-  minutesSpent: number // Total learning minutes
-  xpGained: number // Total XP earned
+  dau: number 
+  sessions: number 
+  minutesSpent: number 
+  xpGained: number 
   newUsers: number
 }
 
@@ -131,7 +121,6 @@ export const activityTimeSeriesData: ActivityDayPoint[] = [
   { dateStr: '2026-08-23', dayLabel: 'Hôm nay', dau: 3690, sessions: 8120, minutesSpent: 205000, xpGained: 760000, newUsers: 310 },
 ]
 
-// 3. User Gamification & Retention Breakdown
 export interface GamificationStats {
   averageStreak: number
   longestStreakRecord: number
@@ -157,7 +146,6 @@ export const gamificationStats: GamificationStats = {
   ],
 }
 
-// 4. Learning & Skill Performance (Listening, Speaking, Writing, Reading, Vocab, Grammar)
 export interface SkillPerformance {
   skillId: string
   skillNameVi: string
@@ -222,7 +210,6 @@ export const skillPerformanceData: SkillPerformance[] = [
   },
 ]
 
-// 5. TOEIC Exam Performance Breakdown (Listening/Reading 10-990 & 4 Skills)
 export interface TOEICPartStat {
   partNumber: number
   partNameVi: string
@@ -271,7 +258,6 @@ export const toeicScoreOverview: TOEICScoreOverview = {
   ],
 }
 
-// 6. AI Engine Analytics & Models (from ai-service.dbml)
 export interface AIModelUsage {
   id: string
   modelName: string
@@ -439,7 +425,6 @@ export const aiRecommendationStats: AIRecommendationStats = {
   ],
 }
 
-// 7. Recent AI Evaluation Log Table Item (from ai_evaluation_results & ai_response_feedback)
 export interface AIEvaluationLogItem {
   id: string
   userName: string

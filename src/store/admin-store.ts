@@ -1,10 +1,3 @@
-// Updated: 2026-08-22
-// Store chính của admin dashboard, quản lý:
-// - theme: light/dark mode (persist localStorage)
-// - activeNavItem: navigation state
-// - sidebarCollapsed: thu gọn/mở rộng sidebar (252px ↔ 72px)
-// - mobileSidebarOpen: toggle sidebar trên mobile
-
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'
 

@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// User Profile Page - Chi tiết người dùng
-// Đồng bộ với user.dbml - user_profiles, user_gamifications
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -31,7 +27,7 @@ interface UserProfileData {
   is_premium: boolean
   created_at: string
   last_active: string
-  // Gamification
+  
   total_xp: number
   level: number
   current_streak: number
@@ -42,7 +38,7 @@ interface UserProfileData {
   accuracy_rate: number
   avg_session_time: number
   total_sessions: number
-  // Stats
+  
   total_courses_enrolled: number
   total_courses_completed: number
   total_decks_studied: number
@@ -62,7 +58,7 @@ export function UserProfilePage() {
 
   useEffect(() => {
     if (user) {
-      // Mock full profile data
+      
       setProfileData({
         id: user.id,
         full_name: user.full_name,
@@ -120,7 +116,7 @@ export function UserProfilePage() {
 
   return (
     <main className="page-content">
-      {/* Header */}
+      
       <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="back-button" onClick={() => setActiveNavItem('users-list')}>
@@ -134,7 +130,7 @@ export function UserProfilePage() {
       </div>
 
       <div className="profile-content">
-        {/* Profile Header */}
+        
         <div className="profile-header-card">
           <div className="profile-avatar">
             {user.avatar_url ? (
@@ -167,7 +163,7 @@ export function UserProfilePage() {
         </div>
 
         <div className="profile-grid">
-          {/* Level & XP */}
+          
           <div className="profile-card">
             <h3 className="card-title">
               <Award /> {isVietnamese ? 'Cấp độ & Kinh nghiệm' : 'Level & Experience'}
@@ -204,7 +200,6 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Learning Stats */}
           <div className="profile-card">
             <h3 className="card-title">
               <BookOpen /> {isVietnamese ? 'Tiến độ học tập' : 'Learning Progress'}
@@ -233,7 +228,6 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Course Progress */}
           <div className="profile-card">
             <h3 className="card-title">
               <BookOpen /> {isVietnamese ? 'Khóa học' : 'Courses'}
@@ -260,7 +254,6 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* TOEIC Score */}
           {profileData.toeic_score && (
             <div className="profile-card">
               <h3 className="card-title">
@@ -289,7 +282,6 @@ export function UserProfilePage() {
             </div>
           )}
 
-          {/* Session Stats */}
           <div className="profile-card">
             <h3 className="card-title">
               <Clock /> {isVietnamese ? 'Phiên học' : 'Sessions'}
@@ -306,7 +298,6 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Account Info */}
           <div className="profile-card">
             <h3 className="card-title">
               <Calendar /> {isVietnamese ? 'Thông tin tài khoản' : 'Account Info'}

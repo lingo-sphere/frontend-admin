@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Dashboard page - Tổng quan vận hành (Dynamic Activity Chart & Date Range Sync)
-
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -71,7 +68,7 @@ export function DashboardPage() {
   const isVietnamese = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1]) // Default 14d
+  const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1]) 
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [customFromDate, setCustomFromDate] = useState('')
   const [customToDate, setCustomToDate] = useState('')
@@ -92,7 +89,6 @@ export function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Dynamic Chart Data based on selected range (7d, 14d, 30d, custom)
   const chartItems = useMemo<ChartItem[]>(() => {
     if (selectedRange.id === 'custom') {
       if (!customFromDate || !customToDate) {
@@ -162,7 +158,6 @@ export function DashboardPage() {
     })
   }, [selectedRange, isVietnamese])
 
-  // Total sessions calculated dynamically
   const totalSessions = useMemo(() => {
     return chartItems.reduce((acc, curr) => acc + curr.value, 0).toLocaleString('en-US')
   }, [chartItems])
@@ -224,7 +219,7 @@ export function DashboardPage() {
 
   return (
     <main className="page-content">
-      {/* Page Heading */}
+      
       <div className="page-heading">
         <div>
           <h1 className="page-title">{t('page.dashboard.title')}</h1>
@@ -304,9 +299,8 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Overview Grid */}
       <section className="overview-grid">
-        {/* Engagement Chart Card */}
+        
         <article className="card chart-card">
           <div className="card-header">
             <div>
@@ -337,7 +331,6 @@ export function DashboardPage() {
           </div>
         </article>
 
-        {/* Platform Health Card */}
         <article className="card pulse-card">
           <div className="card-header">
             <div>
@@ -385,9 +378,8 @@ export function DashboardPage() {
         </article>
       </section>
 
-      {/* KPI Grid */}
       <section className="kpi-grid">
-        {/* Active Learners */}
+        
         <article className="kpi-card">
           <div className="kpi-top">
             <span className="kpi-icon">
@@ -414,7 +406,6 @@ export function DashboardPage() {
           </div>
         </article>
 
-        {/* Lesson Completion */}
         <article className="kpi-card">
           <div className="kpi-top">
             <span className="kpi-icon blue">
@@ -435,7 +426,6 @@ export function DashboardPage() {
           </div>
         </article>
 
-        {/* Accuracy */}
         <article className="kpi-card">
           <div className="kpi-top">
             <span className="kpi-icon green">
@@ -453,7 +443,6 @@ export function DashboardPage() {
           </div>
         </article>
 
-        {/* AI Evaluations */}
         <article className="kpi-card">
           <div className="kpi-top">
             <span className="kpi-icon ai">
@@ -472,7 +461,6 @@ export function DashboardPage() {
         </article>
       </section>
 
-      {/* Activity Table */}
       <section className="card activity-card">
         <div className="card-header activity-header">
           <div>
@@ -577,14 +565,13 @@ export function DashboardPage() {
   )
 }
 
-// Interactive chart visualization using CSS bars matching exact filter range
 function SimpleChart({ items }: { items: ChartItem[] }) {
   const maxValue = Math.max(...items.map((i) => i.value))
   const minValue = Math.min(...items.map((i) => i.value))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Bars container */}
+      
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: items.length > 20 ? 3 : 8, flex: 1, paddingBottom: 4 }}>
         {items.map((item, index) => (
           <div
@@ -613,7 +600,7 @@ function SimpleChart({ items }: { items: ChartItem[] }) {
           </div>
         ))}
       </div>
-      {/* Labels */}
+      
       <div style={{ display: 'flex', gap: items.length > 20 ? 3 : 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
         {items.map((item, index) => (
           <div

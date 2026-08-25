@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Pagination component - đồng bộ UI với Ant Design Pro Table
-
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 
@@ -45,7 +42,6 @@ export function Pagination({
     return `${start} - ${end} / ${totalItems}`
   }
 
-  // Generate page numbers with ellipsis
   const getPageNumbers = () => {
     const pages: (number | 'ellipsis')[] = []
     const delta = 2
@@ -54,14 +50,12 @@ export function Pagination({
       return Array.from({ length: totalPages }, (_, i) => i + 1)
     }
 
-    // Always show first page
     pages.push(1)
 
     if (currentPage - delta > 2) {
       pages.push('ellipsis')
     }
 
-    // Show pages around current page
     const start = Math.max(2, currentPage - delta)
     const end = Math.min(totalPages - 1, currentPage + delta)
 
@@ -73,7 +67,6 @@ export function Pagination({
       pages.push('ellipsis')
     }
 
-    // Always show last page
     pages.push(totalPages)
 
     return pages

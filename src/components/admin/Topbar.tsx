@@ -1,11 +1,3 @@
-// Updated: 2026-08-22
-// Topbar cho admin dashboard
-// - Search box
-// - Language toggle
-// - Theme toggle
-// - Notifications dropdown
-// - Admin info
-
 import { useState, useRef, useEffect } from 'react'
 import { Search, Moon, Sun, Bell, Menu } from 'lucide-react'
 
@@ -59,7 +51,6 @@ export function Topbar() {
     setNotificationOpen(false)
   }
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
@@ -73,7 +64,7 @@ export function Topbar() {
   return (
     <header className="topbar">
       <div className="topbar-left">
-        {/* Mobile Menu Button */}
+        
         <button
           className="mobile-menu"
           onClick={() => setMobileSidebarOpen(true)}
@@ -83,7 +74,6 @@ export function Topbar() {
           <Menu className="icon" />
         </button>
 
-        {/* Search Box */}
         <div className="search-box" role="search">
           <Search className="icon" />
           <span className="search-placeholder">{t('header.search')}</span>
@@ -92,19 +82,17 @@ export function Topbar() {
       </div>
 
       <div className="header-actions">
-        {/* Learners Pill */}
+        
         <span className="utility-pill info">
           <UsersIcon />
           <span className="utility-text">12.4k {t('header.learnersCount')}</span>
         </span>
 
-        {/* System Status Pill */}
         <span className="utility-pill success">
           <span className="status-dot" />
           <span className="utility-text">{t('header.systemStable')}</span>
         </span>
 
-        {/* Language Toggle */}
         <button
           className="icon-button lang-button"
           onClick={toggleLanguage}
@@ -114,7 +102,6 @@ export function Topbar() {
           {isVietnamese ? 'VI' : 'EN'}
         </button>
 
-        {/* Theme Toggle */}
         <button
           className="icon-button"
           onClick={toggleTheme}
@@ -124,7 +111,6 @@ export function Topbar() {
           {theme === 'dark' ? <Sun className="icon" /> : <Moon className="icon" />}
         </button>
 
-        {/* Notifications */}
         <div className="notification-wrapper" ref={notificationRef}>
           <button
             className="icon-button"
@@ -136,7 +122,6 @@ export function Topbar() {
             {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
           </button>
 
-          {/* Notification Dropdown */}
           {notificationOpen && (
             <div className="notification-dropdown">
               <div className="notification-header">
@@ -193,7 +178,6 @@ export function Topbar() {
   )
 }
 
-// Inline icon component for pill
 function UsersIcon() {
   return (
     <svg
