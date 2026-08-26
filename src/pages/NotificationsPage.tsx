@@ -15,7 +15,6 @@ import {
 import { notificationService } from "@/services/notification.service";
 import { toast } from "@/store/toast-store";
 import {
-  mockNotifications,
   categoryLabels,
   type Notification,
 } from "@/data/notifications-data";
@@ -45,7 +44,7 @@ export function NotificationsPage() {
   const { i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
 
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>("ALL");

@@ -15,48 +15,9 @@ import {
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-const mockPublicDecks: FlashcardDeck[] = [
-  {
-    _id: 'deck-001',
-    title: 'Essential 600 TOEIC Vocabulary Words',
-    description: 'Bộ từ vựng cốt lõi 50 chủ đề xuất hiện nhiều nhất trong đề thi TOEIC ETS mới',
-    is_public: true,
-    is_system: true,
-    total_cards: 600,
-    rating: 4.9,
-    enrolled_count: 12450,
-    tags: ['TOEIC', 'Core', 'ETS 2024'],
-    created_at: '2026-01-10T00:00:00Z',
-  },
-  {
-    _id: 'deck-002',
-    title: 'Business English & Office Communication',
-    description: 'Từ vựng giao tiếp thương mại, hợp đồng, đàm phán và email văn phòng',
-    is_public: true,
-    is_system: false,
-    total_cards: 240,
-    rating: 4.7,
-    enrolled_count: 5820,
-    tags: ['Business', 'Email', 'Office'],
-    created_at: '2026-01-22T00:00:00Z',
-  },
-  {
-    _id: 'deck-003',
-    title: 'Advanced Academic Vocabulary (IELTS 7.5+ / TOEIC 900+)',
-    description: 'Từ vựng học thuật chuyên sâu và cụm collocations nâng cao',
-    is_public: true,
-    is_system: false,
-    total_cards: 350,
-    rating: 4.8,
-    enrolled_count: 4210,
-    tags: ['Academic', 'Advanced'],
-    created_at: '2026-02-05T00:00:00Z',
-  },
-]
-
 export function PublicDecksPage() {
   const { t } = useTranslation()
-  const [decks, setDecks] = useState<FlashcardDeck[]>(mockPublicDecks)
+  const [decks, setDecks] = useState<FlashcardDeck[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
@@ -68,11 +29,12 @@ export function PublicDecksPage() {
     setIsLoading(true)
     try {
       const realDecks = await vocabularyService.explorePublicDecks()
-      if (realDecks && realDecks.length > 0) {
+      if (realDecks) {
         setDecks(realDecks)
       }
     } catch (err) {
-      console.warn('Could not load public decks from API, using cached data:', err)
+      console.warn('Error fetching public decks from backend:', err)
+      setDecks([])
     } finally {
       setIsLoading(false)
     }

@@ -32,48 +32,9 @@ interface CommunityPost {
   created_at: string
 }
 
-const mockPosts: CommunityPost[] = [
-  {
-    id: 'post-001',
-    author_name: 'Minh Hoàng',
-    author_email: 'hoang.minh@gmail.com',
-    title: 'Kinh nghiệm luyện Part 7 TOEIC trong 30 ngày từ 300 lên 420 Reading',
-    content: 'Mình chia sẻ lộ trình quét từ vựng và phương pháp skim/scan bài đọc dài 3 đoạn...',
-    category: 'EXPERIENCE',
-    likes_count: 86,
-    comments_count: 24,
-    status: 'APPROVED',
-    created_at: '2026-02-23T09:30:00Z',
-  },
-  {
-    id: 'post-002',
-    author_name: 'Bảo Trâm',
-    author_email: 'tram.bao99@yahoo.com',
-    title: 'Phân biệt cấu trúc "in spite of" và "although" trong Part 5',
-    content: 'Thầy cô và các bạn cho mình hỏi trường hợp nào thì đi với V-ing và Noun phrase...',
-    category: 'QUESTION',
-    likes_count: 32,
-    comments_count: 15,
-    status: 'APPROVED',
-    created_at: '2026-02-24T14:10:00Z',
-  },
-  {
-    id: 'post-003',
-    author_name: 'User Spam Test',
-    author_email: 'spammer888@tempmail.com',
-    title: 'Bán tài khoản hack gems và VIP giá rẻ',
-    content: 'Liên hệ telegram @xyz để mua full đề thi và hack streak...',
-    category: 'REPORT',
-    likes_count: 0,
-    comments_count: 2,
-    status: 'FLAGGED',
-    created_at: '2026-02-25T03:00:00Z',
-  },
-]
-
 export function CommunityPage() {
   const { t } = useTranslation()
-  const [posts, setPosts] = useState<CommunityPost[]>(mockPosts)
+  const [posts, setPosts] = useState<CommunityPost[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [deletePostId, setDeletePostId] = useState<string | null>(null)

@@ -30,133 +30,6 @@ import type { PracticeSet, ListeningExercise, SpeakingExercise, WritingExercise,
 
 type PracticeTab = 'exercises' | 'listening' | 'speaking' | 'writing' | 'toeic'
 
-const mockSets: PracticeSet[] = [
-  {
-    _id: 'set-001',
-    title: 'TOEIC Listening Part 1 - Photo Descriptions',
-    description: 'Bộ luyện nghe mô tả tranh 50 câu hỏi ETS chuẩn',
-    category: 'LISTENING',
-    difficulty: 'INTERMEDIATE',
-    total_questions: 50,
-    duration_minutes: 20,
-    is_active: true,
-    created_at: '2026-02-10T10:00:00Z',
-  },
-  {
-    _id: 'set-002',
-    title: 'TOEIC Reading Part 5 - Incomplete Sentences',
-    description: 'Chuyên đề ngữ pháp và từ vựng điền câu nhanh trong 15 phút',
-    category: 'READING',
-    difficulty: 'ADVANCED',
-    total_questions: 30,
-    duration_minutes: 15,
-    is_active: true,
-    created_at: '2026-02-12T14:30:00Z',
-  },
-  {
-    _id: 'set-003',
-    title: 'Business Idioms & Collocations Practice',
-    description: 'Luyện phản xạ thành ngữ thương mại thường gặp trong đề thi',
-    category: 'VOCABULARY',
-    difficulty: 'BEGINNER',
-    total_questions: 25,
-    duration_minutes: 10,
-    is_active: true,
-    created_at: '2026-02-15T09:15:00Z',
-  },
-]
-
-const mockListening: ListeningExercise[] = [
-  {
-    _id: 'listen-001',
-    title: 'Airport Flight Announcement Dictation',
-    audio_url: 'https://assets.lingosphere.edu.vn/audio/flight_announcement.mp3',
-    transcript: 'Attention passengers on flight VN123 to Tokyo, the gate has changed to B12.',
-    duration_seconds: 45,
-    difficulty: 'INTERMEDIATE',
-    exercise_type: 'DICTATION',
-    created_at: '2026-02-18T08:00:00Z',
-  },
-  {
-    _id: 'listen-002',
-    title: 'Quarterly Business Meeting Key Points',
-    audio_url: 'https://assets.lingosphere.edu.vn/audio/quarterly_meeting.mp3',
-    transcript: 'Our revenue grew by fifteen percent compared to the last quarter.',
-    duration_seconds: 60,
-    difficulty: 'ADVANCED',
-    exercise_type: 'MULTIPLE_CHOICE',
-    created_at: '2026-02-20T11:00:00Z',
-  },
-]
-
-const mockSpeaking: SpeakingExercise[] = [
-  {
-    _id: 'speak-001',
-    title: 'Read Aloud: Corporate Environmental Policy',
-    prompt_text: 'Our organization is committed to minimizing energy consumption across all production facilities.',
-    phonetic_guide: '/ˈaʊər ˌɔːrɡənəˈzeɪʃən ɪz kəˈmɪtɪd tuː ˈmɪnɪmaɪzɪŋ ˈɛnərdʒi kənˈsʌmpʃən/',
-    difficulty: 'INTERMEDIATE',
-    created_at: '2026-02-16T10:00:00Z',
-  },
-  {
-    _id: 'speak-002',
-    title: 'Describe an Image: Office Workspace Meeting',
-    prompt_text: 'In the foreground, two business professionals are reviewing financial charts on a laptop.',
-    difficulty: 'ADVANCED',
-    created_at: '2026-02-19T15:00:00Z',
-  },
-]
-
-const mockWriting: WritingExercise[] = [
-  {
-    _id: 'write-001',
-    title: 'Email Response: Rescheduling Client Meeting',
-    topic: 'Business Correspondence',
-    prompt: 'Write an email to a client explaining why the scheduled product demonstration needs to be postponed by two days.',
-    min_words: 80,
-    difficulty: 'INTERMEDIATE',
-    created_at: '2026-02-14T09:00:00Z',
-  },
-  {
-    _id: 'write-002',
-    title: 'Daily Journal: Modern AI in Education',
-    topic: 'Opinion Essay',
-    prompt: 'How has artificial intelligence changed your daily learning habits and productivity?',
-    min_words: 120,
-    difficulty: 'ADVANCED',
-    created_at: '2026-02-22T16:00:00Z',
-  },
-]
-
-const mockExams: ToeicExam[] = [
-  {
-    _id: 'exam-001',
-    title: 'ETS TOEIC 2024 Practice Test 01 (Full 200 Qs)',
-    exam_code: 'ETS-2024-T01',
-    exam_type: 'FULL',
-    duration_minutes: 120,
-    total_questions: 200,
-    difficulty: 'INTERMEDIATE',
-    is_free: false,
-    is_published: true,
-    attempts_count: 1420,
-    created_at: '2026-01-15T00:00:00Z',
-  },
-  {
-    _id: 'exam-002',
-    title: 'Mini TOEIC Reading Speed Test (50 Qs)',
-    exam_code: 'MINI-R-01',
-    exam_type: 'MINI',
-    duration_minutes: 35,
-    total_questions: 50,
-    difficulty: 'ADVANCED',
-    is_free: true,
-    is_published: true,
-    attempts_count: 3840,
-    created_at: '2026-01-20T00:00:00Z',
-  },
-]
-
 export function PracticePage() {
   const { t, i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -175,11 +48,11 @@ export function PracticePage() {
   const [filterDifficulty, setFilterDifficulty] = useState<string>('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
-  const [practiceSets, setPracticeSets] = useState<PracticeSet[]>(mockSets)
-  const [listeningList, setListeningList] = useState<ListeningExercise[]>(mockListening)
-  const [speakingList, setSpeakingList] = useState<SpeakingExercise[]>(mockSpeaking)
-  const [writingList, setWritingList] = useState<WritingExercise[]>(mockWriting)
-  const [examList, setExamList] = useState<ToeicExam[]>(mockExams)
+  const [practiceSets, setPracticeSets] = useState<PracticeSet[]>([])
+  const [listeningList, setListeningList] = useState<ListeningExercise[]>([])
+  const [speakingList, setSpeakingList] = useState<SpeakingExercise[]>([])
+  const [writingList, setWritingList] = useState<WritingExercise[]>([])
+  const [examList, setExamList] = useState<ToeicExam[]>([])
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)

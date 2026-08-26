@@ -32,29 +32,6 @@ export interface AdminUser {
   phone?: string;
 }
 
-const defaultAdmins: AdminUser[] = [
-  {
-    id: "usr_admin_001",
-    name: "LingoSphere Super Admin",
-    email: "admin@lingosphere.local",
-    role: "ADMIN",
-    is_active: true,
-    created_at: "2026-01-01T00:00:00.000Z",
-    last_active: "Vừa xong",
-    phone: "0901234567",
-  },
-  {
-    id: "usr_instructor_001",
-    name: "LingoSphere Master Teacher",
-    email: "teacher@lingosphere.local",
-    role: "TEACHER",
-    is_active: true,
-    created_at: "2026-01-05T00:00:00.000Z",
-    last_active: "10 phút trước",
-    phone: "0909876543",
-  },
-];
-
 type FilterRole = "ALL" | "ADMIN" | "TEACHER";
 type FilterStatus = "ALL" | "ACTIVE" | "INACTIVE";
 

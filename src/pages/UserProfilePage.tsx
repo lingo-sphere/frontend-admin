@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
-import { mockUsers } from '@/data/users-data'
 
 interface UserProfileData {
   id: string
@@ -47,8 +46,7 @@ export function UserProfilePage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
 
-  const userId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : (mockUsers[0]?.id || 'u-1')
-  const user = mockUsers.find((u) => u.id === userId) || mockUsers[0]
+  const userId = activeNavItem.includes(':') ? activeNavItem.split(':')[1] : 'usr_learner_001'
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
 
@@ -58,63 +56,37 @@ export function UserProfilePage() {
         const u = await userService.getProfileById(userId)
         if (u) {
           setProfileData({
-            id: u._id || userId,
+            id: u._id || u.user_id || userId,
             full_name: u.full_name || u.email.split('@')[0],
             email: u.email,
             avatar_url: u.avatar_url,
+            phone: u.phone_number,
             status: u.status || 'ACTIVE',
             is_premium: Boolean(u.is_premium),
             created_at: u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '12/01/2026',
             last_active: 'Vừa xong',
-            total_xp: u.total_xp || 3420,
-            level: u.level || 8,
-            current_streak: u.current_streak || 14,
-            longest_streak: 28,
-            total_lessons_completed: 36,
-            total_words_learned: 480,
-            toeic_score: u.target_toeic_score || 685,
-            accuracy_rate: 86.4,
-            avg_session_time: 25,
-            total_sessions: 42,
-            total_courses_enrolled: 4,
-            total_courses_completed: 2,
-            total_decks_studied: 8,
+            total_xp: u.total_xp || 0,
+            level: u.level || 1,
+            current_streak: u.current_streak || 0,
+            longest_streak: u.current_streak || 0,
+            total_lessons_completed: 0,
+            total_words_learned: 0,
+            toeic_score: u.target_toeic_score || 650,
+            accuracy_rate: 0,
+            avg_session_time: 0,
+            total_sessions: 0,
+            total_courses_enrolled: 0,
+            total_courses_completed: 0,
+            total_decks_studied: 0,
           })
-          return
         }
       } catch (err) {
-        console.warn('Using local learner profile:', err)
-      }
-
-      if (user) {
-        setProfileData({
-          id: user.id,
-          full_name: user.full_name,
-          email: user.email,
-          avatar_url: user.avatar_url,
-          status: user.status,
-          is_premium: user.is_premium,
-          created_at: '12/01/2026',
-          last_active: 'Hôm nay',
-          total_xp: user.total_xp,
-          level: user.level,
-          current_streak: user.current_streak,
-          longest_streak: user.longest_streak || 24,
-          total_lessons_completed: user.lessons_completed || 28,
-          total_words_learned: user.vocabulary_reviewed || 320,
-          toeic_score: user.target_toeic_score || 650,
-          accuracy_rate: 84.5,
-          avg_session_time: 20,
-          total_sessions: user.practice_sessions || 35,
-          total_courses_enrolled: 3,
-          total_courses_completed: 1,
-          total_decks_studied: 5,
-        })
+        console.warn('Error fetching learner profile from backend:', err)
       }
     }
 
     loadData()
-  }, [userId, user])
+  }, [userId])
 
   if (!profileData) {
     return (

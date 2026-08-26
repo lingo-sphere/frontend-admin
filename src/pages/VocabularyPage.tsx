@@ -19,14 +19,15 @@ import { useAdminStore } from "@/store/admin-store";
 import { vocabularyService } from "@/services/vocabulary.service";
 import { toast } from "@/store/toast-store";
 import {
-  mockLexicalItems,
-  mockTopics,
-  mockFlashcardDecks,
   type LexicalItem,
   type Topic,
   type FlashcardDeck,
 } from "@/data/vocabulary-data";
-import type { LexicalItem as ApiLexicalItem, Topic as ApiTopic } from "@/types/api.types";
+import type {
+  LexicalItem as ApiLexicalItem,
+  Topic as ApiTopic,
+  FlashcardDeck as ApiFlashcardDeck,
+} from "@/types/api.types";
 
 type TabType = "words" | "topics" | "decks";
 
@@ -35,9 +36,9 @@ export function VocabularyPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
 
   const [activeTab, setActiveTab] = useState<TabType>("words");
-  const [words, setWords] = useState<LexicalItem[]>(mockLexicalItems);
-  const [topics, setTopics] = useState<Topic[]>(mockTopics);
-  const [decks, setDecks] = useState<FlashcardDeck[]>(mockFlashcardDecks);
+  const [words, setWords] = useState<LexicalItem[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [decks, setDecks] = useState<FlashcardDeck[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [searchWord, setSearchWord] = useState("");
@@ -51,12 +52,13 @@ export function VocabularyPage() {
   const fetchVocabularyData = async () => {
     setIsLoading(true);
     try {
-      const [wordsRes, topicsRes] = await Promise.allSettled([
+      const [wordsRes, topicsRes, decksRes] = await Promise.allSettled([
         vocabularyService.searchVocabulary(),
         vocabularyService.getAllTopics(),
+        vocabularyService.getAllFlashcardDecks(),
       ]);
 
-      if (wordsRes.status === "fulfilled" && wordsRes.value && wordsRes.value.length > 0) {
+      if (wordsRes.status === "fulfilled" && wordsRes.value) {
         const mapped: LexicalItem[] = wordsRes.value.map((w: ApiLexicalItem) => ({
           id: w._id,
           word: w.word,
@@ -73,7 +75,7 @@ export function VocabularyPage() {
         setWords(mapped);
       }
 
-      if (topicsRes.status === "fulfilled" && topicsRes.value && topicsRes.value.length > 0) {
+      if (topicsRes.status === "fulfilled" && topicsRes.value) {
         const mappedTopics: Topic[] = topicsRes.value.map((t: ApiTopic) => ({
           id: t._id,
           name: t.name,
@@ -90,8 +92,31 @@ export function VocabularyPage() {
         }));
         setTopics(mappedTopics);
       }
+
+      if (decksRes.status === "fulfilled" && decksRes.value) {
+        const mappedDecks: FlashcardDeck[] = decksRes.value.map((d: ApiFlashcardDeck) => ({
+          id: d._id,
+          name_en: d.title,
+          name_vi: d.title,
+          description: d.description || '',
+          creator_name: 'LingoSphere System',
+          topic_name: 'TOEIC Core',
+          cefr_level: 'B1',
+          card_count: d.total_cards || 0,
+          total_studied: d.enrolled_count || 0,
+          total_users: d.enrolled_count || 0,
+          avg_mastery_percent: 75,
+          rating_average: d.rating || 5,
+          rating_count: 100,
+          visibility: d.is_public ? 'PUBLIC' : 'PRIVATE',
+          is_featured: Boolean(d.is_system),
+          is_premium: false,
+          created_at: d.created_at || new Date().toISOString(),
+        }));
+        setDecks(mappedDecks);
+      }
     } catch (err) {
-      console.warn("Using local mock vocabulary:", err);
+      console.warn("Error fetching vocabulary data from backend:", err);
     } finally {
       setIsLoading(false);
     }

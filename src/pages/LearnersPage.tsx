@@ -18,7 +18,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useAdminStore } from "@/store/admin-store";
 import { userService } from "@/services/user.service";
 import { toast } from "@/store/toast-store";
-import { mockUsers, type User } from "@/data/users-data";
+import { type User } from "@/data/users-data";
 import type { UserProfile } from "@/types/api.types";
 
 type FilterStatus = "ALL" | "ACTIVE" | "INACTIVE" | "BANNED";
