@@ -62,7 +62,7 @@ export function AdminUsersPage() {
   const { t } = useTranslation();
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
 
-  const [admins, setAdmins] = useState<AdminUser[]>(defaultAdmins);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<FilterRole>("ALL");
@@ -90,22 +90,21 @@ export function AdminUsersPage() {
         items.push(...teacherRes.value.items);
       }
 
-      if (items.length > 0) {
-        const mapped: AdminUser[] = items.map((u: UserProfile) => ({
-          id: u._id || u.user_id,
-          name: u.full_name || u.email.split("@")[0],
-          email: u.email,
-          role: u.role === "INSTRUCTOR" ? "TEACHER" : "ADMIN",
-          is_active: u.status === "ACTIVE",
-          avatar: u.avatar_url,
-          created_at: u.created_at || new Date().toISOString(),
-          last_active: "Vừa xong",
-          phone: u.phone_number || "Chưa cập nhật",
-        }));
-        setAdmins(mapped);
-      }
+      const mapped: AdminUser[] = items.map((u: UserProfile) => ({
+        id: u._id || u.user_id,
+        name: u.full_name || u.email.split("@")[0],
+        email: u.email,
+        role: u.role === "INSTRUCTOR" ? "TEACHER" : "ADMIN",
+        is_active: u.status === "ACTIVE",
+        avatar: u.avatar_url,
+        created_at: u.created_at || new Date().toISOString(),
+        last_active: "Vừa xong",
+        phone: u.phone_number || "Chưa cập nhật",
+      }));
+      setAdmins(mapped);
     } catch (err) {
-      console.warn("Using local mock admin data:", err);
+      console.warn("Error fetching admin data from backend:", err);
+      setAdmins([]);
     } finally {
       setIsLoading(false);
     }

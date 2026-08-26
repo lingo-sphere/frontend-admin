@@ -28,7 +28,7 @@ export function LearnersPage() {
   const { t } = useTranslation();
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem);
 
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("ALL");
@@ -44,40 +44,41 @@ export function LearnersPage() {
     setIsLoading(true);
     try {
       const res = await userService.getAllUsers({
-        role: "LEARNER",
+        role: "STUDENT",
         limit: 100,
         search: searchTerm || undefined,
+        status: selectedStatus !== "ALL" ? selectedStatus : undefined,
+        plan: selectedPlan !== "ALL" ? selectedPlan : undefined,
       });
 
       const items: UserProfile[] = res?.items || [];
-      if (items.length > 0) {
-        const mappedUsers: User[] = items.map((u: UserProfile) => ({
-          id: u._id || u.user_id,
-          email: u.email,
-          full_name: u.full_name || u.email.split("@")[0],
-          avatar_url: u.avatar_url,
-          gender: u.gender || "OTHER",
-          target_toeic_score: u.target_toeic_score || 650,
-          current_estimated_score: u.current_estimated_score || 500,
-          learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
-          status: (u.status as "ACTIVE" | "INACTIVE" | "BANNED") || "ACTIVE",
-          is_premium: u.is_premium || false,
-          current_plan_slug: u.current_plan_slug || "free",
-          created_at: u.created_at || new Date().toISOString(),
-          total_xp: u.total_xp || 0,
-          level: u.level || 1,
-          current_streak: u.current_streak || 0,
-          longest_streak: 10,
-          gems: 50,
-          lessons_completed: 12,
-          vocabulary_reviewed: 120,
-          practice_sessions: 15,
-          exams_completed: 2,
-        }));
-        setUsers(mappedUsers);
-      }
+      const mappedUsers: User[] = items.map((u: UserProfile) => ({
+        id: u._id || u.user_id,
+        email: u.email,
+        full_name: u.full_name || u.email.split("@")[0],
+        avatar_url: u.avatar_url,
+        gender: u.gender || "OTHER",
+        target_toeic_score: u.target_toeic_score || 650,
+        current_estimated_score: u.current_estimated_score || 500,
+        learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
+        status: (u.status as "ACTIVE" | "INACTIVE" | "BANNED") || "ACTIVE",
+        is_premium: u.is_premium || false,
+        current_plan_slug: u.current_plan_slug || (u.is_premium ? "vip" : "free"),
+        created_at: u.created_at || new Date().toISOString(),
+        total_xp: u.total_xp || 0,
+        level: u.level || 1,
+        current_streak: u.current_streak || 0,
+        longest_streak: 10,
+        gems: 50,
+        lessons_completed: 12,
+        vocabulary_reviewed: 120,
+        practice_sessions: 15,
+        exams_completed: 2,
+      }));
+      setUsers(mappedUsers);
     } catch (err) {
-      console.warn("Using local mock users:", err);
+      console.warn("Error fetching learners from backend:", err);
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -307,7 +308,7 @@ export function LearnersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {t("page.users.title") || "Quản Lý Học Viên"}
+              Quản Lý Học Viên
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Danh sách toàn bộ người học, theo dõi điểm TOEIC, streak ngày học và quản lý tài khoản
