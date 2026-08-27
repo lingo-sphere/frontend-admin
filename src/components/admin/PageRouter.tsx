@@ -17,6 +17,9 @@ import { VocabularyImportPage } from '@/pages/VocabularyImportPage'
 import { VocabularyFormPage } from '@/pages/VocabularyFormPage'
 import { AdminProfilePage } from '@/pages/AdminProfilePage'
 import { RolesPage } from '@/pages/RolesPage'
+import { ExamsPage } from '@/pages/ExamsPage'
+import { MediaStoragePage } from '@/pages/MediaStoragePage'
+import { AiManagementPage } from '@/pages/AiManagementPage'
 
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -36,7 +39,12 @@ const pageMap: Record<string, React.ComponentType> = {
   'practice-listening': PracticePage,
   'practice-speaking': PracticePage,
   'practice-writing': PracticePage,
-  'toeic-tests': PracticePage,
+  'toeic-tests': ExamsPage,
+  exams: ExamsPage,
+  'media-storage': MediaStoragePage,
+  media: MediaStoragePage,
+  'ai-management': AiManagementPage,
+  'ai-teacher': AiManagementPage,
   community: CommunityPage,
   'public-decks': PublicDecksPage,
   progress: ProgressPage,

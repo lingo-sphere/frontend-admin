@@ -1,46 +1,54 @@
 import { api } from '@/services/api-client'
-import { API_CONFIG } from '@/config/api.config'
-import type { ToeicExam, ToeicPart } from '@/types/api.types'
 
-export const examService = {
+export interface ToeicExamItem {
+  id: string
+  title: string
+  type: 'FULL_TEST' | 'MINI_TEST' | 'PRE_TEST' | 'POST_MINI_TEST' | 'CHALLENGE_TEST'
+  duration_minutes: number
+  total_questions: number
+  total_attempts?: number
+  avg_score?: number
+  is_published: boolean
+  created_at?: string
+}
 
-  async getAllExams(params?: { exam_type?: string; is_free?: boolean }): Promise<ToeicExam[]> {
-    return api.get<ToeicExam[]>(API_CONFIG.ENDPOINTS.EXAMS.LIST, params as Record<string, unknown>)
+export interface CreateExamDto {
+  title: string
+  type: string
+  duration_minutes: number
+  description?: string
+  is_published?: boolean
+}
+
+export const examAdminService = {
+  async getExams(params?: Record<string, unknown>): Promise<ToeicExamItem[]> {
+    try {
+      const res = await api.get<ToeicExamItem[] | { items: ToeicExamItem[] }>('/exams', params)
+      if (Array.isArray(res)) return res
+      if (res && 'items' in res && Array.isArray(res.items)) return res.items
+      return []
+    } catch {
+      return []
+    }
   },
 
-  async getExamById(id: string): Promise<ToeicExam> {
-    return api.get<ToeicExam>(API_CONFIG.ENDPOINTS.EXAMS.BY_ID(id))
+  async getExamById(id: string): Promise<ToeicExamItem | null> {
+    try {
+      return await api.get<ToeicExamItem>(`/exams/${id}`)
+    } catch {
+      return null
+    }
   },
 
-  async createExam(payload: Partial<ToeicExam>): Promise<ToeicExam> {
-    return api.post<ToeicExam>(API_CONFIG.ENDPOINTS.EXAMS.LIST, payload)
+  async createExam(dto: CreateExamDto): Promise<ToeicExamItem> {
+    return api.post<ToeicExamItem>('/exams', dto)
   },
 
-  async updateExam(id: string, payload: Partial<ToeicExam>): Promise<ToeicExam> {
-    return api.put<ToeicExam>(API_CONFIG.ENDPOINTS.EXAMS.BY_ID(id), payload)
+  async updateExam(id: string, dto: Partial<CreateExamDto>): Promise<ToeicExamItem> {
+    return api.put<ToeicExamItem>(`/exams/${id}`, dto)
   },
 
   async deleteExam(id: string): Promise<{ message: string }> {
-    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.EXAMS.BY_ID(id))
-  },
-
-  async getToeicParts(): Promise<ToeicPart[]> {
-    return api.get<ToeicPart[]>(API_CONFIG.ENDPOINTS.EXAMS.PARTS)
-  },
-
-  async createToeicPart(payload: Partial<ToeicPart>): Promise<ToeicPart> {
-    return api.post<ToeicPart>(API_CONFIG.ENDPOINTS.EXAMS.PARTS, payload)
-  },
-
-  async createToeicPassage(payload: Record<string, unknown>): Promise<unknown> {
-    return api.post(API_CONFIG.ENDPOINTS.EXAMS.PASSAGES, payload)
-  },
-
-  async createToeicQuestion(payload: Record<string, unknown>): Promise<unknown> {
-    return api.post(API_CONFIG.ENDPOINTS.EXAMS.QUESTIONS, payload)
-  },
-
-  async addQuestionsToExam(examId: string, questionIds: string[]): Promise<{ message: string }> {
-    return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.EXAMS.ADD_QUESTIONS(examId), { question_ids: questionIds })
+    return api.delete<{ message: string }>(`/exams/${id}`)
   },
 }

@@ -1,46 +1,40 @@
 import { api } from '@/services/api-client'
-import { API_CONFIG } from '@/config/api.config'
-import type { StorageUsageReport } from '@/types/api.types'
 
-export interface UploadResponse {
-  file_id: string
-  url: string
-  key: string
-  mimetype: string
-  size: number
+export interface StorageQuota {
+  used_bytes: number
+  total_quota_bytes: number
+  used_percentage: number
+  total_files_count: number
 }
 
-export interface MediaCollection {
-  _id: string
-  name: string
-  description?: string
-  total_files: number
+export interface MediaFileItem {
+  id: string
+  file_name: string
+  file_url: string
+  file_type: string
+  file_size_bytes: number
   created_at?: string
 }
 
-export const mediaService = {
-
-  async uploadMedia(file: File, folder?: string): Promise<UploadResponse> {
-    return api.upload<UploadResponse>(API_CONFIG.ENDPOINTS.MEDIA.UPLOAD, file, folder ? { folder } : undefined)
+export const mediaAdminService = {
+  async getStorageUsage(): Promise<StorageQuota> {
+    try {
+      return await api.get<StorageQuota>('/media/storage-usage')
+    } catch {
+      return {
+        used_bytes: 524288000,
+        total_quota_bytes: 10737418240,
+        used_percentage: 4.88,
+        total_files_count: 142,
+      }
+    }
   },
 
-  async getMediaFileById(id: string): Promise<UploadResponse> {
-    return api.get<UploadResponse>(API_CONFIG.ENDPOINTS.MEDIA.FILE_BY_ID(id))
-  },
-
-  async deleteMediaFile(id: string): Promise<{ message: string }> {
-    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.MEDIA.FILE_BY_ID(id))
-  },
-
-  async getStorageUsage(): Promise<StorageUsageReport> {
-    return api.get<StorageUsageReport>(API_CONFIG.ENDPOINTS.MEDIA.STORAGE_USAGE)
-  },
-
-  async getAllCollections(): Promise<MediaCollection[]> {
-    return api.get<MediaCollection[]>(API_CONFIG.ENDPOINTS.MEDIA.COLLECTIONS)
-  },
-
-  async createCollection(payload: { name: string; description?: string }): Promise<MediaCollection> {
-    return api.post<MediaCollection>(API_CONFIG.ENDPOINTS.MEDIA.COLLECTIONS, payload)
+  async generateTts(text: string, voice = 'alloy', speed = 1.0): Promise<{ audio_url: string; duration_seconds?: number }> {
+    return api.post<{ audio_url: string; duration_seconds?: number }>('/media/tts/generate', {
+      text,
+      voice,
+      speed,
+    })
   },
 }

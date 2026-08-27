@@ -74,6 +74,8 @@ const navGroups: NavGroup[] = [
           { id: "toeic-tests", label: "Đề thi TOEIC" },
         ],
       },
+      { id: "ai-management", icon: Sparkles, label: "Quản Trị AI & Soạn Đề" },
+      { id: "media-storage", icon: Layers3, label: "Kho Media Cloudflare R2" },
     ],
   },
   {

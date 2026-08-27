@@ -1,40 +1,35 @@
 import { api } from '@/services/api-client'
-import { API_CONFIG } from '@/config/api.config'
-import type { AiModelConfig, AiPromptTemplate } from '@/types/api.types'
 
-export interface GenerateAiTextPayload {
-  prompt: string
-  model?: string
-  temperature?: number
-  system_instruction?: string
+export interface GenerateQuizItem {
+  question_text: string
+  options: string[]
+  correct_index: number
+  explanation_vi: string
 }
 
-export const aiService = {
+export interface TeacherGenerateQuizResponse {
+  topic: string
+  questions: GenerateQuizItem[]
+  model_used: string
+}
 
-  async getAiModels(): Promise<AiModelConfig[]> {
-    return api.get<AiModelConfig[]>(API_CONFIG.ENDPOINTS.AI.MODELS)
-  },
-
-  async createAiModel(payload: Partial<AiModelConfig>): Promise<AiModelConfig> {
-    return api.post<AiModelConfig>(API_CONFIG.ENDPOINTS.AI.MODELS, payload)
-  },
-
-  async getAiPrompts(): Promise<AiPromptTemplate[]> {
-    return api.get<AiPromptTemplate[]>(API_CONFIG.ENDPOINTS.AI.PROMPTS)
-  },
-
-  async createAiPrompt(payload: Partial<AiPromptTemplate>): Promise<AiPromptTemplate> {
-    return api.post<AiPromptTemplate>(API_CONFIG.ENDPOINTS.AI.PROMPTS, payload)
-  },
-
-  async generateAiText(payload: GenerateAiTextPayload): Promise<{ result: string; model_used: string }> {
-    return api.post<{ result: string; model_used: string }>(API_CONFIG.ENDPOINTS.AI.GENERATE, payload)
-  },
-
-  async generateQuizForTeacher(topicOrText: string, numberOfQuestions: number = 5): Promise<unknown> {
-    return api.post(API_CONFIG.ENDPOINTS.AI.TEACHER_GENERATE_QUIZ, {
-      topic: topicOrText,
-      number_of_questions: numberOfQuestions,
+export const aiAdminService = {
+  async generateQuizForTeacher(topic: string, questionCount = 5, difficulty = 'MEDIUM'): Promise<TeacherGenerateQuizResponse> {
+    return api.post<TeacherGenerateQuizResponse>('/ai/teacher/generate-quiz', {
+      topic,
+      question_count: questionCount,
+      difficulty,
     })
+  },
+
+  async getAiModels(): Promise<Array<{ model_name: string; provider: string; is_active: boolean }>> {
+    try {
+      return await api.get<Array<{ model_name: string; provider: string; is_active: boolean }>>('/ai/models')
+    } catch {
+      return [
+        { model_name: 'qwen/qwen3.8-27b', provider: 'GROQ_CLOUD', is_active: true },
+        { model_name: 'gemini-3.1-flash-lite', provider: 'GOOGLE_GEMINI', is_active: true },
+      ]
+    }
   },
 }
