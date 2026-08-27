@@ -31,16 +31,12 @@ export const authService = {
 
   async logout(): Promise<{ message: string }> {
     try {
-      const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-      const res = await apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {}, {
-        headers: refreshToken ? { 'x-refresh-token': refreshToken } : {},
-      })
+      const res = await apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
       return res.data
     } catch {
       return { message: 'Logged out successfully' }
     } finally {
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
     }
   },

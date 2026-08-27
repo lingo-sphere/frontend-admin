@@ -51,9 +51,6 @@ export const authStore = createStore<AuthState>()((set, get) => ({
 
       if (typeof window !== 'undefined') {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, access_token)
-        if (refresh_token) {
-          localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, refresh_token)
-        }
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(user))
       }
 
@@ -89,7 +86,6 @@ export const authStore = createStore<AuthState>()((set, get) => ({
     } finally {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
       }
       set({
