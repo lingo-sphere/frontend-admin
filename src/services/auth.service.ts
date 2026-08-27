@@ -1,4 +1,4 @@
-import { api } from '@/services/api-client'
+import { api, apiClient } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { AuthUser, LoginResponse } from '@/types/api.types'
 
@@ -32,7 +32,12 @@ export const authService = {
   async logout(): Promise<{ message: string }> {
     try {
       const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-      return await api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, { refresh_token: refreshToken })
+      const res = await apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {}, {
+        headers: refreshToken ? { 'x-refresh-token': refreshToken } : {},
+      })
+      return res.data
+    } catch {
+      return { message: 'Logged out successfully' }
     } finally {
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
