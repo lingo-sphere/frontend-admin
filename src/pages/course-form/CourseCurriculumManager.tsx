@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Film,
 } from 'lucide-react'
+import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import type {
   CourseFormData,
   CourseModule,
@@ -333,53 +334,33 @@ export function CourseCurriculumManager({
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="sm:col-span-2 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                  <Video className="w-3 h-3 text-indigo-500" />
-                                  <span>
-                                    {isVi
-                                      ? 'Đường dẫn Video bài giảng (MP4 / YouTube / R2)'
-                                      : 'Video URL (MP4 / YouTube / R2)'}
-                                  </span>
-                                </label>
-                                {les.video_url && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      onPreviewVideo(les.video_url)
-                                    }
-                                    className="text-[10px] text-indigo-600 hover:underline dark:text-indigo-400 font-semibold flex items-center gap-0.5 cursor-pointer"
-                                  >
-                                    <Play className="w-2.5 h-2.5 fill-indigo-600 dark:fill-indigo-400" />
-                                    <span>{isVi ? 'Xem thử video' : 'Preview video'}</span>
-                                  </button>
-                                )}
-                              </div>
-                              <input
-                                type="text"
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                            <div className="sm:col-span-2">
+                              <R2MediaUploader
+                                type="video"
                                 value={les.video_url}
-                                onChange={(e) =>
+                                onChange={(url) =>
                                   updateLessonField(
                                     mod.id,
                                     les.id,
                                     'video_url',
-                                    e.target.value
+                                    url
                                   )
                                 }
-                                placeholder="https://www.youtube.com/watch?v=... hoặc https://r2.lingosphere.../lesson1.mp4"
-                                className="w-full h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
+                                folder="course-videos"
+                                label={isVi ? 'Video bài giảng (Cloudflare R2 MP4 / WebM)' : 'Lesson Video (Cloudflare R2 MP4 / WebM)'}
+                                isVi={isVi}
                               />
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-1 sm:pt-6">
                               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                 <Clock className="w-3 h-3 text-teal-500" />
                                 <span>{isVi ? 'Thời lượng (Phút)' : 'Duration (Mins)'}</span>
                               </label>
                               <input
                                 type="number"
+                                min={1}
                                 value={les.duration_minutes}
                                 onChange={(e) =>
                                   updateLessonField(
@@ -389,9 +370,7 @@ export function CourseCurriculumManager({
                                     Number(e.target.value)
                                   )
                                 }
-                                min={1}
-                                placeholder="15"
-                                className="w-full h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-teal-600 focus:outline-none focus:border-teal-500 dark:bg-slate-950 dark:border-slate-800 dark:text-teal-400"
+                                className="w-full h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                               />
                             </div>
                           </div>

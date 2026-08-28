@@ -1,5 +1,5 @@
-import { Image } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
+import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 
 export interface CourseFormData {
   title: string
@@ -171,26 +171,14 @@ export function CourseBasicInfoTab({
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Ảnh Thumbnail URL' : 'Thumbnail URL'}
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={formData.thumbnail_url}
-                onChange={(e) => onChange({ thumbnail_url: e.target.value })}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-              />
-              {formData.thumbnail_url && (
-                <div className="h-10 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
-                  <img
-                    src={formData.thumbnail_url}
-                    alt="Thumbnail preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
+            <R2MediaUploader
+              type="image"
+              value={formData.thumbnail_url}
+              onChange={(url) => onChange({ thumbnail_url: url })}
+              folder="course-thumbnails"
+              label={isVi ? 'Ảnh Thumbnail Khóa Học (Cloudflare R2)' : 'Course Thumbnail (Cloudflare R2)'}
+              isVi={isVi}
+            />
           </div>
 
           <div className="sm:col-span-2">

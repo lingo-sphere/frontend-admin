@@ -30,6 +30,10 @@ export const mediaAdminService = {
     }
   },
 
+  async uploadFile(file: File, folder = 'courses'): Promise<{ file_url: string; url?: string; public_url?: string }> {
+    return await api.upload<{ file_url: string; url?: string; public_url?: string }>('/media/upload', file, { folder })
+  },
+
   async generateTts(text: string, voice = 'alloy', speed = 1.0): Promise<{ audio_url: string; duration_seconds?: number }> {
     return api.post<{ audio_url: string; duration_seconds?: number }>('/media/tts/generate', {
       text,

@@ -33,15 +33,23 @@ export interface CourseModule {
 }
 
 export const categoryLabels: Record<string, { vi: string; en: string }> = {
-  TOEIC_LISTENING: { vi: 'Nghe TOEIC', en: 'TOEIC Listening' },
-  TOEIC_READING: { vi: 'Đọc TOEIC', en: 'TOEIC Reading' },
+  TOEIC_LISTENING: { vi: 'Nghe TOEIC (Listening)', en: 'TOEIC Listening' },
+  TOEIC_READING: { vi: 'Đọc TOEIC (Reading)', en: 'TOEIC Reading' },
+  TOEIC_2_SKILLS: { vi: 'TOEIC 2 Kỹ năng (LR)', en: 'TOEIC 2 Skills (LR)' },
+  TOEIC_4_SKILLS: { vi: 'TOEIC 4 Kỹ năng (Full)', en: 'TOEIC 4 Skills (Full)' },
+  SPEAKING: { vi: 'Luyện nói & Phát âm (Speaking)', en: 'Speaking' },
+  WRITING: { vi: 'Luyện viết (Writing)', en: 'Writing' },
   GRAMMAR: { vi: 'Ngữ pháp', en: 'Grammar' },
-  VOCABULARY: { vi: 'Từ vựng', en: 'Vocabulary' },
+  VOCABULARY: { vi: 'Từ vựng SRS', en: 'Vocabulary' },
 }
 
 export const categoryColors: Record<string, { bg: string; text: string }> = {
   TOEIC_LISTENING: { bg: 'var(--info-soft)', text: 'var(--info)' },
   TOEIC_READING: { bg: 'var(--success-soft)', text: 'var(--success)' },
+  TOEIC_2_SKILLS: { bg: 'var(--info-soft)', text: 'var(--info)' },
+  TOEIC_4_SKILLS: { bg: 'var(--success-soft)', text: 'var(--success)' },
+  SPEAKING: { bg: 'var(--warning-soft)', text: 'var(--warning)' },
+  WRITING: { bg: 'var(--error-soft)', text: 'var(--error)' },
   GRAMMAR: { bg: 'var(--ai-soft)', text: 'var(--ai)' },
   VOCABULARY: { bg: 'var(--warning-soft)', text: 'var(--warning)' },
 }
