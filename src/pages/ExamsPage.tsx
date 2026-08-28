@@ -22,7 +22,6 @@ export function ExamsPage() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedType, setSelectedType] = useState<string>('ALL')
 
-  // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false)
   const [newTitle, setNewTitle] = useState<string>('')
   const [newType, setNewType] = useState<string>('FULL_TEST')
@@ -36,7 +35,7 @@ export function ExamsPage() {
       if (data && data.length > 0) {
         setExams(data)
       } else {
-        // Mock fallback dataset for preview
+
         setExams([
           {
             id: 'exam_toeic_full_01',
@@ -136,7 +135,7 @@ export function ExamsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-2.5">
@@ -156,7 +155,6 @@ export function ExamsPage() {
         </button>
       </div>
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
@@ -199,7 +197,6 @@ export function ExamsPage() {
         </div>
       </div>
 
-      {/* Filters & Search */}
       <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -228,7 +225,6 @@ export function ExamsPage() {
         </div>
       </div>
 
-      {/* Exam Table */}
       <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-300">
@@ -319,7 +315,6 @@ export function ExamsPage() {
         </div>
       </div>
 
-      {/* Modal Tạo Đề Thi Mới */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">

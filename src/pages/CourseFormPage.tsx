@@ -349,7 +349,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      {/* Top Header */}
+
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
@@ -380,7 +380,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 1. Basic Info Section */}
+
         <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-5">
           <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-teal-400" />
@@ -515,7 +515,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           </div>
         </div>
 
-        {/* 2. Modules & Video Lessons Curriculum Editor */}
         <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -548,7 +547,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                   key={mod.id}
                   className="rounded-2xl bg-slate-950/60 border border-slate-800 overflow-hidden transition-all shadow-sm"
                 >
-                  {/* Module Header Bar */}
+
                   <div className="p-4 flex items-center justify-between gap-3 bg-slate-900/70 border-b border-slate-800/80">
                     <button
                       type="button"
@@ -587,10 +586,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                     </div>
                   </div>
 
-                  {/* Module Content & Lessons */}
                   {isExpanded && (
                     <div className="p-4 sm:p-5 space-y-4">
-                      {/* Chapter Info */}
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3 border-b border-slate-800/60">
                         <div className="space-y-1">
                           <label className="text-[11px] font-semibold text-slate-400">Tên chương</label>
@@ -629,7 +627,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                         </div>
                       </div>
 
-                      {/* Video Lessons List */}
                       <div className="space-y-3">
                         <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                           <Film className="w-4 h-4 text-teal-400" />
@@ -653,7 +650,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                               key={les.id}
                               className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 transition-all hover:border-slate-700"
                             >
-                              {/* Lesson Row Top */}
+
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2 flex-1 min-w-[200px]">
                                   <span className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-500/20">
@@ -671,7 +668,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                  {/* Free Preview Toggle */}
+
                                   <label className="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer select-none">
                                     <input
                                       type="checkbox"
@@ -684,7 +681,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                                     <span className="text-[11px] font-medium text-teal-400">Học thử</span>
                                   </label>
 
-                                  {/* Delete lesson */}
                                   <button
                                     type="button"
                                     onClick={() => removeLesson(mod.id, les.id)}
@@ -696,7 +692,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                                 </div>
                               </div>
 
-                              {/* Lesson Video URL & Duration */}
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="sm:col-span-2 space-y-1">
                                   <div className="flex items-center justify-between">
@@ -749,7 +744,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                                 </div>
                               </div>
 
-                              {/* Lesson Notes / Theory Content */}
                               <div className="space-y-1">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                                   <FileText className="w-3 h-3 text-slate-400" />
@@ -777,7 +771,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           </div>
         </div>
 
-        {/* Bottom Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
           <button
             type="button"
@@ -806,7 +799,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         </div>
       </form>
 
-      {/* Video Preview Modal */}
       {videoPreviewUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">

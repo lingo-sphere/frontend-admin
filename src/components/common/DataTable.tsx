@@ -92,7 +92,7 @@ export function DataTable<T extends object>({
 
   return (
     <div className="space-y-4">
-      {/* 1. Header (Title & Extra Actions) */}
+
       {(title || extraActions) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -113,7 +113,6 @@ export function DataTable<T extends object>({
         </div>
       )}
 
-      {/* 2. Filter Bar & Table Controls */}
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
           {filterSlot}
@@ -131,7 +130,6 @@ export function DataTable<T extends object>({
         />
       </div>
 
-      {/* 3. Grid View Mode */}
       {viewMode === 'grid' && renderGridItem && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
@@ -151,7 +149,6 @@ export function DataTable<T extends object>({
         </div>
       )}
 
-      {/* 4. Table View Mode */}
       {viewMode === 'table' && (
         <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
@@ -233,7 +230,6 @@ export function DataTable<T extends object>({
         </div>
       )}
 
-      {/* 5. Pagination */}
       {pagination && pagination.totalItems > 0 && (
         <Pagination
           currentPage={pagination.currentPage}

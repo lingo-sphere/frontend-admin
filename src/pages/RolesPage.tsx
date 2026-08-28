@@ -250,7 +250,7 @@ export function RolesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2.5">
@@ -287,7 +287,6 @@ export function RolesPage() {
         </div>
       </div>
 
-      {/* Tabs Bar */}
       <div className="flex flex-wrap items-center gap-2 p-1 rounded-2xl bg-slate-900/80 border border-slate-800 w-fit">
         <button
           onClick={() => setActiveTab('roles')}
@@ -326,7 +325,6 @@ export function RolesPage() {
         </button>
       </div>
 
-      {/* TAB 1: ROLES */}
       {activeTab === 'roles' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {roles.map((role) => {
@@ -400,10 +398,9 @@ export function RolesPage() {
         </div>
       )}
 
-      {/* TAB 2: PERMISSIONS */}
       {activeTab === 'permissions' && (
         <div className="space-y-4">
-          {/* Filter Bar */}
+
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
               <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
@@ -445,7 +442,6 @@ export function RolesPage() {
             </button>
           </div>
 
-          {/* Permissions Table */}
           <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -499,10 +495,9 @@ export function RolesPage() {
         </div>
       )}
 
-      {/* TAB 3: USER ROLE ASSIGNMENT */}
       {activeTab === 'assign' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* User Selection List */}
+
           <div className="lg:col-span-2 space-y-4">
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
               <div className="flex items-center gap-2 w-full h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
@@ -559,7 +554,6 @@ export function RolesPage() {
             </div>
           </div>
 
-          {/* Role Assign Action Form */}
           <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6 h-fit">
             <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-indigo-400" />
@@ -610,7 +604,6 @@ export function RolesPage() {
         </div>
       )}
 
-      {/* Role Create / Edit Modal */}
       {isRoleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
@@ -704,7 +697,6 @@ export function RolesPage() {
         </div>
       )}
 
-      {/* Permission Create Modal */}
       {isPermModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
@@ -797,7 +789,6 @@ export function RolesPage() {
         </div>
       )}
 
-      {/* Delete Role Modal */}
       <ConfirmModal
         isOpen={Boolean(deleteRoleId)}
         onClose={() => setDeleteRoleId(null)}

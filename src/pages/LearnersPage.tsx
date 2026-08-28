@@ -303,7 +303,7 @@ export function LearnersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header & KPI Stats Row */}
+
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -326,7 +326,6 @@ export function LearnersPage() {
           </div>
         </div>
 
-        {/* KPI Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
             <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
@@ -370,7 +369,6 @@ export function LearnersPage() {
         </div>
       </div>
 
-      {/* Reusable Generic DataTable */}
       <DataTable<User>
         columns={columns}
         data={paginatedUsers}
@@ -429,7 +427,6 @@ export function LearnersPage() {
         }}
       />
 
-      {/* Ban / Unban Modal */}
       <ConfirmModal
         isOpen={Boolean(modalUser && modalAction)}
         onClose={() => {

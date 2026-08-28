@@ -249,7 +249,7 @@ export function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header & KPI Stats */}
+
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -279,7 +279,6 @@ export function AdminUsersPage() {
           </div>
         </div>
 
-        {/* KPI Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 shadow-xs">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
@@ -317,7 +316,6 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Reusable Generic DataTable */}
       <DataTable<AdminUser>
         columns={columns}
         data={paginatedAdmins}
@@ -375,7 +373,6 @@ export function AdminUsersPage() {
         }}
       />
 
-      {/* Ban / Unban Modal */}
       <ConfirmModal
         isOpen={Boolean(modalUser && modalAction)}
         onClose={() => {

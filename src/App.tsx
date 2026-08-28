@@ -30,7 +30,6 @@ export function App() {
     }
   }, [theme])
 
-  // 🚀 Real-time Session Kickout via Server-Sent Events (SSE)
   useEffect(() => {
     if (!isAuthenticated) return
 
@@ -76,7 +75,6 @@ export function App() {
       </AdminShell>
       <ToastContainer />
 
-      {/* 🚨 Modal Cảnh Báo An Ninh Phiên Quản Trị */}
       <ConfirmModal
         isOpen={Boolean(kickoutMessage)}
         onClose={() => {

@@ -130,7 +130,7 @@ export function Topbar() {
   return (
     <>
       <header className="sticky top-0 z-20 w-full h-16 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-4 transition-colors">
-        {/* Left Side: Mobile Menu & Search */}
+
         <div className="flex items-center gap-3 flex-1 max-w-md">
           <button
             className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -152,7 +152,6 @@ export function Topbar() {
           </div>
         </div>
 
-        {/* Right Side: Status Badges & Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-300">
             <Users className="w-3.5 h-3.5" />
@@ -167,7 +166,6 @@ export function Topbar() {
             <span>{t('header.systemStable') || 'Hệ thống ổn định'}</span>
           </div>
 
-          {/* Language Toggle */}
           <button
             className="h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             onClick={toggleLanguage}
@@ -177,7 +175,6 @@ export function Topbar() {
             {isVietnamese ? 'VI' : 'EN'}
           </button>
 
-          {/* Theme Toggle */}
           <button
             className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             onClick={toggleTheme}
@@ -187,7 +184,6 @@ export function Topbar() {
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
           </button>
 
-          {/* Notifications Dropdown */}
           <div className="relative" ref={notificationRef}>
             <button
               className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors relative cursor-pointer"
@@ -269,7 +265,6 @@ export function Topbar() {
             )}
           </div>
 
-          {/* User Account Dropdown */}
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -348,7 +343,6 @@ export function Topbar() {
         </div>
       </header>
 
-      {/* Logout Confirm Modal */}
       <ConfirmModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}

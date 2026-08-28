@@ -98,7 +98,7 @@ export function UserProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => setActiveNavItem('users')}
@@ -117,7 +117,6 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {/* Main Info Card */}
       <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="w-24 h-24 rounded-3xl bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 text-3xl font-extrabold shadow-xl shrink-0">
           {profileData.avatar_url ? (
@@ -166,7 +165,6 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {/* Gamification Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
           <Star className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
@@ -195,7 +193,6 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {/* Progress Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
           <p className="text-xs text-slate-400">Bài giảng đã hoàn thành</p>

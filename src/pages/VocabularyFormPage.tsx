@@ -103,7 +103,7 @@ export function VocabularyFormPage({ editWordId, editId }: { editWordId?: string
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Back Button & Title */}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => setActiveNavItem("vocabulary")}
@@ -122,9 +122,8 @@ export function VocabularyFormPage({ editWordId, editId }: { editWordId?: string
         </div>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Word Info */}
+
         <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-5">
           <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-teal-400" />
@@ -221,7 +220,6 @@ export function VocabularyFormPage({ editWordId, editId }: { editWordId?: string
           </div>
         </div>
 
-        {/* Meanings Card */}
         <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-100">
@@ -296,7 +294,6 @@ export function VocabularyFormPage({ editWordId, editId }: { editWordId?: string
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"

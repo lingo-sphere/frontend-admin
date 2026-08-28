@@ -136,7 +136,7 @@ export function AdminProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -165,7 +165,6 @@ export function AdminProfilePage() {
         </button>
       </div>
 
-      {/* Main Profile Info Card */}
       <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-xl shadow-teal-500/20 ring-4 ring-slate-800 shrink-0">
           {profileData.avatar ? (
@@ -211,7 +210,6 @@ export function AdminProfilePage() {
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
           <p className="text-xs text-slate-400">Khóa học đã tạo</p>
@@ -229,7 +227,6 @@ export function AdminProfilePage() {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
@@ -282,7 +279,6 @@ export function AdminProfilePage() {
                 />
               </div>
 
-              {/* Change Password Section */}
               <div className="pt-4 border-t border-slate-800 space-y-3">
                 <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-indigo-400" />

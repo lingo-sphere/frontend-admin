@@ -76,7 +76,7 @@ export function TableControls({
 
   return (
     <div className="flex items-center gap-2">
-      {/* 1. View Mode Switcher (Grid / Table) */}
+
       {viewMode && onViewModeChange && (
         <div className="flex items-center p-0.5 rounded-xl bg-slate-950/70 border border-slate-800">
           <button
@@ -106,7 +106,6 @@ export function TableControls({
         </div>
       )}
 
-      {/* 2. Table Density Control */}
       <div className="relative" ref={densityRef}>
         <button
           type="button"
@@ -158,7 +157,6 @@ export function TableControls({
         )}
       </div>
 
-      {/* 3. Column Visibility Selector */}
       {columns && onColumnsChange && (
         <div className="relative" ref={columnRef}>
           <button
@@ -221,7 +219,6 @@ export function TableControls({
         </div>
       )}
 
-      {/* 4. Reset Filters Action */}
       {onResetFilters && (
         <button
           type="button"

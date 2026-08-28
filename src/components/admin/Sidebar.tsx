@@ -156,7 +156,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const content = (
     <div className="flex flex-col h-full justify-between select-none">
       <div>
-        {/* Brand Lockup */}
+
         <div
           className={`flex items-center gap-3 pb-4 border-b border-slate-200/80 dark:border-slate-800/80 ${
             sidebarCollapsed && !mobile ? "justify-center" : ""
@@ -180,7 +180,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           )}
         </div>
 
-        {/* Navigation Groups */}
         <nav className="mt-3 space-y-3 overflow-y-auto max-h-[calc(100vh-230px)] pr-1">
           {localizedGroups.map((group, groupIdx) => (
             <div key={group.id} className="space-y-0.5">
@@ -265,7 +264,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
                       </div>
                     </button>
 
-                    {/* Tree View Submenu */}
                     {hasChildren && isExpanded && (
                       <div className="ml-4 pl-3.5 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 mt-1 mb-1">
                         {item.children!.map((child) => {
@@ -303,7 +301,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         </nav>
       </div>
 
-      {/* User Profile Card & Collapse Toggle */}
       <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-2">
         <button
           className={`w-full flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 hover:bg-slate-100/90 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 transition-all text-left cursor-pointer group ${

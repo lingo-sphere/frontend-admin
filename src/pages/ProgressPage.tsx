@@ -178,7 +178,7 @@ export function ProgressPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -190,7 +190,7 @@ export function ProgressPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Time Filter */}
+
           <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
             <CalendarDays className="w-3.5 h-3.5 text-slate-400 ml-1.5" />
             <select
@@ -224,7 +224,6 @@ export function ProgressPage() {
         </div>
       </div>
 
-      {/* KPI Database Entity Cards (6 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {dbEntityMetrics.map((metric) => (
           <div
@@ -267,7 +266,6 @@ export function ProgressPage() {
         ))}
       </div>
 
-      {/* Tabs */}
       <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 w-fit">
         <button
           onClick={() => setActiveTab('overview')}
@@ -318,10 +316,9 @@ export function ProgressPage() {
         </button>
       </div>
 
-      {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Chart & Metric Card */}
+
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -333,7 +330,6 @@ export function ProgressPage() {
                 </p>
               </div>
 
-              {/* Metric Selector */}
               <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
                 {(
                   [
@@ -358,7 +354,6 @@ export function ProgressPage() {
               </div>
             </div>
 
-            {/* Visual Bar Chart */}
             <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 pt-8 pb-2 px-2">
               {activityTimeSeriesData.map((item) => {
                 const val = item[chartMetric]
@@ -381,9 +376,8 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* Gamification & Devices Distribution */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Gamification Stats */}
+
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -419,7 +413,6 @@ export function ProgressPage() {
               </div>
             </div>
 
-            {/* Device Distribution */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
@@ -456,10 +449,9 @@ export function ProgressPage() {
         </div>
       )}
 
-      {/* TAB 2: TOEIC & SKILLS */}
       {activeTab === 'toeic' && (
         <div className="space-y-6">
-          {/* Part 1 - Part 7 Breakdown */}
+
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
             <div className="flex items-center justify-between">
               <div>
@@ -508,7 +500,6 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* Skill Performance Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {skillPerformanceData.map((skill) => (
               <div
@@ -537,10 +528,9 @@ export function ProgressPage() {
         </div>
       )}
 
-      {/* TAB 3: AI PERFORMANCE */}
       {activeTab === 'ai' && (
         <div className="space-y-6">
-          {/* AI Models Usage */}
+
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
@@ -590,7 +580,6 @@ export function ProgressPage() {
             </div>
           </div>
 
-          {/* AI Categories */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {aiEvaluationCategories.map((cat) => (
               <div
@@ -616,7 +605,6 @@ export function ProgressPage() {
         </div>
       )}
 
-      {/* TAB 4: ACTIVITY LOGS */}
       {activeTab === 'logs' && (
         <DataTable<UserActivityLog>
           columns={logColumns}

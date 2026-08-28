@@ -100,7 +100,6 @@ export function Pagination({
           />
         </div>
 
-        {/* Page Buttons List */}
         <ul className="flex items-center gap-1">
           <li
             className={`w-8 h-8 rounded-lg border border-slate-800 flex items-center justify-center transition-colors cursor-pointer ${

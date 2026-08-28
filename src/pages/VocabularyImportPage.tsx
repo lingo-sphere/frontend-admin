@@ -73,7 +73,7 @@ export function VocabularyImportPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => setActiveNavItem('vocabulary')}
@@ -92,7 +92,6 @@ export function VocabularyImportPage() {
         </div>
       </div>
 
-      {/* Upload Box */}
       <div className="p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -123,7 +122,6 @@ export function VocabularyImportPage() {
           </button>
         </div>
 
-        {/* Drag & Drop Zone */}
         <label className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-800 hover:border-teal-500/50 rounded-2xl bg-slate-950/50 cursor-pointer transition-colors group">
           <div className="w-14 h-14 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
             <Upload className="w-7 h-7" />
@@ -160,7 +158,6 @@ export function VocabularyImportPage() {
         )}
       </div>
 
-      {/* History */}
       <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
           <Clock className="w-4 h-4 text-slate-400" />

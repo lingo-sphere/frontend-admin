@@ -158,7 +158,7 @@ export function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
@@ -194,7 +194,6 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
       <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
           <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
@@ -239,7 +238,6 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      {/* Notifications List */}
       <div className="space-y-3">
         {paginatedNotifications.length === 0 ? (
           <div className="py-16 text-center rounded-3xl bg-slate-900/60 border border-slate-800 text-slate-500 text-xs">
@@ -292,7 +290,6 @@ export function NotificationsPage() {
                   <p className="text-xs text-slate-400 leading-relaxed">{content}</p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
                   <button
                     onClick={() => togglePin(notif.id)}
@@ -326,7 +323,6 @@ export function NotificationsPage() {
         )}
       </div>
 
-      {/* Pagination */}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

@@ -408,7 +408,6 @@ export function CoursesPage() {
         }}
       />
 
-      {/* Delete Course Modal */}
       <ConfirmModal
         isOpen={Boolean(deleteCourseId)}
         onClose={() => setDeleteCourseId(null)}

@@ -42,7 +42,7 @@ export function AiManagementPage() {
         toast.success(`AI đã sinh thành công ${res.questions.length} câu hỏi trắc nghiệm!`, 'AI Sư Phạm')
       }
     } catch {
-      // Fallback mock data
+
       setGeneratedQuestions([
         {
           question_text: 'What is the most professional way to open a formal business email?',
@@ -80,7 +80,7 @@ export function AiManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-2.5">
           <Brain className="w-7 h-7 text-purple-400" />
@@ -91,7 +91,6 @@ export function AiManagementPage() {
         </p>
       </div>
 
-      {/* AI Models Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-slate-900 border border-indigo-500/30 shadow-xl space-y-3">
           <div className="flex items-center justify-between">
@@ -136,7 +135,6 @@ export function AiManagementPage() {
         </div>
       </div>
 
-      {/* Teacher Quiz Generator Studio */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
@@ -224,7 +222,6 @@ export function AiManagementPage() {
           </div>
         </form>
 
-        {/* Generated Questions List */}
         {generatedQuestions.length > 0 && (
           <div className="space-y-4 pt-4 border-t border-slate-800">
             <div className="flex items-center justify-between">
@@ -252,7 +249,6 @@ export function AiManagementPage() {
                     </button>
                   </div>
 
-                  {/* Options */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {q.options.map((opt, optIndex) => {
                       const isCorrect = optIndex === q.correct_index
@@ -277,7 +273,6 @@ export function AiManagementPage() {
                     })}
                   </div>
 
-                  {/* Explanation */}
                   <div className="p-3 rounded-lg bg-indigo-950/40 border border-indigo-500/20 text-xs text-indigo-200">
                     <span className="font-bold text-indigo-300 mr-1.5">💡 Giải thích:</span>
                     {q.explanation_vi}

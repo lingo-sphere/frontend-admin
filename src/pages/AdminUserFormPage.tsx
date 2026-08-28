@@ -96,7 +96,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Back Button & Title */}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => setActiveNavItem('admins')}
@@ -115,12 +115,11 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         </div>
       </div>
 
-      {/* Form Card */}
       <form
         onSubmit={handleSubmit}
         className="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6"
       >
-        {/* Full Name */}
+
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
             Họ và tên <span className="text-rose-400">*</span>
@@ -138,7 +137,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           {errors.full_name && <p className="text-[11px] text-rose-400 mt-1">{errors.full_name}</p>}
         </div>
 
-        {/* Email */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
             Địa chỉ Email <span className="text-rose-400">*</span>
@@ -156,7 +154,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           {errors.email && <p className="text-[11px] text-rose-400 mt-1">{errors.email}</p>}
         </div>
 
-        {/* Password */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
             {isEditing ? 'Mật khẩu mới (Bỏ trống nếu không đổi)' : 'Mật khẩu khởi tạo'} {!isEditing && <span className="text-rose-400">*</span>}
@@ -181,7 +178,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           {errors.password && <p className="text-[11px] text-rose-400 mt-1">{errors.password}</p>}
         </div>
 
-        {/* Role Selection Cards */}
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
             Vai trò quản trị <span className="text-rose-400">*</span>
@@ -229,7 +225,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </div>
         </div>
 
-        {/* Status */}
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
             Trạng thái tài khoản
@@ -260,7 +255,6 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
           <button
             type="button"

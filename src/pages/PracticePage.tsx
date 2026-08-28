@@ -178,7 +178,7 @@ export function PracticePage() {
 
   return (
     <main className="page-content">
-      {/* Heading */}
+
       <div className="page-heading">
         <div>
           <div className="eyebrow">
@@ -202,7 +202,6 @@ export function PracticePage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="tabs-wrapper" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <button
           className={`tab-item ${activeTab === 'exercises' ? 'active' : ''}`}
@@ -255,7 +254,6 @@ export function PracticePage() {
         </button>
       </div>
 
-      {/* Filter Toolbar */}
       <div className="table-toolbar" style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
         <div className="search-box" style={{ flex: 1, minWidth: '240px' }}>
           <Search className="icon" />
@@ -281,9 +279,8 @@ export function PracticePage() {
         </select>
       </div>
 
-      {/* Content Area */}
       <div className="table-container" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', overflow: 'hidden' }}>
-        {/* TAB 1: PRACTICE SETS */}
+
         {activeTab === 'exercises' && (
           <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
@@ -333,7 +330,6 @@ export function PracticePage() {
           </table>
         )}
 
-        {/* TAB 2: LISTENING */}
         {activeTab === 'listening' && (
           <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
@@ -369,7 +365,6 @@ export function PracticePage() {
           </table>
         )}
 
-        {/* TAB 3: SPEAKING */}
         {activeTab === 'speaking' && (
           <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
@@ -401,7 +396,6 @@ export function PracticePage() {
           </table>
         )}
 
-        {/* TAB 4: WRITING */}
         {activeTab === 'writing' && (
           <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
@@ -433,7 +427,6 @@ export function PracticePage() {
           </table>
         )}
 
-        {/* TAB 5: TOEIC EXAMS */}
         {activeTab === 'toeic' && (
           <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
@@ -472,7 +465,6 @@ export function PracticePage() {
         )}
       </div>
 
-      {/* Create Modal */}
       {showAddModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', maxWidth: '480px', width: '100%', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
@@ -529,7 +521,6 @@ export function PracticePage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={Boolean(deleteTargetId)}
         onClose={() => setDeleteTargetId(null)}

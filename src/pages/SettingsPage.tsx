@@ -107,7 +107,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
@@ -130,7 +130,6 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 p-1 rounded-2xl bg-slate-900/80 border border-slate-800 w-fit">
         {tabs.map((tab) => {
           const Icon = tab.icon
@@ -151,7 +150,6 @@ export function SettingsPage() {
         })}
       </div>
 
-      {/* TAB 1: PLANS */}
       {activeTab === 'plans' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -261,7 +259,6 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* TAB 2: AI & MODELS */}
       {activeTab === 'ai' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -326,7 +323,6 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* TAB 3: ROLES & RBAC */}
       {activeTab === 'roles' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -380,7 +376,6 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* TAB 4: SYSTEM */}
       {activeTab === 'system' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">

@@ -43,13 +43,12 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 p-4 text-slate-100 font-sans relative overflow-hidden">
-      {/* Background Decorative Glows */}
+
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Main Login Card */}
       <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-xl relative z-10 flex flex-col gap-6">
-        {/* Brand Header */}
+
         <div className="flex flex-col items-center text-center gap-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/20 mb-1">
             <Shield className="w-7 h-7 text-white" />
@@ -62,7 +61,6 @@ export function LoginPage() {
           </p>
         </div>
 
-        {/* Error Alert */}
         {errorMessage && (
           <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
@@ -70,9 +68,8 @@ export function LoginPage() {
           </div>
         )}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Email Field */}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
               Email Quản trị viên
@@ -90,7 +87,6 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* Password Field */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
@@ -124,7 +120,6 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* Remember Me */}
           <div className="flex items-center justify-between pt-0.5">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
@@ -137,7 +132,6 @@ export function LoginPage() {
             </label>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -157,7 +151,6 @@ export function LoginPage() {
           </button>
         </form>
 
-        {/* Quick Demo Accounts */}
         <div className="pt-4 border-t border-slate-800/80 flex flex-col gap-3">
           <p className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />

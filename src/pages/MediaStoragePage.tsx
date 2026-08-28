@@ -17,7 +17,6 @@ export function MediaStoragePage() {
   const [quota, setQuota] = useState<StorageQuota | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // TTS State
   const [ttsText, setTtsText] = useState<string>('Hello! Welcome to LingoSphere English Learning Ecosystem.')
   const [selectedVoice, setSelectedVoice] = useState<string>('alloy')
   const [isGeneratingTts, setIsGeneratingTts] = useState<boolean>(false)
@@ -58,7 +57,7 @@ export function MediaStoragePage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-2.5">
           <HardDrive className="w-7 h-7 text-sky-400" />
@@ -69,7 +68,6 @@ export function MediaStoragePage() {
         </p>
       </div>
 
-      {/* Cloudflare R2 Quota Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
@@ -89,7 +87,6 @@ export function MediaStoragePage() {
             </span>
           </div>
 
-          {/* Progress Bar */}
           <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full transition-all"
@@ -127,7 +124,6 @@ export function MediaStoragePage() {
         </div>
       </div>
 
-      {/* TTS Generator Studio */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
@@ -198,7 +194,6 @@ export function MediaStoragePage() {
           </div>
         </form>
 
-        {/* Audio Player Preview */}
         {generatedAudioUrl && (
           <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4 mt-4">
             <div className="flex items-center gap-3">

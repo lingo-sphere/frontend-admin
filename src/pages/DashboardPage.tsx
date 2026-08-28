@@ -171,7 +171,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -182,7 +182,6 @@ export function DashboardPage() {
           </p>
         </div>
 
-        {/* Date Filter */}
         <div className="flex items-center gap-2 relative" ref={pickerRef}>
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
@@ -250,9 +249,8 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Learners */}
+
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center">
@@ -274,7 +272,6 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Card 2: Courses */}
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
@@ -296,7 +293,6 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Card 3: TOEIC Average */}
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -316,7 +312,6 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Card 4: Cloud Storage (Cloudflare R2) */}
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
@@ -341,9 +336,8 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Main Chart & Services Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart Column (2 cols) */}
+
         <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -360,7 +354,6 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Microservices Status Column (1 col) */}
         <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">Trạng Thái Hệ Thống Microservices</h3>
 
@@ -408,7 +401,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Activity Table */}
       <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
