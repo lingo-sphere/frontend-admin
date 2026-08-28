@@ -4,24 +4,18 @@ import {
   Shield,
   KeyRound,
   Plus,
-  Edit2,
-  Trash2,
-  Check,
-  Search,
   RotateCcw,
   Sparkles,
-  Lock,
-  Layers,
   UserCheck,
-  AlertCircle,
-  X,
-  CheckCircle,
 } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { Role, Permission, UserProfile } from '@/types/api.types'
+import { RolesListTab } from '@/pages/roles/RolesListTab'
+import { PermissionsListTab } from '@/pages/roles/PermissionsListTab'
+import { AssignRoleTab } from '@/pages/roles/AssignRoleTab'
 
 type TabType = 'roles' | 'permissions' | 'assign'
 
@@ -123,20 +117,17 @@ export function RolesPage() {
 
   const openCreateRole = () => {
     setEditingRole(null)
-    setRoleForm({
-      name: '',
-      description: '',
-      permissions: [],
-    })
+    setRoleForm({ name: '', description: '', permissions: [] })
     setIsRoleModalOpen(true)
   }
 
   const openEditRole = (role: Role) => {
     setEditingRole(role)
+    const permIds = (role.permissions || []).map((p) => (typeof p === 'string' ? p : p._id))
     setRoleForm({
       name: role.name,
       description: role.description || '',
-      permissions: role.permissions?.map((p: Permission | string) => (typeof p === 'string' ? p : p._id)) || [],
+      permissions: permIds,
     })
     setIsRoleModalOpen(true)
   }
@@ -156,14 +147,14 @@ export function RolesPage() {
           description: roleForm.description,
           permissions: roleForm.permissions,
         })
-        toast.success(`Đã cập nhật vai trò ${roleForm.name}!`)
+        toast.success(`Đã cập nhật vai trò ${roleForm.name} thành công!`)
       } else {
         await roleService.createRole({
-          name: roleForm.name.toUpperCase().replace(/\s+/g, '_'),
+          name: roleForm.name,
           description: roleForm.description,
           permissions: roleForm.permissions,
         })
-        toast.success(`Đã tạo vai trò mới ${roleForm.name}!`)
+        toast.success(`Đã tạo vai trò ${roleForm.name} mới thành công!`)
       }
       setIsRoleModalOpen(false)
       loadData()
@@ -194,7 +185,7 @@ export function RolesPage() {
   const handleSavePermission = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!permForm.name.trim() || !permForm.api_path.trim()) {
-      toast.error('Vui lòng nhập đầy đủ thông tin quyền hạn')
+      toast.error('Vui lòng điền đủ thông tin quyền hạn')
       return
     }
 
@@ -250,7 +241,6 @@ export function RolesPage() {
 
   return (
     <div className="space-y-6">
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2.5">
@@ -326,282 +316,39 @@ export function RolesPage() {
       </div>
 
       {activeTab === 'roles' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {roles.map((role) => {
-            const permCount = role.permissions?.length || 0
-
-            return (
-              <div
-                key={role._id}
-                className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between hover:border-slate-700 transition-all group"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
-                        role.name === 'SUPER_ADMIN' || role.name === 'ADMIN'
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                          : role.name === 'INSTRUCTOR'
-                          ? 'bg-teal-500/10 text-teal-400 border-teal-500/20'
-                          : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                      }`}
-                    >
-                      {role.name}
-                    </span>
-
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      Hoạt động
-                    </span>
-                  </div>
-
-                  <h3 className="text-base font-bold text-slate-100">{role.description || role.name}</h3>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                    Vai trò kiểm soát các quyền truy cập tài nguyên thuộc hệ thống LingoSphere.
-                  </p>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 my-4 text-xs space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Số lượng quyền hạn:</span>
-                      <span className="font-bold text-teal-300">
-                        {role.name === 'SUPER_ADMIN' || role.name === 'ADMIN'
-                          ? 'Toàn quyền (*)'
-                          : `${permCount} Permissions`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-slate-500 font-mono">ID: {role._id.slice(-6)}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => openEditRole(role)}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                      title="Chỉnh sửa quyền hạn"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    {role.name !== 'SUPER_ADMIN' && role.name !== 'ADMIN' && (
-                      <button
-                        onClick={() => setDeleteRoleId(role._id)}
-                        className="p-2 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
-                        title="Xóa vai trò"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <RolesListTab
+          roles={roles}
+          permissions={permissions}
+          onOpenEditRole={openEditRole}
+          onDeleteRole={(roleId) => setDeleteRoleId(roleId)}
+        />
       )}
 
       {activeTab === 'permissions' && (
-        <div className="space-y-4">
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-              <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
-                <Search className="w-4 h-4 text-slate-500 shrink-0" />
-                <input
-                  type="text"
-                  value={permSearch}
-                  onChange={(e) => setPermSearch(e.target.value)}
-                  placeholder="Tìm theo tên hoặc API Path..."
-                  className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
-                />
-                {permSearch && (
-                  <button onClick={() => setPermSearch('')} className="text-slate-500 hover:text-slate-300">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <select
-                value={selectedModule}
-                onChange={(e) => setSelectedModule(e.target.value)}
-                className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
-              >
-                <option value="ALL">Tất cả phân hệ (Modules)</option>
-                {modulesList.map((m) => (
-                  <option key={m} value={m}>
-                    Phân hệ: {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={() => setIsPermModalOpen(true)}
-              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm Permission Mới</span>
-            </button>
-          </div>
-
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
-                    <th className="py-3.5 px-4">Tên quyền hạn</th>
-                    <th className="py-3.5 px-4">Phân hệ (Module)</th>
-                    <th className="py-3.5 px-4">Phương thức</th>
-                    <th className="py-3.5 px-4">Đường dẫn API (Endpoint)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/50 text-slate-200">
-                  {filteredPermissions.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-12 text-center text-slate-500">
-                        Không tìm thấy quyền hạn nào phù hợp
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredPermissions.map((perm) => (
-                      <tr key={perm._id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3.5 px-4 font-semibold text-slate-100">{perm.name}</td>
-                        <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                            {perm.module}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
-                              perm.method === 'GET'
-                                ? 'bg-teal-500/10 text-teal-400'
-                                : perm.method === 'POST'
-                                ? 'bg-indigo-500/10 text-indigo-400'
-                                : perm.method === 'PUT' || perm.method === 'PATCH'
-                                ? 'bg-amber-500/10 text-amber-400'
-                                : 'bg-rose-500/10 text-rose-400'
-                            }`}
-                          >
-                            {perm.method}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-400">{perm.api_path}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <PermissionsListTab
+          permissions={filteredPermissions}
+          permSearch={permSearch}
+          onSearchChange={setPermSearch}
+          selectedModule={selectedModule}
+          onModuleChange={setSelectedModule}
+          modulesList={modulesList}
+          onOpenCreatePerm={() => setIsPermModalOpen(true)}
+        />
       )}
 
       {activeTab === 'assign' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          <div className="lg:col-span-2 space-y-4">
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <div className="flex items-center gap-2 w-full h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
-                <Search className="w-4 h-4 text-slate-500 shrink-0" />
-                <input
-                  type="text"
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  placeholder="Tìm kiếm tài khoản thành viên theo email hoặc tên..."
-                  className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
-                />
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden divide-y divide-slate-800/60 max-h-[520px] overflow-y-auto">
-              {users
-                .filter(
-                  (u) =>
-                    u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-                    u.full_name?.toLowerCase().includes(userSearch.toLowerCase())
-                )
-                .map((u) => {
-                  const isSelected = selectedUser?._id === u._id
-
-                  return (
-                    <div
-                      key={u._id}
-                      onClick={() => setSelectedUser(u)}
-                      className={`p-4 flex items-center justify-between gap-4 cursor-pointer transition-colors ${
-                        isSelected
-                          ? 'bg-indigo-600/10 border-l-4 border-l-indigo-500'
-                          : 'hover:bg-slate-800/40'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-teal-400 text-xs shrink-0">
-                          {u.full_name?.slice(0, 2).toUpperCase() || 'US'}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-xs text-slate-100">{u.full_name || u.email}</p>
-                          <p className="text-[11px] text-slate-400">{u.email}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                          {u.role || 'STUDENT'}
-                        </span>
-                        {isSelected && <CheckCircle className="w-4 h-4 text-indigo-400 shrink-0" />}
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6 h-fit">
-            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-indigo-400" />
-              <span>Gán vai trò mới</span>
-            </h3>
-
-            {selectedUser ? (
-              <form onSubmit={handleAssignRole} className="space-y-4">
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
-                  <p className="text-[11px] text-slate-500">Tài khoản được chọn:</p>
-                  <p className="text-sm font-bold text-slate-100">{selectedUser.full_name || selectedUser.email}</p>
-                  <p className="text-xs text-slate-400 font-mono">{selectedUser.email}</p>
-                  <p className="text-[11px] text-teal-400 mt-1">Vai trò hiện tại: {selectedUser.role || 'STUDENT'}</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                    Chọn vai trò mới cần cấp
-                  </label>
-                  <select
-                    value={assignRoleName}
-                    onChange={(e) => setAssignRoleName(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                  >
-                    {roles.map((r) => (
-                      <option key={r._id} value={r.name}>
-                        {r.name} - {r.description || r.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isAssigning}
-                  className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                >
-                  {isAssigning ? 'Đang cập nhật...' : 'Cấp quyền cho thành viên'}
-                </button>
-              </form>
-            ) : (
-              <div className="py-12 text-center text-xs text-slate-500 space-y-2">
-                <AlertCircle className="w-8 h-8 mx-auto text-slate-600" />
-                <p>Vui lòng chọn một tài khoản từ danh sách bên trái để tiến hành phân quyền</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <AssignRoleTab
+          users={users}
+          userSearch={userSearch}
+          onUserSearchChange={setUserSearch}
+          selectedUser={selectedUser}
+          onSelectUser={setSelectedUser}
+          roles={roles}
+          assignRoleName={assignRoleName}
+          onRoleNameChange={setAssignRoleName}
+          onAssignRole={handleAssignRole}
+          isAssigning={isAssigning}
+        />
       )}
 
       {isRoleModalOpen && (

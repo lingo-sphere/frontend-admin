@@ -9,7 +9,6 @@ export interface GenerateQuizItem {
 
 export interface TeacherGenerateQuizResponse {
   topic: string
-  
   questions: GenerateQuizItem[]
   model_used: string
 }
@@ -34,3 +33,5 @@ export const aiAdminService = {
     }
   },
 }
+
+export const aiService = aiAdminService

@@ -76,8 +76,20 @@ export function PracticePage() {
         const list = await practiceService.getAllWritingExercises()
         if (list && list.length > 0) setWritingList(list)
       } else if (activeTab === 'toeic') {
-        const exams = await examService.getAllExams()
-        if (exams && exams.length > 0) setExamList(exams)
+        const exams = await examService.getExams()
+        if (exams && exams.length > 0) {
+          setExamList(
+            exams.map((e) => ({
+              _id: e.id,
+              title: e.title,
+              exam_type: (e.type.includes('FULL') ? 'FULL' : 'MINI') as ToeicExam['exam_type'],
+              duration_minutes: e.duration_minutes,
+              total_questions: e.total_questions,
+              difficulty: 'MEDIUM',
+              is_published: e.is_published,
+            }))
+          )
+        }
       }
     } catch (err) {
       console.warn('API fetch warning, using existing data:', err)
@@ -138,13 +150,20 @@ export function PracticePage() {
       } else if (activeTab === 'toeic') {
         const created = await examService.createExam({
           title: newTitle,
-          exam_type: 'MINI',
+          type: 'MINI_TEST',
           duration_minutes: 45,
-          total_questions: 50,
-          difficulty: newDifficulty,
           is_published: true,
         })
-        setExamList([created, ...examList])
+        const mappedExam: ToeicExam = {
+          _id: created.id,
+          title: created.title,
+          exam_type: 'MINI',
+          duration_minutes: created.duration_minutes,
+          total_questions: created.total_questions,
+          difficulty: newDifficulty,
+          is_published: created.is_published,
+        }
+        setExamList([mappedExam, ...examList])
       }
 
       toast.success('Tạo mới mục luyện tập thành công!')

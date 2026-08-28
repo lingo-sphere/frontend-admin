@@ -52,3 +52,5 @@ export const examAdminService = {
     return api.delete<{ message: string }>(`/exams/${id}`)
   },
 }
+
+export const examService = examAdminService

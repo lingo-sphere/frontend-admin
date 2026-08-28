@@ -61,7 +61,16 @@ export function SettingsPage() {
       ])
 
       if (models.status === 'fulfilled' && models.value) {
-        setAiModels(models.value)
+        setAiModels(
+          models.value.map((m) => ({
+            name: m.model_name,
+            provider: m.provider,
+            model_id: m.model_name,
+            is_active: m.is_active,
+            max_tokens: 2048,
+            temperature: 0.7,
+          }))
+        )
       }
 
       if (rbacRoles.status === 'fulfilled' && rbacRoles.value) {

@@ -38,3 +38,5 @@ export const mediaAdminService = {
     })
   },
 }
+
+export const mediaService = mediaAdminService
