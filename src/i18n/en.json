@@ -1,0 +1,131 @@
+{
+  "common": {
+    "appName": "LingoSphere",
+    "adminConsole": "Admin console"
+  },
+  "nav": {
+    "home": "HOME",
+    "learning": "LEARNING",
+    "community": "COMMUNITY",
+    "insights": "INSIGHTS",
+    "system": "SYSTEM",
+    "dashboard": "Overview",
+    "users": "Users",
+    "usersList": "Users",
+    "admins": "Admins",
+    "courses": "Courses",
+    "vocabulary": "Vocabulary",
+    "practice": "Practice & TOEIC",
+    "practiceExercises": "Practice Exercises",
+    "practiceListening": "Listening",
+    "practiceSpeaking": "Speaking",
+    "practiceWriting": "Writing",
+    "toeicTests": "TOEIC Tests",
+    "communityNav": "Community",
+    "publicDecks": "Public Decks",
+    "progress": "Data Statistics",
+    "notifications": "Notifications",
+    "roles": "Roles & RBAC",
+    "settings": "Settings"
+  },
+  "header": {
+    "search": "Search learners, courses...",
+    "learnersCount": "learners",
+    "systemStable": "System stable",
+    "notifications": "Notifications",
+    "darkMode": "Enable dark mode",
+    "lightMode": "Enable light mode"
+  },
+  "page": {
+    "dashboard": {
+      "eyebrow": "PLATFORM PULSE · OPERATIONS",
+      "title": "Operations Overview",
+      "subtitle": "Monitor platform health and learning rhythms of the LingoSphere community.",
+      "exportReport": "Export Report",
+      "quickActions": "Quick actions",
+      "createCourse": "Create course",
+      "sendNotification": "Send notification",
+      "exportCsv": "Export CSV",
+      "engagementOverview": "Engagement overview",
+      "activityTitle": "Learning Activity · 14 days",
+      "activityDesc": "Completed sessions on Courses, Practice and Vocabulary",
+      "totalSessions": "total sessions",
+      "platformHealth": "Platform Health",
+      "liveUpdate": "Live updates",
+      "liveInfrastructure": "Live infrastructure",
+      "allSystemsNormal": "All systems normal",
+      "uptimeLabel": "uptime in last 30 days",
+      "apiLatency": "API latency",
+      "learningQueue": "Learning queue",
+      "aiEvaluation": "AI evaluation",
+      "sessionsLabel": "Sessions",
+      "kpi": {
+        "activeLearners": "Active learners 7 days",
+        "previousPeriod": "vs previous period",
+        "lessonCompletion": "Lesson completion rate",
+        "monthlyGoal": "Monthly goal",
+        "accuracy": "Average accuracy",
+        "listeningLeader": "Listening leading",
+        "aiEvaluations": "AI evaluations this month",
+        "pending": "pending"
+      },
+      "operationalFeed": "Operational feed",
+      "recentActivity": "Recent Activity",
+      "viewAll": "View all",
+      "user": "User",
+      "event": "Event",
+      "detailsXP": "Details / XP",
+      "time": "Time",
+      "status": "Status",
+      "actions": "Actions",
+      "completedCourse": "Completed TOEIC Foundation",
+      "aiSpeakingReview": "Received Speaking AI review",
+      "streakMilestone": "Streak reached 30 days",
+      "vocabularyCards": "Reviewed 25 vocabulary cards",
+      "recorded": "Recorded",
+      "sent": "Sent",
+      "syncing": "Syncing",
+      "completed": "Completed"
+    },
+    "learners": {
+      "title": "Learners",
+      "subtitle": "Manage learner accounts and activities"
+    },
+    "courses": {
+      "title": "Courses",
+      "subtitle": "Manage course content"
+    },
+    "vocabulary": {
+      "title": "Vocabulary",
+      "subtitle": "Manage vocabulary and flashcards"
+    },
+    "practice": {
+      "title": "Practice & TOEIC",
+      "subtitle": "Manage practice exercises and TOEIC tests"
+    },
+    "community": {
+      "title": "Community",
+      "subtitle": "Manage learning community"
+    },
+    "publicDecks": {
+      "title": "Public Decks",
+      "subtitle": "Manage publicly shared decks"
+    },
+    "progress": {
+      "title": "Data Statistics",
+      "subtitle": "Comprehensive analytics of user activities, charts, AI engine performance and system database"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Manage system notifications"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Configure admin system"
+    }
+  },
+  "placeholder": {
+    "comingSoon": "Coming Soon",
+    "description": "This page will be available soon"
+  }
+}
