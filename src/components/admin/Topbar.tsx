@@ -232,11 +232,10 @@ export function Topbar() {
                       return (
                         <div
                           key={notifId}
-                          className={`pt-2 first:pt-0 cursor-pointer p-2 rounded-xl transition-colors ${
-                            !notif.is_read
+                          className={`pt-2 first:pt-0 cursor-pointer p-2 rounded-xl transition-colors ${!notif.is_read
                               ? 'bg-indigo-50 dark:bg-indigo-950/30'
                               : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                          }`}
+                            }`}
                           onClick={() => markAsRead(notifId)}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -274,11 +273,11 @@ export function Topbar() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm ring-1 ring-white/20">
                 {profile?.full_name
                   ? profile.full_name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .slice(-2)
-                      .join('')
-                      .toUpperCase()
+                    .split(' ')
+                    .map((n) => n[0])
+                    .slice(-2)
+                    .join('')
+                    .toUpperCase()
                   : user?.email
                     ? user.email.substring(0, 2).toUpperCase()
                     : 'AD'}
