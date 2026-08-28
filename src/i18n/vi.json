@@ -1,0 +1,131 @@
+{
+  "common": {
+    "appName": "LingoSphere",
+    "adminConsole": "Admin console"
+  },
+  "nav": {
+    "home": "HOME",
+    "learning": "LEARNING",
+    "community": "COMMUNITY",
+    "insights": "INSIGHTS",
+    "system": "SYSTEM",
+    "dashboard": "Tổng quan",
+    "users": "Người dùng",
+    "usersList": "Người dùng",
+    "admins": "Quản trị viên",
+    "courses": "Khóa học",
+    "vocabulary": "Từ vựng",
+    "practice": "Luyện tập & TOEIC",
+    "practiceExercises": "Bài luyện tập",
+    "practiceListening": "Luyện nghe",
+    "practiceSpeaking": "Luyện nói",
+    "practiceWriting": "Luyện viết",
+    "toeicTests": "Đề thi TOEIC",
+    "communityNav": "Cộng đồng",
+    "publicDecks": "Bộ thẻ công khai",
+    "progress": "Thống kê dữ liệu",
+    "notifications": "Thông báo",
+    "roles": "Phân quyền (RBAC)",
+    "settings": "Cài đặt"
+  },
+  "header": {
+    "search": "Tìm kiếm người học, khóa học...",
+    "learnersCount": "học viên",
+    "systemStable": "Hệ thống ổn định",
+    "notifications": "Thông báo",
+    "darkMode": "Bật dark mode",
+    "lightMode": "Bật light mode"
+  },
+  "page": {
+    "dashboard": {
+      "eyebrow": "PLATFORM PULSE · VẬN HÀNH",
+      "title": "Tổng quan vận hành",
+      "subtitle": "Theo dõi sức khỏe nền tảng và nhịp học tập của cộng đồng LingoSphere.",
+      "exportReport": "Xuất báo cáo",
+      "quickActions": "Thao tác nhanh",
+      "createCourse": "Tạo khóa học",
+      "sendNotification": "Gửi thông báo",
+      "exportCsv": "Xuất CSV",
+      "engagementOverview": "Tổng quan tương tác",
+      "activityTitle": "Hoạt động học tập · 14 ngày",
+      "activityDesc": "Sessions hoàn thành trên Courses, Practice và Vocabulary",
+      "totalSessions": "tổng sessions",
+      "platformHealth": "Sức khỏe nền tảng",
+      "liveUpdate": "Cập nhật theo thời gian thực",
+      "liveInfrastructure": "Hạ tầng thời gian thực",
+      "allSystemsNormal": "Tất cả hệ thống hoạt động bình thường",
+      "uptimeLabel": "uptime trong 30 ngày gần nhất",
+      "apiLatency": "Độ trễ API",
+      "learningQueue": "Hàng đợi học tập",
+      "aiEvaluation": "Đánh giá AI",
+      "sessionsLabel": "Phiên học",
+      "kpi": {
+        "activeLearners": "Học viên hoạt động 7 ngày",
+        "previousPeriod": "so với kỳ trước",
+        "lessonCompletion": "Tỷ lệ hoàn thành bài học",
+        "monthlyGoal": "Mục tiêu tháng",
+        "accuracy": "Accuracy trung bình",
+        "listeningLeader": "Listening đang dẫn đầu",
+        "aiEvaluations": "AI evaluations tháng này",
+        "pending": "đang chờ"
+      },
+      "operationalFeed": "Hoạt động vận hành",
+      "recentActivity": "Hoạt động gần đây",
+      "viewAll": "Xem tất cả",
+      "user": "Người dùng",
+      "event": "Sự kiện",
+      "detailsXP": "Chi tiết / XP",
+      "time": "Thời gian",
+      "status": "Trạng thái",
+      "actions": "Thao tác",
+      "completedCourse": "Hoàn thành TOEIC Foundation",
+      "aiSpeakingReview": "Nhận đánh giá Speaking AI",
+      "streakMilestone": "Streak đạt mốc 30 ngày",
+      "vocabularyCards": "Ôn xong 25 thẻ từ vựng",
+      "recorded": "Đã ghi nhận",
+      "sent": "Đã gửi",
+      "syncing": "Đang đồng bộ",
+      "completed": "Hoàn thành"
+    },
+    "learners": {
+      "title": "Người học",
+      "subtitle": "Quản lý tài khoản và hoạt động của người học"
+    },
+    "courses": {
+      "title": "Khóa học",
+      "subtitle": "Quản lý nội dung khóa học"
+    },
+    "vocabulary": {
+      "title": "Từ vựng",
+      "subtitle": "Quản lý bộ từ vựng và flashcards"
+    },
+    "practice": {
+      "title": "Luyện tập & TOEIC",
+      "subtitle": "Quản lý bài luyện tập và đề thi TOEIC"
+    },
+    "community": {
+      "title": "Cộng đồng",
+      "subtitle": "Quản lý cộng đồng người học"
+    },
+    "publicDecks": {
+      "title": "Bộ thẻ công khai",
+      "subtitle": "Quản lý bộ thẻ được chia sẻ công khai"
+    },
+    "progress": {
+      "title": "Thống kê dữ liệu",
+      "subtitle": "Phân tích toàn diện hoạt động người học, các chỉ số biểu đồ, hiệu năng AI và dữ liệu hệ thống"
+    },
+    "notifications": {
+      "title": "Thông báo",
+      "subtitle": "Quản lý thông báo hệ thống"
+    },
+    "settings": {
+      "title": "Cài đặt",
+      "subtitle": "Cấu hình hệ thống admin"
+    }
+  },
+  "placeholder": {
+    "comingSoon": "Đang phát triển",
+    "description": "Trang này sẽ sớm được hoàn thiện"
+  }
+}
