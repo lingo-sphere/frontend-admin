@@ -432,5 +432,90 @@ export interface UserActivityLog {
   timestamp: string | Date
 }
 
+export interface ServiceHealthItem {
+  id: string
+  name: string
+  port: number
+  type: string
+  description: string
+  status: 'OPERATIONAL' | 'DEGRADED' | 'DOWN'
+  latency_ms: number
+  uptime_percentage: number
+  last_heartbeat: string
+  checked_at: string
+}
 
+export interface BetterStackIncident {
+  id: string
+  title: string
+  status: 'RESOLVED' | 'INVESTIGATING' | 'MONITORING'
+  impact: 'NONE' | 'MINOR' | 'MAJOR' | 'CRITICAL'
+  created_at: string
+  resolved_at?: string
+}
 
+export interface BetterStackMonitoringData {
+  provider: string
+  overall_status: 'ALL_SYSTEMS_OPERATIONAL' | 'DEGRADED' | 'OUTAGE'
+  uptime_percentage: number
+  average_latency_ms: number
+  monitored_services_count: number
+  healthy_services_count: number
+  incident_count_last_30d: number
+  last_synced_at: string
+  status_page_url: string
+  services: ServiceHealthItem[]
+  recent_incidents: BetterStackIncident[]
+}
+
+export interface PostHogTopEvent {
+  event_name: string
+  count: number
+  label: string
+}
+
+export interface PostHogTopPage {
+  path: string
+  views: number
+  unique_visitors: number
+}
+
+export interface PostHogSessionReplay {
+  session_id: string
+  user_email: string
+  duration_seconds: number
+  events_count: number
+  device: string
+  created_at: string
+  replay_url: string
+}
+
+export interface PostHogLiveEventItem {
+  id: string
+  event: string
+  user_email: string
+  properties: Record<string, unknown>
+  timestamp: string
+}
+
+export interface PostHogAnalyticsData {
+  provider: string
+  project_id: string
+  project_name: string
+  dashboard_url: string
+  session_replays_url: string
+  time_range: string
+  metrics: {
+    total_pageviews: number
+    unique_visitors: number
+    identified_users: number
+    total_session_replays: number
+    custom_learning_events: number
+    avg_session_duration_minutes: number
+    bounce_rate_percentage: number
+  }
+  top_events: PostHogTopEvent[]
+  top_pages: PostHogTopPage[]
+  recent_replays: PostHogSessionReplay[]
+  live_events: PostHogLiveEventItem[]
+}

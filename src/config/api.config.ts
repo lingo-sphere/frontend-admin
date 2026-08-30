@@ -132,6 +132,8 @@ export const API_CONFIG = {
       MY_COURSES: '/progress/courses',
       STUDENTS: (courseId: string) => `/progress/teacher/courses/${courseId}/students`,
       GROWTH_CHART: (courseId: string) => `/progress/courses/${courseId}/growth-chart`,
+      MONITORING_BETTERSTACK: '/progress/monitoring/betterstack',
+      ANALYTICS_POSTHOG: '/progress/analytics/posthog',
     },
   },
 }

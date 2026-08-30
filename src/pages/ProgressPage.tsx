@@ -12,6 +12,7 @@ import {
   Download,
   RotateCcw,
   BarChart2,
+  BarChart3,
   Award,
   BrainCircuit,
   Layers,
@@ -27,6 +28,8 @@ import {
   Monitor,
   Check,
   GraduationCap,
+  Server,
+  Globe,
 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { toast } from '@/store/toast-store'
@@ -34,7 +37,15 @@ import { userService } from '@/services/user.service'
 import { courseService } from '@/services/course.service'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { examService } from '@/services/exam.service'
-import type { SystemAnalyticsOverview, UserActivityLog } from '@/types/api.types'
+import { progressService } from '@/services/progress.service'
+import { BetterStackMonitoringTab } from '@/pages/progress/BetterStackMonitoringTab'
+import { PostHogAnalyticsTab } from '@/pages/progress/PostHogAnalyticsTab'
+import type {
+  SystemAnalyticsOverview,
+  UserActivityLog,
+  BetterStackMonitoringData,
+  PostHogAnalyticsData,
+} from '@/types/api.types'
 import {
   timeFilterOptions,
   activityTimeSeriesData,
@@ -45,7 +56,7 @@ import {
   aiEvaluationCategories,
 } from '@/data/statistics-data'
 
-type AnalyticsTab = 'overview' | 'toeic' | 'ai' | 'logs'
+type AnalyticsTab = 'overview' | 'posthog' | 'betterstack' | 'toeic' | 'ai' | 'logs'
 
 export function ProgressPage() {
   const { i18n } = useTranslation()
@@ -57,6 +68,8 @@ export function ProgressPage() {
   const [chartMetric, setChartMetric] = useState<'dau' | 'sessions' | 'minutesSpent' | 'xpGained'>('dau')
 
   const [analytics, setAnalytics] = useState<SystemAnalyticsOverview | null>(null)
+  const [betterStackData, setBetterStackData] = useState<BetterStackMonitoringData | null>(null)
+  const [postHogData, setPostHogData] = useState<PostHogAnalyticsData | null>(null)
   const [coursesCount, setCoursesCount] = useState<number>(0)
   const [vocabCount, setVocabCount] = useState<number>(0)
   const [examsCount, setExamsCount] = useState<number>(0)
@@ -69,11 +82,13 @@ export function ProgressPage() {
 
   const loadData = async () => {
     try {
-      const [analyticsRes, coursesRes, vocabRes, examsRes] = await Promise.allSettled([
+      const [analyticsRes, coursesRes, vocabRes, examsRes, betterStackRes, postHogRes] = await Promise.allSettled([
         userService.getSystemAnalytics(),
         courseService.getAllCourses(),
         vocabularyService.searchVocabulary(),
         examService.getExams(),
+        progressService.getBetterStackMonitoring(),
+        progressService.getPostHogAnalytics(),
       ])
 
       if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
@@ -90,6 +105,12 @@ export function ProgressPage() {
       }
       if (examsRes.status === 'fulfilled' && examsRes.value) {
         setExamsCount(examsRes.value.length)
+      }
+      if (betterStackRes.status === 'fulfilled' && betterStackRes.value) {
+        setBetterStackData(betterStackRes.value)
+      }
+      if (postHogRes.status === 'fulfilled' && postHogRes.value) {
+        setPostHogData(postHogRes.value)
       }
     } catch (err) {
       console.warn('Error loading progress analytics:', err)
@@ -369,7 +390,7 @@ export function ProgressPage() {
         ))}
       </div>
 
-      <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 w-fit">
+      <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 w-fit flex-wrap">
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -379,7 +400,31 @@ export function ProgressPage() {
           }`}
         >
           <BarChart2 className="w-3.5 h-3.5" />
-          <span>Tổng quan Hoạt động</span>
+          <span>Tổng quan Học tập</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('posthog')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'posthog'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>Frontend Web (PostHog)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('betterstack')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'betterstack'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <Server className="w-3.5 h-3.5" />
+          <span>Backend 13 Services (BetterStack)</span>
         </button>
 
         <button
@@ -418,6 +463,22 @@ export function ProgressPage() {
           <span>Nhật ký Hoạt động</span>
         </button>
       </div>
+
+      {activeTab === 'posthog' && (
+        <PostHogAnalyticsTab
+          data={postHogData}
+          isLoading={isRefreshing}
+          onRefresh={handleRefresh}
+        />
+      )}
+
+      {activeTab === 'betterstack' && (
+        <BetterStackMonitoringTab
+          data={betterStackData}
+          isLoading={isRefreshing}
+          onRefresh={handleRefresh}
+        />
+      )}
 
       {activeTab === 'overview' && (
         <div className="space-y-6">
