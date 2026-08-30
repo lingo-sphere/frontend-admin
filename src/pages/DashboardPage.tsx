@@ -9,8 +9,7 @@ import {
 import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
 import { courseService } from '@/services/course.service'
-import { mediaService } from '@/services/media.service'
-import type { SystemAnalyticsOverview, StorageUsageReport } from '@/types/api.types'
+import type { SystemAnalyticsOverview } from '@/types/api.types'
 import { DashboardStatsGrid } from '@/pages/dashboard/DashboardStatsGrid'
 import { SimpleChart, type ChartItem } from '@/pages/dashboard/DashboardActivityChart'
 import { DashboardRecentActivity } from '@/pages/dashboard/DashboardRecentActivity'
@@ -61,17 +60,15 @@ export function DashboardPage() {
   const pickerRef = useRef<HTMLDivElement>(null)
 
   const [analytics, setAnalytics] = useState<SystemAnalyticsOverview | null>(null)
-  const [storageUsage, setStorageUsage] = useState<StorageUsageReport | null>(null)
   const [totalCoursesCount, setTotalCoursesCount] = useState<number>(0)
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false)
 
   const fetchDashboardData = async () => {
     setIsLoadingStats(true)
     try {
-      const [analyticsData, coursesData, storageData] = await Promise.allSettled([
+      const [analyticsData, coursesData] = await Promise.allSettled([
         userService.getSystemAnalytics(),
         courseService.getAllCourses(),
-        mediaService.getStorageUsage(),
       ])
 
       if (analyticsData.status === 'fulfilled' && analyticsData.value) {
@@ -79,9 +76,6 @@ export function DashboardPage() {
       }
       if (coursesData.status === 'fulfilled' && coursesData.value) {
         setTotalCoursesCount(coursesData.value.length)
-      }
-      if (storageData.status === 'fulfilled' && storageData.value) {
-        setStorageUsage(storageData.value)
       }
     } catch (err) {
       console.warn('Using local fallback stats:', err)
@@ -185,7 +179,6 @@ export function DashboardPage() {
       <DashboardStatsGrid
         analytics={analytics}
         totalCoursesCount={totalCoursesCount}
-        storageUsage={storageUsage}
         isVietnamese={isVietnamese}
       />
 
