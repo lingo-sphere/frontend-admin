@@ -5,6 +5,7 @@ import type { AuthUser, LoginResponse } from '@/types/api.types'
 export interface LoginCredentials {
   email: string
   password: string
+  rememberMe?: boolean
 }
 
 export interface RegisterPayload {

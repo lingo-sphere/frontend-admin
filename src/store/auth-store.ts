@@ -36,12 +36,12 @@ const matchRoutePattern = (pattern: string, path: string): boolean => {
 
 const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+  return localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN) || sessionStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
 }
 
 const getStoredUser = (): AuthUser | null => {
   if (typeof window === 'undefined') return null
-  const saved = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER)
+  const saved = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER) || sessionStorage.getItem(API_CONFIG.STORAGE_KEYS.USER)
   if (!saved) return null
   try {
     return JSON.parse(saved)
@@ -99,8 +99,15 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       const updatedUser: AuthUser = { ...user, permissions }
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, access_token)
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser))
+        const isRemember = credentials.rememberMe !== false
+        const primaryStorage = isRemember ? localStorage : sessionStorage
+        const secondaryStorage = isRemember ? sessionStorage : localStorage
+
+        secondaryStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+        secondaryStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
+
+        primaryStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, access_token)
+        primaryStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser))
       }
 
       set({
@@ -137,6 +144,8 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
+        sessionStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+        sessionStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
       }
       set({
         user: null,
