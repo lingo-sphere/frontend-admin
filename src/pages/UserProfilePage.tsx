@@ -17,27 +17,27 @@ import { userService } from '@/services/user.service'
 
 interface UserProfileData {
   id: string
-  full_name: string
+  full_name?: string
   email: string
   avatar_url?: string
   phone?: string
-  status: string
-  is_premium: boolean
-  created_at: string
-  last_active: string
-  total_xp: number
-  level: number
-  current_streak: number
-  longest_streak: number
-  total_lessons_completed: number
-  total_words_learned: number
+  status?: string
+  is_premium?: boolean
+  created_at?: string
+  last_active?: string
+  total_xp?: number
+  level?: number
+  current_streak?: number
+  longest_streak?: number
+  total_lessons_completed?: number
+  total_words_learned?: number
   toeic_score?: number
-  accuracy_rate: number
-  avg_session_time: number
-  total_sessions: number
-  total_courses_enrolled: number
-  total_courses_completed: number
-  total_decks_studied: number
+  accuracy_rate?: number
+  avg_session_time?: number
+  total_sessions?: number
+  total_courses_enrolled?: number
+  total_courses_completed?: number
+  total_decks_studied?: number
 }
 
 export function UserProfilePage() {
@@ -56,28 +56,19 @@ export function UserProfilePage() {
         const u = await userService.getProfileById(userId)
         if (u) {
           setProfileData({
-            id: u._id || u.user_id || userId,
-            full_name: u.full_name || u.email.split('@')[0],
+            id: u.user_id ? u.user_id : (u._id ? u._id : userId),
+            full_name: u.full_name,
             email: u.email,
             avatar_url: u.avatar_url,
             phone: u.phone_number,
-            status: u.status || 'ACTIVE',
-            is_premium: Boolean(u.is_premium),
-            created_at: u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '12/01/2026',
-            last_active: 'Vừa xong',
-            total_xp: u.total_xp || 0,
-            level: u.level || 1,
-            current_streak: u.current_streak || 0,
-            longest_streak: u.current_streak || 0,
-            total_lessons_completed: 0,
-            total_words_learned: 0,
-            toeic_score: u.target_toeic_score || 650,
-            accuracy_rate: 0,
-            avg_session_time: 0,
-            total_sessions: 0,
-            total_courses_enrolled: 0,
-            total_courses_completed: 0,
-            total_decks_studied: 0,
+            status: u.status,
+            is_premium: u.is_premium,
+            created_at: u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : undefined,
+            last_active: u.updated_at ? new Date(u.updated_at).toLocaleDateString('vi-VN') : undefined,
+            total_xp: u.total_xp,
+            level: u.level,
+            current_streak: u.current_streak,
+            toeic_score: u.target_toeic_score,
           })
         }
       } catch (err) {
@@ -126,7 +117,7 @@ export function UserProfilePage() {
               className="w-full h-full rounded-3xl object-cover"
             />
           ) : (
-            profileData.full_name.slice(0, 2).toUpperCase()
+            profileData.full_name ? profileData.full_name.slice(0, 2).toUpperCase() : 'U'
           )}
         </div>
 
@@ -182,7 +173,7 @@ export function UserProfilePage() {
           <Award className="w-6 h-6 text-teal-400 mx-auto mb-2" />
           <p className="text-xs text-slate-400">Tổng điểm tích lũy</p>
           <p className="text-xl font-bold text-teal-400 mt-1">
-            {profileData.total_xp.toLocaleString('vi-VN')} XP
+            {typeof profileData.total_xp === 'number' ? profileData.total_xp.toLocaleString('vi-VN') : profileData.total_xp} XP
           </p>
         </div>
 

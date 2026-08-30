@@ -62,15 +62,12 @@ export function VocabularyPage() {
         const mapped: LexicalItem[] = wordsRes.value.map((w: ApiLexicalItem) => ({
           id: w._id,
           word: w.word,
-          word_type: w.word_type || "NOUN",
-          cefr_level: w.cefr_level || "B1",
-          pronunciation_us: w.pronunciation_us || "",
+          word_type: w.word_type,
+          cefr_level: w.cefr_level,
+          pronunciation_us: w.pronunciation_us,
+          pronunciation_uk: w.pronunciation_uk,
           audio_url_us: w.audio_url_us,
-          meanings_count: 1,
-          examples_count: 2,
-          status: "ACTIVE",
-          is_verified: true,
-          created_at: new Date().toISOString(),
+          created_at: w.created_at,
         }));
         setWords(mapped);
       }
@@ -78,17 +75,12 @@ export function VocabularyPage() {
       if (topicsRes.status === "fulfilled" && topicsRes.value) {
         const mappedTopics: Topic[] = topicsRes.value.map((t: ApiTopic) => ({
           id: t._id,
-          name: t.name,
-          name_vi: t.name_vi || t.name,
+          name_vi: t.name_vi,
           name_en: t.name,
-          slug: t.slug || '',
-          description: t.description || '',
-          icon: t.icon_url || 'BookOpen',
-          cefr_level: 'B1',
-          lexical_count: t.words_count || 0,
-          is_featured: false,
-          status: 'ACTIVE',
-          created_at: t.created_at || new Date().toISOString(),
+          slug: t.slug,
+          description: t.description,
+          icon: t.icon_url,
+          created_at: t.created_at,
         }));
         setTopics(mappedTopics);
       }
@@ -98,20 +90,14 @@ export function VocabularyPage() {
           id: d._id,
           name_en: d.title,
           name_vi: d.title,
-          description: d.description || '',
-          creator_name: 'LingoSphere System',
-          topic_name: 'TOEIC Core',
-          cefr_level: 'B1',
-          card_count: d.total_cards || 0,
-          total_studied: d.enrolled_count || 0,
-          total_users: d.enrolled_count || 0,
-          avg_mastery_percent: 75,
-          rating_average: d.rating || 5,
-          rating_count: 100,
+          description: d.description,
+          card_count: d.total_cards,
+          total_studied: d.enrolled_count,
+          total_users: d.enrolled_count,
+          rating_average: d.rating,
           visibility: d.is_public ? 'PUBLIC' : 'PRIVATE',
-          is_featured: Boolean(d.is_system),
-          is_premium: false,
-          created_at: d.created_at || new Date().toISOString(),
+          is_featured: d.is_system,
+          created_at: d.created_at,
         }));
         setDecks(mappedDecks);
       }

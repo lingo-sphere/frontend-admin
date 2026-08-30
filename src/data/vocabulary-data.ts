@@ -1,50 +1,50 @@
 export interface LexicalItem {
   id: string
   word: string
-  word_type: string
-  cefr_level: string
+  word_type?: string
+  cefr_level?: string
   pronunciation_us?: string
   pronunciation_uk?: string
   audio_url_us?: string
-  meanings_count: number
-  examples_count: number
-  status: 'ACTIVE' | 'INACTIVE'
-  is_verified: boolean
-  created_at: string
+  meanings_count?: number
+  examples_count?: number
+  status?: string
+  is_verified?: boolean
+  created_at?: string
 }
 
 export interface Topic {
   id: string
-  name_en: string
-  name_vi: string
-  slug: string
+  name_en?: string
+  name_vi?: string
+  slug?: string
   description?: string
   icon?: string
-  cefr_level: string
-  lexical_count: number
-  is_featured: boolean
-  status: 'ACTIVE' | 'INACTIVE'
-  created_at: string
+  cefr_level?: string
+  lexical_count?: number
+  is_featured?: boolean
+  status?: string
+  created_at?: string
 }
 
 export interface FlashcardDeck {
   id: string
-  name_en: string
-  name_vi: string
+  name_en?: string
+  name_vi?: string
   description?: string
-  creator_name: string
+  creator_name?: string
   topic_name?: string
   cefr_level?: string
-  card_count: number
-  total_studied: number
-  total_users: number
-  avg_mastery_percent: number
-  rating_average: number
-  rating_count: number
-  visibility: 'PUBLIC' | 'PRIVATE'
-  is_featured: boolean
-  is_premium: boolean
-  created_at: string
+  card_count?: number
+  total_studied?: number
+  total_users?: number
+  avg_mastery_percent?: number
+  rating_average?: number
+  rating_count?: number
+  visibility?: string
+  is_featured?: boolean
+  is_premium?: boolean
+  created_at?: string
 }
 
 export interface VocabularyStats {

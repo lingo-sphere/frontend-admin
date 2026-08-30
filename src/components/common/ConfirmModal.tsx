@@ -30,8 +30,8 @@ export function ConfirmModal({
   cancelText = 'Hủy',
   isLoading = false,
 }: ConfirmModalProps) {
-  const modalType = type || variant
-  const modalMessage = message || description || ''
+  const modalType = type ? type : variant
+  const modalMessage = message ? message : (description ? description : '')
 
   useEffect(() => {
     if (isOpen) {
