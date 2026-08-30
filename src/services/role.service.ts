@@ -12,11 +12,11 @@ export const roleService = {
     return api.get<Role>(API_CONFIG.ENDPOINTS.ROLES.BY_ID(id))
   },
 
-  async createRole(payload: { name: string; description?: string; permissions?: string[] }): Promise<Role> {
+  async createRole(payload: { name: string; description?: string; permissions?: string[]; is_active?: boolean }): Promise<Role> {
     return api.post<Role>(API_CONFIG.ENDPOINTS.ROLES.LIST, payload)
   },
 
-  async updateRole(id: string, payload: { name?: string; description?: string; permissions?: string[] }): Promise<Role> {
+  async updateRole(id: string, payload: { name?: string; description?: string; permissions?: string[]; is_active?: boolean }): Promise<Role> {
     return api.put<Role>(API_CONFIG.ENDPOINTS.ROLES.BY_ID(id), payload)
   },
 

@@ -1,126 +1,299 @@
-import { Search, X, Plus } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, RotateCcw, Edit2, Trash2, SlidersHorizontal, Settings, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 
 interface PermissionsListTabProps {
   permissions: Permission[]
-  permSearch: string
-  onSearchChange: (val: string) => void
-  selectedModule: string
-  onModuleChange: (val: string) => void
-  modulesList: string[]
   onOpenCreatePerm: () => void
+  onOpenEditPerm: (perm: Permission) => void
+  onDeletePerm: (permId: string) => void
+  onRefresh: () => void
+  isLoading?: boolean
 }
 
 export function PermissionsListTab({
   permissions,
-  permSearch,
-  onSearchChange,
-  selectedModule,
-  onModuleChange,
-  modulesList,
   onOpenCreatePerm,
+  onOpenEditPerm,
+  onDeletePerm,
+  onRefresh,
+  isLoading,
 }: PermissionsListTabProps) {
+  const [filterName, setFilterName] = useState('')
+  const [filterApi, setFilterApi] = useState('')
+  const [filterModule, setFilterModule] = useState('ALL')
+  const [isExpandedFilter, setIsExpandedFilter] = useState(false)
+
+  // Applied search states
+  const [searchQuery, setSearchQuery] = useState({ name: '', api: '', module: 'ALL' })
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    setSearchQuery({
+      name: filterName.trim().toLowerCase(),
+      api: filterApi.trim().toLowerCase(),
+      module: filterModule,
+    })
+  }
+
+  const handleReset = () => {
+    setFilterName('')
+    setFilterApi('')
+    setFilterModule('ALL')
+    setSearchQuery({ name: '', api: '', module: 'ALL' })
+  }
+
+  const modulesList = useMemo(() => {
+    const set = new Set(permissions.map((p) => (p.module || 'GENERAL').toUpperCase()))
+    return Array.from(set).sort()
+  }, [permissions])
+
+  const filteredData = useMemo(() => {
+    return permissions.filter((p) => {
+      const matchName = !searchQuery.name || p.name.toLowerCase().includes(searchQuery.name)
+      const matchApi = !searchQuery.api || (p.api_path || '').toLowerCase().includes(searchQuery.api)
+      const matchModule = searchQuery.module === 'ALL' || (p.module || '').toUpperCase() === searchQuery.module
+      return matchName && matchApi && matchModule
+    })
+  }, [permissions, searchQuery])
+
+  const getMethodBadgeClass = (method?: string) => {
+    switch (method?.toUpperCase()) {
+      case 'POST':
+        return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 font-bold'
+      case 'PUT':
+      case 'PATCH':
+        return 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 font-bold'
+      case 'DELETE':
+        return 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 font-bold'
+      case 'GET':
+      default:
+        return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 font-bold'
+    }
+  }
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = d.getFullYear()
+    const hours = String(d.getHours()).padStart(2, '0')
+    const mins = String(d.getMinutes()).padStart(2, '0')
+    const secs = String(d.getSeconds()).padStart(2, '0')
+    return `${day}-${month}-${year} ${hours}:${mins}:${secs}`
+  }
+
   return (
     <div className="space-y-4">
-      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus-within:border-indigo-500 transition-all">
-            <Search className="w-4 h-4 text-slate-500 shrink-0" />
+      {/* 1. Filter Card (HoiDanIT Style) */}
+      <form
+        onSubmit={handleSearch}
+        className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4"
+      >
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-12 text-right">
+              Name:
+            </span>
             <input
               type="text"
-              value={permSearch}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Tìm theo tên hoặc API Path..."
-              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              placeholder="nhập dữ liệu"
+              className="h-9 w-52 sm:w-64 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
             />
-            {permSearch && (
-              <button
-                onClick={() => onSearchChange('')}
-                className="text-slate-500 hover:text-slate-300"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
-          <select
-            value={selectedModule}
-            onChange={(e) => onModuleChange(e.target.value)}
-            className="h-10 px-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
-          >
-            <option value="ALL">Tất cả phân hệ (Modules)</option>
-            {modulesList.map((m) => (
-              <option key={m} value={m}>
-                Phân hệ: {m}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-8 text-right">
+              API:
+            </span>
+            <input
+              type="text"
+              value={filterApi}
+              onChange={(e) => setFilterApi(e.target.value)}
+              placeholder="nhập dữ liệu"
+              className="h-9 w-52 sm:w-64 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all font-mono"
+            />
+          </div>
+
+          <div className="flex items-center gap-2.5 ml-auto">
+            <button
+              type="submit"
+              className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              Tìm kiếm
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="h-9 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            >
+              Làm lại
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsExpandedFilter(!isExpandedFilter)}
+              className="flex items-center gap-1 h-9 px-3 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            >
+              <span>{isExpandedFilter ? 'Thu gọn' : 'Mở rộng'}</span>
+              {isExpandedFilter ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
 
-        <button
-          onClick={onOpenCreatePerm}
-          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Thêm Permission Mới</span>
-        </button>
-      </div>
+        {/* Expanded Filters */}
+        {isExpandedFilter && (
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-12 text-right">
+              Module:
+            </span>
+            <select
+              value={filterModule}
+              onChange={(e) => setFilterModule(e.target.value)}
+              className="h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+            >
+              <option value="ALL">Tất cả Module</option>
+              {modulesList.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </form>
 
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
+      {/* 2. Main Data Table Card */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        {/* Table Top Bar */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            Danh sách Permissions (Quyền Hạn)
+          </h3>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenCreatePerm}
+              className="flex items-center gap-1.5 h-8.5 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-xs transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Thêm mới</span>
+            </button>
+
+            <button
+              onClick={onRefresh}
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+              title="Làm mới"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+            </button>
+
+            <button
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+              title="Tùy chỉnh cột"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+              title="Cài đặt bảng"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Data Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
-                <th className="py-3.5 px-4">Tên quyền hạn</th>
-                <th className="py-3.5 px-4">Phân hệ (Module)</th>
-                <th className="py-3.5 px-4">Phương thức</th>
-                <th className="py-3.5 px-4">Đường dẫn API (Endpoint)</th>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 font-bold">
+                <th className="py-3 px-4 w-12 text-center">Id</th>
+                <th className="py-3 px-4 min-w-[180px]">Name</th>
+                <th className="py-3 px-4 min-w-[200px]">API</th>
+                <th className="py-3 px-4 w-28">Method</th>
+                <th className="py-3 px-4 w-32">Module</th>
+                <th className="py-3 px-4 min-w-[150px]">CreatedAt</th>
+                <th className="py-3 px-4 min-w-[150px]">UpdatedAt</th>
+                <th className="py-3 px-4 w-24 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50 text-slate-200">
-              {permissions.length === 0 ? (
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
+              {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-slate-500">
-                    Không tìm thấy quyền hạn nào phù hợp
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    Không tìm thấy Permission nào phù hợp
                   </td>
                 </tr>
               ) : (
-                permissions.map((perm) => (
+                filteredData.map((perm, index) => (
                   <tr
                     key={perm._id}
-                    className="hover:bg-slate-800/30 transition-colors"
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                   >
-                    <td className="py-3.5 px-4 font-semibold text-slate-100">
+                    <td className="py-3 px-4 text-center font-mono text-slate-500 font-semibold">
+                      {index + 1}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
                       {perm.name}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                        {perm.module}
-                      </span>
+                    <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">
+                      {perm.api_path || '-'}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
-                          perm.method === 'GET'
-                            ? 'bg-teal-500/10 text-teal-400'
-                            : perm.method === 'POST'
-                              ? 'bg-indigo-500/10 text-indigo-400'
-                              : perm.method === 'PUT' || perm.method === 'PATCH'
-                                ? 'bg-amber-500/10 text-amber-400'
-                                : 'bg-rose-500/10 text-rose-400'
-                        }`}
+                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono border ${getMethodBadgeClass(
+                          perm.method,
+                        )}`}
                       >
-                        {perm.method}
+                        {perm.method || 'GET'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-400">
-                      {perm.api_path}
+                    <td className="py-3 px-4">
+                      <span className="font-semibold text-[11px] text-slate-700 dark:text-slate-300">
+                        {(perm.module || 'GENERAL').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                      {formatDate(perm.created_at)}
+                    </td>
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                      {formatDate(perm.updated_at)}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => onOpenEditPerm(perm)}
+                          className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDeletePerm(perm._id)}
+                          className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Table Footer Stats */}
+        <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+          <span>
+            Hiển thị <strong>{filteredData.length}</strong> / <strong>{permissions.length}</strong> quyền hạn
+          </span>
         </div>
       </div>
     </div>

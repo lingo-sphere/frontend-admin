@@ -90,6 +90,7 @@ export interface Permission {
   module: string
   description?: string
   created_at?: string
+  updated_at?: string
 }
 
 export interface Role {
@@ -97,8 +98,10 @@ export interface Role {
   name: string
   description?: string
   permissions: string[] | Permission[]
+  is_active?: boolean
   is_system?: boolean
   created_at?: string
+  updated_at?: string
 }
 
 export type CourseCategory = 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY' | 'FULL_TEST' | 'GENERAL'
