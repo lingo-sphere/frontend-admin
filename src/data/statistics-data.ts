@@ -429,7 +429,7 @@ export interface AIEvaluationLogItem {
   id: string
   userName: string
   userEmail: string
-  planType: 'FREE' | 'PREMIUM' | 'PREMIUM_PLUS'
+  planType: 'FREE' | 'PREMIUM'
   sourceService: 'PRACTICE' | 'EXAM' | 'VOCABULARY'
   evaluationType: 'SPEAKING' | 'WRITING' | 'LISTENING' | 'VOCABULARY' | 'GRAMMAR' | 'TOEIC_ANALYSIS' | 'PRONUNCIATION'
   score: string
@@ -463,27 +463,43 @@ export const mockAIEvaluationLogs: AIEvaluationLogItem[] = [
     id: 'eval-102',
     userName: 'Ngọc Trâm',
     userEmail: 'ngoctram@gmail.com',
-    planType: 'PREMIUM_PLUS',
+    planType: 'PREMIUM',
     sourceService: 'PRACTICE',
     evaluationType: 'WRITING',
     score: '8.0 / 9.0 (IELTS Band 7.5)',
     tokensUsed: 1240,
-    processingTimeMs: 790,
+    processingTimeMs: 520,
     costUSD: 0.0035,
     status: 'COMPLETED',
     feedbackType: 'HELPFUL',
     rating: 5,
-    createdAt: '8 phút trước',
+    createdAt: '15 phút trước',
   },
   {
     id: 'eval-103',
-    userName: 'Phúc Hoàng',
-    userEmail: 'phuchoang@gmail.com',
+    userName: 'Trần Văn Nam',
+    userEmail: 'namtran@gmail.com',
     planType: 'FREE',
+    sourceService: 'VOCABULARY',
+    evaluationType: 'PRONUNCIATION',
+    score: '3.8 / 5.0 (Word: Entrepreneur)',
+    tokensUsed: 180,
+    processingTimeMs: 240,
+    costUSD: 0.0005,
+    status: 'COMPLETED',
+    feedbackType: 'HELPFUL',
+    rating: 4,
+    createdAt: '42 phút trước',
+  },
+  {
+    id: 'eval-104',
+    userName: 'Đỗ Hoàng Long',
+    userEmail: 'longdo@gmail.com',
+    planType: 'PREMIUM',
     sourceService: 'EXAM',
     evaluationType: 'TOEIC_ANALYSIS',
-    score: 'Gợi ý Part 3 & 7',
-    tokensUsed: 850,
+    score: 'Part 7 Reading (Score 415/495)',
+    tokensUsed: 2150,
     processingTimeMs: 540,
     costUSD: 0.0021,
     status: 'COMPLETED',
@@ -492,7 +508,7 @@ export const mockAIEvaluationLogs: AIEvaluationLogItem[] = [
     createdAt: '15 phút trước',
   },
   {
-    id: 'eval-104',
+    id: 'eval-105',
     userName: 'Thu Hà',
     userEmail: 'thuha@gmail.com',
     planType: 'PREMIUM',
@@ -508,10 +524,10 @@ export const mockAIEvaluationLogs: AIEvaluationLogItem[] = [
     createdAt: '22 phút trước',
   },
   {
-    id: 'eval-105',
+    id: 'eval-106',
     userName: 'Minh Anh',
     userEmail: 'minhanh@gmail.com',
-    planType: 'PREMIUM_PLUS',
+    planType: 'PREMIUM',
     sourceService: 'PRACTICE',
     evaluationType: 'VOCABULARY',
     score: 'Mastered (SRS Interval 30d)',
@@ -524,7 +540,7 @@ export const mockAIEvaluationLogs: AIEvaluationLogItem[] = [
     createdAt: '31 phút trước',
   },
   {
-    id: 'eval-106',
+    id: 'eval-107',
     userName: 'Đức Trí',
     userEmail: 'ductri@gmail.com',
     planType: 'PREMIUM',
@@ -540,10 +556,10 @@ export const mockAIEvaluationLogs: AIEvaluationLogItem[] = [
     createdAt: '45 phút trước',
   },
   {
-    id: 'eval-107',
+    id: 'eval-108',
     userName: 'Thanh Hằng',
     userEmail: 'thanhhang@gmail.com',
-    planType: 'PREMIUM_PLUS',
+    planType: 'PREMIUM',
     sourceService: 'PRACTICE',
     evaluationType: 'PRONUNCIATION',
     score: 'Accuracy 92.5% (/θ/ sound)',
