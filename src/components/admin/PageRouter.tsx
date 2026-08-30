@@ -17,6 +17,7 @@ import { VocabularyImportPage } from '@/pages/VocabularyImportPage'
 import { VocabularyFormPage } from '@/pages/VocabularyFormPage'
 import { AdminProfilePage } from '@/pages/AdminProfilePage'
 import { RolesPage } from '@/pages/RolesPage'
+import { PermissionsPage } from '@/pages/PermissionsPage'
 import { ExamsPage } from '@/pages/ExamsPage'
 import { MediaStoragePage } from '@/pages/MediaStoragePage'
 import { AiManagementPage } from '@/pages/AiManagementPage'
@@ -27,7 +28,7 @@ const pageMap: Record<string, React.ComponentType> = {
   users: LearnersPage,
   admins: AdminUsersPage,
   roles: RolesPage,
-  permissions: RolesPage,
+  permissions: PermissionsPage,
   'admin-user-create': AdminUserFormPage,
   courses: CoursesPage,
   'course-create': CourseFormPage,
