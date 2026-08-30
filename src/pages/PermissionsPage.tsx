@@ -50,7 +50,7 @@ export function PermissionsPage() {
         setRoles(rolesRes.value)
       }
       if (usersRes.status === 'fulfilled' && usersRes.value) {
-        const uList = usersRes.value.items || []
+        const uList = usersRes.value.items ? usersRes.value.items : []
         setUsers(uList)
       }
     } catch (err) {
@@ -127,7 +127,7 @@ export function PermissionsPage() {
 
     setIsAssigning(true)
     try {
-      const targetUserId = selectedUser._id || selectedUser.user_id || ''
+      const targetUserId = selectedUser._id ? selectedUser._id : (selectedUser.user_id ? selectedUser.user_id : '')
       await roleService.assignUserRole(targetUserId, assignRoleName)
       toast.success(`Đã gán vai trò ${assignRoleName} cho người dùng ${selectedUser.email}!`)
       setSelectedUser(null)
@@ -141,7 +141,7 @@ export function PermissionsPage() {
   }
 
   const availableModules = Array.from(
-    new Set(permissions.map((p) => (p.module || 'GENERAL').toUpperCase())),
+    new Set(permissions.map((p) => (p.module ? p.module : 'GENERAL').toUpperCase())),
   )
 
   return (

@@ -100,7 +100,10 @@ export function SettingsPage() {
   }
 
   const togglePlanActive = (planId: string) => {
-    setPlans((prev) => prev.map((p) => ((p._id === planId || p.id === planId) ? { ...p, is_active: !p.is_active } : p)))
+    setPlans((prev) => prev.map((p) => {
+      const match = p._id ? p._id === planId : (p.id ? p.id === planId : false)
+      return match ? { ...p, is_active: !p.is_active } : p
+    }))
   }
 
   const handleSeedRBAC = async () => {
@@ -187,7 +190,7 @@ export function SettingsPage() {
             {plans
               .sort((a, b) => a.tier - b.tier)
               .map((plan) => {
-                const planId = plan._id || plan.id || ''
+                const planId = plan._id ? plan._id : (plan.id ? plan.id : '')
                 return (
                   <div
                     key={planId}

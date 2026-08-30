@@ -102,7 +102,7 @@ export function DashboardRecentActivity({
                     <td className="py-3 px-3">
                       <div
                         className="flex items-center gap-2.5 cursor-pointer"
-                        onClick={() => onSelectUser(log.userId || log.id)}
+                        onClick={() => onSelectUser(log.userId ? log.userId : log.id)}
                       >
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs">
                           {log.userName.slice(0, 2).toUpperCase()}
@@ -128,12 +128,12 @@ export function DashboardRecentActivity({
                       </div>
                     </td>
                     <td className="py-3 px-3 font-bold text-teal-600 dark:text-teal-400">
-                      {log.scoreOrXP || '-'}
+                      {log.scoreOrXP ? log.scoreOrXP : '-'}
                     </td>
                     <td className="py-3 px-3 text-slate-500">{formatActivityTime(log.timestamp)}</td>
                     <td className="py-3 px-3 text-right">
                       <button
-                        onClick={() => onSelectUser(log.userId || log.id)}
+                        onClick={() => onSelectUser(log.userId ? log.userId : log.id)}
                         className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                       >
                         <ChevronRight className="w-4 h-4" />

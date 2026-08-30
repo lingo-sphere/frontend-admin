@@ -110,7 +110,7 @@ export function ProgressPage() {
   const handleExportCSV = () => {
     const headers = 'ID,User,Action,Detail,ScoreOrXP,Platform,Time\n'
     const rows = liveLogs
-      .map((l) => `${l.id},${l.userName},${l.actionNameVi},${l.detail},${l.scoreOrXP || ''},${l.platform},${l.timestamp}`)
+      .map((l) => `${l.id},${l.userName},${l.actionNameVi},${l.detail},${l.scoreOrXP ? l.scoreOrXP : ''},${l.platform},${l.timestamp}`)
       .join('\n')
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -143,7 +143,7 @@ export function ProgressPage() {
       serviceName: 'User Service DB',
       labelVi: 'Tổng người dùng hệ thống',
       labelEn: 'Total Registered Users',
-      count: analytics?.overview.total_users || 0,
+      count: analytics ? analytics.overview.total_users : 0,
       changePercent: 12.5,
       unit: 'người dùng',
       color: '#2f7f78',
@@ -153,7 +153,7 @@ export function ProgressPage() {
       serviceName: 'User Service DB',
       labelVi: 'Tài khoản VIP / Premium',
       labelEn: 'Active VIP Subscribers',
-      count: analytics?.overview.total_vip_users || 0,
+      count: analytics ? analytics.overview.total_vip_users : 0,
       changePercent: 18.2,
       unit: 'tài khoản',
       color: '#d97706',
@@ -193,7 +193,7 @@ export function ProgressPage() {
       serviceName: 'Gamification Engine',
       labelVi: 'Tổng XP người dùng đạt được',
       labelEn: 'Total System XP',
-      count: analytics?.overview.total_system_xp || 0,
+      count: analytics ? analytics.overview.total_system_xp : 0,
       changePercent: 24.6,
       unit: 'XP',
       color: '#ec4899',
@@ -235,7 +235,7 @@ export function ProgressPage() {
           LESSON_COMPLETED: { label: 'Hoàn thành bài học', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
           PREMIUM_UPGRADE: { label: 'Nâng cấp Premium', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
         }
-        const badge = map[log.actionType] || { label: log.actionNameVi, color: 'bg-slate-500/10 text-slate-500' }
+        const badge = map[log.actionType] ? map[log.actionType] : { label: log.actionNameVi, color: 'bg-slate-500/10 text-slate-500' }
         return (
           <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.color}`}>
             {badge.label}
@@ -343,7 +343,7 @@ export function ProgressPage() {
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                    {metric.count.toLocaleString('vi-VN')}
+                    {typeof metric.count === 'number' ? metric.count.toLocaleString('vi-VN') : metric.count}
                   </span>
                   <span className="text-[11px] text-slate-500">{metric.unit}</span>
                 </div>
@@ -492,16 +492,16 @@ export function ProgressPage() {
                   </h3>
                 </div>
                 <span className="text-xs font-bold text-orange-500">
-                  Trung bình {analytics?.overview.avg_user_streak || 0} ngày
+                  Trung bình {analytics ? analytics.overview.avg_user_streak : 0} ngày
                 </span>
               </div>
 
               <div className="space-y-3">
                 {[
-                  { range: 'Level 1–5 (Beginner)', count: Math.round((analytics?.overview.total_users || 0) * 0.45), percent: 45 },
-                  { range: 'Level 6–10 (Intermediate)', count: Math.round((analytics?.overview.total_users || 0) * 0.35), percent: 35 },
-                  { range: 'Level 11–20 (Advanced)', count: Math.round((analytics?.overview.total_users || 0) * 0.15), percent: 15 },
-                  { range: 'Level 21+ (Master)', count: Math.round((analytics?.overview.total_users || 0) * 0.05), percent: 5 },
+                  { range: 'Level 1–5 (Beginner)', count: Math.round(analytics ? analytics.overview.total_users * 0.45 : 0), percent: 45 },
+                  { range: 'Level 6–10 (Intermediate)', count: Math.round(analytics ? analytics.overview.total_users * 0.35 : 0), percent: 35 },
+                  { range: 'Level 11–20 (Advanced)', count: Math.round(analytics ? analytics.overview.total_users * 0.15 : 0), percent: 15 },
+                  { range: 'Level 21+ (Master)', count: Math.round(analytics ? analytics.overview.total_users * 0.05 : 0), percent: 5 },
                 ].map((lvl) => (
                   <div key={lvl.range} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
@@ -533,9 +533,9 @@ export function ProgressPage() {
 
               <div className="space-y-3">
                 {[
-                  { device: 'WEB', labelVi: 'Trình duyệt Web (Desktop)', count: Math.round((analytics?.overview.total_users || 0) * 0.58), percent: 58 },
-                  { device: 'MOBILE_IOS', labelVi: 'iOS App (iPhone / iPad)', count: Math.round((analytics?.overview.total_users || 0) * 0.28), percent: 28 },
-                  { device: 'MOBILE_ANDROID', labelVi: 'Android App', count: Math.round((analytics?.overview.total_users || 0) * 0.14), percent: 14 },
+                  { device: 'WEB', labelVi: 'Trình duyệt Web (Desktop)', count: Math.round(analytics ? analytics.overview.total_users * 0.58 : 0), percent: 58 },
+                  { device: 'MOBILE_IOS', labelVi: 'iOS App (iPhone / iPad)', count: Math.round(analytics ? analytics.overview.total_users * 0.28 : 0), percent: 28 },
+                  { device: 'MOBILE_ANDROID', labelVi: 'Android App', count: Math.round(analytics ? analytics.overview.total_users * 0.14 : 0), percent: 14 },
                 ].map((dev) => (
                   <div key={dev.device} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
