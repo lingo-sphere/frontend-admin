@@ -5,7 +5,10 @@ import { LearnersPage } from '@/pages/LearnersPage'
 import { AdminUsersPage } from '@/pages/AdminUsersPage'
 import { CoursesPage } from '@/pages/CoursesPage'
 import { VocabularyPage } from '@/pages/VocabularyPage'
-import { PracticePage } from '@/pages/PracticePage'
+import { PracticeExercisesPage } from '@/pages/practice/PracticeExercisesPage'
+import { PracticeListeningPage } from '@/pages/practice/PracticeListeningPage'
+import { PracticeSpeakingPage } from '@/pages/practice/PracticeSpeakingPage'
+import { PracticeWritingPage } from '@/pages/practice/PracticeWritingPage'
 import { CommunityPage } from '@/pages/CommunityPage'
 import { PublicDecksPage } from '@/pages/PublicDecksPage'
 import { ProgressPage } from '@/pages/ProgressPage'
@@ -38,11 +41,11 @@ const pageMap: Record<string, React.ComponentType> = {
   vocabulary: VocabularyPage,
   'vocab-create': VocabularyFormPage,
   'vocabulary-import': VocabularyImportPage,
-  practice: PracticePage,
-  'practice-exercises': PracticePage,
-  'practice-listening': PracticePage,
-  'practice-speaking': PracticePage,
-  'practice-writing': PracticePage,
+  practice: PracticeExercisesPage,
+  'practice-exercises': PracticeExercisesPage,
+  'practice-listening': PracticeListeningPage,
+  'practice-speaking': PracticeSpeakingPage,
+  'practice-writing': PracticeWritingPage,
   'toeic-tests': ExamsPage,
   exams: ExamsPage,
   'media-storage': MediaStoragePage,

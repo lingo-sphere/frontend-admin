@@ -1,14 +1,15 @@
 import { api } from '@/services/api-client'
 
 export interface ToeicExamItem {
-  id: string
+  id?: string
+  _id?: string
   title: string
-  type: 'FULL_TEST' | 'MINI_TEST' | 'PRE_TEST' | 'POST_MINI_TEST' | 'CHALLENGE_TEST'
-  duration_minutes: number
-  total_questions: number
+  type?: 'FULL_TEST' | 'MINI_TEST' | 'PRE_TEST' | 'POST_MINI_TEST' | 'CHALLENGE_TEST' | string
+  duration_minutes?: number
+  total_questions?: number
   total_attempts?: number
   avg_score?: number
-  is_published: boolean
+  is_published?: boolean
   created_at?: string
 }
 

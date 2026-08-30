@@ -142,7 +142,7 @@ export function ExamListTable({
                     <td className="py-3.5 px-4">
                       <button
                         onClick={() =>
-                          onTogglePublish(exam.id, exam.is_published)
+                          onTogglePublish(exam.id || exam._id || '', exam.is_published ?? true)
                         }
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors cursor-pointer ${
                           exam.is_published
@@ -156,7 +156,7 @@ export function ExamListTable({
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => onDeleteExam(exam.id)}
+                          onClick={() => onDeleteExam(exam.id || exam._id || '')}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
                           title="Xóa đề thi"
                         >
