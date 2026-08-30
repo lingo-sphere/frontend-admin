@@ -60,11 +60,17 @@ export function App() {
       triggerKickout(customEvent.detail?.message)
     }
 
+    const handleUnauthorized = () => {
+      logout()
+    }
+
     window.addEventListener('lingosphere:session_terminated', handleSessionTerminated)
+    window.addEventListener('lingosphere:unauthorized', handleUnauthorized)
 
     return () => {
       eventSource?.close()
       window.removeEventListener('lingosphere:session_terminated', handleSessionTerminated)
+      window.removeEventListener('lingosphere:unauthorized', handleUnauthorized)
     }
   }, [isAuthenticated, logout])
 

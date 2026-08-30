@@ -182,7 +182,8 @@ export const authStore = createStore<AuthState>()((set, get) => ({
         isAuthenticated: true,
       })
     } catch (err) {
-      console.warn('Failed to fetch current user profile:', err)
+      console.warn('Failed to fetch current user profile (token expired), logging out:', err)
+      await get().logout()
     }
   },
 
@@ -197,9 +198,17 @@ export const authStore = createStore<AuthState>()((set, get) => ({
     if (token) {
       set({ isAuthenticated: true, token })
       await get().fetchCurrentUser()
+    } else {
+      set({ isAuthenticated: false, token: null, user: null, permissions: [] })
     }
   },
 }))
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('lingosphere:unauthorized', () => {
+    authStore.getState().logout()
+  })
+}
 
 export function useAuthStore<T>(selector: (state: AuthState) => T): T {
   return useSyncExternalStore(
