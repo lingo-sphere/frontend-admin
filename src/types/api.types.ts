@@ -497,6 +497,12 @@ export interface BetterStackMonitoringData {
   services: ServiceHealthItem[]
   recent_incidents: BetterStackIncident[]
   live_logs?: BetterStackLogItem[]
+  pagination?: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
 }
 
 export interface PostHogTopEvent {
@@ -549,4 +555,10 @@ export interface PostHogAnalyticsData {
   top_pages: PostHogTopPage[]
   recent_replays: PostHogSessionReplay[]
   live_events: PostHogLiveEventItem[]
+  pagination?: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
 }

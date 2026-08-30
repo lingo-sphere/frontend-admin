@@ -25,11 +25,37 @@ export const progressService = {
     return api.get<unknown[]>(API_CONFIG.ENDPOINTS.PROGRESS.MY_COURSES)
   },
 
-  async getBetterStackMonitoring(): Promise<BetterStackMonitoringData> {
-    return api.get<BetterStackMonitoringData>(API_CONFIG.ENDPOINTS.PROGRESS.MONITORING_BETTERSTACK)
+  async getBetterStackMonitoring(params?: {
+    page?: number
+    limit?: number
+    search?: string
+    level?: string
+  }): Promise<BetterStackMonitoringData> {
+    const query = new URLSearchParams()
+    if (params?.page) query.set('page', String(params.page))
+    if (params?.limit) query.set('limit', String(params.limit))
+    if (params?.search) query.set('search', params.search)
+    if (params?.level) query.set('level', params.level)
+    const qs = query.toString()
+    const endpoint = qs
+      ? `${API_CONFIG.ENDPOINTS.PROGRESS.MONITORING_BETTERSTACK}?${qs}`
+      : API_CONFIG.ENDPOINTS.PROGRESS.MONITORING_BETTERSTACK
+    return api.get<BetterStackMonitoringData>(endpoint)
   },
 
-  async getPostHogAnalytics(): Promise<PostHogAnalyticsData> {
-    return api.get<PostHogAnalyticsData>(API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG)
+  async getPostHogAnalytics(params?: {
+    page?: number
+    limit?: number
+    search?: string
+  }): Promise<PostHogAnalyticsData> {
+    const query = new URLSearchParams()
+    if (params?.page) query.set('page', String(params.page))
+    if (params?.limit) query.set('limit', String(params.limit))
+    if (params?.search) query.set('search', params.search)
+    const qs = query.toString()
+    const endpoint = qs
+      ? `${API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG}?${qs}`
+      : API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG
+    return api.get<PostHogAnalyticsData>(endpoint)
   },
 }

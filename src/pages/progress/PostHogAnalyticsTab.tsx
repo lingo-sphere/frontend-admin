@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
@@ -11,12 +11,14 @@ import {
   Play,
   Clock,
   Laptop,
-  CheckCircle2,
   BookOpen,
   GraduationCap,
   Brain,
   Headphones,
   Search,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import type { PostHogAnalyticsData, PostHogSessionReplay, PostHogLiveEventItem } from '@/types/api.types'
 
@@ -24,17 +26,34 @@ interface PostHogAnalyticsTabProps {
   data: PostHogAnalyticsData | null
   isLoading: boolean
   onRefresh: () => void
+  serverParams?: {
+    page: number
+    limit: number
+    search: string
+  }
+  onParamsChange?: (newParams: Partial<{
+    page: number
+    limit: number
+    search: string
+  }>) => void
+  onSearchSubmit?: (searchTerm: string) => void
 }
 
 export function PostHogAnalyticsTab({
   data,
   isLoading,
   onRefresh,
+  serverParams,
+  onParamsChange,
+  onSearchSubmit,
 }: PostHogAnalyticsTabProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [eventSearch, setEventSearch] = useState('')
+  const [searchInput, setSearchInput] = useState<string>(serverParams?.search || '')
+
+  const [replaysPage, setReplaysPage] = useState<number>(1)
+  const [replaysPageSize, setReplaysPageSize] = useState<number>(6)
 
   const getEventBadge = (eventName: string) => {
     switch (eventName) {
@@ -72,13 +91,34 @@ export function PostHogAnalyticsTab({
   }
 
   const liveEvents = data?.live_events || []
-  const filteredEvents = liveEvents.filter(
-    (e) =>
-      e.event.toLowerCase().includes(eventSearch.toLowerCase()) ||
-      e.user_email.toLowerCase().includes(eventSearch.toLowerCase()),
-  )
+  const pagination = data?.pagination || {
+    total: liveEvents.length,
+    page: serverParams?.page || 1,
+    limit: serverParams?.limit || 10,
+    totalPages: Math.max(1, Math.ceil(liveEvents.length / (serverParams?.limit || 10))),
+  }
+
+  const currentPage = serverParams?.page || pagination.page || 1
+  const currentLimit = serverParams?.limit || pagination.limit || 10
+  const totalPages = pagination.totalPages || 1
+  const totalEvents = pagination.total || 0
 
   const replays = data?.recent_replays || []
+  const totalReplayPages = Math.max(1, Math.ceil(replays.length / replaysPageSize))
+  const paginatedReplays = useMemo(() => {
+    const start = (replaysPage - 1) * replaysPageSize
+    return replays.slice(start, start + replaysPageSize)
+  }, [replays, replaysPage, replaysPageSize])
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (onSearchSubmit) {
+        onSearchSubmit(searchInput)
+      } else if (onParamsChange) {
+        onParamsChange({ search: searchInput, page: 1 })
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -98,7 +138,7 @@ export function PostHogAnalyticsTab({
             <p className="text-indigo-100/90 text-sm max-w-2xl">
               {isVi
                 ? 'Theo dõi hành vi học viên trên Frontend Web, ghi hình trực quan toàn bộ phiên làm bài thi TOEIC, học từ vựng SRS và đo lường tỷ lệ hoàn thành khóa học.'
-                : 'Track student behavior on Frontend Web, record video replays of TOEIC exams & SRS vocab sessions, and measure course completion funnels.'}
+                : 'Real-time telemetry tracking learner interactions, session replays, and learning funnels powered by PostHog Cloud.'}
             </p>
           </div>
 
@@ -116,99 +156,88 @@ export function PostHogAnalyticsTab({
               href="https://us.posthog.com/project/585141"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-indigo-50 text-xs sm:text-sm font-bold shadow-lg shadow-black/10 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-teal-50 text-xs sm:text-sm font-bold shadow-lg shadow-black/10 transition-all cursor-pointer"
             >
-              <span>{isVi ? 'Mở PostHog Staging' : 'Open PostHog'}</span>
+              <span>{isVi ? 'Mở PostHog Cloud' : 'Open PostHog'}</span>
               <ExternalLink className="w-4 h-4 text-indigo-600" />
             </a>
           </div>
         </div>
 
-        {/* 4 KPI Metrics */}
+        {/* Quick KPI Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/15">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold">
+            <div className="flex items-center gap-2 text-teal-200 text-xs font-semibold">
               <Eye className="w-4 h-4" />
-              <span>{isVi ? 'Lượt xem trang ($Pageviews)' : 'Total Pageviews'}</span>
+              <span>{isVi ? 'Tổng lượt xem trang' : 'Total Pageviews'}</span>
             </div>
-            <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.total_pageviews.toLocaleString() ?? '0'}
+            <p className="text-xl sm:text-2xl font-black text-white mt-1">
+              {data?.metrics?.total_pageviews ?? 0}
             </p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold">
+            <div className="flex items-center gap-2 text-teal-200 text-xs font-semibold">
               <Users className="w-4 h-4" />
-              <span>{isVi ? 'Người dùng định danh' : 'Identified Users'}</span>
+              <span>{isVi ? 'Khách truy cập (Unique)' : 'Unique Visitors'}</span>
             </div>
-            <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.identified_users.toLocaleString() ?? '0'}
+            <p className="text-xl sm:text-2xl font-black text-white mt-1">
+              {data?.metrics?.unique_visitors ?? 0}
             </p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold">
-              <Sparkles className="w-4 h-4" />
-              <span>{isVi ? 'Sự kiện học tập (Events)' : 'Custom Events'}</span>
-            </div>
-            <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.custom_learning_events.toLocaleString() ?? '0'}
-            </p>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold">
+            <div className="flex items-center gap-2 text-teal-200 text-xs font-semibold">
               <Video className="w-4 h-4" />
-              <span>{isVi ? 'Video ghi hình Replay' : 'Session Replays'}</span>
+              <span>{isVi ? 'Video Session Replays' : 'Recorded Sessions'}</span>
             </div>
-            <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.total_session_replays ?? 0} {isVi ? 'phiên' : 'replays'}
+            <p className="text-xl sm:text-2xl font-black text-white mt-1">
+              {data?.metrics?.total_session_replays ?? 0}
+            </p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+            <div className="flex items-center gap-2 text-teal-200 text-xs font-semibold">
+              <Sparkles className="w-4 h-4" />
+              <span>{isVi ? 'Tương tác học tập' : 'Learning Events'}</span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-white mt-1">
+              {data?.metrics?.custom_learning_events ?? 0}
             </p>
           </div>
         </div>
       </div>
 
-      {/* 2. Top Events & Top Pages Grid */}
+      {/* 2. Top Events & Top Pages */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Learning Events */}
+        {/* Top Events */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                {isVi ? 'Sự Kiện Nổi Bật (Top Events)' : 'Top Events'}
+                {isVi ? 'Top Sự Kiện Thực Hiện Nhiều Nhất' : 'Top Triggered Events'}
               </h3>
             </div>
-            <span className="text-xs text-slate-400 font-mono">PostHog Track</span>
+            <span className="text-xs font-semibold text-slate-500">PostHog Live</span>
           </div>
 
           <div className="space-y-3">
-            {data?.top_events.map((ev) => {
-              const maxCount = Math.max(...(data.top_events.map((e) => e.count) || [1]), 1)
-              const percentage = Math.round((ev.count / maxCount) * 100)
-              const badge = getEventBadge(ev.event_name)
-              const Icon = badge.icon
-
+            {(data?.top_events || []).map((ev, index) => {
+              const maxCount = Math.max(...(data?.top_events?.map((e) => e.count) || [1]), 1)
+              const percent = Math.min(100, Math.round((ev.count / maxCount) * 100))
               return (
-                <div key={ev.event_name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs sm:text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{ev.label}</span>
-                        <span className="text-xs text-slate-400 font-mono ml-2">({ev.event_name})</span>
-                      </div>
-                    </div>
-                    <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                      {ev.count.toLocaleString()}
+                <div key={index} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-800 dark:text-slate-200">{ev.label}</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 font-mono">
+                      {ev.count} {isVi ? 'lần' : 'times'}
                     </span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div
                       className="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, percentage)}%` }}
+                      style={{ width: `${percent}%` }}
                     />
                   </div>
                 </div>
@@ -217,35 +246,38 @@ export function PostHogAnalyticsTab({
           </div>
         </div>
 
-        {/* Top Visited Pages */}
+        {/* Top Pages */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Eye className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                {isVi ? 'Trang Được Truy Cập Nhiều Nhất' : 'Top Visited Pages'}
+                {isVi ? 'Top Trang Được Truy Cập Nhiều Nhất' : 'Most Viewed Pages'}
               </h3>
             </div>
-            <span className="text-xs text-slate-400 font-mono">$pageview</span>
+            <span className="text-xs font-semibold text-slate-500">Frontend Web</span>
           </div>
 
           <div className="space-y-3">
-            {data?.top_pages.map((p) => (
+            {(data?.top_pages || []).map((pg, index) => (
               <div
-                key={p.path}
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 text-xs sm:text-sm"
+                key={index}
+                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate">
-                    {p.path}
+                  <span className="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 font-black text-xs flex items-center justify-center shrink-0">
+                    {index + 1}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                    {pg.path}
                   </span>
                 </div>
-                <div className="flex items-center gap-4 shrink-0 font-mono">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    {p.unique_visitors.toLocaleString()} {isVi ? 'học viên' : 'users'}
+                <div className="flex items-center gap-3 text-xs font-bold shrink-0">
+                  <span className="text-teal-600 dark:text-teal-400 font-mono">
+                    {pg.views} {isVi ? 'views' : 'views'}
                   </span>
-                  <span className="font-bold text-teal-600 dark:text-teal-400">
-                    {p.views.toLocaleString()} views
+                  <span className="text-slate-400 text-[11px]">
+                    ({pg.unique_visitors} {isVi ? 'người' : 'users'})
                   </span>
                 </div>
               </div>
@@ -254,15 +286,19 @@ export function PostHogAnalyticsTab({
         </div>
       </div>
 
-      {/* 3. Session Replay Videos */}
+      {/* 3. Session Replay Videos with Pagination */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2.5">
             <Video className="w-5 h-5 text-rose-500" />
             <h3 className="font-bold text-base text-slate-900 dark:text-white">
               {isVi ? 'Video Ghi Hình Thao Tác (Session Replays)' : 'Recent Session Replays'}
             </h3>
+            <span className="text-xs font-semibold text-slate-400">
+              ({replays.length} {isVi ? 'bản ghi' : 'replays'})
+            </span>
           </div>
+
           <a
             href="https://us.posthog.com/project/585141/replay"
             target="_blank"
@@ -274,117 +310,284 @@ export function PostHogAnalyticsTab({
           </a>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {replays.map((rep: PostHogSessionReplay) => (
-            <div
-              key={rep.session_id}
-              className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
-                    {rep.session_id}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                    REPLAY
-                  </span>
-                </div>
-
-                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                  {rep.user_email}
-                </p>
-
-                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{Math.round(rep.duration_seconds / 60)} {isVi ? 'phút' : 'mins'}</span>
-                  </div>
-                  <span>•</span>
-                  <span>{rep.events_count} events</span>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                  <Laptop className="w-3.5 h-3.5" />
-                  <span className="truncate">{rep.device}</span>
-                </div>
-              </div>
-
-              <a
-                href={rep.replay_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 transition-all cursor-pointer group-hover:scale-[1.02]"
+        {paginatedReplays.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedReplays.map((rep: PostHogSessionReplay) => (
+              <div
+                key={rep.session_id}
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group"
               >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>{isVi ? 'Xem lại thao tác' : 'Watch Replay'}</span>
-              </a>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
+                      {rep.session_id}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                      REPLAY
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {rep.user_email}
+                  </p>
+
+                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{Math.round(rep.duration_seconds / 60)} {isVi ? 'phút' : 'mins'}</span>
+                    </div>
+                    <span>•</span>
+                    <span>{rep.events_count} events</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Laptop className="w-3.5 h-3.5" />
+                    <span className="truncate">{rep.device}</span>
+                  </div>
+                </div>
+
+                <a
+                  href={rep.replay_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 transition-all cursor-pointer group-hover:scale-[1.02]"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>{isVi ? 'Xem lại thao tác' : 'Watch Replay'}</span>
+                </a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-slate-400 text-xs">
+            {isVi ? 'Chưa có bản ghi Session Replay nào' : 'No session replays found'}
+          </div>
+        )}
+
+        {/* Replays Pagination Bar */}
+        {totalReplayPages > 1 && (
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
+            <span className="text-slate-500">
+              {isVi
+                ? `Hiển thị ${(replaysPage - 1) * replaysPageSize + 1} - ${Math.min(
+                    replaysPage * replaysPageSize,
+                    replays.length
+                  )} trên ${replays.length} bản ghi`
+                : `Showing ${(replaysPage - 1) * replaysPageSize + 1} - ${Math.min(
+                    replaysPage * replaysPageSize,
+                    replays.length
+                  )} of ${replays.length} replays`}
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setReplaysPage((p) => Math.max(1, p - 1))}
+                disabled={replaysPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {replaysPage} / {totalReplayPages}
+              </span>
+              <button
+                onClick={() => setReplaysPage((p) => Math.min(totalReplayPages, p + 1))}
+                disabled={replaysPage === totalReplayPages}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* 4. Live Event Stream */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      {/* 4. Live Event Stream with Server-side Pagination & Search */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 relative">
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs rounded-3xl z-20 flex items-center justify-center">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>{isVi ? 'Đang tải dữ liệu PostHog...' : 'Loading PostHog data...'}</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">
-              {isVi ? 'Luồng Sự Kiện Học Tập Thời Gian Thực (Live Events)' : 'Real-time Event Stream'}
-            </h3>
+            <div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                {isVi ? 'Luồng Sự Kiện Học Tập Thời Gian Thực (Server-side)' : 'Real-time Event Stream'}
+              </h3>
+              <span className="text-xs text-slate-500">
+                ({totalEvents} {isVi ? 'sự kiện ghi nhận' : 'events'})
+              </span>
+            </div>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={eventSearch}
-              onChange={(e) => setEventSearch(e.target.value)}
-              placeholder={isVi ? 'Tìm sự kiện, email...' : 'Search events, email...'}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-indigo-500"
-            />
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder={isVi ? 'Gõ tìm kiếm & ấn Enter...' : 'Search events & press Enter...'}
+                className="w-full pl-9 pr-8 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-indigo-500"
+              />
+              {searchInput && (
+                <button
+                  onClick={() => {
+                    setSearchInput('')
+                    if (onSearchSubmit) onSearchSubmit('')
+                    else if (onParamsChange) onParamsChange({ search: '', page: 1 })
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>{isVi ? 'Số dòng:' : 'Page size:'}</span>
+              <select
+                value={currentLimit}
+                onChange={(e) => {
+                  if (onParamsChange) {
+                    onParamsChange({ limit: Number(e.target.value), page: 1 })
+                  }
+                }}
+                className="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-hidden"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10.5px]">
-                <th className="pb-3 px-3">{isVi ? 'Loại Sự Kiện' : 'Event'}</th>
-                <th className="pb-3 px-3">{isVi ? 'Học Viên' : 'User'}</th>
-                <th className="pb-3 px-3">{isVi ? 'Dữ Liệu Nghiệp Vụ' : 'Properties'}</th>
-                <th className="pb-3 px-3">{isVi ? 'Thời Gian' : 'Timestamp'}</th>
+            <thead className="bg-slate-50 dark:bg-slate-800/80">
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10.5px]">
+                <th className="py-3 px-3.5 w-44">{isVi ? 'Loại Sự Kiện' : 'Event'}</th>
+                <th className="py-3 px-3.5 w-48">{isVi ? 'Học Viên' : 'User'}</th>
+                <th className="py-3 px-3.5">{isVi ? 'Dữ Liệu Thu Thập' : 'Properties'}</th>
+                <th className="py-3 px-3.5 w-36">{isVi ? 'Thời Gian' : 'Timestamp'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {filteredEvents.map((item: PostHogLiveEventItem) => {
-                const badge = getEventBadge(item.event)
-                const Icon = badge.icon
+              {liveEvents.length > 0 ? (
+                liveEvents.map((item: PostHogLiveEventItem) => {
+                  const badge = getEventBadge(item.event)
+                  const Icon = badge.icon
 
-                return (
-                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold border ${badge.color}`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                        <span>{badge.label}</span>
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                      {item.user_email}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-300">
-                      {JSON.stringify(item.properties)}
-                    </td>
-                    <td className="py-3 px-3 text-slate-400">
-                      {new Date(item.timestamp).toLocaleTimeString(isVi ? 'vi-VN' : 'en-US')}
-                    </td>
-                  </tr>
-                )
-              })}
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 px-3.5 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold border text-[11px] ${badge.color}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{badge.label}</span>
+                        </span>
+                      </td>
+                      <td className="py-3 px-3.5 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {item.user_email}
+                      </td>
+                      <td className="py-3 px-3.5 font-mono text-[11px] text-slate-600 dark:text-slate-300 max-w-md truncate">
+                        {JSON.stringify(item.properties)}
+                      </td>
+                      <td className="py-3 px-3.5 text-slate-400 whitespace-nowrap font-mono text-[11px]">
+                        {new Date(item.timestamp).toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={4} className="text-center py-8 text-slate-400 text-xs">
+                    {isVi ? 'Không tìm thấy sự kiện nào' : 'No events found'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+        </div>
+
+        {/* Live Events Server-side Pagination Controls */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
+          <span className="text-slate-500">
+            {isVi
+              ? `Hiển thị ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
+                  currentPage * currentLimit,
+                  totalEvents
+                )} trên tổng số ${totalEvents} sự kiện (Server-side)`
+              : `Showing ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
+                  currentPage * currentLimit,
+                  totalEvents
+                )} of ${totalEvents} events (Server-side)`}
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (onParamsChange && currentPage > 1) {
+                  onParamsChange({ page: currentPage - 1 })
+                }
+              }}
+              disabled={currentPage <= 1 || isLoading}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
+              let pageNum = idx + 1
+              if (totalPages > 5 && currentPage > 3) {
+                pageNum = currentPage - 2 + idx
+                if (pageNum > totalPages) pageNum = totalPages - (4 - idx)
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => {
+                    if (onParamsChange) {
+                      onParamsChange({ page: pageNum })
+                    }
+                  }}
+                  disabled={isLoading}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentPage === pageNum
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
+
+            <button
+              onClick={() => {
+                if (onParamsChange && currentPage < totalPages) {
+                  onParamsChange({ page: currentPage + 1 })
+                }
+              }}
+              disabled={currentPage >= totalPages || isLoading}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

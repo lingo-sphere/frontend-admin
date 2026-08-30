@@ -17,6 +17,9 @@ import {
   Search,
   Terminal,
   Filter,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import type { BetterStackMonitoringData, ServiceHealthItem, BetterStackLogItem } from '@/types/api.types'
 
@@ -24,45 +27,76 @@ interface BetterStackMonitoringTabProps {
   data: BetterStackMonitoringData | null
   isLoading: boolean
   onRefresh: () => void
+  serverParams?: {
+    page: number
+    limit: number
+    search: string
+    level: string
+  }
+  onParamsChange?: (newParams: Partial<{
+    page: number
+    limit: number
+    search: string
+    level: string
+  }>) => void
+  onSearchSubmit?: (searchTerm: string) => void
 }
 
 export function BetterStackMonitoringTab({
   data,
   isLoading,
   onRefresh,
+  serverParams,
+  onParamsChange,
+  onSearchSubmit,
 }: BetterStackMonitoringTabProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
   const [filterType, setFilterType] = useState<string>('ALL')
-  const [logSearch, setLogSearch] = useState<string>('')
-  const [logLevelFilter, setLogLevelFilter] = useState<string>('ALL')
+  const [searchInput, setSearchInput] = useState<string>(serverParams?.search || '')
+
+  const [servicesPage, setServicesPage] = useState<number>(1)
+  const [servicesPageSize, setServicesPageSize] = useState<number>(9)
 
   const services = data?.services || []
   const liveLogs = data?.live_logs || []
+  const pagination = data?.pagination || {
+    total: data?.total_logs_count || liveLogs.length,
+    page: serverParams?.page || 1,
+    limit: serverParams?.limit || 10,
+    totalPages: Math.max(1, Math.ceil((data?.total_logs_count || liveLogs.length) / (serverParams?.limit || 10))),
+  }
 
-  const filteredServices = services.filter((s) => {
-    if (filterType === 'ALL') return true
-    if (filterType === 'MICROSERVICES') return s.type !== 'INFRA'
-    if (filterType === 'INFRA') return s.type === 'INFRA'
-    return true
-  })
+  const currentPage = serverParams?.page || pagination.page || 1
+  const currentLimit = serverParams?.limit || pagination.limit || 10
+  const totalPages = pagination.totalPages || 1
+  const totalLogs = pagination.total || 0
 
-  const filteredLogs = useMemo(() => {
-    return liveLogs.filter((log: BetterStackLogItem) => {
-      const matchesLevel =
-        logLevelFilter === 'ALL' || log.level.toUpperCase() === logLevelFilter.toUpperCase()
-      const searchLower = logSearch.toLowerCase().trim()
-      const matchesSearch =
-        !searchLower ||
-        log.message.toLowerCase().includes(searchLower) ||
-        (log.path && log.path.toLowerCase().includes(searchLower)) ||
-        (log.target_service && log.target_service.toLowerCase().includes(searchLower)) ||
-        (log.correlation_id && log.correlation_id.toLowerCase().includes(searchLower))
-
-      return matchesLevel && matchesSearch
+  const filteredServices = useMemo(() => {
+    return services.filter((s) => {
+      if (filterType === 'ALL') return true
+      if (filterType === 'MICROSERVICES') return s.type !== 'INFRA'
+      if (filterType === 'INFRA') return s.type === 'INFRA'
+      return true
     })
-  }, [liveLogs, logLevelFilter, logSearch])
+  }, [services, filterType])
+
+  const totalServicesPages = Math.max(1, Math.ceil(filteredServices.length / servicesPageSize))
+  const paginatedServices = useMemo(() => {
+    const start = (servicesPage - 1) * servicesPageSize
+    return filteredServices.slice(start, start + servicesPageSize)
+  }, [filteredServices, servicesPage, servicesPageSize])
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (onSearchSubmit) {
+        onSearchSubmit(searchInput)
+      } else if (onParamsChange) {
+        onParamsChange({ search: searchInput, page: 1 })
+      }
+    }
+  }
 
   const getServiceIcon = (type: string) => {
     switch (type) {
@@ -108,8 +142,8 @@ export function BetterStackMonitoringTab({
             </h2>
             <p className="text-emerald-100/90 text-sm max-w-2xl">
               {isVi
-                ? 'Hệ thống giám sát phân tán kết nối trực tiếp ClickHouse SQL, theo dõi luồng request thực tế, độ trễ và nhịp tim toàn bộ hệ sinh thái LingoSphere.'
-                : 'Real-time distributed telemetry querying live ClickHouse SQL, tracking HTTP requests, latency, and system health.'}
+                ? 'Hệ thống giám sát phân tán kết nối trực tiếp ClickHouse SQL, hỗ trợ phân trang Server-side theo từng trang từ cơ sở dữ liệu vi dịch vụ.'
+                : 'Real-time distributed telemetry querying live ClickHouse SQL with server-side pagination across microservices.'}
             </p>
           </div>
 
@@ -170,17 +204,27 @@ export function BetterStackMonitoringTab({
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <div className="flex items-center gap-2 text-emerald-200 text-xs font-semibold">
               <Terminal className="w-4 h-4" />
-              <span>{isVi ? 'Logs ClickHouse ghi nhận' : 'Recorded Logs'}</span>
+              <span>{isVi ? 'Tổng Logs ClickHouse' : 'Total Logs'}</span>
             </div>
             <p className="text-lg sm:text-xl font-black text-white mt-1">
-              {data?.total_logs_count ?? liveLogs.length} {isVi ? 'requests' : 'logs'}
+              {totalLogs} {isVi ? 'logs' : 'logs'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* 2. BetterStack Live Tail & Telemetry Log Stream Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      {/* 2. BetterStack Live Tail & Telemetry Log Stream Table with Server-side Pagination */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 relative">
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs rounded-3xl z-20 flex items-center justify-center">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>{isVi ? 'Đang truy vấn ClickHouse SQL...' : 'Querying ClickHouse SQL...'}</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -189,49 +233,87 @@ export function BetterStackMonitoringTab({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                  {isVi ? 'Live Tail: Luồng Log & Request Thời Gian Thực' : 'Live Tail: Real-time Request Stream'}
+                  {isVi ? 'Live Tail: Luồng Log & Request Thời Gian Thực (Server-side)' : 'Live Tail: Real-time Request Stream'}
                 </h3>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  LIVE
+                  LIVE SQL
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isVi
-                  ? 'Dữ liệu stream trực tiếp từ BetterStack Telemetry ClickHouse SQL'
-                  : 'Streamed directly from BetterStack Telemetry ClickHouse SQL'}
+                  ? `Truy vấn trực tiếp ClickHouse SQL • Tổng số: ${totalLogs} logs`
+                  : `Direct ClickHouse SQL Query • Total: ${totalLogs} logs`}
               </p>
             </div>
           </div>
 
-          {/* Filters & Search */}
+          {/* Filters, Search & PageSize Selector */}
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder={isVi ? 'Tìm kiếm log, path, service...' : 'Search logs, path, service...'}
-                value={logSearch}
-                onChange={(e) => setLogSearch(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                placeholder={isVi ? 'Gõ tìm kiếm & ấn Enter...' : 'Search logs & press Enter...'}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="pl-8 pr-8 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 w-52 sm:w-64"
               />
+              {searchInput && (
+                <button
+                  onClick={() => {
+                    setSearchInput('')
+                    if (onSearchSubmit) onSearchSubmit('')
+                    else if (onParamsChange) onParamsChange({ search: '', page: 1 })
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
+            {/* Level Filter */}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <Filter className="w-3.5 h-3.5 text-slate-400 ml-1.5" />
-              {['ALL', 'INFO', 'WARN', 'ERROR'].map((lvl) => (
-                <button
-                  key={lvl}
-                  onClick={() => setLogLevelFilter(lvl)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                    logLevelFilter === lvl
-                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                >
-                  {lvl}
-                </button>
-              ))}
+              {['ALL', 'INFO', 'WARN', 'ERROR'].map((lvl) => {
+                const isSelected = (serverParams?.level || 'ALL').toUpperCase() === lvl
+                return (
+                  <button
+                    key={lvl}
+                    onClick={() => {
+                      if (onParamsChange) {
+                        onParamsChange({ level: lvl, page: 1 })
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Page Size */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <select
+                value={currentLimit}
+                onChange={(e) => {
+                  if (onParamsChange) {
+                    onParamsChange({ limit: Number(e.target.value), page: 1 })
+                  }
+                }}
+                className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-hidden"
+              >
+                <option value={10}>10 / trang</option>
+                <option value={20}>20 / trang</option>
+                <option value={50}>50 / trang</option>
+              </select>
             </div>
           </div>
         </div>
@@ -248,8 +330,8 @@ export function BetterStackMonitoringTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredLogs.length > 0 ? (
-                filteredLogs.map((log: BetterStackLogItem, idx: number) => {
+              {liveLogs.length > 0 ? (
+                liveLogs.map((log: BetterStackLogItem, idx: number) => {
                   const dateStr = log.timestamp.replace('T', ' ').replace('Z', '').slice(0, 23)
                   return (
                     <tr
@@ -292,13 +374,80 @@ export function BetterStackMonitoringTab({
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-slate-500 font-sans text-xs">
                     {isVi
-                      ? 'Chưa có log phù hợp với bộ lọc tìm kiếm'
-                      : 'No logs match your current filter'}
+                      ? 'Chưa có log phù hợp với bộ lọc ClickHouse SQL'
+                      : 'No logs match your ClickHouse SQL query'}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Live Logs Server-side Pagination Controls */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
+          <span className="text-slate-500">
+            {isVi
+              ? `Hiển thị ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
+                  currentPage * currentLimit,
+                  totalLogs
+                )} trên tổng số ${totalLogs} logs (Server-side)`
+              : `Showing ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
+                  currentPage * currentLimit,
+                  totalLogs
+                )} of ${totalLogs} logs (Server-side)`}
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (onParamsChange && currentPage > 1) {
+                  onParamsChange({ page: currentPage - 1 })
+                }
+              }}
+              disabled={currentPage <= 1 || isLoading}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
+              let pageNum = idx + 1
+              if (totalPages > 5 && currentPage > 3) {
+                pageNum = currentPage - 2 + idx
+                if (pageNum > totalPages) pageNum = totalPages - (4 - idx)
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => {
+                    if (onParamsChange) {
+                      onParamsChange({ page: pageNum })
+                    }
+                  }}
+                  disabled={isLoading}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentPage === pageNum
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
+
+            <button
+              onClick={() => {
+                if (onParamsChange && currentPage < totalPages) {
+                  onParamsChange({ page: currentPage + 1 })
+                }
+              }}
+              disabled={currentPage >= totalPages || isLoading}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -319,7 +468,10 @@ export function BetterStackMonitoringTab({
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setFilterType(tab.id)}
+              onClick={() => {
+                setFilterType(tab.id)
+                setServicesPage(1)
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 filterType === tab.id
                   ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20'
@@ -332,77 +484,116 @@ export function BetterStackMonitoringTab({
         </div>
       </div>
 
-      {/* 4. Services Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredServices.map((service: ServiceHealthItem) => {
-          const Icon = getServiceIcon(service.type)
+      {/* 4. Services Grid with Pagination */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {paginatedServices.map((service: ServiceHealthItem) => {
+            const Icon = getServiceIcon(service.type)
 
-          return (
-            <div
-              key={service.id}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
-                      {service.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="font-mono text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                        :{service.port}
-                      </span>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
-                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
-                        {service.type}
-                      </span>
+            return (
+              <div
+                key={service.id}
+                className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                        {service.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                          :{service.port}
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+                          {service.type}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      OPERATIONAL
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-end shrink-0">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    OPERATIONAL
-                  </span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 line-clamp-2">
+                  {service.description}
+                </p>
+
+                {/* Uptime & Latency stats */}
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                    <Zap className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      {service.latency_ms} ms
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <Radio className="w-3.5 h-3.5 animate-pulse" />
+                    <span>{service.uptime_percentage}% uptime</span>
+                  </div>
+                </div>
+
+                {/* Visual 20-block uptime graph */}
+                <div className="flex items-center gap-1 mt-3">
+                  {Array.from({ length: 20 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="flex-1 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-90 hover:opacity-100 hover:scale-y-125 transition-all"
+                      title="100% Uptime Block"
+                    />
+                  ))}
                 </div>
               </div>
+            )
+          })}
+        </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 line-clamp-2">
-                {service.description}
-              </p>
+        {/* Services Grid Pagination Bar */}
+        {totalServicesPages > 1 && (
+          <div className="flex items-center justify-between pt-2 text-xs flex-wrap gap-3">
+            <span className="text-slate-500">
+              {isVi
+                ? `Hiển thị ${(servicesPage - 1) * servicesPageSize + 1} - ${Math.min(
+                    servicesPage * servicesPageSize,
+                    filteredServices.length
+                  )} trên ${filteredServices.length} dịch vụ`
+                : `Showing ${(servicesPage - 1) * servicesPageSize + 1} - ${Math.min(
+                    servicesPage * servicesPageSize,
+                    filteredServices.length
+                  )} of ${filteredServices.length} services`}
+            </span>
 
-              {/* Uptime & Latency stats */}
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                    {service.latency_ms} ms
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-                  <Radio className="w-3.5 h-3.5 animate-pulse" />
-                  <span>{service.uptime_percentage}% uptime</span>
-                </div>
-              </div>
-
-              {/* Visual 20-block uptime graph */}
-              <div className="flex items-center gap-1 mt-3">
-                {Array.from({ length: 20 }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="flex-1 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-90 hover:opacity-100 hover:scale-y-125 transition-all"
-                    title="100% Uptime Block"
-                  />
-                ))}
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setServicesPage((p) => Math.max(1, p - 1))}
+                disabled={servicesPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {servicesPage} / {totalServicesPages}
+              </span>
+              <button
+                onClick={() => setServicesPage((p) => Math.min(totalServicesPages, p + 1))}
+                disabled={servicesPage === totalServicesPages}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          )
-        })}
+          </div>
+        )}
       </div>
 
       {/* 5. Incident Log Table */}
