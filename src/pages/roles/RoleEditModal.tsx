@@ -117,15 +117,15 @@ export function RoleEditModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-modal-backdrop"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-modal-backdrop"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh] animate-modal-content"
+        className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col h-[85vh] max-h-[850px] animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
               <ShieldCheck className="h-5 w-5" />
@@ -147,10 +147,12 @@ export function RoleEditModal({
           </button>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Top Form Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Modal Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          {/* Scrollable Body - ONLY 1 SCROLLBAR IN MODAL */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {/* Top Form Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                 <span className="text-rose-500">*</span> Tên Role
@@ -245,8 +247,8 @@ export function RoleEditModal({
               </div>
             </div>
 
-            {/* Accordion Module List */}
-            <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-800 p-2 bg-slate-50/50 dark:bg-slate-950/40 max-h-[420px] overflow-y-auto">
+            {/* Accordion Module List (Unified Scroll) */}
+            <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-800 p-2 bg-slate-50/50 dark:bg-slate-950/40">
               {moduleNames.map((mod) => {
                 const modPerms = groupedPermissions[mod] || []
                 const filteredModPerms = modPerms.filter((p) => {
@@ -372,23 +374,29 @@ export function RoleEditModal({
               })}
             </div>
           </div>
+        </div>
 
-          {/* Modal Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-9 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-md shadow-blue-600/30 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Đang lưu...' : editingRole ? 'Cập nhật Role' : 'Tạo mới Role'}
-            </button>
+        {/* Sticky Modal Footer */}
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 backdrop-blur-xs shrink-0">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Đã chọn <strong className="text-blue-600 dark:text-blue-400">{selectedPermIds.length}</strong> / {allPermissions.length} quyền
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-9.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="h-9.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-md shadow-blue-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                {isSubmitting ? 'Đang lưu...' : editingRole ? 'Cập nhật Role' : 'Tạo mới Role'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

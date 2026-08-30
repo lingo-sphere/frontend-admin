@@ -36,7 +36,7 @@ export function CreateExamModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-modal-backdrop"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop"
       onClick={onClose}
     >
       <div
