@@ -57,9 +57,8 @@ apiClient.interceptors.response.use(
       const isKickout = errorMsg.includes('thiết bị khác') || errorMsg.includes('đăng nhập trên một thiết bị')
 
       if (isKickout) {
+        console.warn('🚨 [api-client] 401 Kickout detected on URL:', originalRequest.url, 'message:', errorMsg)
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
         }
         return Promise.reject(error)

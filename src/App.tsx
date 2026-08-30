@@ -11,11 +11,14 @@ import { API_CONFIG } from '@/config/api.config'
 export function App() {
   const theme = useAdminStore((state) => state.theme)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const token = useAuthStore((state) => state.token)
+  const clearLocalSession = useAuthStore((state) => state.clearLocalSession)
   const logout = useAuthStore((state) => state.logout)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
 
   const triggerKickout = (msg?: string) => {
-    logout()
+    console.warn('🚨 [App] triggerKickout called with msg:', msg)
+    clearLocalSession()
     setKickoutMessage(msg || 'Tài khoản Quản trị vừa được đăng nhập trên một thiết bị khác. Bạn đã bị đăng xuất.')
   }
 
@@ -31,20 +34,21 @@ export function App() {
   }, [theme])
 
   useEffect(() => {
-    if (!isAuthenticated) return
-
-    const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-    if (!token) return
+    if (!isAuthenticated || !token) return
 
     let eventSource: EventSource | null = null
     try {
       const sseUrl = `${API_CONFIG.BASE_URL}/auth/session-stream?token=${encodeURIComponent(token)}`
+      console.log('📡 [SSE] Connecting to:', sseUrl)
       eventSource = new EventSource(sseUrl)
 
       eventSource.onmessage = (event) => {
+        console.log('📡 [SSE] Message received:', event.data)
         try {
           const data = JSON.parse(event.data)
           if (data.type === 'SESSION_TERMINATED') {
+            console.warn('🚨 [SSE] SESSION_TERMINATED event:', data)
+            eventSource?.close()
             triggerKickout(data.message)
           }
         } catch {
@@ -57,6 +61,7 @@ export function App() {
 
     const handleSessionTerminated = (e: Event) => {
       const customEvent = e as CustomEvent<{ message?: string }>
+      console.warn('🚨 [Window Event] lingosphere:session_terminated received:', customEvent.detail?.message)
       triggerKickout(customEvent.detail?.message)
     }
 
@@ -72,24 +77,26 @@ export function App() {
       window.removeEventListener('lingosphere:session_terminated', handleSessionTerminated)
       window.removeEventListener('lingosphere:unauthorized', handleUnauthorized)
     }
-  }, [isAuthenticated, logout])
+  }, [isAuthenticated, token, logout, clearLocalSession])
 
   return (
-    <AuthGuard>
-      <AdminShell>
-        <PageRouter />
-      </AdminShell>
+    <>
+      <AuthGuard>
+        <AdminShell>
+          <PageRouter />
+        </AdminShell>
+      </AuthGuard>
       <ToastContainer />
 
       <ConfirmModal
         isOpen={Boolean(kickoutMessage)}
         onClose={() => {
           setKickoutMessage(null)
-          window.location.href = '/'
+          clearLocalSession()
         }}
         onConfirm={() => {
           setKickoutMessage(null)
-          window.location.href = '/'
+          clearLocalSession()
         }}
         title="Đăng Nhập Từ Thiết Bị Khác"
         message={kickoutMessage || ''}
@@ -98,6 +105,6 @@ export function App() {
         variant="warning"
         icon="warning"
       />
-    </AuthGuard>
+    </>
   )
 }

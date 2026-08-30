@@ -15,6 +15,7 @@ interface AuthState {
   error: string | null
   login: (credentials: LoginCredentials) => Promise<boolean>
   logout: () => Promise<void>
+  clearLocalSession: () => void
   fetchCurrentUser: () => Promise<void>
   updateProfile: (data: Partial<UserProfile>) => Promise<UserProfile>
   initAuth: () => Promise<void>
@@ -147,6 +148,18 @@ export const authStore = createStore<AuthState>()((set, get) => ({
         error: null,
       })
     }
+  },
+
+  clearLocalSession: () => {
+    set({
+      user: null,
+      profile: null,
+      token: null,
+      permissions: [],
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    })
   },
 
   fetchCurrentUser: async () => {
