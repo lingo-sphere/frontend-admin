@@ -253,6 +253,7 @@ export function DashboardPage() {
       </div>
 
       <DashboardRecentActivity
+        activities={analytics?.recent_activities}
         onViewAll={() => setActiveNavItem('progress')}
         onSelectUser={(userId) => setActiveNavItem(`user-profile:${userId}`)}
         isVietnamese={isVietnamese}

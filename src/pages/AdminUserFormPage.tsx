@@ -12,7 +12,8 @@ import {
   User,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
-import { adminUsers } from '@/data/settings-data'
+import { userService } from '@/services/user.service'
+import { roleService } from '@/services/role.service'
 import { toast } from '@/store/toast-store'
 
 interface AdminUserFormData {
@@ -46,16 +47,23 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
 
   useEffect(() => {
     if (editUserId) {
-      const user = adminUsers.find((u) => u.id === editUserId)
-      if (user) {
-        setFormData({
-          email: user.email,
-          password: '',
-          full_name: user.name,
-          role: user.role,
-          status: user.is_active ? 'ACTIVE' : 'BLOCKED',
-        })
+      const loadUser = async () => {
+        try {
+          const profile = await userService.getProfileById(editUserId)
+          if (profile) {
+            setFormData({
+              email: profile.email || '',
+              password: '',
+              full_name: profile.full_name || '',
+              role: profile.role === 'INSTRUCTOR' ? 'TEACHER' : 'ADMIN',
+              status: profile.status === 'BLOCKED' ? 'BLOCKED' : 'ACTIVE',
+            })
+          }
+        } catch (err) {
+          console.warn('Error loading admin user profile:', err)
+        }
       }
+      loadUser()
     }
   }, [editUserId])
 

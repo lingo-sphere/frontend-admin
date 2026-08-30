@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useAdminStore } from "@/store/admin-store";
 import {
-  mockTopics,
   cefrLevelLabels,
   wordTypeLabels,
 } from "@/data/vocabulary-data";

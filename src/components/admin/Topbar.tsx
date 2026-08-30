@@ -7,7 +7,6 @@ import { notificationService } from '@/services/notification.service'
 import { userService } from '@/services/user.service'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { toast } from '@/store/toast-store'
-import { mockNotifications, type Notification } from '@/data/notifications-data'
 import type { AppNotification } from '@/types/api.types'
 
 function formatTimeAgo(dateStr: string, isVietnamese: boolean): string {
@@ -40,7 +39,7 @@ export function Topbar() {
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [notifications, setNotifications] = useState<(Notification | AppNotification)[]>(mockNotifications.slice(0, 5))
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [totalLearnersCount, setTotalLearnersCount] = useState<number | null>(null)
 
   const notificationRef = useRef<HTMLDivElement>(null)
@@ -52,11 +51,9 @@ export function Topbar() {
     const loadNotifications = async () => {
       try {
         const items = await notificationService.getMyNotifications()
-        if (items && items.length > 0) {
-          setNotifications(items.slice(0, 8))
-        }
-      } catch (err) {
-        console.warn('Using fallback notifications:', err)
+        setNotifications(items || [])
+      } catch {
+        setNotifications([])
       }
     }
 
@@ -66,8 +63,8 @@ export function Topbar() {
         if (analytics?.overview?.total_users !== undefined) {
           setTotalLearnersCount(analytics.overview.total_users)
         }
-      } catch (err) {
-        console.warn('Using default learner count:', err)
+      } catch {
+        // do not set fake number
       }
     }
 

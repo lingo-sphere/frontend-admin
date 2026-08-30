@@ -78,7 +78,8 @@ export interface SystemAnalyticsOverview {
     avg_user_streak: number
     max_user_streak: number
   }
-  timestamp: string
+  recent_activities?: UserActivityLog[]
+  timestamp?: string | Date
 }
 
 export interface Permission {
@@ -404,3 +405,21 @@ export interface SubscriptionPlan {
   is_active: boolean
   is_popular?: boolean
 }
+
+export interface UserActivityLog {
+  id: string
+  userId?: string
+  userName: string
+  userEmail: string
+  userAvatar?: string
+  actionType: string
+  actionNameVi: string
+  actionNameEn: string
+  detail: string
+  scoreOrXP?: string
+  platform: string
+  timestamp: string | Date
+}
+
+
+

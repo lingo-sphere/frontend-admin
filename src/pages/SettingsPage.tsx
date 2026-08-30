@@ -17,14 +17,13 @@ import {
 import { aiService } from '@/services/ai.service'
 import { roleService } from '@/services/role.service'
 import { mediaService } from '@/services/media.service'
+import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
 import {
-  subscriptionPlans,
   systemSettings,
-  type SubscriptionPlan,
   type SystemSetting,
 } from '@/data/settings-data'
-import type { AiModelConfig, StorageUsageReport, Role } from '@/types/api.types'
+import type { AiModelConfig, StorageUsageReport, Role, SubscriptionPlan } from '@/types/api.types'
 
 type TabType = 'plans' | 'ai' | 'roles' | 'system'
 
@@ -37,7 +36,7 @@ export function SettingsPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [activeTab, setActiveTab] = useState<TabType>('plans')
-  const [plans, setPlans] = useState<SubscriptionPlan[]>(subscriptionPlans)
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [settings, setSettings] = useState<SystemSetting[]>(systemSettings)
   const [aiModels, setAiModels] = useState<AiModelConfig[]>([])
   const [roles, setRoles] = useState<Role[]>([])
@@ -54,10 +53,11 @@ export function SettingsPage() {
   const loadSettingsData = async () => {
     setIsLoading(true)
     try {
-      const [models, rbacRoles, storage] = await Promise.allSettled([
+      const [models, rbacRoles, storage, plansRes] = await Promise.allSettled([
         aiService.getAiModels(),
         roleService.getAllRoles(),
         mediaService.getStorageUsage(),
+        userService.getSubscriptionPlans(),
       ])
 
       if (models.status === 'fulfilled' && models.value) {
@@ -80,8 +80,12 @@ export function SettingsPage() {
       if (storage.status === 'fulfilled' && storage.value) {
         setStorageUsage(storage.value)
       }
+
+      if (plansRes.status === 'fulfilled' && plansRes.value) {
+        setPlans(plansRes.value)
+      }
     } catch (err) {
-      console.warn('Using cached settings data:', err)
+      console.warn('Error loading settings data from backend:', err)
     } finally {
       setIsLoading(false)
     }
@@ -96,7 +100,7 @@ export function SettingsPage() {
   }
 
   const togglePlanActive = (planId: string) => {
-    setPlans((prev) => prev.map((p) => (p.id === planId ? { ...p, is_active: !p.is_active } : p)))
+    setPlans((prev) => prev.map((p) => ((p._id === planId || p.id === planId) ? { ...p, is_active: !p.is_active } : p)))
   }
 
   const handleSeedRBAC = async () => {
@@ -182,88 +186,80 @@ export function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans
               .sort((a, b) => a.tier - b.tier)
-              .map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`p-6 rounded-3xl border transition-all flex flex-col justify-between relative ${
-                    plan.is_featured
-                      ? 'bg-slate-900/90 border-indigo-500/50 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/30'
-                      : 'bg-slate-900/70 border-slate-800'
-                  }`}
-                >
-                  {plan.is_featured && (
-                    <span className="absolute -top-3 right-6 px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-md">
-                      {isVietnamese ? 'Phổ biến nhất' : 'Popular'}
-                    </span>
-                  )}
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {plan.tier === 0 ? (
-                          <Star className="w-5 h-5 text-slate-400" />
-                        ) : (
-                          <Crown className="w-5 h-5 text-amber-400" />
-                        )}
-                        <h3 className="text-base font-bold text-slate-100">
-                          {isVietnamese ? plan.name_vi : plan.name_en}
-                        </h3>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 font-mono">TIER {plan.tier}</span>
-                    </div>
-
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-extrabold text-slate-100">{formatPrice(plan.price_monthly)}</span>
-                        {plan.price_monthly > 0 && <span className="text-xs text-slate-500">/tháng</span>}
-                      </div>
-                      {plan.price_yearly > 0 && (
-                        <p className="text-[11px] text-teal-400 mt-0.5">
-                          {formatPrice(plan.price_yearly)}/năm (tiết kiệm 20%)
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs">
-                      <span className="text-slate-400">Hạn mức AI mỗi tháng: </span>
-                      <span className="font-bold text-teal-300">
-                        {plan.ai_chat_quota_monthly === -1 ? 'Không giới hạn' : `${plan.ai_chat_quota_monthly} tin nhắn`}
+              .map((plan) => {
+                const planId = plan._id || plan.id || ''
+                return (
+                  <div
+                    key={planId}
+                    className={`p-6 rounded-3xl border transition-all flex flex-col justify-between relative ${
+                      plan.is_popular
+                        ? 'bg-slate-900/90 border-indigo-500/50 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/30'
+                        : 'bg-slate-900/70 border-slate-800'
+                    }`}
+                  >
+                    {plan.is_popular && (
+                      <span className="absolute -top-3 right-6 px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-md">
+                        {isVietnamese ? 'Phổ biến nhất' : 'Popular'}
                       </span>
+                    )}
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {plan.tier === 0 ? (
+                            <Star className="w-5 h-5 text-slate-400" />
+                          ) : (
+                            <Crown className="w-5 h-5 text-amber-400" />
+                          )}
+                          <h3 className="text-base font-bold text-slate-100">
+                            {plan.name}
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 font-mono">TIER {plan.tier}</span>
+                      </div>
+
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-extrabold text-slate-100">{formatPrice(plan.price)}</span>
+                          {plan.price > 0 && <span className="text-xs text-slate-500">/{plan.duration_days >= 365 ? 'năm' : `${plan.duration_days} ngày`}</span>}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 pt-2">
+                        <h4 className="text-xs font-semibold text-slate-300">Quyền lợi bao gồm:</h4>
+                        <ul className="space-y-2 text-xs text-slate-400">
+                          {plan.features && plan.features.length > 0 ? (
+                            plan.features.map((feat, idx) => (
+                              <li key={idx} className="flex items-center gap-2">
+                                <Check className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                <span>{feat}</span>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="flex items-center gap-2">
+                              <Check className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                              <span>{plan.tier === 0 ? 'Quyền truy cập miễn phí cơ bản' : 'Toàn quyền truy cập tất cả tính năng VIP'}</span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
                     </div>
 
-                    <div className="space-y-2 pt-2">
-                      <h4 className="text-xs font-semibold text-slate-300">Quyền lợi bao gồm:</h4>
-                      <ul className="space-y-2 text-xs text-slate-400">
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                          <span>{plan.has_ai_evaluation ? 'Chấm bài nói/viết bằng AI Gemini 2.5' : 'Học từ vựng cơ bản'}</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                          <span>{plan.has_full_toeic_access ? 'Toàn quyền 50+ đề thi TOEIC ETS' : 'Luyện tập đề mẫu hạn chế'}</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                          <span>{plan.has_ad_free ? 'Không quảng cáo & Ưu tiên hỗ trợ' : 'Hỗ trợ cộng đồng'}</span>
-                        </li>
-                      </ul>
+                    <div className="pt-6 mt-6 border-t border-slate-800">
+                      <button
+                        className={`w-full py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                          plan.is_active
+                            ? 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }`}
+                        onClick={() => togglePlanActive(planId)}
+                      >
+                        {plan.is_active ? 'Đang kích hoạt' : 'Đang tạm dừng'}
+                      </button>
                     </div>
                   </div>
-
-                  <div className="pt-6 mt-6 border-t border-slate-800">
-                    <button
-                      className={`w-full py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                        plan.is_active
-                          ? 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}
-                      onClick={() => togglePlanActive(plan.id)}
-                    >
-                      {plan.is_active ? 'Đang kích hoạt' : 'Đang tạm dừng'}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
           </div>
         </div>
       )}
