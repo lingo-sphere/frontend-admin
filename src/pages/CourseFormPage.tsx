@@ -37,41 +37,14 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     title: '',
     slug: '',
     description: '',
-    category: 'TOEIC_LISTENING',
-    level: 'INTERMEDIATE',
-    target_score: 750,
-    price: 399000,
-    discount_price: 299000,
-    thumbnail_url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
+    category: 'TOEIC_2_SKILLS',
+    level: 'BEGINNER',
+    target_score: 500,
+    price: 0,
+    discount_price: 0,
+    thumbnail_url: '',
     is_published: true,
-    modules: [
-      {
-        id: 'mod-1',
-        title: 'Chương 1: Tổng quan và Phương pháp nghe',
-        description: 'Làm quen với cấu trúc đề Part 1, 2 và phương pháp bắt từ khóa',
-        module_order: 1,
-        lessons: [
-          {
-            id: 'les-1',
-            title: 'Bài 1: Chiến thuật xử lý dạng tranh miêu tả 1 người',
-            video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration_minutes: 15,
-            content: 'Tóm tắt các bẫy thường gặp về thì hiện tại tiếp diễn và vị trí hành động trong đề thi TOEIC ETS.',
-            is_preview: true,
-            lesson_order: 1,
-          },
-          {
-            id: 'les-2',
-            title: 'Bài 2: Phân biệt tranh tĩnh (vật thể) và tranh động (người)',
-            video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration_minutes: 20,
-            content: 'Kỹ thuật loại trừ đáp án có từ phát âm tương tự nhưng sai ngữ cảnh.',
-            is_preview: false,
-            lesson_order: 2,
-          },
-        ],
-      },
-    ],
+    modules: [],
   })
 
   useEffect(() => {
@@ -89,9 +62,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           title: course.title || '',
           slug: course.slug || '',
           description: course.description || '',
-          category: course.category || 'TOEIC_LISTENING',
-          level: course.level || 'INTERMEDIATE',
-          target_score: course.target_score || 750,
+          category: course.category || 'TOEIC_2_SKILLS',
+          level: course.level || 'BEGINNER',
+          target_score: course.target_score || 500,
           price: course.price || 0,
           discount_price: course.discount_price || 0,
           thumbnail_url: course.thumbnail_url || '',
@@ -100,23 +73,23 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
             course.modules && course.modules.length > 0
               ? course.modules.map((m, mIdx) => ({
                   id: m._id || `mod-${mIdx}`,
-                  title: m.title,
+                  title: m.title || '',
                   description: m.description || '',
                   module_order: m.module_order || mIdx + 1,
                   lessons:
                     m.lessons && m.lessons.length > 0
                       ? m.lessons.map((l, lIdx) => ({
                           id: l._id || `les-${lIdx}`,
-                          title: l.title,
+                          title: l.title || '',
                           video_url: l.video_url || '',
-                          duration_minutes: l.duration_minutes || 10,
+                          duration_minutes: l.duration_minutes || 0,
                           content: l.content || '',
                           is_preview: l.is_preview || false,
                           lesson_order: l.lesson_order || lIdx + 1,
                         }))
                       : [],
                 }))
-              : formData.modules,
+              : [],
         })
       }
     } catch {

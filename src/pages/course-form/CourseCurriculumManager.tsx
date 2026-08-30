@@ -46,17 +46,15 @@ export function CourseCurriculumManager({
     const newModuleId = `mod-${Date.now()}`
     const newModule: CourseModule = {
       id: newModuleId,
-      title: isVi
-        ? `Chương ${modules.length + 1}: Tiêu đề chương mới`
-        : `Chapter ${modules.length + 1}: New Chapter`,
+      title: '',
       description: '',
       module_order: modules.length + 1,
       lessons: [
         {
           id: `les-${Date.now()}`,
-          title: isVi ? 'Bài 1: Video mở đầu' : 'Lesson 1: Introduction Video',
+          title: '',
           video_url: '',
-          duration_minutes: 15,
+          duration_minutes: 0,
           content: '',
           is_preview: false,
           lesson_order: 1,
@@ -68,7 +66,6 @@ export function CourseCurriculumManager({
   }
 
   const removeModule = (moduleId: string) => {
-    if (modules.length <= 1) return
     onChange(modules.filter((m) => m.id !== moduleId))
   }
 
@@ -84,11 +81,9 @@ export function CourseCurriculumManager({
         if (m.id !== moduleId) return m
         const newLesson: CourseLesson = {
           id: `les-${Date.now()}`,
-          title: isVi
-            ? `Bài ${m.lessons.length + 1}: Bài giảng video mới`
-            : `Lesson ${m.lessons.length + 1}: New Video Lesson`,
+          title: '',
           video_url: '',
-          duration_minutes: 15,
+          duration_minutes: 0,
           content: '',
           is_preview: false,
           lesson_order: m.lessons.length + 1,
@@ -161,50 +156,74 @@ export function CourseCurriculumManager({
         </button>
       </div>
 
-      <div className="space-y-4">
-        {modules.map((mod, modIdx) => {
-          const isExpanded = expandedModules.includes(mod.id)
-          const modDuration = mod.lessons.reduce(
-            (acc, l) => acc + (Number(l.duration_minutes) || 0),
-            0
-          )
+      {modules.length === 0 ? (
+        <div className="py-12 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center space-y-3 bg-slate-50/50 dark:bg-slate-950/40">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center border border-indigo-500/20">
+            <Film className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="font-bold text-sm text-slate-800 dark:text-slate-200">
+              {isVi ? 'Chưa có chương học nào' : 'No chapters added yet'}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+              {isVi
+                ? 'Bấm nút "Thêm Chương Mới" để bắt đầu thiết kế lộ trình và tải lên các bài học video cho khóa học.'
+                : 'Click "Add Chapter" to begin creating your curriculum and uploading lesson videos.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={addModule}
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isVi ? 'Thêm Chương Mới' : 'Add Chapter'}</span>
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {modules.map((mod, modIdx) => {
+            const isExpanded = expandedModules.includes(mod.id)
+            const modDuration = mod.lessons.reduce(
+              (acc, l) => acc + (Number(l.duration_minutes) || 0),
+              0
+            )
 
-          return (
-            <div
-              key={mod.id}
-              className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden dark:border-slate-800 dark:bg-slate-950/60"
-            >
-              <div className="p-4 flex items-center justify-between gap-3 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => toggleModuleExpand(mod.id)}
-                  className="flex items-center gap-2.5 text-left flex-1 font-bold text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4 text-indigo-500" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                  )}
-                  <span className="text-sm">
-                    {isVi ? 'Chương' : 'Chapter'} {modIdx + 1}:{' '}
-                    {mod.title.replace(/^(Chương|Chapter)\s*\d+:\s*/, '')}
-                  </span>
-                  <span className="text-[11px] font-normal text-slate-400 ml-2">
-                    ({mod.lessons.length} {isVi ? 'bài' : 'lessons'} · {modDuration} {isVi ? 'phút' : 'min'})
-                  </span>
-                </button>
-
-                <div className="flex items-center gap-2">
+            return (
+              <div
+                key={mod.id}
+                className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden dark:border-slate-800 dark:bg-slate-950/60"
+              >
+                <div className="p-4 flex items-center justify-between gap-3 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                   <button
                     type="button"
-                    onClick={() => addLesson(mod.id)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 dark:bg-teal-500/10 dark:text-teal-400 text-xs font-semibold transition-colors cursor-pointer"
+                    onClick={() => toggleModuleExpand(mod.id)}
+                    className="flex items-center gap-2.5 text-left flex-1 font-bold text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400 transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{isVi ? 'Thêm Video' : 'Add Video'}</span>
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-indigo-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    )}
+                    <span className="text-sm">
+                      {isVi ? 'Chương' : 'Chapter'} {modIdx + 1}:{' '}
+                      {mod.title || (isVi ? 'Chưa đặt tên chương' : 'Untitled Chapter')}
+                    </span>
+                    <span className="text-[11px] font-normal text-slate-400 ml-2">
+                      ({mod.lessons.length} {isVi ? 'bài' : 'lessons'} · {modDuration} {isVi ? 'phút' : 'min'})
+                    </span>
                   </button>
 
-                  {modules.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => addLesson(mod.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 dark:bg-teal-500/10 dark:text-teal-400 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{isVi ? 'Thêm Video' : 'Add Video'}</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => removeModule(mod.id)}
@@ -213,9 +232,8 @@ export function CourseCurriculumManager({
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
 
               {isExpanded && (
                 <div className="p-4 sm:p-5 space-y-4">
@@ -412,7 +430,8 @@ export function CourseCurriculumManager({
             </div>
           )
         })}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
