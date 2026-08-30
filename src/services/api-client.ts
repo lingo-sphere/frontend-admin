@@ -122,11 +122,12 @@ apiClient.interceptors.response.use(
     }
   }
 
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
-      'Đã xảy ra lỗi khi kết nối tới máy chủ'
+    let rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
+    if (typeof rawError === 'string' && (rawError.includes('<!DOCTYPE') || rawError.includes('<html'))) {
+      rawError = 'Không thể kết nối đến máy chủ xác thực Auth Service (Cổng 3000 bị chiếm dụng hoặc dịch vụ chưa khởi động)'
+    }
+
+    const errorMessage = rawError || 'Đã xảy ra lỗi khi kết nối tới máy chủ'
 
     return Promise.reject(new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : String(errorMessage)))
   },
