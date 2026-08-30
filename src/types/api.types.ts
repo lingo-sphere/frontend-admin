@@ -28,12 +28,23 @@ export interface ApiError {
 
 export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER' | 'GUEST'
 
+export interface PermissionItem {
+  _id: string
+  method: string
+  api_path: string
+  module: string
+  name: string
+  description?: string
+}
+
 export interface AuthUser {
   user_id: string
   email: string
   role: UserRole | string
+  role_id?: string
   full_name?: string
   avatar_url?: string
+  permissions?: PermissionItem[]
 }
 
 export interface LoginResponse {

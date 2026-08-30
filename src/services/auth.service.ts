@@ -45,6 +45,10 @@ export const authService = {
     return api.get<AuthUser>(API_CONFIG.ENDPOINTS.AUTH.ME)
   },
 
+  async getRolePermissions(roleIdOrName: string): Promise<import('@/types/api.types').PermissionItem[]> {
+    return api.get<import('@/types/api.types').PermissionItem[]>(`/roles/${encodeURIComponent(roleIdOrName)}/permissions`)
+  },
+
   async changePassword(userId: string, payload: ChangePasswordPayload): Promise<{ message: string }> {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD(userId), payload)
   },

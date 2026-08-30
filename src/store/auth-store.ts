@@ -3,12 +3,13 @@ import { createStore } from 'zustand/vanilla'
 import { authService, type LoginCredentials } from '@/services/auth.service'
 import { userService } from '@/services/user.service'
 import { API_CONFIG } from '@/config/api.config'
-import type { AuthUser, UserProfile } from '@/types/api.types'
+import type { AuthUser, PermissionItem, UserProfile } from '@/types/api.types'
 
 interface AuthState {
   user: AuthUser | null
   profile: UserProfile | null
   token: string | null
+  permissions: PermissionItem[]
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -17,6 +18,19 @@ interface AuthState {
   fetchCurrentUser: () => Promise<void>
   updateProfile: (data: Partial<UserProfile>) => Promise<UserProfile>
   initAuth: () => Promise<void>
+  hasPermission: (method: string, apiPath: string) => boolean
+  hasModulePermission: (module: string) => boolean
+}
+
+const matchRoutePattern = (pattern: string, path: string): boolean => {
+  if (!pattern || !path) return false
+  if (pattern === path) return true
+  const cleanPattern = pattern.replace(/\/+$/, '')
+  const cleanPath = path.replace(/\/+$/, '')
+  if (cleanPattern === cleanPath) return true
+  const regexPattern = cleanPattern.replace(/:[a-zA-Z0-9_]+/g, '[^/]+')
+  const regex = new RegExp(`^${regexPattern}$`)
+  return regex.test(cleanPath)
 }
 
 const getStoredToken = (): string | null => {
@@ -39,24 +53,59 @@ export const authStore = createStore<AuthState>()((set, get) => ({
   user: getStoredUser(),
   profile: null,
   token: getStoredToken(),
+  permissions: getStoredUser()?.permissions || [],
   isAuthenticated: Boolean(getStoredToken()),
   isLoading: false,
   error: null,
+
+  hasPermission: (method: string, apiPath: string) => {
+    const { user, profile, permissions } = get()
+    const role = (user?.role || profile?.role || '').toUpperCase()
+    if (role === 'ADMIN') return true
+
+    const targetMethod = method.toUpperCase()
+    return permissions.some((p) => {
+      const methodMatches = (p.method || 'GET').toUpperCase() === targetMethod
+      const pathMatches = matchRoutePattern(p.api_path, apiPath)
+      return methodMatches && pathMatches
+    })
+  },
+
+  hasModulePermission: (module: string) => {
+    const { user, profile, permissions } = get()
+    const role = (user?.role || profile?.role || '').toUpperCase()
+    if (role === 'ADMIN') return true
+
+    const targetModule = module.toUpperCase()
+    return permissions.some((p) => p.module?.toUpperCase() === targetModule)
+  },
 
   login: async (credentials: LoginCredentials) => {
     set({ isLoading: true, error: null })
     try {
       const res = await authService.login(credentials)
-      const { user, access_token, refresh_token } = res
+      const { user, access_token } = res
+
+      let permissions: PermissionItem[] = user.permissions || []
+      if (!permissions || permissions.length === 0) {
+        try {
+          permissions = await authService.getRolePermissions(user.role)
+        } catch {
+          permissions = []
+        }
+      }
+
+      const updatedUser: AuthUser = { ...user, permissions }
 
       if (typeof window !== 'undefined') {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, access_token)
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(user))
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser))
       }
 
       set({
-        user,
+        user: updatedUser,
         token: access_token,
+        permissions,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -92,6 +141,7 @@ export const authStore = createStore<AuthState>()((set, get) => ({
         user: null,
         profile: null,
         token: null,
+        permissions: [],
         isAuthenticated: false,
         isLoading: false,
         error: null,
@@ -107,13 +157,28 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       const user = await authService.getMe()
       const profile = await userService.getMyProfile()
 
+      let permissions: PermissionItem[] = user.permissions || []
+      const roleName = user.role || profile.role
+      if (roleName && roleName.toUpperCase() !== 'ADMIN') {
+        try {
+          const freshPermissions = await authService.getRolePermissions(roleName)
+          if (Array.isArray(freshPermissions)) {
+            permissions = freshPermissions
+          }
+        } catch {
+        }
+      }
+
+      const updatedUser: AuthUser = { ...user, permissions }
+
       if (typeof window !== 'undefined') {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(user))
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser))
       }
 
       set({
-        user,
+        user: updatedUser,
         profile,
+        permissions,
         isAuthenticated: true,
       })
     } catch (err) {

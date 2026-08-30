@@ -18,6 +18,8 @@ import type { Course as ApiCourse, CourseModule as ApiCourseModule } from '@/typ
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useAdminStore } from '@/store/admin-store'
+import { usePermission } from '@/hooks/use-permission'
+import { Can } from '@/components/common/Can'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 
@@ -29,6 +31,7 @@ export function CoursesPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const { can } = usePermission()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -206,20 +209,24 @@ export function CoursesPage() {
       align: 'right',
       render: (course) => (
         <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Chỉnh sửa khóa học"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeleteCourseId(course.id)}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
-            title="Xóa khóa học"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {can('PUT', '/courses/:id') && (
+            <button
+              onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+              title="Chỉnh sửa khóa học"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+          {can('DELETE', '/courses/:id') && (
+            <button
+              onClick={() => setDeleteCourseId(course.id)}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
+              title="Xóa khóa học"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -293,20 +300,24 @@ export function CoursesPage() {
           </span>
 
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-              title="Chỉnh sửa khóa học"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setDeleteCourseId(course.id)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
-              title="Xóa khóa học"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {can('PUT', '/courses/:id') && (
+              <button
+                onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                title="Chỉnh sửa khóa học"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            )}
+            {can('DELETE', '/courses/:id') && (
+              <button
+                onClick={() => setDeleteCourseId(course.id)}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
+                title="Xóa khóa học"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -335,13 +346,15 @@ export function CoursesPage() {
               <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-500' : ''}`} />
               <span>Làm mới</span>
             </button>
-            <button
-              onClick={() => setActiveNavItem('course-create')}
-              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tạo Khóa Học Mới</span>
-            </button>
+            <Can do="POST" on="/courses">
+              <button
+                onClick={() => setActiveNavItem('course-create')}
+                className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tạo Khóa Học Mới</span>
+              </button>
+            </Can>
           </>
         }
         filterSlot={

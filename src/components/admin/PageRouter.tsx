@@ -59,19 +59,47 @@ export function PageRouter() {
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+  const hasPermission = useAuthStore((state) => state.hasPermission)
+  const hasModulePermission = useAuthStore((state) => state.hasModulePermission)
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
 
-  // Admin-only pages
-  const adminOnlyPages = ['roles', 'permissions', 'admins', 'admin-user-create', 'settings']
-  const isAdminOnlyNav =
-    adminOnlyPages.includes(activeNavItem) ||
-    activeNavItem.startsWith('admin-user-form:') ||
-    activeNavItem.startsWith('admin-user-edit:')
+  // Route RBAC Validation
+  if (!isAdmin) {
+    if (activeNavItem === 'courses' || activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
+      if (!hasPermission('GET', '/courses') && !hasModulePermission('COURSES')) {
+        return <DashboardPage />
+      }
+    }
 
-  if (isAdminOnlyNav && !isAdmin) {
-    return <DashboardPage />
+    if (activeNavItem === 'vocabulary' || activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:') || activeNavItem === 'public-decks') {
+      if (!hasModulePermission('VOCABULARY')) {
+        return <DashboardPage />
+      }
+    }
+
+    if (activeNavItem === 'toeic-tests') {
+      if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS')) {
+        return <DashboardPage />
+      }
+    }
+
+    if (activeNavItem === 'roles') {
+      if (!hasPermission('GET', '/roles') && !hasModulePermission('ROLES')) {
+        return <DashboardPage />
+      }
+    }
+
+    if (activeNavItem === 'permissions') {
+      if (!hasPermission('GET', '/permissions') && !hasModulePermission('PERMISSIONS')) {
+        return <DashboardPage />
+      }
+    }
+
+    if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
+      return <DashboardPage />
+    }
   }
 
   if (activeNavItem.startsWith('admin-user-form:') || activeNavItem.startsWith('admin-user-edit:')) {

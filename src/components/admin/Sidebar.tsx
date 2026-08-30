@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -158,30 +158,71 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase();
   const isAdmin = currentRole === 'ADMIN';
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const hasModulePermission = useAuthStore((state) => state.hasModulePermission);
+  const permissions = useAuthStore((state) => state.permissions);
+
+  const isNavAllowed = useCallback((id: string): boolean => {
+    if (isAdmin) return true;
+
+    switch (id) {
+      case 'dashboard':
+        return true;
+      case 'users':
+      case 'users-list':
+        return hasModulePermission('USERS') || hasPermission('GET', '/users/admin/users');
+      case 'admins':
+        return false;
+      case 'access_control':
+      case 'roles':
+        return hasPermission('GET', '/roles') || hasModulePermission('ROLES');
+      case 'permissions':
+        return hasPermission('GET', '/permissions') || hasModulePermission('PERMISSIONS');
+      case 'courses':
+        return hasPermission('GET', '/courses') || hasModulePermission('COURSES');
+      case 'vocabulary':
+      case 'public-decks':
+        return hasModulePermission('VOCABULARY');
+      case 'practice':
+      case 'practice-exercises':
+      case 'practice-listening':
+      case 'practice-speaking':
+      case 'practice-writing':
+        return hasModulePermission('PRACTICE');
+      case 'toeic-tests':
+        return hasPermission('GET', '/exams') || hasModulePermission('EXAMS');
+      case 'ai-management':
+        return hasModulePermission('AI');
+      case 'media-storage':
+        return hasModulePermission('MEDIA');
+      case 'community':
+        return hasModulePermission('COMMUNITY');
+      case 'progress':
+        return hasModulePermission('PROGRESS');
+      case 'notifications':
+        return hasModulePermission('NOTIFICATIONS');
+      case 'settings':
+        return false;
+      default:
+        return true;
+    }
+  }, [isAdmin, hasPermission, hasModulePermission]);
 
   const visibleNavGroups = useMemo(() => {
     return navGroups
       .map((group) => {
-        if (group.id === 'access_control' && !isAdmin) {
+        if (!isAdmin && group.id === 'access_control' && !hasModulePermission('ROLES') && !hasModulePermission('PERMISSIONS')) {
           return null;
         }
 
         const filteredItems = group.items
           .map((item) => {
-            if ((item.id === 'roles' || item.id === 'permissions') && !isAdmin) {
-              return null;
-            }
-            if (item.id === 'settings' && !isAdmin) {
-              return null;
-            }
-            if (item.children) {
-              const filteredChildren = item.children.filter((c) => {
-                if (c.id === 'admins' && !isAdmin) return false;
-                return true;
-              });
+            if (item.children && item.children.length > 0) {
+              const filteredChildren = item.children.filter((c) => isNavAllowed(c.id));
               if (filteredChildren.length === 0) return null;
               return { ...item, children: filteredChildren };
             }
+            if (!isNavAllowed(item.id)) return null;
             return item;
           })
           .filter(Boolean) as NavItem[];
@@ -190,7 +231,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         return { ...group, items: filteredItems };
       })
       .filter(Boolean) as NavGroup[];
-  }, [isAdmin]);
+  }, [isAdmin, isNavAllowed, permissions]);
 
   const toCamelCase = (str: string) =>
     str.toLowerCase().replace(/[-_]([a-z0-9])/g, (_, c) => c.toUpperCase());
