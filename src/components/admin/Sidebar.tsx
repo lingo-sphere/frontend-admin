@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -156,10 +156,46 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     }
   }, [activeNavItem]);
 
+  const currentRole = (user?.role || profile?.role || '').toUpperCase();
+  const isAdmin = currentRole === 'ADMIN';
+
+  const visibleNavGroups = useMemo(() => {
+    return navGroups
+      .map((group) => {
+        if (group.id === 'access_control' && !isAdmin) {
+          return null;
+        }
+
+        const filteredItems = group.items
+          .map((item) => {
+            if ((item.id === 'roles' || item.id === 'permissions') && !isAdmin) {
+              return null;
+            }
+            if (item.id === 'settings' && !isAdmin) {
+              return null;
+            }
+            if (item.children) {
+              const filteredChildren = item.children.filter((c) => {
+                if (c.id === 'admins' && !isAdmin) return false;
+                return true;
+              });
+              if (filteredChildren.length === 0) return null;
+              return { ...item, children: filteredChildren };
+            }
+            return item;
+          })
+          .filter(Boolean) as NavItem[];
+
+        if (filteredItems.length === 0) return null;
+        return { ...group, items: filteredItems };
+      })
+      .filter(Boolean) as NavGroup[];
+  }, [isAdmin]);
+
   const toCamelCase = (str: string) =>
     str.toLowerCase().replace(/[-_]([a-z0-9])/g, (_, c) => c.toUpperCase());
 
-  const localizedGroups: NavGroup[] = navGroups.map((group) => {
+  const localizedGroups: NavGroup[] = visibleNavGroups.map((group) => {
     const groupKey = `nav.${toCamelCase(group.id)}`;
     const groupTranslated = t(groupKey);
     const groupLabel =

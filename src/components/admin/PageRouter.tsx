@@ -1,4 +1,5 @@
 import { useAdminStore } from '@/store/admin-store'
+import { useAuthStore } from '@/store/auth-store'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { LearnersPage } from '@/pages/LearnersPage'
 import { AdminUsersPage } from '@/pages/AdminUsersPage'
@@ -56,6 +57,22 @@ const pageMap: Record<string, React.ComponentType> = {
 
 export function PageRouter() {
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
+  const user = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile)
+
+  const currentRole = (user?.role || profile?.role || '').toUpperCase()
+  const isAdmin = currentRole === 'ADMIN'
+
+  // Admin-only pages
+  const adminOnlyPages = ['roles', 'permissions', 'admins', 'admin-user-create', 'settings']
+  const isAdminOnlyNav =
+    adminOnlyPages.includes(activeNavItem) ||
+    activeNavItem.startsWith('admin-user-form:') ||
+    activeNavItem.startsWith('admin-user-edit:')
+
+  if (isAdminOnlyNav && !isAdmin) {
+    return <DashboardPage />
+  }
 
   if (activeNavItem.startsWith('admin-user-form:') || activeNavItem.startsWith('admin-user-edit:')) {
     const userId = activeNavItem.split(':')[1]
