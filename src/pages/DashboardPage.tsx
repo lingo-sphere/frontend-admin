@@ -119,39 +119,39 @@ export function DashboardPage() {
   }, [selectedRange, isVietnamese])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
             {isVietnamese ? 'Tổng quan Hệ thống' : 'System Overview'}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
             {isVietnamese
               ? 'Theo dõi dữ liệu phân tích học tập thời gian thực trên toàn hệ thống LingoSphere'
               : 'Real-time analytics across the LingoSphere learning platform'}
           </p>
         </div>
 
-        <div className="relative flex items-center gap-2" ref={pickerRef}>
+        <div className="relative flex items-center gap-2.5" ref={pickerRef}>
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-2.5 h-11 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-xs cursor-pointer"
           >
-            <CalendarDays className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <CalendarDays className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400" />
             <span>{isVietnamese ? selectedRange.labelVi : selectedRange.label}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-slate-400" />
           </button>
 
           <button
             onClick={fetchDashboardData}
             title="Làm mới dữ liệu"
-            className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-xs cursor-pointer"
+            className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-xs cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingStats ? 'animate-spin text-teal-500' : 'text-slate-400'}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoadingStats ? 'animate-spin text-teal-500' : 'text-slate-400'}`} />
           </button>
 
           {showDatePicker && (
-            <div className="absolute right-0 top-12 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50">
+            <div className="absolute right-0 top-13 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50">
               <div className="space-y-1">
                 {dateRanges.map((r) => (
                   <button
@@ -160,14 +160,14 @@ export function DashboardPage() {
                       setSelectedRange(r)
                       setShowDatePicker(false)
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
                       selectedRange.id === r.id
                         ? 'bg-teal-50 dark:bg-teal-500/15 text-teal-600 dark:text-teal-400 font-bold'
                         : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>{isVietnamese ? r.labelVi : r.label}</span>
-                    {selectedRange.id === r.id && <Check className="w-3.5 h-3.5" />}
+                    {selectedRange.id === r.id && <Check className="w-4 h-4" />}
                   </button>
                 ))}
               </div>
@@ -183,70 +183,70 @@ export function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
+        <div className="lg:col-span-2 p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 {isVietnamese ? 'Phiên Học & Luyện Tập Mỗi Ngày' : 'Daily Study & Practice Sessions'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
                 {isVietnamese ? 'Số lượng học viên tham gia học từ vựng và làm bài TOEIC' : 'Learners practicing vocabulary and taking TOEIC tests'}
               </p>
             </div>
-            <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-3 py-1.5 rounded-full">
               {formatDateRange(selectedRange, isVietnamese)}
             </span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-72 w-full">
             <SimpleChart items={chartData} />
           </div>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">
+        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-5">
             {isVietnamese ? 'Trạng Thái Hệ Thống Microservices' : 'Microservices Health'}
           </h3>
 
           <div className="space-y-3 flex-1">
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">User & Auth Gateway</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">User & Auth Gateway</span>
               </div>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">24ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">24ms · Healthy</span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Course & Curriculum Service</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Course & Curriculum Service</span>
               </div>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">38ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">38ms · Healthy</span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Vocabulary & Spaced Repetition</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Vocabulary & Spaced Repetition</span>
               </div>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">19ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">19ms · Healthy</span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">AI Assessment (Gemini 2.5)</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">AI Assessment (Gemini 2.5)</span>
               </div>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">240ms · Online</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">240ms · Online</span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">TOEIC Exam Engine</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">TOEIC Exam Engine</span>
               </div>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">32ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">32ms · Healthy</span>
             </div>
           </div>
         </div>

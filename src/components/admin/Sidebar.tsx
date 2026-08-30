@@ -134,7 +134,16 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const user = useAuthStore((state) => state.user);
   const profile = useAuthStore((state) => state.profile);
 
-  const [expandedItem, setExpandedItem] = useState<string | null>("users");
+  const [expandedItem, setExpandedItem] = useState<string | null>(() => {
+    for (const group of navGroups) {
+      for (const item of group.items) {
+        if (item.children && item.children.some((c) => c.id === activeNavItem)) {
+          return item.id;
+        }
+      }
+    }
+    return null;
+  });
 
   const handleNavigate = (id: string) => {
     setActiveNavItem(id);
@@ -273,19 +282,18 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   });
 
   const content = (
-    <div className="flex flex-col h-full justify-between select-none">
-      <div>
-
+    <div className="flex flex-col h-full select-none justify-between overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0">
         <button
           onClick={() => handleNavigate("dashboard")}
           type="button"
           title={isVietnamese ? "Về trang Tổng quan (Dashboard)" : "Go to Dashboard"}
-          className={`w-full flex items-center gap-3 pb-4 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-all ${
+          className={`w-full shrink-0 flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-all ${
             sidebarCollapsed && !mobile ? "justify-center" : ""
           }`}
         >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-md shadow-teal-500/25 shrink-0 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 group-hover:shadow-teal-500/40 transition-all duration-200">
-            <Shield className="w-5 h-5 text-white group-hover:rotate-6 transition-transform duration-200" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-md shadow-teal-500/25 shrink-0 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 group-hover:shadow-teal-500/40 transition-all duration-200">
+            <Shield className="w-4.5 h-4.5 text-white group-hover:rotate-6 transition-transform duration-200" />
           </div>
           {(!sidebarCollapsed || mobile) && (
             <div className="min-w-0 flex-1">
@@ -302,139 +310,144 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           )}
         </button>
 
-        <nav className="mt-3 space-y-3 overflow-y-auto max-h-[calc(100vh-140px)] pr-1">
+        <nav className="my-2 flex-1 sidebar-scroll space-y-2 pr-0.5 overflow-y-auto">
           {localizedGroups.map((group, groupIdx) => (
-            <div key={group.id} className="space-y-0.5">
+            <div key={group.id} className="space-y-1">
+              {groupIdx > 0 && (
+                <div className="pt-1.5 my-1 border-t border-slate-200/70 dark:border-slate-800/70" />
+              )}
               {(!sidebarCollapsed || mobile) && groupIdx > 0 && (
-                <div className="pt-2.5 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div className="pt-0.5 pb-1 px-3 text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   {group.label}
                 </div>
               )}
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  activeNavItem === item.id ||
-                  (item.children &&
-                    item.children.some((c) => activeNavItem === c.id));
-                const isExactActive = activeNavItem === item.id;
-                const hasChildren = item.children && item.children.length > 0;
-                const isExpanded = expandedItem === item.id;
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    activeNavItem === item.id ||
+                    (item.children &&
+                      item.children.some((c) => activeNavItem === c.id));
+                  const isExactActive = activeNavItem === item.id;
+                  const hasChildren = item.children && item.children.length > 0;
+                  const isExpanded = expandedItem === item.id;
 
-                if (sidebarCollapsed && !mobile) {
+                  if (sidebarCollapsed && !mobile) {
+                    return (
+                      <button
+                        key={item.id}
+                        className={`w-full flex items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                        }`}
+                        onClick={
+                          hasChildren
+                            ? () => toggleExpand(item.id)
+                            : () => handleNavigate(item.id)
+                        }
+                        type="button"
+                        title={item.label}
+                      >
+                        <Icon className="w-4.5 h-4.5" />
+                      </button>
+                    );
+                  }
+
                   return (
-                    <button
-                      key={item.id}
-                      className={`w-full flex items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60"
-                      }`}
-                      onClick={
-                        hasChildren
-                          ? () => toggleExpand(item.id)
-                          : () => handleNavigate(item.id)
-                      }
-                      type="button"
-                      title={item.label}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </button>
-                  );
-                }
-
-                return (
-                  <div key={item.id} className="space-y-0.5">
-                    <button
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        isExactActive && !hasChildren
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/25"
-                          : isActive && hasChildren
-                          ? "text-indigo-600 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-500/10 font-bold"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
-                      }`}
-                      onClick={
-                        hasChildren
-                          ? () => toggleExpand(item.id)
-                          : () => handleNavigate(item.id)
-                      }
-                      type="button"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <Icon
-                          className={`w-4 h-4 shrink-0 ${
-                            isExactActive && !hasChildren
-                              ? "text-white"
-                              : isActive && hasChildren
-                              ? "text-indigo-600 dark:text-indigo-400"
-                              : "text-slate-400 dark:text-slate-500"
-                          }`}
-                        />
-                        <span className="truncate">{item.label}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {item.kicker && (
-                          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
-                            {item.kicker}
-                          </span>
-                        )}
-                        {hasChildren && (
-                          <ChevronDown
-                            className={`w-3.5 h-3.5 opacity-60 transition-transform duration-300 ease-out ${
-                              isExpanded ? "rotate-0 text-indigo-600 dark:text-indigo-400 opacity-100" : "-rotate-90"
+                    <div key={item.id} className="space-y-0.5">
+                      <button
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all cursor-pointer ${
+                          isExactActive && !hasChildren
+                            ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/25"
+                            : isActive && hasChildren
+                            ? "text-indigo-600 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-500/10 font-bold"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
+                        }`}
+                        onClick={
+                          hasChildren
+                            ? () => toggleExpand(item.id)
+                            : () => handleNavigate(item.id)
+                        }
+                        type="button"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon
+                            className={`w-4.5 h-4.5 shrink-0 ${
+                              isExactActive && !hasChildren
+                                ? "text-white"
+                                : isActive && hasChildren
+                                ? "text-indigo-600 dark:text-indigo-400"
+                                : "text-slate-400 dark:text-slate-500"
                             }`}
                           />
-                        )}
-                      </div>
-                    </button>
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {item.kicker && (
+                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
+                              {item.kicker}
+                            </span>
+                          )}
+                          {hasChildren && (
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 opacity-60 transition-transform duration-300 ease-out ${
+                                isExpanded ? "rotate-0 text-indigo-600 dark:text-indigo-400 opacity-100" : "-rotate-90"
+                              }`}
+                            />
+                          )}
+                        </div>
+                      </button>
 
-                    {hasChildren && (
-                      <div
-                        className={`grid transition-all duration-300 ease-in-out ${
-                          isExpanded
-                            ? "grid-rows-[1fr] opacity-100 mt-1 mb-1"
-                            : "grid-rows-[0fr] opacity-0 pointer-events-none"
-                        }`}
-                      >
-                        <div className="overflow-hidden">
-                          <div className="ml-4 pl-3.5 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 py-0.5">
-                            {item.children!.map((child) => {
-                              const isChildActive = activeNavItem === child.id;
+                      {hasChildren && (
+                        <div
+                          className={`grid transition-all duration-300 ease-in-out ${
+                            isExpanded
+                              ? "grid-rows-[1fr] opacity-100 mt-1 mb-1"
+                              : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                          }`}
+                        >
+                          <div className="overflow-hidden">
+                            <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 py-0.5">
+                              {item.children!.map((child) => {
+                                const isChildActive = activeNavItem === child.id;
 
-                              return (
-                                <button
-                                  key={child.id}
-                                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left cursor-pointer ${
-                                    isChildActive
-                                      ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs ring-1 ring-indigo-500/20"
-                                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/40"
-                                  }`}
-                                  onClick={() => handleNavigate(child.id)}
-                                  type="button"
-                                >
-                                  <span
-                                    className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200 ${
+                                return (
+                                  <button
+                                    key={child.id}
+                                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left cursor-pointer ${
                                       isChildActive
-                                        ? "bg-indigo-600 dark:bg-indigo-400 ring-2 ring-indigo-400/30 scale-125"
-                                        : "bg-slate-300 dark:bg-slate-600"
+                                        ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs ring-1 ring-indigo-500/20"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/40"
                                     }`}
-                                  />
-                                  <span className="truncate">{child.label}</span>
-                                </button>
-                              );
-                            })}
+                                    onClick={() => handleNavigate(child.id)}
+                                    type="button"
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200 ${
+                                        isChildActive
+                                          ? "bg-indigo-600 dark:bg-indigo-400 ring-2 ring-indigo-400/30 scale-125"
+                                          : "bg-slate-300 dark:bg-slate-600"
+                                      }`}
+                                    />
+                                    <span className="truncate">{child.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </nav>
       </div>
 
-      <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
+      <div className="pt-2 shrink-0 border-t border-slate-200/80 dark:border-slate-800/80">
         {!mobile && (
           <button
             className={`w-full flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer ${
