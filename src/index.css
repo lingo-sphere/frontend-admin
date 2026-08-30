@@ -221,3 +221,42 @@ html[data-theme="light"] .bg-indigo-950\/30 {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
 }
+
+/* ==========================================================================
+   MODAL SMOOTH ANIMATIONS & KEYFRAMES
+   ========================================================================== */
+@keyframes modalBackdropFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContentScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background-color: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+}
+
+:is(.dark, [data-theme="dark"]) .animate-modal-backdrop {
+  background-color: rgba(2, 6, 23, 0.55);
+}
+
+.animate-modal-content {
+  animation: modalContentScaleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
