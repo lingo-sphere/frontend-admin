@@ -30,6 +30,9 @@
     "communityNav": "Community",
     "publicDecks": "Public Decks",
     "progress": "Data Statistics",
+    "progressLingosphere": "LingoSphere Analytics",
+    "analyticsPosthog": "Frontend Web (PostHog)",
+    "monitoringBetterstack": "Backend Services (BetterStack)",
     "notifications": "Notifications",
     "settings": "Settings"
   },

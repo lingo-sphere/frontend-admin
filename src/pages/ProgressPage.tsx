@@ -56,7 +56,7 @@ import {
   aiEvaluationCategories,
 } from '@/data/statistics-data'
 
-type AnalyticsTab = 'overview' | 'posthog' | 'betterstack' | 'toeic' | 'ai' | 'logs'
+type AnalyticsTab = 'overview' | 'toeic' | 'ai' | 'logs'
 
 export function ProgressPage() {
   const { i18n } = useTranslation()
@@ -404,30 +404,6 @@ export function ProgressPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('posthog')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'posthog'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <BarChart3 className="w-3.5 h-3.5" />
-          <span>Frontend Web (PostHog)</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('betterstack')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'betterstack'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Server className="w-3.5 h-3.5" />
-          <span>Backend 13 Services (BetterStack)</span>
-        </button>
-
-        <button
           onClick={() => setActiveTab('toeic')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'toeic'
@@ -463,22 +439,6 @@ export function ProgressPage() {
           <span>Nhật ký Hoạt động</span>
         </button>
       </div>
-
-      {activeTab === 'posthog' && (
-        <PostHogAnalyticsTab
-          data={postHogData}
-          isLoading={isRefreshing}
-          onRefresh={handleRefresh}
-        />
-      )}
-
-      {activeTab === 'betterstack' && (
-        <BetterStackMonitoringTab
-          data={betterStackData}
-          isLoading={isRefreshing}
-          onRefresh={handleRefresh}
-        />
-      )}
 
       {activeTab === 'overview' && (
         <div className="space-y-6">

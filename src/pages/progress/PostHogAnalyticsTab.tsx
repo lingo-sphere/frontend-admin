@@ -132,7 +132,7 @@ export function PostHogAnalyticsTab({
               <span>{isVi ? 'Lượt xem trang ($Pageviews)' : 'Total Pageviews'}</span>
             </div>
             <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.total_pageviews.toLocaleString() ?? '18,450'}
+              {data?.metrics.total_pageviews.toLocaleString() ?? '0'}
             </p>
           </div>
 
@@ -142,7 +142,7 @@ export function PostHogAnalyticsTab({
               <span>{isVi ? 'Người dùng định danh' : 'Identified Users'}</span>
             </div>
             <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.identified_users.toLocaleString() ?? '1,890'}
+              {data?.metrics.identified_users.toLocaleString() ?? '0'}
             </p>
           </div>
 
@@ -152,7 +152,7 @@ export function PostHogAnalyticsTab({
               <span>{isVi ? 'Sự kiện học tập (Events)' : 'Custom Events'}</span>
             </div>
             <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.custom_learning_events.toLocaleString() ?? '12,640'}
+              {data?.metrics.custom_learning_events.toLocaleString() ?? '0'}
             </p>
           </div>
 
@@ -162,7 +162,7 @@ export function PostHogAnalyticsTab({
               <span>{isVi ? 'Video ghi hình Replay' : 'Session Replays'}</span>
             </div>
             <p className="text-lg sm:text-2xl font-black text-white mt-1">
-              {data?.metrics.total_session_replays ?? 328} {isVi ? 'phiên' : 'replays'}
+              {data?.metrics.total_session_replays ?? 0} {isVi ? 'phiên' : 'replays'}
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export function PostHogAnalyticsTab({
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                {isVi ? 'Sự Kiện Học Tập Nổi Bật (Custom Events)' : 'Top Learning Events'}
+                {isVi ? 'Sự Kiện Nổi Bật (Top Events)' : 'Top Events'}
               </h3>
             </div>
             <span className="text-xs text-slate-400 font-mono">PostHog Track</span>
@@ -184,7 +184,7 @@ export function PostHogAnalyticsTab({
 
           <div className="space-y-3">
             {data?.top_events.map((ev) => {
-              const maxCount = 5000
+              const maxCount = Math.max(...(data.top_events.map((e) => e.count) || [1]), 1)
               const percentage = Math.round((ev.count / maxCount) * 100)
               const badge = getEventBadge(ev.event_name)
               const Icon = badge.icon

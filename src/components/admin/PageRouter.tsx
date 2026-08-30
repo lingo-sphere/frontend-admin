@@ -9,6 +9,8 @@ import { PracticePage } from '@/pages/PracticePage'
 import { CommunityPage } from '@/pages/CommunityPage'
 import { PublicDecksPage } from '@/pages/PublicDecksPage'
 import { ProgressPage } from '@/pages/ProgressPage'
+import { PostHogAnalyticsPage } from '@/pages/PostHogAnalyticsPage'
+import { BetterStackMonitoringPage } from '@/pages/BetterStackMonitoringPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { UserProfilePage } from '@/pages/UserProfilePage'
@@ -50,6 +52,10 @@ const pageMap: Record<string, React.ComponentType> = {
   community: CommunityPage,
   'public-decks': PublicDecksPage,
   progress: ProgressPage,
+  'analytics-posthog': PostHogAnalyticsPage,
+  posthog: PostHogAnalyticsPage,
+  'monitoring-betterstack': BetterStackMonitoringPage,
+  betterstack: BetterStackMonitoringPage,
   notifications: NotificationsPage,
   settings: SettingsPage,
   'admin-profile': AdminProfilePage,

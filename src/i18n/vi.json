@@ -30,6 +30,9 @@
     "communityNav": "Cộng đồng",
     "publicDecks": "Bộ thẻ công khai",
     "progress": "Thống kê dữ liệu",
+    "progressLingosphere": "Phân tích LingoSphere",
+    "analyticsPosthog": "Frontend Web (PostHog)",
+    "monitoringBetterstack": "Backend Services (BetterStack)",
     "notifications": "Thông báo",
     "settings": "Cài đặt"
   },

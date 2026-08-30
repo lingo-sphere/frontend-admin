@@ -1,4 +1,3 @@
-
 export interface ApiResponse<T = unknown> {
   statusCode: number
   message: string
@@ -192,6 +191,25 @@ export interface WordMeaning {
 }
 
 export interface LexicalItem {
+  _id: string
+  word: string
+  word_lowercase?: string
+  slug?: string
+  word_type: WordType | string
+  cefr_level: CefrLevel | string
+  pronunciation_us?: string
+  pronunciation_uk?: string
+  audio_url_us?: string
+  audio_url_uk?: string
+  syllables?: number
+  stress_pattern?: string
+  is_active: boolean
+  meanings?: WordMeaning[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Word {
   _id: string
   word: string
   word_lowercase?: string
@@ -454,6 +472,17 @@ export interface BetterStackIncident {
   resolved_at?: string
 }
 
+export interface BetterStackLogItem {
+  timestamp: string
+  level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG'
+  source: string
+  message: string
+  method?: string
+  path?: string
+  target_service?: string
+  correlation_id?: string
+}
+
 export interface BetterStackMonitoringData {
   provider: string
   overall_status: 'ALL_SYSTEMS_OPERATIONAL' | 'DEGRADED' | 'OUTAGE'
@@ -462,10 +491,12 @@ export interface BetterStackMonitoringData {
   monitored_services_count: number
   healthy_services_count: number
   incident_count_last_30d: number
+  total_logs_count?: number
   last_synced_at: string
   status_page_url: string
   services: ServiceHealthItem[]
   recent_incidents: BetterStackIncident[]
+  live_logs?: BetterStackLogItem[]
 }
 
 export interface PostHogTopEvent {

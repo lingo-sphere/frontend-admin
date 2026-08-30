@@ -8,6 +8,9 @@ import {
   MessageCircle,
   Layers3,
   BarChart3,
+  BarChart2,
+  Globe,
+  Server,
   Bell,
   Settings2,
   PanelLeftClose,
@@ -103,7 +106,18 @@ const navGroups: NavGroup[] = [
   {
     id: "insights",
     label: "INSIGHTS",
-    items: [{ id: "progress", icon: BarChart3, label: "Thống kê dữ liệu" }],
+    items: [
+      {
+        id: "progress",
+        icon: BarChart3,
+        label: "Thống kê dữ liệu",
+        children: [
+          { id: "progress", label: "Phân tích LingoSphere" },
+          { id: "analytics-posthog", label: "Frontend Web (PostHog)" },
+          { id: "monitoring-betterstack", label: "Backend 13 Services (BetterStack)" },
+        ],
+      },
+    ],
   },
   {
     id: "system",
@@ -207,6 +221,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       case 'community':
         return hasModulePermission('COMMUNITY');
       case 'progress':
+      case 'analytics-posthog':
+      case 'monitoring-betterstack':
         return hasModulePermission('PROGRESS');
       case 'notifications':
         return hasModulePermission('NOTIFICATIONS');
