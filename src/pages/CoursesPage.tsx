@@ -8,6 +8,13 @@ import {
   BookOpen,
   RotateCcw,
   X,
+  Layers,
+  Users,
+  GraduationCap,
+  Sparkles,
+  CheckCircle2,
+  Target,
+  TrendingUp,
 } from 'lucide-react'
 import {
   categoryLabels,
@@ -23,9 +30,40 @@ import { Can } from '@/components/common/Can'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 
-type FilterCategory = 'ALL' | 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY'
+type FilterCategory = 'ALL' | 'TOEIC_LISTENING' | 'TOEIC_READING' | 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS' | 'GRAMMAR' | 'VOCABULARY'
 type FilterLevel = 'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 type FilterStatus = 'ALL' | 'PUBLISHED' | 'DRAFT'
+
+const getCategoryBadgeClass = (category: string) => {
+  switch (category) {
+    case 'TOEIC_LISTENING':
+      return 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/60'
+    case 'TOEIC_READING':
+      return 'bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200/60 dark:border-sky-800/60'
+    case 'TOEIC_2_SKILLS':
+    case 'TOEIC_4_SKILLS':
+      return 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/60'
+    case 'GRAMMAR':
+      return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/60'
+    case 'VOCABULARY':
+      return 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/60'
+    default:
+      return 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/60'
+  }
+}
+
+const getLevelBadgeClass = (level: string) => {
+  switch (level) {
+    case 'BEGINNER':
+      return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/50'
+    case 'INTERMEDIATE':
+      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/50'
+    case 'ADVANCED':
+      return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/50'
+    default:
+      return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+  }
+}
 
 export function CoursesPage() {
   const { i18n } = useTranslation()
@@ -85,6 +123,14 @@ export function CoursesPage() {
     fetchCourses()
   }, [])
 
+  const stats = useMemo(() => {
+    const total = courses.length
+    const published = courses.filter((c) => c.is_published).length
+    const totalStudents = courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
+    const avgScore = courses.length ? Math.round(courses.reduce((acc, c) => acc + (c.target_score || 500), 0) / courses.length) : 650
+    return { total, published, totalStudents, avgScore }
+  }, [courses])
+
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
       const matchSearch =
@@ -134,21 +180,30 @@ export function CoursesPage() {
       key: 'info',
       title: 'Khóa học & Lộ trình',
       render: (course) => (
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3.5 py-1">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
             {course.thumbnail_url ? (
-              <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover" />
+              <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                <BookOpen className="w-5 h-5" />
+              <div className="w-full h-full flex items-center justify-center text-indigo-500/80 bg-indigo-50/50 dark:bg-indigo-950/30">
+                <BookOpen className="w-6 h-6" />
               </div>
             )}
           </div>
-          <div>
-            <p className="font-bold text-slate-900 dark:text-slate-100">{course.title}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-bold text-sm text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer line-clamp-1" onClick={() => setActiveNavItem(`course-edit:${course.id}`)}>
+                {course.title}
+              </p>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 max-w-md">
               {course.description}
             </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-600 dark:text-teal-400">
+                <Target className="w-3 h-3" /> Target {course.target_score}+
+              </span>
+            </div>
           </div>
         </div>
       ),
@@ -157,13 +212,18 @@ export function CoursesPage() {
       key: 'category',
       title: 'Danh mục & Trình độ',
       render: (course) => (
-        <div className="space-y-1">
-          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20">
-            {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
-          </span>
-          <p className="text-[11px] text-slate-500">
-            {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
-          </p>
+        <div className="space-y-1.5 py-1">
+          <div>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold border whitespace-nowrap ${getCategoryBadgeClass(course.category)}`}>
+              {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
+            </span>
+          </div>
+          <div>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border whitespace-nowrap ${getLevelBadgeClass(course.level)}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+              {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
+            </span>
+          </div>
         </div>
       ),
     },
@@ -171,11 +231,15 @@ export function CoursesPage() {
       key: 'stats',
       title: 'Số bài & Học viên',
       render: (course) => (
-        <div>
-          <p className="font-semibold text-slate-900 dark:text-slate-200">
-            {course.total_modules} chương · {course.total_lessons} video
-          </p>
-          <p className="text-[11px] text-slate-500">{course.enrollments} học viên</p>
+        <div className="space-y-1 py-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-750 dark:text-slate-200 whitespace-nowrap">
+            <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span>{course.total_modules} chương · {course.total_lessons} video</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            <Users className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span>{course.enrollments.toLocaleString('vi-VN')} học viên</span>
+          </div>
         </div>
       ),
     },
@@ -183,24 +247,29 @@ export function CoursesPage() {
       key: 'price',
       title: 'Học phí',
       render: (course) => (
-        <span className="font-extrabold text-teal-600 dark:text-teal-400">
-          {course.price ? `${course.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}
-        </span>
+        <div className="whitespace-nowrap py-1">
+          <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
+            {course.price ? `${course.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}
+          </span>
+        </div>
       ),
     },
     {
       key: 'status',
       title: 'Trạng thái',
       render: (course) => (
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-            course.is_published
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-              : 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20'
-          }`}
-        >
-          {course.is_published ? 'Đã xuất bản' : 'Bản nháp'}
-        </span>
+        <div className="whitespace-nowrap py-1">
+          <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+              course.is_published
+                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${course.is_published ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+            {course.is_published ? 'Đã xuất bản' : 'Bản nháp'}
+          </span>
+        </div>
       ),
     },
     {
@@ -208,11 +277,11 @@ export function CoursesPage() {
       title: 'Thao tác',
       align: 'right',
       render: (course) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 py-1">
           {can('PUT', '/courses/:id') && (
             <button
               onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800/80 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-300 border border-slate-200/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs"
               title="Chỉnh sửa khóa học"
             >
               <Edit2 className="w-4 h-4" />
@@ -221,7 +290,7 @@ export function CoursesPage() {
           {can('DELETE', '/courses/:id') && (
             <button
               onClick={() => setDeleteCourseId(course.id)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800/80 dark:hover:bg-rose-950/60 dark:hover:text-rose-300 border border-slate-200/60 dark:border-slate-700/60 text-slate-500 hover:text-rose-500 transition-all cursor-pointer shadow-2xs"
               title="Xóa khóa học"
             >
               <Trash2 className="w-4 h-4" />
@@ -233,7 +302,7 @@ export function CoursesPage() {
   ]
 
   const renderGridCard = (course: Course) => (
-    <div className="rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs flex flex-col group h-full">
+    <div className="rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 overflow-hidden hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col group h-full">
       <div className="relative aspect-video w-full bg-slate-100 dark:bg-slate-950 overflow-hidden">
         {course.thumbnail_url ? (
           <img
@@ -242,26 +311,27 @@ export function CoursesPage() {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-400">
-            <BookOpen className="w-8 h-8" />
+          <div className="w-full h-full flex items-center justify-center text-slate-400 bg-gradient-to-br from-indigo-500/10 to-violet-500/10">
+            <BookOpen className="w-8 h-8 text-indigo-500/70" />
           </div>
         )}
-        <div className="absolute top-3 left-3 flex gap-1.5">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur-md">
+        <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
+          <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border backdrop-blur-md shadow-xs ${getCategoryBadgeClass(course.category)}`}>
             {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
           </span>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 backdrop-blur-md">
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border backdrop-blur-md shadow-xs ${getLevelBadgeClass(course.level)}`}>
             {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
           </span>
         </div>
         <div className="absolute top-3 right-3">
           <span
-            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border backdrop-blur-md shadow-xs ${
               course.is_published
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-md'
-                : 'bg-slate-500/20 text-slate-300 border border-slate-500/30 backdrop-blur-md'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                : 'bg-slate-800/80 text-slate-300 border-slate-700/80'
             }`}
           >
+            <span className={`w-1.5 h-1.5 rounded-full ${course.is_published ? 'bg-emerald-400' : 'bg-slate-400'}`} />
             {course.is_published ? 'Đã xuất bản' : 'Bản nháp'}
           </span>
         </div>
@@ -269,7 +339,7 @@ export function CoursesPage() {
 
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
         <div>
-          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors cursor-pointer" onClick={() => setActiveNavItem(`course-edit:${course.id}`)}>
             {course.title}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
@@ -278,24 +348,24 @@ export function CoursesPage() {
 
           <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
             <div>
-              <p className="text-[10px] text-slate-400">Mục tiêu</p>
+              <p className="text-[10px] text-slate-400 font-medium">Mục tiêu</p>
               <p className="text-xs font-extrabold text-teal-600 dark:text-teal-400 mt-0.5">{course.target_score}+</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400">Chương / Bài</p>
+              <p className="text-[10px] text-slate-400 font-medium">Chương / Bài</p>
               <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5">
                 {course.total_modules}m · {course.total_lessons}b
               </p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400">Học viên</p>
-              <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{course.enrollments}</p>
+              <p className="text-[10px] text-slate-400 font-medium">Học viên</p>
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{course.enrollments.toLocaleString('vi-VN')}</p>
             </div>
           </div>
         </div>
 
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <span className="text-sm font-extrabold text-teal-600 dark:text-teal-400">
+          <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
             {course.price ? `${course.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}
           </span>
 
@@ -303,7 +373,7 @@ export function CoursesPage() {
             {can('PUT', '/courses/:id') && (
               <button
                 onClick={() => setActiveNavItem(`course-edit:${course.id}`)}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-300 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700/60"
                 title="Chỉnh sửa khóa học"
               >
                 <Edit2 className="w-4 h-4" />
@@ -312,7 +382,7 @@ export function CoursesPage() {
             {can('DELETE', '/courses/:id') && (
               <button
                 onClick={() => setDeleteCourseId(course.id)}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500/20 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700/60"
                 title="Xóa khóa học"
               >
                 <Trash2 className="w-4 h-4" />
@@ -326,6 +396,49 @@ export function CoursesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Top Overview KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tổng Khóa Học</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{stats.total}</p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+            <GraduationCap className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tổng Học Viên</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{stats.totalStudents.toLocaleString('vi-VN')}</p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+            <Users className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Phát Hành</p>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{stats.published}</p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/20">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mục Tiêu TOEIC</p>
+            <p className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight">{stats.avgScore}+</p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+            <Sparkles className="w-5 h-5" />
+          </div>
+        </div>
+      </div>
+
       <DataTable<Course>
         title="Quản Lý Khóa Học & Lộ Trình"
         subtitle="Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi"
@@ -341,15 +454,15 @@ export function CoursesPage() {
           <>
             <button
               onClick={fetchCourses}
-              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
             >
-              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-500' : ''}`} />
+              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
               <span>Làm mới</span>
             </button>
             <Can do="POST" on="/courses">
               <button
                 onClick={() => setActiveNavItem('course-create')}
-                className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+                className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tạo Khóa Học Mới</span>
@@ -359,7 +472,7 @@ export function CoursesPage() {
         }
         filterSlot={
           <>
-            <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 transition-all">
+            <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
               <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
               <input
                 type="text"
@@ -378,11 +491,13 @@ export function CoursesPage() {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value as FilterCategory)}
-              className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             >
               <option value="ALL">Tất cả danh mục</option>
               <option value="TOEIC_LISTENING">TOEIC Listening</option>
               <option value="TOEIC_READING">TOEIC Reading</option>
+              <option value="TOEIC_2_SKILLS">TOEIC 2 Kỹ Năng</option>
+              <option value="TOEIC_4_SKILLS">TOEIC 4 Kỹ Năng</option>
               <option value="GRAMMAR">Ngữ pháp (Grammar)</option>
               <option value="VOCABULARY">Từ vựng (Vocabulary)</option>
             </select>
@@ -390,7 +505,7 @@ export function CoursesPage() {
             <select
               value={filterLevel}
               onChange={(e) => setFilterLevel(e.target.value as FilterLevel)}
-              className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             >
               <option value="ALL">Tất cả trình độ</option>
               <option value="BEGINNER">Sơ cấp (Beginner)</option>
@@ -401,7 +516,7 @@ export function CoursesPage() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-              className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             >
               <option value="ALL">Tất cả trạng thái</option>
               <option value="PUBLISHED">Đã xuất bản (Public)</option>
