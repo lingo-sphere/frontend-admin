@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus, RotateCcw, Edit2, Trash2, SlidersHorizontal, Settings, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
+import { Pagination } from '@/components/common/Pagination'
 
 interface PermissionsListTabProps {
   permissions: Permission[]
@@ -27,6 +28,10 @@ export function PermissionsListTab({
   // Applied search states
   const [searchQuery, setSearchQuery] = useState({ name: '', api: '', module: 'ALL' })
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setSearchQuery({
@@ -34,6 +39,7 @@ export function PermissionsListTab({
       api: filterApi.trim().toLowerCase(),
       module: filterModule,
     })
+    setCurrentPage(1)
   }
 
   const handleReset = () => {
@@ -41,6 +47,7 @@ export function PermissionsListTab({
     setFilterApi('')
     setFilterModule('ALL')
     setSearchQuery({ name: '', api: '', module: 'ALL' })
+    setCurrentPage(1)
   }
 
   const modulesList = useMemo(() => {
@@ -56,6 +63,14 @@ export function PermissionsListTab({
       return matchName && matchApi && matchModule
     })
   }, [permissions, searchQuery])
+
+  const totalItems = filteredData.length
+  const totalPages = Math.ceil(totalItems / pageSize) || 1
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    return filteredData.slice(startIndex, startIndex + pageSize)
+  }, [filteredData, currentPage, pageSize])
 
   const getMethodBadgeClass = (method?: string) => {
     switch (method?.toUpperCase()) {
@@ -223,77 +238,98 @@ export function PermissionsListTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-              {filteredData.length === 0 ? (
+              {paginatedData.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     Không tìm thấy Permission nào phù hợp
                   </td>
                 </tr>
               ) : (
-                filteredData.map((perm, index) => (
-                  <tr
-                    key={perm._id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="py-3 px-4 text-center font-mono text-slate-500 font-semibold">
-                      {index + 1}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
-                      {perm.name}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">
-                      {perm.api_path || '-'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono border ${getMethodBadgeClass(
-                          perm.method,
-                        )}`}
-                      >
-                        {perm.method || 'GET'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-[11px] text-slate-700 dark:text-slate-300">
-                        {(perm.module || 'GENERAL').toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                      {formatDate(perm.created_at)}
-                    </td>
-                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                      {formatDate(perm.updated_at)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => onOpenEditPerm(perm)}
-                          className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
-                          title="Chỉnh sửa"
+                paginatedData.map((perm, index) => {
+                  const itemIndex = (currentPage - 1) * pageSize + index + 1
+                  return (
+                    <tr
+                      key={perm._id}
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                    >
+                      <td className="py-3 px-4 text-center font-mono text-slate-500 font-semibold">
+                        {itemIndex}
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
+                        {perm.name}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">
+                        {perm.api_path || '-'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono border ${getMethodBadgeClass(
+                            perm.method,
+                          )}`}
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onDeletePerm(perm._id)}
-                          className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {perm.method || 'GET'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-[11px] text-slate-700 dark:text-slate-300">
+                          {(perm.module || 'GENERAL').toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                        {formatDate(perm.created_at)}
+                      </td>
+                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                        {formatDate(perm.updated_at)}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => onOpenEditPerm(perm)}
+                            className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                            title="Chỉnh sửa"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDeletePerm(perm._id)}
+                            className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                            title="Xóa"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Table Footer Stats */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+        {/* Table Footer Stats & Pagination */}
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 gap-3 text-xs text-slate-500 dark:text-slate-400">
           <span>
-            Hiển thị <strong>{filteredData.length}</strong> / <strong>{permissions.length}</strong> quyền hạn
+            Hiển thị <strong>{paginatedData.length}</strong> / <strong>{totalItems}</strong> quyền hạn (Tổng <strong>{permissions.length}</strong>)
           </span>
+
+          {totalItems > 0 && (
+            <div className="w-full sm:w-auto">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20, 50, 100]}
+                onPageChange={(page) => setCurrentPage(page)}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setCurrentPage(1)
+                }}
+                showTotal={false}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -74,7 +74,9 @@ export function SettingsPage() {
       }
 
       if (rbacRoles.status === 'fulfilled' && rbacRoles.value) {
-        setRoles(rbacRoles.value)
+        const rVal = rbacRoles.value
+        const items = Array.isArray(rVal) ? rVal : (rVal?.result || [])
+        setRoles(items)
       }
 
       if (storage.status === 'fulfilled' && storage.value) {

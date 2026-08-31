@@ -7,14 +7,16 @@ export interface ApiResponse<T = unknown> {
   path?: string
 }
 
+export interface PaginationMeta {
+  current: number
+  pageSize: number
+  pages: number
+  total: number
+}
+
 export interface PaginatedResult<T> {
-  items: T[]
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
+  meta: PaginationMeta
+  result: T[]
 }
 
 export interface ApiError {

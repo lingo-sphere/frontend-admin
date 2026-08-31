@@ -26,15 +26,19 @@ export function RolesPage() {
     setIsLoading(true)
     try {
       const [rolesRes, permsRes] = await Promise.allSettled([
-        roleService.getAllRoles(),
-        roleService.getAllPermissions(),
+        roleService.getAllRoles({ pageSize: 50 }),
+        roleService.getAllPermissions({ pageSize: 100 }),
       ])
 
       if (rolesRes.status === 'fulfilled' && rolesRes.value) {
-        setRoles(rolesRes.value)
+        const rVal = rolesRes.value
+        const items = Array.isArray(rVal) ? rVal : (rVal?.result || [])
+        setRoles(items)
       }
       if (permsRes.status === 'fulfilled' && permsRes.value) {
-        setPermissions(permsRes.value)
+        const pVal = permsRes.value
+        const items = Array.isArray(pVal) ? pVal : (pVal?.result || [])
+        setPermissions(items)
       }
     } catch (err) {
       console.warn('Error loading Roles data:', err)

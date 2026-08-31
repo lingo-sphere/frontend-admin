@@ -38,19 +38,24 @@ export function PermissionsPage() {
     setIsLoading(true)
     try {
       const [permsRes, rolesRes, usersRes] = await Promise.allSettled([
-        roleService.getAllPermissions(),
-        roleService.getAllRoles(),
+        roleService.getAllPermissions({ pageSize: 100 }),
+        roleService.getAllRoles({ pageSize: 50 }),
         userService.getAllUsers({ limit: 50 }),
       ])
 
       if (permsRes.status === 'fulfilled' && permsRes.value) {
-        setPermissions(permsRes.value)
+        const pVal = permsRes.value
+        const items = Array.isArray(pVal) ? pVal : (pVal?.result || [])
+        setPermissions(items)
       }
       if (rolesRes.status === 'fulfilled' && rolesRes.value) {
-        setRoles(rolesRes.value)
+        const rVal = rolesRes.value
+        const items = Array.isArray(rVal) ? rVal : (rVal?.result || [])
+        setRoles(items)
       }
       if (usersRes.status === 'fulfilled' && usersRes.value) {
-        const uList = usersRes.value.items ? usersRes.value.items : []
+        const uVal = usersRes.value
+        const uList = Array.isArray(uVal) ? uVal : (uVal?.result || [])
         setUsers(uList)
       }
     } catch (err) {

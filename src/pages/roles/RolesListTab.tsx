@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus, RotateCcw, Edit2, Trash2, Sparkles } from 'lucide-react'
 import type { Role, Permission } from '@/types/api.types'
+import { Pagination } from '@/components/common/Pagination'
 
 interface RolesListTabProps {
   roles: Role[]
@@ -26,14 +27,20 @@ export function RolesListTab({
   const [filterName, setFilterName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setSearchQuery(filterName.trim().toLowerCase())
+    setCurrentPage(1)
   }
 
   const handleReset = () => {
     setFilterName('')
     setSearchQuery('')
+    setCurrentPage(1)
   }
 
   const filteredRoles = useMemo(() => {
@@ -45,6 +52,14 @@ export function RolesListTab({
       )
     })
   }, [roles, searchQuery])
+
+  const totalItems = filteredRoles.length
+  const totalPages = Math.ceil(totalItems / pageSize) || 1
+
+  const paginatedRoles = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    return filteredRoles.slice(startIndex, startIndex + pageSize)
+  }, [filteredRoles, currentPage, pageSize])
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-'
@@ -150,16 +165,17 @@ export function RolesListTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-              {filteredRoles.length === 0 ? (
+              {paginatedRoles.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     Không tìm thấy Vai trò nào phù hợp
                   </td>
                 </tr>
               ) : (
-                filteredRoles.map((role, index) => {
+                paginatedRoles.map((role, index) => {
                   const permCount = role.permissions?.length || 0
                   const isRoleActive = role.is_active !== false
+                  const itemIndex = (currentPage - 1) * pageSize + index + 1
 
                   return (
                     <tr
@@ -167,7 +183,7 @@ export function RolesListTab({
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       <td className="py-3 px-4 text-center font-mono text-slate-500 font-semibold">
-                        {index + 1}
+                        {itemIndex}
                       </td>
                       <td className="py-3 px-4">
                         <span className="font-bold text-xs uppercase px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
@@ -229,11 +245,29 @@ export function RolesListTab({
           </table>
         </div>
 
-        {/* Table Footer Stats */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+        {/* Table Footer Stats & Pagination */}
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 gap-3 text-xs text-slate-500 dark:text-slate-400">
           <span>
-            Hiển thị <strong>{filteredRoles.length}</strong> / <strong>{roles.length}</strong> vai trò
+            Hiển thị <strong>{paginatedRoles.length}</strong> / <strong>{totalItems}</strong> vai trò (Tổng <strong>{roles.length}</strong>)
           </span>
+
+          {totalItems > 0 && (
+            <div className="w-full sm:w-auto">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20, 50]}
+                onPageChange={(page) => setCurrentPage(page)}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setCurrentPage(1)
+                }}
+                showTotal={false}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

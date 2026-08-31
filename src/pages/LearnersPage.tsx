@@ -51,7 +51,7 @@ export function LearnersPage() {
         plan: selectedPlan !== "ALL" ? selectedPlan : undefined,
       });
 
-      const items: UserProfile[] = res?.items || [];
+      const items: UserProfile[] = res?.result || [];
       const mappedUsers: User[] = items.map((u: UserProfile) => ({
         id: u._id || u.user_id,
         email: u.email,

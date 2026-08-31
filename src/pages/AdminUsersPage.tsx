@@ -60,11 +60,13 @@ export function AdminUsersPage() {
       ]);
 
       const items: UserProfile[] = [];
-      if (adminRes.status === "fulfilled" && adminRes.value?.items) {
-        items.push(...adminRes.value.items);
+      if (adminRes.status === "fulfilled" && adminRes.value) {
+        const adminList = Array.isArray(adminRes.value) ? adminRes.value : (adminRes.value.result || []);
+        items.push(...adminList);
       }
-      if (teacherRes.status === "fulfilled" && teacherRes.value?.items) {
-        items.push(...teacherRes.value.items);
+      if (teacherRes.status === "fulfilled" && teacherRes.value) {
+        const teacherList = Array.isArray(teacherRes.value) ? teacherRes.value : (teacherRes.value.result || []);
+        items.push(...teacherList);
       }
 
       const mapped: AdminUser[] = items.map((u: UserProfile) => ({

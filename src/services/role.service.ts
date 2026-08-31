@@ -1,11 +1,19 @@
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Role, Permission } from '@/types/api.types'
+import type { Role, Permission, PaginatedResult } from '@/types/api.types'
 
 export const roleService = {
 
-  async getAllRoles(): Promise<Role[]> {
-    return api.get<Role[]>(API_CONFIG.ENDPOINTS.ROLES.LIST)
+  async getAllRoles(params?: {
+    current?: number
+    pageSize?: number
+    page?: number
+    limit?: number
+    name?: string
+    search?: string
+    is_active?: boolean | string
+  }): Promise<PaginatedResult<Role>> {
+    return api.get<PaginatedResult<Role>>(API_CONFIG.ENDPOINTS.ROLES.LIST, params)
   },
 
   async getRoleById(id: string): Promise<Role> {
@@ -32,8 +40,16 @@ export const roleService = {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.ROLES.SEED_DEFAULT)
   },
 
-  async getAllPermissions(module?: string): Promise<Permission[]> {
-    return api.get<Permission[]>(API_CONFIG.ENDPOINTS.PERMISSIONS.LIST, module ? { module } : undefined)
+  async getAllPermissions(params?: {
+    module?: string
+    current?: number
+    pageSize?: number
+    page?: number
+    limit?: number
+    search?: string
+  } | string): Promise<PaginatedResult<Permission>> {
+    const query = typeof params === 'string' ? { module: params } : params
+    return api.get<PaginatedResult<Permission>>(API_CONFIG.ENDPOINTS.PERMISSIONS.LIST, query)
   },
 
   async getPermissionById(id: string): Promise<Permission> {
