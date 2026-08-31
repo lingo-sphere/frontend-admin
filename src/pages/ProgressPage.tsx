@@ -38,8 +38,8 @@ import { courseService } from '@/services/course.service'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { examService } from '@/services/exam.service'
 import { progressService } from '@/services/progress.service'
-import { BetterStackMonitoringTab } from '@/pages/progress/BetterStackMonitoringTab'
-import { PostHogAnalyticsTab } from '@/pages/progress/PostHogAnalyticsTab'
+import { BetterStackMonitoringTab } from '@/components/progress/BetterStackMonitoringTab'
+import { PostHogAnalyticsTab } from '@/components/progress/PostHogAnalyticsTab'
 import type {
   SystemAnalyticsOverview,
   UserActivityLog,

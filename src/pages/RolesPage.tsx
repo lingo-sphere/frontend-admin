@@ -5,8 +5,8 @@ import { roleService } from '@/services/role.service'
 import { toast } from '@/store/toast-store'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { Role, Permission } from '@/types/api.types'
-import { RolesListTab } from '@/pages/roles/RolesListTab'
-import { RoleEditModal } from '@/pages/roles/RoleEditModal'
+import { RolesListTab } from '@/components/roles/RolesListTab'
+import { RoleEditModal } from '@/components/roles/RoleEditModal'
 
 export function RolesPage() {
   const { i18n } = useTranslation()

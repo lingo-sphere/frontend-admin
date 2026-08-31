@@ -1,31 +1,24 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { examService } from '@/services/exam.service'
+import { practiceService } from '@/services/practice.service'
+import { useAdminStore } from '@/store/admin-store'
+import { toast } from '@/store/toast-store'
+import type { ListeningExercise, PracticeSet, SpeakingExercise, ToeicExam, WritingExercise } from '@/types/api.types'
 import {
   Activity,
+  Award,
+  CheckCircle2,
+  Filter,
   Headphones,
   Mic,
   PenTool,
-  Award,
-  Search,
   Plus,
-  Trash2,
-  Edit2,
-  CheckCircle2,
-  Sparkles,
   RefreshCw,
-  Clock,
-  Filter,
-  FileText,
-  Volume2,
-  Brain,
-  Layers,
-  ChevronRight,
+  Search,
+  Trash2,
+  Volume2
 } from 'lucide-react'
-import { practiceService } from '@/services/practice.service'
-import { examService } from '@/services/exam.service'
-import { toast } from '@/store/toast-store'
-import { useAdminStore } from '@/store/admin-store'
-import type { PracticeSet, ListeningExercise, SpeakingExercise, WritingExercise, ToeicExam } from '@/types/api.types'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type PracticeTab = 'exercises' | 'listening' | 'speaking' | 'writing' | 'toeic'
 

@@ -8,8 +8,8 @@ import { toast } from '@/store/toast-store'
 import {
   CourseBasicInfoTab,
   type CourseFormData,
-} from '@/pages/course-form/CourseBasicInfoTab'
-import { CourseCurriculumManager } from '@/pages/course-form/CourseCurriculumManager'
+} from '@/components/courses/CourseBasicInfoTab'
+import { CourseCurriculumManager } from '@/components/courses/CourseCurriculumManager'
 
 interface CourseFormPageProps {
   editCourseId?: string
@@ -46,6 +46,8 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     discount_price: 0,
     thumbnail_url: '',
     is_published: true,
+    final_test_passing_score: 70,
+    final_test_questions: [],
     modules: [],
   })
 
@@ -74,6 +76,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           discount_price: course.discount_price || 0,
           thumbnail_url: course.thumbnail_url || '',
           is_published: course.is_published ?? true,
+          final_test_exam_id: course.final_test_exam_id,
+          final_test_passing_score: course.final_test_passing_score || 70,
+          final_test_questions: (course.final_test_questions || []) as CourseFormData['final_test_questions'],
           modules:
             course.modules && course.modules.length > 0
               ? course.modules.map((m, mIdx) => ({
@@ -81,6 +86,8 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                   title: m.title || '',
                   description: m.description || '',
                   module_order: m.module_order || mIdx + 1,
+                  passing_score: m.passing_score || m.post_mini_passing_score || m.challenge_passing_score || 70,
+                  test_questions: (m.test_questions || m.post_mini_questions || m.challenge_questions || []) as CourseFormData['final_test_questions'],
                   created_at_timestamp: m.created_at
                     ? new Date(m.created_at).getTime()
                     : Date.now() + mIdx * 1000,
@@ -140,12 +147,24 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         discount_price: Number(formData.discount_price),
         thumbnail_url: formData.thumbnail_url,
         is_published: formData.is_published,
+        pre_test_exam_id: formData.pre_test_exam_id || undefined,
+        final_test_exam_id: formData.final_test_exam_id || undefined,
+        final_test_passing_score: Number(formData.final_test_passing_score) || 70,
+        final_test_questions: formData.final_test_questions || [],
         modules: formData.modules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
           course_id: currentCourseId || '',
           title: m.title,
           description: m.description,
           module_order: mIdx + 1,
+          passing_score: Number(m.passing_score) || Number(m.post_mini_passing_score) || Number(m.challenge_passing_score) || 70,
+          test_questions: m.test_questions || m.post_mini_questions || m.challenge_questions || [],
+          challenge_test_exam_id: m.challenge_test_exam_id,
+          challenge_passing_score: Number(m.passing_score) || Number(m.challenge_passing_score) || 70,
+          challenge_questions: m.test_questions || m.challenge_questions || [],
+          post_mini_test_exam_id: m.post_mini_test_exam_id,
+          post_mini_passing_score: Number(m.passing_score) || Number(m.post_mini_passing_score) || 70,
+          post_mini_questions: m.test_questions || m.post_mini_questions || [],
           lessons: m.lessons.map((l, lIdx) => ({
             _id: l.id || `les-${lIdx}`,
             module_id: m.id || `mod-${mIdx}`,

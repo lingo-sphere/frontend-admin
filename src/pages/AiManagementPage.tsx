@@ -241,7 +241,7 @@ export function AiManagementPage() {
                       {q.question_text}
                     </p>
                     <button
-                      onClick={() => copyToClipboard(`${q.question_text}\n${q.options.map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt}`).join('\n')}\nĐáp án: ${String.fromCharCode(65 + q.correct_index)}\nGiải thích: ${q.explanation_vi}`)}
+                      onClick={() => copyToClipboard(`${q.question_text}\n${q.options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt}`).join('\n')}\nĐáp án: ${String.fromCharCode(65 + q.correct_index)}\nGiải thích: ${q.explanation_vi || q.explanation || ''}`)}
                       className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
                       title="Sao chép câu hỏi"
                     >
@@ -250,7 +250,7 @@ export function AiManagementPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {q.options.map((opt, optIndex) => {
+                    {q.options.map((opt: string, optIndex: number) => {
                       const isCorrect = optIndex === q.correct_index
                       return (
                         <div

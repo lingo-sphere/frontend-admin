@@ -117,9 +117,17 @@ export interface Role {
   updated_at?: string
 }
 
-export type CourseCategory = 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY' | 'FULL_TEST' | 'GENERAL'
+export type CourseCategory = 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
 export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type CourseApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED' | 'DRAFT'
+
+export interface QuizQuestionItem {
+  question_text: string
+  options: string[]
+  correct_answer: string
+  explanation?: string
+  media_url?: string
+}
 
 export interface LessonQuestion {
   _id?: string
@@ -150,6 +158,14 @@ export interface CourseModule {
   title: string
   module_order: number
   description?: string
+  passing_score?: number
+  test_questions?: QuizQuestionItem[]
+  challenge_test_exam_id?: string
+  challenge_passing_score?: number
+  challenge_questions?: QuizQuestionItem[]
+  post_mini_test_exam_id?: string
+  post_mini_passing_score?: number
+  post_mini_questions?: QuizQuestionItem[]
   lessons?: Lesson[]
   created_at?: string
   updated_at?: string
@@ -169,6 +185,10 @@ export interface Course {
   author_id?: string
   approval_status: CourseApprovalStatus | string
   is_published?: boolean
+  pre_test_exam_id?: string
+  final_test_exam_id?: string
+  final_test_passing_score?: number
+  final_test_questions?: QuizQuestionItem[]
   rating?: number
   students_count?: number
   total_modules?: number

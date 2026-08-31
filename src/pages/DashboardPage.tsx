@@ -10,9 +10,9 @@ import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
 import { courseService } from '@/services/course.service'
 import type { SystemAnalyticsOverview } from '@/types/api.types'
-import { DashboardStatsGrid } from '@/pages/dashboard/DashboardStatsGrid'
-import { SimpleChart, type ChartItem } from '@/pages/dashboard/DashboardActivityChart'
-import { DashboardRecentActivity } from '@/pages/dashboard/DashboardRecentActivity'
+import { DashboardStatsGrid } from '@/components/dashboard/DashboardStatsGrid'
+import { SimpleChart, type ChartItem } from '@/components/dashboard/DashboardActivityChart'
+import { DashboardRecentActivity } from '@/components/dashboard/DashboardRecentActivity'
 
 interface DateRange {
   id: string

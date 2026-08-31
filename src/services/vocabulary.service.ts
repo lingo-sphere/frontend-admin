@@ -22,6 +22,10 @@ export const vocabularyService = {
     return api.post<LexicalItem>(API_CONFIG.ENDPOINTS.VOCABULARY.CREATE, payload)
   },
 
+  async deleteLexicalItem(id: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.VOCABULARY.BY_ID(id))
+  },
+
   async getAllTopics(): Promise<Topic[]> {
     return api.get<Topic[]>(API_CONFIG.ENDPOINTS.VOCABULARY.TOPICS)
   },

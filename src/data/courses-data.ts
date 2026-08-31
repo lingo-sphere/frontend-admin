@@ -5,7 +5,7 @@ export interface Course {
   description: string
   thumbnail_url?: string
   target_score: number
-  category: 'TOEIC_LISTENING' | 'TOEIC_READING' | 'GRAMMAR' | 'VOCABULARY'
+  category: 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
   level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
   total_modules: number
   total_lessons: number
@@ -33,25 +33,13 @@ export interface CourseModule {
 }
 
 export const categoryLabels: Record<string, { vi: string; en: string }> = {
-  TOEIC_LISTENING: { vi: 'Nghe TOEIC (Listening)', en: 'TOEIC Listening' },
-  TOEIC_READING: { vi: 'Đọc TOEIC (Reading)', en: 'TOEIC Reading' },
-  TOEIC_2_SKILLS: { vi: 'TOEIC 2 Kỹ năng (LR)', en: 'TOEIC 2 Skills (LR)' },
-  TOEIC_4_SKILLS: { vi: 'TOEIC 4 Kỹ năng (Full)', en: 'TOEIC 4 Skills (Full)' },
-  SPEAKING: { vi: 'Luyện nói & Phát âm (Speaking)', en: 'Speaking' },
-  WRITING: { vi: 'Luyện viết (Writing)', en: 'Writing' },
-  GRAMMAR: { vi: 'Ngữ pháp', en: 'Grammar' },
-  VOCABULARY: { vi: 'Từ vựng SRS', en: 'Vocabulary' },
+  TOEIC_2_SKILLS: { vi: 'TOEIC 2 Kỹ Năng (Listening - Reading)', en: 'TOEIC 2 Skills (LR)' },
+  TOEIC_4_SKILLS: { vi: 'TOEIC 4 Kỹ Năng (Full Skills L-R-S-W)', en: 'TOEIC 4 Skills (Full)' },
 }
 
 export const categoryColors: Record<string, { bg: string; text: string }> = {
-  TOEIC_LISTENING: { bg: 'var(--info-soft)', text: 'var(--info)' },
-  TOEIC_READING: { bg: 'var(--success-soft)', text: 'var(--success)' },
   TOEIC_2_SKILLS: { bg: 'var(--info-soft)', text: 'var(--info)' },
   TOEIC_4_SKILLS: { bg: 'var(--success-soft)', text: 'var(--success)' },
-  SPEAKING: { bg: 'var(--warning-soft)', text: 'var(--warning)' },
-  WRITING: { bg: 'var(--error-soft)', text: 'var(--error)' },
-  GRAMMAR: { bg: 'var(--ai-soft)', text: 'var(--ai)' },
-  VOCABULARY: { bg: 'var(--warning-soft)', text: 'var(--warning)' },
 }
 
 export const levelLabels: Record<string, { vi: string; en: string }> = {

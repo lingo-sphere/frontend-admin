@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { progressService } from '@/services/progress.service'
-import { BetterStackMonitoringTab } from '@/pages/progress/BetterStackMonitoringTab'
+import { BetterStackMonitoringTab } from '@/components/progress/BetterStackMonitoringTab'
 import type { BetterStackMonitoringData } from '@/types/api.types'
 import { toast } from '@/store/toast-store'
 

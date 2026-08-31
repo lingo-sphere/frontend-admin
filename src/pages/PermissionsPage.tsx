@@ -6,9 +6,9 @@ import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { Role, Permission, UserProfile } from '@/types/api.types'
-import { PermissionsListTab } from '@/pages/roles/PermissionsListTab'
-import { AssignRoleTab } from '@/pages/roles/AssignRoleTab'
-import { PermissionModal } from '@/pages/roles/PermissionModal'
+import { PermissionsListTab } from '@/components/roles/PermissionsListTab'
+import { AssignRoleTab } from '@/components/roles/AssignRoleTab'
+import { PermissionModal } from '@/components/roles/PermissionModal'
 
 type PermTabType = 'permissions' | 'assign'
 

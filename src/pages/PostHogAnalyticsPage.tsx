@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { progressService } from '@/services/progress.service'
-import { PostHogAnalyticsTab } from '@/pages/progress/PostHogAnalyticsTab'
+import { PostHogAnalyticsTab } from '@/components/progress/PostHogAnalyticsTab'
 import type { PostHogAnalyticsData } from '@/types/api.types'
 import { toast } from '@/store/toast-store'
 
