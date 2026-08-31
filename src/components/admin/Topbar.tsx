@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Moon, Sun, Bell, Menu, LogOut, User as UserIcon, Shield, ChevronDown, Users, CheckCircle } from 'lucide-react'
+import { Search, Moon, Sun, Bell, Menu, LogOut, User as UserIcon, Shield, ChevronDown, Users } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useTranslation } from 'react-i18next'
 import { notificationService } from '@/services/notification.service'
 import { userService } from '@/services/user.service'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { GlobalSearchModal } from '@/components/admin/GlobalSearchModal'
 import { toast } from '@/store/toast-store'
 import type { AppNotification } from '@/types/api.types'
 
@@ -38,6 +39,7 @@ export function Topbar() {
 
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [totalLearnersCount, setTotalLearnersCount] = useState<number | null>(null)
@@ -46,6 +48,17 @@ export function Topbar() {
   const userDropdownRef = useRef<HTMLDivElement>(null)
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchModalOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [])
 
   useEffect(() => {
     const loadNotifications = async () => {
@@ -152,15 +165,19 @@ export function Topbar() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="hidden sm:flex items-center gap-3 w-full h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-950 transition-all">
+          <button
+            type="button"
+            onClick={() => setSearchModalOpen(true)}
+            className="hidden sm:flex items-center gap-3 w-full h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400 hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all cursor-pointer text-left"
+          >
             <Search className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 shrink-0" />
-            <input
-              type="text"
-              placeholder={t('header.search') || 'Tìm kiếm nhanh (Người dùng, Khóa học, Từ vựng)...'}
-              className="w-full bg-transparent border-0 outline-none text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-sm focus:ring-0"
-            />
-            <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 font-mono shrink-0">⌘K</span>
-          </div>
+            <span className="w-full text-slate-400 dark:text-slate-500 text-xs truncate">
+              {t('header.search') || 'Tìm kiếm nhanh (Người dùng, Khóa học, Từ vựng)...'}
+            </span>
+            <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 font-mono shrink-0">
+              ⌘K
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
@@ -375,6 +392,11 @@ export function Topbar() {
         confirmText="Đăng xuất"
         cancelText="Hủy bỏ"
         variant="danger"
+      />
+
+      <GlobalSearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
       />
     </>
   )
