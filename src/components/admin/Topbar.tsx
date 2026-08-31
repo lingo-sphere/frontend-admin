@@ -124,6 +124,20 @@ export function Topbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const [avatarError, setAvatarError] = useState(false)
+  const avatarUrl = profile?.avatar_url
+  const fullName = profile?.full_name || 'Admin Console'
+  const email = profile?.email || user?.email || 'admin@lingosphere.local'
+  const role = (profile?.role || user?.role || 'ADMIN').toUpperCase()
+
+  const initials = fullName
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(-2)
+    .join('')
+    .toUpperCase() || 'AD'
+
   return (
     <>
       <header className="sticky top-0 z-20 w-full h-17 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 sm:px-7 flex items-center justify-between gap-4 transition-colors">
@@ -230,8 +244,8 @@ export function Topbar() {
                         <div
                           key={notifId}
                           className={`pt-2 first:pt-0 cursor-pointer p-2.5 rounded-xl transition-colors ${!notif.is_read
-                              ? 'bg-indigo-50 dark:bg-indigo-950/30'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                            ? 'bg-indigo-50 dark:bg-indigo-950/30'
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
                             }`}
                           onClick={() => markAsRead(notifId)}
                         >
@@ -267,24 +281,24 @@ export function Topbar() {
               className="flex items-center gap-2.5 pl-2 pr-2 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700/60 cursor-pointer"
               type="button"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-extrabold shadow-sm ring-1 ring-white/20">
-                {profile?.full_name
-                  ? profile.full_name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .slice(-2)
-                    .join('')
-                    .toUpperCase()
-                  : user?.email
-                    ? user.email.substring(0, 2).toUpperCase()
-                    : 'AD'}
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-extrabold shadow-sm ring-1 ring-white/20 overflow-hidden shrink-0">
+                {avatarUrl && !avatarError ? (
+                  <img
+                    src={avatarUrl}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <span>{initials}</span>
+                )}
               </div>
               <div className="hidden md:flex flex-col text-left">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-200 leading-tight">
-                  {profile?.full_name || user?.email?.split('@')[0] || 'Admin'}
+                  {fullName}
                 </span>
                 <span className="text-[11px] font-semibold text-teal-600 dark:text-teal-400">
-                  {user?.role === 'ADMIN' ? 'Quản trị viên' : user?.role || 'Admin'}
+                  {role === 'ADMIN' ? 'Quản trị viên' : role}
                 </span>
               </div>
               <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -292,11 +306,24 @@ export function Topbar() {
 
             {userDropdownOpen && (
               <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
-                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-200 truncate">
-                    {profile?.full_name || 'Admin Console'}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user?.email || 'admin@lingosphere.local'}</p>
+                <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-extrabold overflow-hidden shrink-0">
+                    {avatarUrl && !avatarError ? (
+                      <img
+                        src={avatarUrl}
+                        alt={fullName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-200 truncate">
+                      {fullName}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{email}</p>
+                  </div>
                 </div>
 
                 <button

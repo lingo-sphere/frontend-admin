@@ -187,7 +187,6 @@ export function AdminProfilePage() {
 
   return (
     <div className="w-full px-[10px] space-y-6">
-      {}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -209,7 +208,6 @@ export function AdminProfilePage() {
         </div>
       </div>
 
-      {}
       <AdminProfileHeader
         profileData={profileData}
         bio={form.bio}
@@ -217,10 +215,8 @@ export function AdminProfilePage() {
         onAvatarChange={handleAvatarChange}
       />
 
-      {}
       <form onSubmit={handleSaveProfile} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <AdminProfileInfoForm
             name={form.name}
             email={profileData.email}
@@ -231,7 +227,6 @@ export function AdminProfilePage() {
             onBioChange={(val) => setForm((prev) => ({ ...prev, bio: val }))}
           />
 
-          {}
           <AdminProfileSecurityForm
             currentPassword={form.currentPassword}
             newPassword={form.newPassword}
@@ -243,7 +238,6 @@ export function AdminProfilePage() {
           />
         </div>
 
-        {}
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
