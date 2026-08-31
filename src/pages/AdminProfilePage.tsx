@@ -36,9 +36,6 @@ interface AdminProfileData {
   is_active: boolean
   last_active: string
   created_at: string
-  total_courses_created: number
-  total_lessons_created: number
-  total_users_managed: number
 }
 
 export function AdminProfilePage() {
@@ -87,9 +84,6 @@ export function AdminProfilePage() {
             is_active: true,
             last_active: 'Vừa xong',
             created_at: p.created_at || '10/01/2026',
-            total_courses_created: 12,
-            total_lessons_created: 48,
-            total_users_managed: 12840,
           })
           setForm({
             name: p.full_name || '',
@@ -113,9 +107,6 @@ export function AdminProfilePage() {
           is_active: true,
           last_active: 'Vừa xong',
           created_at: '10/01/2026',
-          total_courses_created: 12,
-          total_lessons_created: 48,
-          total_users_managed: 12840,
         })
         setForm({
           name: authProfile?.full_name || 'LingoSphere Super Admin',
@@ -267,19 +258,6 @@ export function AdminProfilePage() {
             </p>
           </div>
         </div>
-
-        <button
-          onClick={handleSaveProfile}
-          disabled={isSaving}
-          className="flex items-center gap-2 h-10 px-5 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-xs font-bold text-white shadow-md shadow-blue-600/30 transition-all cursor-pointer"
-        >
-          {isSaving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          <span>{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
-        </button>
       </div>
 
       {/* Profile Overview Card with Interactive Avatar */}
@@ -368,24 +346,6 @@ export function AdminProfilePage() {
 
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
             {form.bio || 'Tổng quản trị viên hệ sinh thái LingoSphere, phụ trách kiểm duyệt nội dung và phân quyền bảo mật.'}
-          </p>
-        </div>
-      </div>
-
-      {/* Summary KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-center shadow-xs">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Khóa học đã tạo</p>
-          <p className="text-2xl font-black text-teal-600 dark:text-teal-400 mt-1">{profileData.total_courses_created}</p>
-        </div>
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-center shadow-xs">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Bài giảng & Đề thi</p>
-          <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{profileData.total_lessons_created}</p>
-        </div>
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-center shadow-xs">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Học viên quản lý</p>
-          <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
-            {profileData.total_users_managed.toLocaleString('vi-VN')}
           </p>
         </div>
       </div>
