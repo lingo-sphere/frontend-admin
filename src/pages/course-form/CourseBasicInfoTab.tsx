@@ -53,6 +53,7 @@ export interface CourseModule {
   title: string
   description: string
   module_order: number
+  created_at_timestamp?: number
   lessons: CourseLesson[]
 }
 
@@ -61,6 +62,7 @@ interface CourseBasicInfoTabProps {
   onChange: (updated: Partial<CourseFormData>) => void
   onGenerateSlug?: () => void
   isVi: boolean
+  courseFolder?: string
 }
 
 export function CourseBasicInfoTab({
@@ -68,6 +70,7 @@ export function CourseBasicInfoTab({
   onChange,
   onGenerateSlug,
   isVi,
+  courseFolder,
 }: CourseBasicInfoTabProps) {
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
 
@@ -215,7 +218,7 @@ export function CourseBasicInfoTab({
               type="image"
               value={formData.thumbnail_url}
               onChange={(url) => onChange({ thumbnail_url: url })}
-              folder="course-thumbnails"
+              folder={courseFolder || (formData.slug ? `courses/${formData.slug}` : 'courses')}
               label={isVi ? 'Ảnh Thumbnail Khóa Học (Cloudflare R2)' : 'Course Thumbnail (Cloudflare R2)'}
               isVi={isVi}
             />

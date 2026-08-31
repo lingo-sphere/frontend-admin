@@ -151,6 +151,8 @@ export interface CourseModule {
   module_order: number
   description?: string
   lessons?: Lesson[]
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Course {

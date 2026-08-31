@@ -29,6 +29,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
 
   const isEditMode = Boolean(currentCourseId && currentCourseId !== 'create')
 
+  const [courseCreatedAt, setCourseCreatedAt] = useState<number>(() => Date.now())
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
@@ -58,6 +59,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     try {
       const course = await courseService.getCourseById(courseId)
       if (course) {
+        if (course.created_at) {
+          setCourseCreatedAt(new Date(course.created_at).getTime())
+        }
         setFormData({
           title: course.title || '',
           slug: course.slug || '',
@@ -76,6 +80,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
                   title: m.title || '',
                   description: m.description || '',
                   module_order: m.module_order || mIdx + 1,
+                  created_at_timestamp: m.created_at
+                    ? new Date(m.created_at).getTime()
+                    : Date.now() + mIdx * 1000,
                   lessons:
                     m.lessons && m.lessons.length > 0
                       ? m.lessons.map((l, lIdx) => ({
@@ -182,6 +189,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     )
   }
 
+  const courseSlug = formData.slug.trim() || 'untitled-course'
+  const courseFolder = `courses/${courseSlug}-${courseCreatedAt}`
+
   return (
     <div className="space-y-6 w-full px-[10px] pb-12">
       <div className="flex items-center justify-between gap-4">
@@ -229,6 +239,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           onChange={(updated) => setFormData((prev) => ({ ...prev, ...updated }))}
           onGenerateSlug={handleGenerateSlug}
           isVi={isVi}
+          courseFolder={courseFolder}
         />
 
         <CourseCurriculumManager
@@ -236,6 +247,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           onChange={(modules) => setFormData((prev) => ({ ...prev, modules }))}
           onPreviewVideo={(url) => setVideoPreviewUrl(url)}
           isVi={isVi}
+          courseFolder={courseFolder}
         />
       </form>
 

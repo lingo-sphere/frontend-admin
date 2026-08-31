@@ -22,6 +22,7 @@ interface CourseCurriculumManagerProps {
   onChange: (modules: CourseModule[]) => void
   onPreviewVideo: (url: string) => void
   isVi: boolean
+  courseFolder?: string
 }
 
 export function CourseCurriculumManager({
@@ -29,6 +30,7 @@ export function CourseCurriculumManager({
   onChange,
   onPreviewVideo,
   isVi,
+  courseFolder,
 }: CourseCurriculumManagerProps) {
   const [expandedModules, setExpandedModules] = useState<string[]>(
     modules.map((m) => m.id)
@@ -43,15 +45,17 @@ export function CourseCurriculumManager({
   }
 
   const addModule = () => {
-    const newModuleId = `mod-${Date.now()}`
+    const now = Date.now()
+    const newModuleId = `mod-${now}`
     const newModule: CourseModule = {
       id: newModuleId,
       title: '',
       description: '',
       module_order: modules.length + 1,
+      created_at_timestamp: now,
       lessons: [
         {
-          id: `les-${Date.now()}`,
+          id: `les-${now}`,
           title: '',
           video_url: '',
           duration_minutes: 0,
@@ -295,134 +299,142 @@ export function CourseCurriculumManager({
                         </button>
                       </div>
                     ) : (
-                      mod.lessons.map((les, lesIdx) => (
-                        <div
-                          key={les.id}
-                          className="p-4 rounded-xl bg-white border border-slate-200 space-y-3 transition-all dark:bg-slate-900 dark:border-slate-800"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                              <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-100 dark:bg-indigo-600/20 dark:text-indigo-400 dark:border-indigo-500/20">
-                                {lesIdx + 1}
-                              </span>
-                              <input
-                                type="text"
-                                value={les.title}
-                                onChange={(e) =>
-                                  updateLessonField(
-                                    mod.id,
-                                    les.id,
-                                    'title',
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Tên bài học video..."
-                                className="w-full h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
-                              />
-                            </div>
+                      mod.lessons.map((les, lesIdx) => {
+                        const modOrder = mod.module_order || modIdx + 1
+                        const modTimestamp = mod.created_at_timestamp || Date.now()
+                        const chapterFolder = courseFolder
+                          ? `${courseFolder}/${modOrder}-${modTimestamp}`
+                          : `courses/modules/${modOrder}-${modTimestamp}`
 
-                            <div className="flex items-center gap-3">
-                              <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                        return (
+                          <div
+                            key={les.id}
+                            className="p-4 rounded-xl bg-white border border-slate-200 space-y-3 transition-all dark:bg-slate-900 dark:border-slate-800"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-100 dark:bg-indigo-600/20 dark:text-indigo-400 dark:border-indigo-500/20">
+                                  {lesIdx + 1}
+                                </span>
                                 <input
-                                  type="checkbox"
-                                  checked={les.is_preview}
+                                  type="text"
+                                  value={les.title}
                                   onChange={(e) =>
                                     updateLessonField(
                                       mod.id,
                                       les.id,
-                                      'is_preview',
-                                      e.target.checked
+                                      'title',
+                                      e.target.value
                                     )
                                   }
-                                  className="w-4 h-4 accent-indigo-600 rounded"
+                                  placeholder="Tên bài học video..."
+                                  className="w-full h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                                 />
-                                <span className="text-[11px] font-medium text-teal-600 dark:text-teal-400">
-                                  {isVi ? 'Học thử' : 'Preview'}
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={les.is_preview}
+                                    onChange={(e) =>
+                                      updateLessonField(
+                                        mod.id,
+                                        les.id,
+                                        'is_preview',
+                                        e.target.checked
+                                      )
+                                    }
+                                    className="w-4 h-4 accent-indigo-600 rounded"
+                                  />
+                                  <span className="text-[11px] font-medium text-teal-600 dark:text-teal-400">
+                                    {isVi ? 'Học thử' : 'Preview'}
+                                  </span>
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeLesson(mod.id, les.id)}
+                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                  title="Xóa bài học"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                              <div className="sm:col-span-2">
+                                <R2MediaUploader
+                                  type="video"
+                                  value={les.video_url}
+                                  onChange={(url) =>
+                                    updateLessonField(
+                                      mod.id,
+                                      les.id,
+                                      'video_url',
+                                      url
+                                    )
+                                  }
+                                  folder={chapterFolder}
+                                  label={isVi ? 'Video bài giảng (Cloudflare R2 MP4 / WebM)' : 'Lesson Video (Cloudflare R2 MP4 / WebM)'}
+                                  isVi={isVi}
+                                />
+                              </div>
+
+                              <div className="space-y-1 sm:pt-6">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-teal-500" />
+                                  <span>{isVi ? 'Thời lượng (Phút)' : 'Duration (Mins)'}</span>
+                                </label>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={les.duration_minutes}
+                                  onChange={(e) =>
+                                    updateLessonField(
+                                      mod.id,
+                                      les.id,
+                                      'duration_minutes',
+                                      Math.max(1, Number(e.target.value) || 1)
+                                    )
+                                  }
+                                  className="w-full h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <FileText className="w-3 h-3 text-slate-400" />
+                                <span>
+                                  {isVi
+                                    ? 'Ghi chú / Tóm tắt kiến thức trọng tâm cho video này'
+                                    : 'Lesson Summary / Key Points'}
                                 </span>
                               </label>
-
-                              <button
-                                type="button"
-                                onClick={() => removeLesson(mod.id, les.id)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
-                                title="Xóa bài học"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
-                            <div className="sm:col-span-2">
-                              <R2MediaUploader
-                                type="video"
-                                value={les.video_url}
-                                onChange={(url) =>
-                                  updateLessonField(
-                                    mod.id,
-                                    les.id,
-                                    'video_url',
-                                    url
-                                  )
-                                }
-                                folder="course-videos"
-                                label={isVi ? 'Video bài giảng (Cloudflare R2 MP4 / WebM)' : 'Lesson Video (Cloudflare R2 MP4 / WebM)'}
-                                isVi={isVi}
-                              />
-                            </div>
-
-                            <div className="space-y-1 sm:pt-6">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-teal-500" />
-                                <span>{isVi ? 'Thời lượng (Phút)' : 'Duration (Mins)'}</span>
-                              </label>
-                              <input
-                                type="number"
-                                min={1}
-                                value={les.duration_minutes}
+                              <textarea
+                                value={les.content}
                                 onChange={(e) =>
                                   updateLessonField(
                                     mod.id,
                                     les.id,
-                                    'duration_minutes',
-                                    Math.max(1, Number(e.target.value) || 1)
+                                    'content',
+                                    e.target.value
                                   )
                                 }
-                                className="w-full h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                                rows={2}
+                                placeholder={
+                                  isVi
+                                    ? 'Ghi chú kiến thức chính, từ vựng hoặc công thức cần nhớ trong video...'
+                                    : 'Summary of key notes or formula...'
+                                }
+                                className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200"
                               />
                             </div>
                           </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                              <FileText className="w-3 h-3 text-slate-400" />
-                              <span>
-                                {isVi
-                                  ? 'Ghi chú / Tóm tắt kiến thức trọng tâm cho video này'
-                                  : 'Lesson Summary / Key Points'}
-                              </span>
-                            </label>
-                            <textarea
-                              value={les.content}
-                              onChange={(e) =>
-                                updateLessonField(
-                                  mod.id,
-                                  les.id,
-                                  'content',
-                                  e.target.value
-                                )
-                              }
-                              rows={2}
-                              placeholder={
-                                isVi
-                                  ? 'Ghi chú kiến thức chính, từ vựng hoặc công thức cần nhớ trong video...'
-                                  : 'Summary of key notes or formula...'
-                              }
-                              className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200"
-                            />
-                          </div>
-                        </div>
-                      ))
+                        )
+                      })
                     )}
                   </div>
                 </div>
