@@ -35,9 +35,38 @@ export function ExamListTable({
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
+
+  const handleSort = (key: string) => {
+    let nextOrder: 'asc' | 'desc' = 'asc'
+    if (sortKey === key && sortOrder) {
+      nextOrder = sortOrder === 'asc' ? 'desc' : 'asc'
+    } else {
+      if (filteredExams.length >= 2) {
+        const getVal = (item: ToeicExamItem) => {
+          if (key === 'title') return item.title.toLowerCase()
+          if (key === 'duration') return item.duration_minutes || 0
+          if (key === 'questions') return item.total_questions || 0
+          if (key === 'attempts') return item.total_attempts || 0
+          if (key === 'score') return item.avg_score || 0
+          return ''
+        }
+        const first = getVal(filteredExams[0])
+        const last = getVal(filteredExams[filteredExams.length - 1])
+        const isCurrentAsc = typeof first === 'number' && typeof last === 'number' ? first <= last : String(first).localeCompare(String(last)) <= 0
+        nextOrder = isCurrentAsc ? 'desc' : 'asc'
+      } else {
+        nextOrder = 'desc'
+      }
+    }
+    setSortKey(key)
+    setSortOrder(nextOrder)
+    setCurrentPage(1)
+  }
 
   const filteredExams = useMemo(() => {
-    return exams.filter((exam) => {
+    const list = exams.filter((exam) => {
       const matchesSearch = exam.title
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
@@ -45,7 +74,33 @@ export function ExamListTable({
         selectedType === 'ALL' || exam.type === selectedType
       return matchesSearch && matchesType
     })
-  }, [exams, searchQuery, selectedType])
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'title') {
+        const comp = a.title.localeCompare(b.title)
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'duration') {
+        const diff = (a.duration_minutes || 0) - (b.duration_minutes || 0)
+        return sortOrder === 'asc' ? diff : -diff
+      }
+      if (sortKey === 'questions') {
+        const diff = (a.total_questions || 0) - (b.total_questions || 0)
+        return sortOrder === 'asc' ? diff : -diff
+      }
+      if (sortKey === 'attempts') {
+        const diff = (a.total_attempts || 0) - (b.total_attempts || 0)
+        return sortOrder === 'asc' ? diff : -diff
+      }
+      if (sortKey === 'score') {
+        const diff = (a.avg_score || 0) - (b.avg_score || 0)
+        return sortOrder === 'asc' ? diff : -diff
+      }
+      return 0
+    })
+  }, [exams, searchQuery, selectedType, sortKey, sortOrder])
 
   const totalPages = Math.ceil(filteredExams.length / pageSize) || 1
 
@@ -98,22 +153,57 @@ export function ExamListTable({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs dark:border-slate-800 dark:bg-slate-900/80">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
-                <th className="py-3.5 px-4">{isVi ? 'Tên đề thi' : 'Exam Title'}</th>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 text-[13.5px] sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+                <th
+                  onClick={() => handleSort('title')}
+                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{isVi ? 'Tên đề thi' : 'Exam Title'}</span>
+                  </div>
+                </th>
                 <th className="py-3.5 px-4">{isVi ? 'Loại đề' : 'Type'}</th>
-                <th className="py-3.5 px-4">{isVi ? 'Thời lượng' : 'Duration'}</th>
-                <th className="py-3.5 px-4">{isVi ? 'Số câu' : 'Questions'}</th>
-                <th className="py-3.5 px-4">{isVi ? 'Lượt thi' : 'Attempts'}</th>
-                <th className="py-3.5 px-4">{isVi ? 'Điểm TB' : 'Avg Score'}</th>
+                <th
+                  onClick={() => handleSort('duration')}
+                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{isVi ? 'Thời lượng' : 'Duration'}</span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('questions')}
+                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{isVi ? 'Số câu' : 'Questions'}</span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('attempts')}
+                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{isVi ? 'Lượt thi' : 'Attempts'}</span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('score')}
+                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{isVi ? 'Điểm TB' : 'Avg Score'}</span>
+                  </div>
+                </th>
                 <th className="py-3.5 px-4">{isVi ? 'Trạng thái' : 'Status'}</th>
                 <th className="py-3.5 px-4 text-right">{isVi ? 'Thao tác' : 'Actions'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700 dark:divide-slate-800/60 dark:text-slate-200">
+            <tbody className="text-slate-700 dark:text-slate-200 text-xs">
               {paginatedExams.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
@@ -124,7 +214,7 @@ export function ExamListTable({
                 paginatedExams.map((exam) => (
                   <tr
                     key={exam.id || exam._id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                    className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100"
                   >
                     <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-slate-100">
                       <div className="flex items-center gap-2.5">

@@ -33,6 +33,8 @@ export function VocabularyPage() {
   const [filterLevel, setFilterLevel] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const fetchVocabularyData = useCallback(async () => {
     setIsLoading(true)
@@ -85,8 +87,8 @@ export function VocabularyPage() {
         }))
         setDecks(mappedDecks)
       }
-    } catch (err) {
-      console.warn('Error fetching vocabulary data from backend:', err)
+    } catch {
+      toast.error('Lỗi khi tải dữ liệu từ vựng')
     } finally {
       setIsLoading(false)
     }
@@ -97,14 +99,28 @@ export function VocabularyPage() {
   }, [fetchVocabularyData])
 
   const filteredWords = useMemo(() => {
-    return words.filter((w) => {
+    const list = words.filter((w) => {
       const matchSearch =
         w.word.toLowerCase().includes(searchWord.toLowerCase()) ||
         (w.word_type || '').toLowerCase().includes(searchWord.toLowerCase())
       const matchLevel = filterLevel === 'ALL' || w.cefr_level === filterLevel
       return matchSearch && matchLevel
     })
-  }, [words, searchWord, filterLevel])
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'word') {
+        const comp = a.word.toLowerCase().localeCompare(b.word.toLowerCase())
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'cefr') {
+        const comp = (a.cefr_level || 'A1').localeCompare(b.cefr_level || 'A1')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      return 0
+    })
+  }, [words, searchWord, filterLevel, sortKey, sortOrder])
 
   const paginatedWords = useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -124,6 +140,8 @@ export function VocabularyPage() {
   const handleResetFilters = () => {
     setSearchWord('')
     setFilterLevel('ALL')
+    setSortKey(null)
+    setSortOrder(null)
     setCurrentPage(1)
   }
 
@@ -224,6 +242,13 @@ export function VocabularyPage() {
           data={paginatedWords}
           rowKey={(w) => w.id}
           isLoading={isLoading}
+          sortKey={sortKey}
+          sortOrder={sortOrder}
+          onSortChange={(k, o) => {
+            setSortKey(k)
+            setSortOrder(o)
+            setCurrentPage(1)
+          }}
           onResetFilters={handleResetFilters}
           filterSlot={
             <VocabularyFilterBar

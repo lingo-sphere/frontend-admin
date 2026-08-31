@@ -20,6 +20,7 @@ export function getVocabularyColumns({
     {
       key: 'word',
       title: isVi ? 'Từ vựng & Phát âm' : 'Word & Phonetics',
+      sortable: true,
       render: (w) => (
         <div className="flex items-center gap-3">
           <button
@@ -55,6 +56,7 @@ export function getVocabularyColumns({
     {
       key: 'cefr',
       title: isVi ? 'Trình độ CEFR' : 'CEFR Level',
+      sortable: true,
       render: (w) => (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
           {w.cefr_level || 'A1'}

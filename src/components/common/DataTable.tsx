@@ -84,17 +84,58 @@ export function DataTable<T extends object>({
 
   const handleHeaderClick = (colKey: string, isSortable?: boolean) => {
     if (!isSortable) return
-    let nextOrder: 'asc' | 'desc' | null = 'asc'
-    if (activeSortKey === colKey) {
-      if (activeSortOrder === 'asc') nextOrder = 'desc'
-      else if (activeSortOrder === 'desc') nextOrder = null
-      else nextOrder = 'asc'
+    let nextOrder: 'asc' | 'desc' = 'asc'
+
+    if (activeSortKey === colKey && activeSortOrder) {
+      nextOrder = activeSortOrder === 'asc' ? 'desc' : 'asc'
+    } else {
+      if (data && data.length >= 2) {
+        const col = columns.find((c) => c.key === colKey)
+        const getVal = (item: T): unknown => {
+          if (!item) return ''
+          if (col?.dataIndex && item[col.dataIndex] !== undefined) {
+            return item[col.dataIndex]
+          }
+          const rec = item as Record<string, unknown>
+          if (colKey === 'user' || colKey === 'learner') return rec.full_name || rec.name || rec.email
+          if (colKey === 'info' || colKey === 'course') return rec.title || rec.name
+          if (colKey === 'price') return rec.price ?? 0
+          if (colKey === 'created_at') return rec.created_at
+          if (colKey === 'updated_at') return rec.updated_at
+          return rec[colKey]
+        }
+
+        const first = getVal(data[0])
+        const last = getVal(data[data.length - 1])
+
+        if (first !== undefined && first !== null && last !== undefined && last !== null) {
+          let isCurrentAsc = false
+          if (typeof first === 'number' && typeof last === 'number') {
+            isCurrentAsc = first <= last
+          } else {
+            const strFirst = String(first).trim().toLowerCase()
+            const strLast = String(last).trim().toLowerCase()
+            const timeFirst = Date.parse(strFirst)
+            const timeLast = Date.parse(strLast)
+            if (!isNaN(timeFirst) && !isNaN(timeLast) && strFirst.length > 8) {
+              isCurrentAsc = timeFirst <= timeLast
+            } else {
+              isCurrentAsc = strFirst.localeCompare(strLast) <= 0
+            }
+          }
+          nextOrder = isCurrentAsc ? 'desc' : 'asc'
+        } else {
+          nextOrder = 'desc'
+        }
+      } else {
+        nextOrder = 'desc'
+      }
     }
 
     if (onSortChange) {
       onSortChange(colKey, nextOrder)
     } else {
-      setInternalSortKey(nextOrder ? colKey : null)
+      setInternalSortKey(colKey)
       setInternalSortOrder(nextOrder)
     }
   }
@@ -188,9 +229,9 @@ export function DataTable<T extends object>({
       {viewMode === 'table' && (
         <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-semibold">
+                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60">
                   {visibleColumns.map((col) => (
                     <th
                       key={col.key}
@@ -204,12 +245,12 @@ export function DataTable<T extends object>({
                           : 'text-left'
                       } ${
                         col.sortable
-                          ? 'cursor-pointer select-none group hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors'
+                          ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
                           : ''
                       }`}
                     >
                       <div
-                        className={`inline-flex items-center gap-1.5 ${
+                        className={`inline-flex items-center gap-2 text-[13.5px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 ${
                           col.align === 'right'
                             ? 'justify-end'
                             : col.align === 'center'
@@ -217,15 +258,15 @@ export function DataTable<T extends object>({
                             : 'justify-start'
                         }`}
                       >
-                        <span>{col.title}</span>
+                        <span className="tracking-tight">{col.title}</span>
                         {col.sortable && (
                           <span className="shrink-0 transition-colors">
                             {activeSortKey === col.key && activeSortOrder === 'asc' ? (
-                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                              <ArrowUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
                             ) : activeSortKey === col.key && activeSortOrder === 'desc' ? (
-                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                              <ArrowDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
                             ) : (
-                              <ChevronsUpDown className="w-3.5 h-3.5 text-slate-400/50 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
+                              <ChevronsUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
                             )}
                           </span>
                         )}
@@ -234,7 +275,7 @@ export function DataTable<T extends object>({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-200">
+              <tbody className="text-slate-700 dark:text-slate-200 text-xs">
                 {isLoading ? (
                   <tr>
                     <td
@@ -261,7 +302,7 @@ export function DataTable<T extends object>({
                     <tr
                       key={rowKey(record)}
                       onClick={() => onRowClick && onRowClick(record)}
-                      className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${
+                      className={`border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100 ${
                         onRowClick ? 'cursor-pointer' : ''
                       }`}
                     >
