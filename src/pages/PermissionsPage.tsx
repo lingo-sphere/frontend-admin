@@ -214,6 +214,7 @@ export function PermissionsPage() {
         onSave={handleSavePerm}
         isSubmitting={isSubmitting}
         availableModules={availableModules}
+        existingPermissions={permissions}
       />
     </div>
   )
