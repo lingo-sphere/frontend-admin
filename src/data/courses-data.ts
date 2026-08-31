@@ -35,10 +35,6 @@ export interface CourseModule {
 export const categoryLabels: Record<string, { vi: string; en: string }> = {
   TOEIC_2_SKILLS: { vi: 'TOEIC 2 Kỹ Năng', en: 'TOEIC 2 Skills' },
   TOEIC_4_SKILLS: { vi: 'TOEIC 4 Kỹ Năng', en: 'TOEIC 4 Skills' },
-  TOEIC_LISTENING: { vi: 'TOEIC Listening', en: 'TOEIC Listening' },
-  TOEIC_READING: { vi: 'TOEIC Reading', en: 'TOEIC Reading' },
-  TOEIC_SPEAKING: { vi: 'TOEIC Speaking', en: 'TOEIC Speaking' },
-  TOEIC_WRITING: { vi: 'TOEIC Writing', en: 'TOEIC Writing' },
 }
 
 export const categoryColors: Record<string, { bg: string; text: string }> = {
