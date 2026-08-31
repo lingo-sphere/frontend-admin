@@ -1,10 +1,11 @@
-import { Award, CheckCircle2, Trash2 } from 'lucide-react'
+import { Award, Trash2 } from 'lucide-react'
 import type { PracticeSet } from '@/types/api.types'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface PracticeSetCardProps {
   set: PracticeSet
   onToggleStatus: (id: string, current: boolean) => void
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void> | void
 }
 
 export function PracticeSetCard({
@@ -46,13 +47,23 @@ export function PracticeSetCard({
           >
             {set.is_active ? 'Hoạt động' : 'Tạm dừng'}
           </button>
-          <button
-            onClick={() => onDelete(setId)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Xóa bộ bài tập"
+          <Popconfirm
+            title="Xóa bộ bài tập này?"
+            description="Hành động này không thể hoàn tác."
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
+            placement="topRight"
+            onConfirm={() => onDelete(setId)}
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <button
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+              title="Xóa bộ bài tập"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </Popconfirm>
         </div>
       </div>
     </div>

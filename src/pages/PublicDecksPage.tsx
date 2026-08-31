@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Search, Plus, RotateCcw, Layers3 } from 'lucide-react'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { toast } from '@/store/toast-store'
 import type { FlashcardDeck } from '@/types/api.types'
@@ -11,7 +10,6 @@ export function PublicDecksPage() {
   const [decks, setDecks] = useState<FlashcardDeck[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
@@ -57,11 +55,9 @@ export function PublicDecksPage() {
     }
   }
 
-  const confirmDelete = () => {
-    if (!deleteTargetId) return
-    setDecks(decks.filter((d) => (d._id || '') !== deleteTargetId))
+  const handleDeleteDeck = (id: string) => {
+    setDecks((prev) => prev.filter((d) => (d._id || '') !== id))
     toast.success('Đã xóa bộ thẻ công khai')
-    setDeleteTargetId(null)
   }
 
   const filteredDecks = decks.filter(
@@ -122,7 +118,7 @@ export function PublicDecksPage() {
             <PublicDeckCard
               key={deck._id || ''}
               deck={deck}
-              onDelete={(id) => setDeleteTargetId(id)}
+              onDelete={handleDeleteDeck}
             />
           ))
         )}
@@ -136,17 +132,6 @@ export function PublicDecksPage() {
         onDescriptionChange={setNewDesc}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreateDeck}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(deleteTargetId)}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirm={confirmDelete}
-        title="Xác nhận xóa bộ thẻ công khai?"
-        message="Học viên đang học bộ thẻ này sẽ không thể tiếp tục ôn tập bằng bộ thẻ này nữa."
-        confirmText="Xóa vĩnh viễn"
-        cancelText="Hủy bỏ"
-        variant="danger"
       />
     </div>
   )

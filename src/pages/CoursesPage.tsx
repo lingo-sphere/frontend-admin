@@ -4,7 +4,6 @@ import { Plus, RotateCcw } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import type { Course as ApiCourse, CourseModule as ApiCourseModule } from '@/types/api.types'
 import { DataTable } from '@/components/common/DataTable'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useAdminStore } from '@/store/admin-store'
 import { usePermission } from '@/hooks/use-permission'
 import { Can } from '@/components/common/Can'
@@ -34,9 +33,6 @@ export function CoursesPage() {
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
-
-  const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState<boolean>(false)
   const [totalStudentsCount, setTotalStudentsCount] = useState<number>(0)
 
   const fetchCourses = useCallback(async () => {
@@ -144,18 +140,13 @@ export function CoursesPage() {
     setActiveNavItem(`course-edit:${courseId}`)
   }
 
-  const handleDeleteCourse = async () => {
-    if (!deleteCourseId) return
-    setIsDeleting(true)
+  const handleDeleteCourse = async (courseId: string) => {
     try {
-      await courseService.deleteCourse(deleteCourseId)
-      setCourses((prev) => prev.filter((c) => c.id !== deleteCourseId))
+      await courseService.deleteCourse(courseId)
+      setCourses((prev) => prev.filter((c) => c.id !== courseId))
       toast.success('Đã xóa khóa học thành công!')
     } catch {
       toast.error('Xóa khóa học thất bại')
-    } finally {
-      setIsDeleting(false)
-      setDeleteCourseId(null)
     }
   }
 
@@ -165,16 +156,14 @@ export function CoursesPage() {
       canEdit: can('PUT', '/courses/:id'),
       canDelete: can('DELETE', '/courses/:id'),
       onEdit: handleEditCourse,
-      onDelete: setDeleteCourseId,
+      onDelete: handleDeleteCourse,
     })
   }, [isVi, can])
 
   return (
     <div className="space-y-6">
-      {}
       <CourseStatsOverview stats={stats} />
 
-      {}
       <DataTable<Course>
         title="Quản Lý Khóa Học & Lộ Trình"
         subtitle="Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi"
@@ -191,7 +180,7 @@ export function CoursesPage() {
             canEdit={can('PUT', '/courses/:id')}
             canDelete={can('DELETE', '/courses/:id')}
             onEdit={handleEditCourse}
-            onDelete={setDeleteCourseId}
+            onDelete={handleDeleteCourse}
           />
         )}
         onResetFilters={handleResetFilters}
@@ -237,20 +226,6 @@ export function CoursesPage() {
             setCurrentPage(1)
           },
         }}
-      />
-
-      {}
-      <ConfirmModal
-        isOpen={Boolean(deleteCourseId)}
-        onClose={() => setDeleteCourseId(null)}
-        onConfirm={handleDeleteCourse}
-        title="Xóa Khóa Học"
-        message="Bạn có chắc chắn muốn xóa khóa học này? Hành động này sẽ chuyển khóa học vào thùng rác."
-        confirmText="Xóa khóa học"
-        cancelText="Hủy bỏ"
-        variant="danger"
-        icon="delete"
-        isLoading={isDeleting}
       />
     </div>
   )

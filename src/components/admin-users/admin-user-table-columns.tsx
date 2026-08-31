@@ -1,10 +1,11 @@
 import { Shield, GraduationCap, Edit2, Ban, CheckCircle } from 'lucide-react'
 import type { AdminUser } from '@/helpers/admin-user.helper'
 import type { DataTableColumn } from '@/components/common/DataTable'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface GetAdminUserColumnsOptions {
   onEditUser: (userId: string) => void
-  onOpenStatusModal: (user: AdminUser, action: 'ban' | 'unban') => void
+  onOpenStatusModal: (user: AdminUser, action: 'ban' | 'unban') => Promise<void> | void
 }
 
 export function getAdminUserColumns({
@@ -100,27 +101,48 @@ export function getAdminUserColumns({
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onEditUser(user.id)}
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
             title="Chỉnh sửa tài khoản"
+            type="button"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           {user.is_active ? (
-            <button
-              onClick={() => onOpenStatusModal(user, 'ban')}
-              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 transition-colors cursor-pointer"
-              title="Khóa tài khoản"
+            <Popconfirm
+              title="Khóa tài khoản này?"
+              description="Tài khoản này sẽ bị tạm dừng truy cập vào hệ thống quản trị."
+              okText="Khóa tài khoản"
+              cancelText="Hủy"
+              okType="danger"
+              placement="topRight"
+              onConfirm={() => onOpenStatusModal(user, 'ban')}
             >
-              <Ban className="w-3.5 h-3.5" />
-            </button>
+              <button
+                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+                title="Khóa tài khoản"
+                type="button"
+              >
+                <Ban className="w-3.5 h-3.5" />
+              </button>
+            </Popconfirm>
           ) : (
-            <button
-              onClick={() => onOpenStatusModal(user, 'unban')}
-              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-400 transition-colors cursor-pointer"
-              title="Mở khóa tài khoản"
+            <Popconfirm
+              title="Mở khóa tài khoản này?"
+              description="Tài khoản này sẽ có thể đăng nhập lại vào hệ thống quản trị."
+              okText="Mở khóa"
+              cancelText="Hủy"
+              okType="primary"
+              placement="topRight"
+              onConfirm={() => onOpenStatusModal(user, 'unban')}
             >
-              <CheckCircle className="w-3.5 h-3.5" />
-            </button>
+              <button
+                className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer"
+                title="Mở khóa tài khoản"
+                type="button"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+              </button>
+            </Popconfirm>
           )}
         </div>
       ),

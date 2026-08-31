@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Shield } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { Role, Permission } from '@/types/api.types'
 import { RolesListTab } from '@/components/roles/RolesListTab'
 import { RoleEditModal } from '@/components/roles/RoleEditModal'
@@ -16,10 +15,8 @@ export function RolesPage() {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
-  const [deleteRoleId, setDeleteRoleId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const loadData = async () => {
@@ -65,7 +62,6 @@ export function RolesPage() {
     }
   }
 
-
   const handleOpenCreateRole = () => {
     setEditingRole(null)
     setIsRoleModalOpen(true)
@@ -101,25 +97,19 @@ export function RolesPage() {
     }
   }
 
-  const handleDeleteRole = async () => {
-    if (!deleteRoleId) return
-    setIsSubmitting(true)
+  const handleDeleteRole = async (roleId: string) => {
     try {
-      await roleService.deleteRole(deleteRoleId)
+      await roleService.deleteRole(roleId)
       toast.success('Đã xóa vai trò thành công!')
-      setDeleteRoleId(null)
       await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Xóa vai trò thất bại'
       toast.error(msg)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   return (
     <div className="space-y-6">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
@@ -132,19 +122,17 @@ export function RolesPage() {
         </div>
       </div>
 
-      {}
       <RolesListTab
         roles={roles}
         permissions={permissions}
         onOpenCreateRole={handleOpenCreateRole}
         onOpenEditRole={handleOpenEditRole}
-        onDeleteRole={(roleId) => setDeleteRoleId(roleId)}
+        onDeleteRole={handleDeleteRole}
         onRefresh={loadData}
         onSeedDefaultRBAC={handleSeedRBAC}
         isLoading={isLoading}
       />
 
-      {}
       <RoleEditModal
         isOpen={isRoleModalOpen}
         onClose={() => setIsRoleModalOpen(false)}
@@ -152,19 +140,6 @@ export function RolesPage() {
         allPermissions={permissions}
         onSave={handleSaveRole}
         isSubmitting={isSubmitting}
-      />
-
-      {}
-      <ConfirmModal
-        isOpen={!!deleteRoleId}
-        onClose={() => setDeleteRoleId(null)}
-        onConfirm={handleDeleteRole}
-        title="Xác nhận xóa vai trò"
-        message="Bạn có chắc chắn muốn xóa vai trò này? Người dùng đang gắn vai trò này sẽ mất các quyền hạn tương ứng."
-        confirmText="Xóa vai trò"
-        cancelText="Hủy"
-        type="danger"
-        isLoading={isSubmitting}
       />
     </div>
   )

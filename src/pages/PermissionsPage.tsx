@@ -4,7 +4,6 @@ import { KeyRound, UserCheck } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { Role, Permission, UserProfile } from '@/types/api.types'
 import { PermissionsListTab } from '@/components/roles/PermissionsListTab'
 import { AssignRoleTab } from '@/components/roles/AssignRoleTab'
@@ -21,12 +20,9 @@ export function PermissionsPage() {
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-
   const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [editingPerm, setEditingPerm] = useState<Permission | null>(null)
-  const [deletePermId, setDeletePermId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
 
   const [users, setUsers] = useState<UserProfile[]>([])
   const [userSearch, setUserSearch] = useState('')
@@ -55,8 +51,8 @@ export function PermissionsPage() {
       }
       if (usersRes.status === 'fulfilled' && usersRes.value) {
         const uVal = usersRes.value
-        const uList = Array.isArray(uVal) ? uVal : (uVal?.result || [])
-        setUsers(uList)
+        const items = Array.isArray(uVal) ? uVal : (uVal?.result || [])
+        setUsers(items)
       }
     } catch (err) {
       console.warn('Error loading Permissions data:', err)
@@ -68,7 +64,6 @@ export function PermissionsPage() {
   useEffect(() => {
     loadData()
   }, [])
-
 
   const handleOpenCreatePerm = () => {
     setEditingPerm(null)
@@ -91,10 +86,10 @@ export function PermissionsPage() {
     try {
       if (editingPerm) {
         await roleService.updatePermission(editingPerm._id, payload)
-        toast.success(`Đã cập nhật quyền hạn ${payload.name} thành công!`)
+        toast.success(`Đã cập nhật quyền ${payload.name} thành công!`)
       } else {
         await roleService.createPermission(payload)
-        toast.success(`Đã tạo quyền hạn ${payload.name} mới thành công!`)
+        toast.success(`Đã tạo quyền ${payload.name} mới thành công!`)
       }
       setIsPermModalOpen(false)
       await loadData()
@@ -106,35 +101,32 @@ export function PermissionsPage() {
     }
   }
 
-  const handleDeletePerm = async () => {
-    if (!deletePermId) return
-    setIsSubmitting(true)
+  const handleDeletePerm = async (permId: string) => {
     try {
-      await roleService.deletePermission(deletePermId)
+      await roleService.deletePermission(permId)
       toast.success('Đã xóa quyền hạn thành công!')
-      setDeletePermId(null)
       await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Xóa quyền hạn thất bại'
       toast.error(msg)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
-
-  const handleAssignRole = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleAssignRole = async () => {
     if (!selectedUser) {
-      toast.error('Vui lòng chọn người dùng cần phân quyền')
+      toast.error('Vui lòng chọn thành viên để gán vai trò')
+      return
+    }
+    const targetUserId = selectedUser._id || selectedUser.user_id || ''
+    if (!targetUserId) {
+      toast.error('Không tìm thấy ID thành viên')
       return
     }
 
     setIsAssigning(true)
     try {
-      const targetUserId = selectedUser._id ? selectedUser._id : (selectedUser.user_id ? selectedUser.user_id : '')
       await roleService.assignUserRole(targetUserId, assignRoleName)
-      toast.success(`Đã gán vai trò ${assignRoleName} cho người dùng ${selectedUser.email}!`)
+      toast.success(`Đã gán vai trò ${assignRoleName} cho ${selectedUser.full_name || selectedUser.email} thành công!`)
       setSelectedUser(null)
       await loadData()
     } catch (err: unknown) {
@@ -151,7 +143,6 @@ export function PermissionsPage() {
 
   return (
     <div className="space-y-6">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
@@ -164,7 +155,6 @@ export function PermissionsPage() {
         </div>
       </div>
 
-      {}
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-fit">
         <button
           onClick={() => setActiveTab('permissions')}
@@ -175,7 +165,7 @@ export function PermissionsPage() {
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
-          <span>Danh sách Permissions ({permissions.length})</span>
+          <span>Danh sách Quyền hạn ({permissions.length})</span>
         </button>
 
         <button
@@ -191,19 +181,17 @@ export function PermissionsPage() {
         </button>
       </div>
 
-      {}
       {activeTab === 'permissions' && (
         <PermissionsListTab
           permissions={permissions}
           onOpenCreatePerm={handleOpenCreatePerm}
           onOpenEditPerm={handleOpenEditPerm}
-          onDeletePerm={(permId) => setDeletePermId(permId)}
+          onDeletePerm={handleDeletePerm}
           onRefresh={loadData}
           isLoading={isLoading}
         />
       )}
 
-      {}
       {activeTab === 'assign' && (
         <AssignRoleTab
           users={users}
@@ -219,7 +207,6 @@ export function PermissionsPage() {
         />
       )}
 
-      {}
       <PermissionModal
         isOpen={isPermModalOpen}
         onClose={() => setIsPermModalOpen(false)}
@@ -227,19 +214,6 @@ export function PermissionsPage() {
         onSave={handleSavePerm}
         isSubmitting={isSubmitting}
         availableModules={availableModules}
-      />
-
-      {}
-      <ConfirmModal
-        isOpen={!!deletePermId}
-        onClose={() => setDeletePermId(null)}
-        onConfirm={handleDeletePerm}
-        title="Xác nhận xóa quyền hạn"
-        message="Bạn có chắc chắn muốn xóa quyền hạn API này khỏi hệ thống?"
-        confirmText="Xóa quyền hạn"
-        cancelText="Hủy"
-        type="danger"
-        isLoading={isSubmitting}
       />
     </div>
   )

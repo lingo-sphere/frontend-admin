@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { BookOpen, Bookmark, Layers, RotateCcw, FileSpreadsheet, Plus } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useAdminStore } from '@/store/admin-store'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { toast } from '@/store/toast-store'
@@ -31,9 +30,6 @@ export function VocabularyPage() {
   const [filterLevel, setFilterLevel] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
-
-  const [deleteWordId, setDeleteWordId] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState<boolean>(false)
 
   const fetchVocabularyData = useCallback(async () => {
     setIsLoading(true)
@@ -112,18 +108,13 @@ export function VocabularyPage() {
     return filteredWords.slice(start, start + pageSize)
   }, [filteredWords, currentPage, pageSize])
 
-  const handleDeleteWord = async () => {
-    if (!deleteWordId) return
-    setIsDeleting(true)
+  const handleDeleteWord = async (wordId: string) => {
     try {
-      await vocabularyService.deleteLexicalItem(deleteWordId)
-      setWords((prev) => prev.filter((w) => w.id !== deleteWordId))
+      await vocabularyService.deleteLexicalItem(wordId)
+      setWords((prev) => prev.filter((w) => w.id !== wordId))
       toast.success('Đã xóa từ vựng thành công!')
     } catch {
       toast.error('Xóa từ vựng thất bại')
-    } finally {
-      setIsDeleting(false)
-      setDeleteWordId(null)
     }
   }
 
@@ -136,13 +127,12 @@ export function VocabularyPage() {
   const columns = useMemo(() => {
     return getVocabularyColumns({
       onEditWord: (wordId) => setActiveNavItem(`vocab-edit:${wordId}`),
-      onDeleteWord: setDeleteWordId,
+      onDeleteWord: handleDeleteWord,
     })
   }, [setActiveNavItem])
 
   return (
     <div className="space-y-6">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -178,7 +168,6 @@ export function VocabularyPage() {
         </div>
       </div>
 
-      {}
       <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 w-fit">
         <button
           onClick={() => setActiveTab('words')}
@@ -217,7 +206,6 @@ export function VocabularyPage() {
         </button>
       </div>
 
-      {}
       {activeTab === 'words' && (
         <DataTable<LexicalItem>
           columns={columns}
@@ -246,24 +234,9 @@ export function VocabularyPage() {
         />
       )}
 
-      {}
       {activeTab === 'topics' && <VocabularyTopicsTab topics={topics} />}
 
-      {}
       {activeTab === 'decks' && <VocabularyDecksTab decks={decks} />}
-
-      {}
-      <ConfirmModal
-        isOpen={Boolean(deleteWordId)}
-        onClose={() => setDeleteWordId(null)}
-        onConfirm={handleDeleteWord}
-        title="Xóa từ vựng này?"
-        message="Từ vựng và các định nghĩa mẫu liên quan sẽ bị xóa khỏi kho từ vựng hệ thống."
-        confirmText="Xóa từ vựng"
-        cancelText="Hủy bỏ"
-        variant="danger"
-        isLoading={isDeleting}
-      />
     </div>
   )
 }

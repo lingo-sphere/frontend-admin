@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Plus, RotateCcw, Search, PenTool } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { WritingExercise } from '@/types/api.types'
 import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard'
 import { CreateWritingModal } from '@/components/practice/CreateWritingModal'
@@ -12,7 +11,6 @@ export function PracticeWritingPage() {
   const [exercises, setExercises] = useState<WritingExercise[]>(INITIAL_WRITING_EXERCISES)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -39,11 +37,9 @@ export function PracticeWritingPage() {
     fetchExercises()
   }, [])
 
-  const handleDelete = () => {
-    if (!deleteTargetId) return
-    setExercises((prev) => prev.filter((e) => e._id !== deleteTargetId))
+  const handleDelete = (id: string) => {
+    setExercises((prev) => prev.filter((e) => e._id !== id))
     toast.success('Đã xóa đề bài luyện viết')
-    setDeleteTargetId(null)
   }
 
   const handleCreate = (e: React.FormEvent) => {
@@ -123,7 +119,7 @@ export function PracticeWritingPage() {
             <PracticeWritingCard
               key={item._id}
               item={item}
-              onDelete={(id) => setDeleteTargetId(id)}
+              onDelete={handleDelete}
             />
           ))
         )}
@@ -143,17 +139,6 @@ export function PracticeWritingPage() {
         onMaxWordsChange={setNewMaxWords}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreate}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(deleteTargetId)}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirm={handleDelete}
-        title="Xác nhận xóa đề luyện viết?"
-        message="Học viên sẽ không thể tiếp tục làm bài viết này nữa."
-        confirmText="Xóa đề viết"
-        cancelText="Hủy bỏ"
-        variant="danger"
       />
     </div>
   )

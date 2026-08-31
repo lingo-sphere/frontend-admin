@@ -6,6 +6,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface ExamListTableProps {
   exams: ToeicExamItem[]
@@ -14,7 +15,7 @@ interface ExamListTableProps {
   selectedType: string
   onTypeChange: (val: string) => void
   onTogglePublish: (id: string, current: boolean) => void
-  onDeleteExam: (id: string) => void
+  onDeleteExam: (id: string) => Promise<void> | void
 }
 
 export function ExamListTable({
@@ -152,13 +153,23 @@ export function ExamListTable({
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => onDeleteExam(exam.id || exam._id || '')}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
-                          title="Xóa đề thi"
+                        <Popconfirm
+                          title="Xóa đề thi này?"
+                          description="Hành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu câu hỏi liên quan."
+                          okText="Xóa"
+                          cancelText="Hủy"
+                          okType="danger"
+                          placement="topRight"
+                          onConfirm={() => onDeleteExam(exam.id || exam._id || '')}
                         >
-                          <Trash2 size={14} />
-                        </button>
+                          <button
+                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+                            title="Xóa đề thi"
+                            type="button"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </Popconfirm>
                       </div>
                     </td>
                   </tr>

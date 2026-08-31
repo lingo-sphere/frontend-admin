@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { PracticeSet } from '@/types/api.types'
 import { PracticeSetCard } from '@/components/practice/PracticeSetCard'
 import { CreatePracticeSetModal } from '@/components/practice/CreatePracticeSetModal'
@@ -13,7 +12,6 @@ export function PracticeExercisesPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -48,11 +46,9 @@ export function PracticeExercisesPage() {
     toast.success('Đã cập nhật trạng thái bộ bài tập')
   }
 
-  const handleDelete = () => {
-    if (!deleteTargetId) return
-    setPracticeSets((prev) => prev.filter((s) => s._id !== deleteTargetId))
+  const handleDelete = (id: string) => {
+    setPracticeSets((prev) => prev.filter((s) => s._id !== id))
     toast.success('Đã xóa bộ bài tập luyện thi')
-    setDeleteTargetId(null)
   }
 
   const handleCreateSet = (e: React.FormEvent) => {
@@ -148,7 +144,7 @@ export function PracticeExercisesPage() {
               key={set._id}
               set={set}
               onToggleStatus={handleToggleStatus}
-              onDelete={(id) => setDeleteTargetId(id)}
+              onDelete={handleDelete}
             />
           ))
         )}
@@ -170,17 +166,6 @@ export function PracticeExercisesPage() {
         onDurationChange={setNewDuration}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreateSet}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(deleteTargetId)}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirm={handleDelete}
-        title="Xác nhận xóa bộ bài tập?"
-        message="Học viên sẽ không thể tiếp tục làm bài tập từ bộ này nữa."
-        confirmText="Xóa bài tập"
-        cancelText="Hủy bỏ"
-        variant="danger"
       />
     </div>
   )

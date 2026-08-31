@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Plus, RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
@@ -22,10 +21,6 @@ export function AdminUsersPage() {
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
-
-  const [modalUser, setModalUser] = useState<AdminUser | null>(null)
-  const [modalAction, setModalAction] = useState<'ban' | 'unban' | null>(null)
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false)
 
   const fetchAdmins = useCallback(async () => {
     setIsLoading(true)
@@ -98,31 +93,23 @@ export function AdminUsersPage() {
     }
   }, [admins])
 
-  const handleConfirmStatusChange = async () => {
-    if (!modalUser || !modalAction) return
-
-    setIsUpdatingStatus(true)
-    const newStatus = modalAction === 'ban' ? 'BLOCKED' : 'ACTIVE'
-
+  const handleStatusChange = async (user: AdminUser, action: 'ban' | 'unban') => {
+    const newStatus = action === 'ban' ? 'BLOCKED' : 'ACTIVE'
     try {
-      await userService.updateUserStatus(modalUser.id, newStatus)
+      await userService.updateUserStatus(user.id, newStatus)
       setAdmins((prev) =>
         prev.map((a) =>
-          a.id === modalUser.id ? { ...a, is_active: modalAction === 'unban' } : a
+          a.id === user.id ? { ...a, is_active: action === 'unban' } : a
         )
       )
       toast.success(
-        modalAction === 'ban'
-          ? `Đã khóa tài khoản quản trị ${modalUser.email}`
-          : `Đã mở khóa tài khoản ${modalUser.email}`
+        action === 'ban'
+          ? `Đã khóa tài khoản quản trị ${user.email}`
+          : `Đã mở khóa tài khoản ${user.email}`
       )
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại'
       toast.error(msg)
-    } finally {
-      setIsUpdatingStatus(false)
-      setModalUser(null)
-      setModalAction(null)
     }
   }
 
@@ -133,24 +120,17 @@ export function AdminUsersPage() {
     setCurrentPage(1)
   }
 
-  const handleOpenStatusModal = (user: AdminUser, action: 'ban' | 'unban') => {
-    setModalUser(user)
-    setModalAction(action)
-  }
-
   const columns = useMemo(() => {
     return getAdminUserColumns({
       onEditUser: (userId) => setActiveNavItem(`admin-user-edit:${userId}`),
-      onOpenStatusModal: handleOpenStatusModal,
+      onOpenStatusModal: handleStatusChange,
     })
   }, [setActiveNavItem])
 
   return (
     <div className="space-y-6">
-      {}
       <AdminUserStatsOverview stats={stats} />
 
-      {}
       <DataTable<AdminUser>
         title="Quản Trị Viên & Giảng Viên"
         subtitle="Quản lý đội ngũ quản trị, cấp tài khoản giảng viên và phân quyền vận hành"
@@ -197,27 +177,6 @@ export function AdminUsersPage() {
             setCurrentPage(1)
           },
         }}
-      />
-
-      {}
-      <ConfirmModal
-        isOpen={Boolean(modalUser && modalAction)}
-        onClose={() => {
-          setModalUser(null)
-          setModalAction(null)
-        }}
-        onConfirm={handleConfirmStatusChange}
-        title={modalAction === 'ban' ? 'Khóa Quyền Tài Khoản' : 'Mở Khóa Tài Khoản'}
-        message={
-          modalAction === 'ban'
-            ? `Bạn có chắc chắn muốn tạm dừng tài khoản "${modalUser?.name}" (${modalUser?.email})? Thành viên này sẽ bị tước quyền đăng nhập ngay lập tức.`
-            : `Mở khóa và khôi phục quyền truy cập cho "${modalUser?.name}" (${modalUser?.email})?`
-        }
-        confirmText={modalAction === 'ban' ? 'Khóa tài khoản' : 'Mở khóa'}
-        cancelText="Hủy bỏ"
-        variant={modalAction === 'ban' ? 'danger' : 'success'}
-        icon={modalAction === 'ban' ? 'ban' : undefined}
-        isLoading={isUpdatingStatus}
       />
     </div>
   )

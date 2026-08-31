@@ -1,6 +1,7 @@
 import { BookOpen, Edit2, Trash2 } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
+import { Popconfirm } from '@/components/common/Popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/helpers/course.helper'
 
 interface CourseGridCardProps {
@@ -9,7 +10,7 @@ interface CourseGridCardProps {
   canEdit: boolean
   canDelete: boolean
   onEdit: (courseId: string) => void
-  onDelete: (courseId: string) => void
+  onDelete: (courseId: string) => Promise<void> | void
 }
 
 export function CourseGridCard({
@@ -105,20 +106,31 @@ export function CourseGridCard({
             {canEdit && (
               <button
                 onClick={() => onEdit(course.id)}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-300 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700/60"
+                className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all cursor-pointer shadow-2xs"
                 title="Chỉnh sửa khóa học"
+                type="button"
               >
                 <Edit2 className="w-4 h-4" />
               </button>
             )}
             {canDelete && (
-              <button
-                onClick={() => onDelete(course.id)}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700/60"
-                title="Xóa khóa học"
+              <Popconfirm
+                title="Xóa khóa học này?"
+                description="Hành động này không thể hoàn tác."
+                okText="Xóa"
+                cancelText="Hủy"
+                okType="danger"
+                placement="topRight"
+                onConfirm={() => onDelete(course.id)}
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                <button
+                  className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer shadow-2xs"
+                  title="Xóa khóa học"
+                  type="button"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </Popconfirm>
             )}
           </div>
         </div>

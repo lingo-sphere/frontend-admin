@@ -1,15 +1,15 @@
-import { Headphones, Volume2, Trash2 } from 'lucide-react'
+import { Headphones, Trash2 } from 'lucide-react'
 import type { ListeningExercise } from '@/types/api.types'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface PracticeListeningCardProps {
   item: ListeningExercise
   onToggleStatus?: (id: string, current: boolean) => void
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void> | void
 }
 
 export function PracticeListeningCard({
   item,
-  onToggleStatus,
   onDelete,
 }: PracticeListeningCardProps) {
   const itemId = item._id || ''
@@ -36,13 +36,23 @@ export function PracticeListeningCard({
         <span className="text-slate-500">{item.duration_seconds || 45} giây</span>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => onDelete(itemId)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Xóa bài nghe"
+          <Popconfirm
+            title="Xóa bài luyện nghe này?"
+            description="Hành động này không thể hoàn tác."
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
+            placement="topRight"
+            onConfirm={() => onDelete(itemId)}
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <button
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+              title="Xóa bài nghe"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </Popconfirm>
         </div>
       </div>
     </div>

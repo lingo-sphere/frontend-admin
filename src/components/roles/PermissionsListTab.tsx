@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react'
 import { Plus, RotateCcw, Edit2, Trash2, Search, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface PermissionsListTabProps {
   permissions: Permission[]
   onOpenCreatePerm: () => void
   onOpenEditPerm: (perm: Permission) => void
-  onDeletePerm: (permId: string) => void
+  onDeletePerm: (permId: string) => Promise<void> | void
   onRefresh: () => void
   isLoading?: boolean
 }
@@ -171,18 +172,29 @@ export function PermissionsListTab({
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onOpenEditPerm(perm)}
-            className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
             title="Chỉnh sửa quyền hạn"
+            type="button"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={() => onDeletePerm(perm._id)}
-            className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-            title="Xóa quyền hạn"
+          <Popconfirm
+            title="Xóa quyền hạn này?"
+            description="Hành động này không thể hoàn tác."
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
+            placement="topRight"
+            onConfirm={() => onDeletePerm(perm._id)}
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <button
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+              title="Xóa quyền hạn"
+              type="button"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Popconfirm>
         </div>
       ),
     },

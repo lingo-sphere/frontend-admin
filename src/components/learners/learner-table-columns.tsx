@@ -1,11 +1,12 @@
 import { Target, Zap, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
 import type { User } from '@/data/users-data'
 import type { DataTableColumn } from '@/components/common/DataTable'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface GetLearnerColumnsOptions {
   onViewDetails?: (userId: string) => void
   onViewProfile?: (userId: string) => void
-  onOpenStatusModal: (user: User, action: 'ban' | 'unban') => void
+  onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
 }
 
 export function getLearnerColumns({
@@ -119,21 +120,41 @@ export function getLearnerColumns({
         return (
           <div className="flex items-center justify-end gap-1.5">
             {isActive ? (
-              <button
-                onClick={() => onOpenStatusModal(u, 'ban')}
-                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 transition-colors cursor-pointer"
-                title="Khóa tài khoản học viên"
+              <Popconfirm
+                title="Khóa tài khoản học viên này?"
+                description="Học viên này sẽ bị tạm dừng truy cập vào hệ thống."
+                okText="Khóa tài khoản"
+                cancelText="Hủy"
+                okType="danger"
+                placement="topRight"
+                onConfirm={() => onOpenStatusModal(u, 'ban')}
               >
-                <Ban className="w-3.5 h-3.5" />
-              </button>
+                <button
+                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+                  title="Khóa tài khoản học viên"
+                  type="button"
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                </button>
+              </Popconfirm>
             ) : (
-              <button
-                onClick={() => onOpenStatusModal(u, 'unban')}
-                className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-400 transition-colors cursor-pointer"
-                title="Mở khóa tài khoản"
+              <Popconfirm
+                title="Mở khóa tài khoản học viên?"
+                description="Học viên này sẽ có thể đăng nhập lại vào hệ thống."
+                okText="Mở khóa"
+                cancelText="Hủy"
+                okType="primary"
+                placement="topRight"
+                onConfirm={() => onOpenStatusModal(u, 'unban')}
               >
-                <CheckCircle className="w-3.5 h-3.5" />
-              </button>
+                <button
+                  className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer"
+                  title="Mở khóa tài khoản"
+                  type="button"
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                </button>
+              </Popconfirm>
             )}
           </div>
         )

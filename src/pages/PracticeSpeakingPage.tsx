@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Plus, RotateCcw, Search, Mic } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { SpeakingExercise } from '@/types/api.types'
 import { PracticeSpeakingCard } from '@/components/practice/PracticeSpeakingCard'
 import { CreateSpeakingModal } from '@/components/practice/CreateSpeakingModal'
@@ -12,7 +11,6 @@ export function PracticeSpeakingPage() {
   const [exercises, setExercises] = useState<SpeakingExercise[]>(INITIAL_SPEAKING_EXERCISES)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -38,11 +36,9 @@ export function PracticeSpeakingPage() {
     fetchExercises()
   }, [])
 
-  const handleDelete = () => {
-    if (!deleteTargetId) return
-    setExercises((prev) => prev.filter((e) => e._id !== deleteTargetId))
+  const handleDelete = (id: string) => {
+    setExercises((prev) => prev.filter((e) => e._id !== id))
     toast.success('Đã xóa bài luyện nói')
-    setDeleteTargetId(null)
   }
 
   const handleCreate = (e: React.FormEvent) => {
@@ -120,7 +116,7 @@ export function PracticeSpeakingPage() {
             <PracticeSpeakingCard
               key={item._id}
               item={item}
-              onDelete={(id) => setDeleteTargetId(id)}
+              onDelete={handleDelete}
             />
           ))
         )}
@@ -138,17 +134,6 @@ export function PracticeSpeakingPage() {
         onAccuracyChange={setNewAccuracy}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreate}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(deleteTargetId)}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirm={handleDelete}
-        title="Xác nhận xóa bài luyện nói?"
-        message="Học viên sẽ không thể tiếp tục ghi âm và chấm bài với câu luyện nói này."
-        confirmText="Xóa bài nói"
-        cancelText="Hủy bỏ"
-        variant="danger"
       />
     </div>
   )

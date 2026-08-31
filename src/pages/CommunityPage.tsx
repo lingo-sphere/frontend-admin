@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { CommunityFilterBar } from '@/components/community/CommunityFilterBar'
 import { CommunityPostCard } from '@/components/community/CommunityPostCard'
 import type { CommunityPost } from '@/helpers/community.helper'
@@ -10,7 +9,6 @@ export function CommunityPage() {
   const [posts, setPosts] = useState<CommunityPost[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
-  const [deletePostId, setDeletePostId] = useState<string | null>(null)
 
   const handleUpdateStatus = (id: string, newStatus: 'APPROVED' | 'HIDDEN') => {
     setPosts(posts.map((p) => (p.id === id ? { ...p, status: newStatus } : p)))
@@ -21,11 +19,9 @@ export function CommunityPage() {
     )
   }
 
-  const confirmDelete = () => {
-    if (!deletePostId) return
-    setPosts(posts.filter((p) => p.id !== deletePostId))
+  const handleDeletePost = (id: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== id))
     toast.success('Đã xóa bài viết cộng đồng vi phạm')
-    setDeletePostId(null)
   }
 
   const filteredPosts = posts.filter((p) => {
@@ -66,22 +62,11 @@ export function CommunityPage() {
               key={post.id}
               post={post}
               onUpdateStatus={handleUpdateStatus}
-              onDelete={(id) => setDeletePostId(id)}
+              onDelete={handleDeletePost}
             />
           ))
         )}
       </div>
-
-      <ConfirmModal
-        isOpen={Boolean(deletePostId)}
-        onClose={() => setDeletePostId(null)}
-        onConfirm={confirmDelete}
-        title="Xác nhận xóa bài viết cộng đồng?"
-        message="Bài viết và toàn bộ bình luận liên quan sẽ bị xóa vĩnh viễn khỏi nền tảng."
-        confirmText="Xóa bài viết"
-        cancelText="Hủy bỏ"
-        variant="danger"
-      />
     </div>
   )
 }

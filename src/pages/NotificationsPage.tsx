@@ -13,6 +13,7 @@ import type { AppNotification } from '@/types/api.types'
 import { Pagination } from '@/components/common/Pagination'
 import { NotificationFilterBar } from '@/components/notifications/NotificationFilterBar'
 import { NotificationListItem } from '@/components/notifications/NotificationListItem'
+import { Popconfirm } from '@/components/common/Popconfirm'
 import type {
   FilterCategory,
   FilterPriority,
@@ -174,13 +175,23 @@ export function NotificationsPage() {
             <CheckCheck className="w-4 h-4 text-emerald-500" />
             <span>Đọc tất cả</span>
           </button>
-          <button
-            onClick={handleDeleteAll}
-            className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 text-xs font-semibold transition-colors cursor-pointer"
+          <Popconfirm
+            title="Xóa tất cả thông báo?"
+            description="Toàn bộ thông báo trong hòm thư sẽ bị dọn dẹp vĩnh viễn."
+            okText="Xóa tất cả"
+            cancelText="Hủy"
+            okType="danger"
+            placement="bottomRight"
+            onConfirm={handleDeleteAll}
           >
-            <Trash2 className="w-4 h-4" />
-            <span>Xóa tất cả</span>
-          </button>
+            <button
+              className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-semibold transition-colors cursor-pointer"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Xóa tất cả</span>
+            </button>
+          </Popconfirm>
         </div>
       </div>
 

@@ -107,7 +107,6 @@ export function ExamsPage() {
   }
 
   const handleDeleteExam = async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa đề thi này?')) return
     try {
       await examAdminService.deleteExam(id)
       setExams((prev) => prev.filter((e) => (e.id || e._id) !== id))

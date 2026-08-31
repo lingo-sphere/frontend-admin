@@ -2,11 +2,12 @@ import { Volume2, Edit2, Trash2 } from 'lucide-react'
 import type { LexicalItem } from '@/data/vocabulary-data'
 import { wordTypeLabels } from '@/data/vocabulary-data'
 import type { DataTableColumn } from '@/components/common/DataTable'
+import { Popconfirm } from '@/components/common/Popconfirm'
 import { playAudio } from '@/helpers/vocabulary.helper'
 
 interface GetVocabularyColumnsOptions {
   onEditWord: (wordId: string) => void
-  onDeleteWord: (wordId: string) => void
+  onDeleteWord: (wordId: string) => Promise<void> | void
 }
 
 export function getVocabularyColumns({
@@ -92,18 +93,29 @@ export function getVocabularyColumns({
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onEditWord(w.id)}
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
             title="Chỉnh sửa từ vựng"
+            type="button"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={() => onDeleteWord(w.id)}
-            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 transition-colors cursor-pointer"
-            title="Xóa từ vựng"
+          <Popconfirm
+            title="Xóa từ vựng này?"
+            description="Hành động này không thể hoàn tác."
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
+            placement="topRight"
+            onConfirm={() => onDeleteWord(w.id)}
           >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+            <button
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+              title="Xóa từ vựng"
+              type="button"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Popconfirm>
         </div>
       ),
     },

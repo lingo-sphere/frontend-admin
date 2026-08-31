@@ -1,9 +1,10 @@
-import { BookOpen, Layers3, Users, Star, Trash2 } from 'lucide-react'
+import { BookOpen, Layers3, Users, Trash2 } from 'lucide-react'
 import type { FlashcardDeck } from '@/types/api.types'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface PublicDeckCardProps {
   deck: FlashcardDeck
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void> | void
 }
 
 export function PublicDeckCard({ deck, onDelete }: PublicDeckCardProps) {
@@ -39,13 +40,23 @@ export function PublicDeckCard({ deck, onDelete }: PublicDeckCardProps) {
           </span>
         </div>
 
-        <button
-          onClick={() => onDelete(deckId)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-          title="Xóa bộ thẻ công khai"
+        <Popconfirm
+          title="Xóa bộ thẻ này?"
+          description="Hành động này không thể hoàn tác."
+          okText="Xóa"
+          cancelText="Hủy"
+          okType="danger"
+          placement="topRight"
+          onConfirm={() => onDelete(deckId)}
         >
-          <Trash2 className="w-4 h-4" />
-        </button>
+          <button
+            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+            title="Xóa bộ thẻ công khai"
+            type="button"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </Popconfirm>
       </div>
     </div>
   )

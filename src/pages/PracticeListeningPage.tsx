@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Plus, RotateCcw, Search, Headphones } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { ListeningExercise } from '@/types/api.types'
 import { PracticeListeningCard } from '@/components/practice/PracticeListeningCard'
 import { CreateListeningModal } from '@/components/practice/CreateListeningModal'
@@ -13,7 +12,6 @@ export function PracticeListeningPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('ALL')
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -39,11 +37,9 @@ export function PracticeListeningPage() {
     fetchExercises()
   }, [])
 
-  const handleDelete = () => {
-    if (!deleteTargetId) return
-    setExercises((prev) => prev.filter((e) => e._id !== deleteTargetId))
+  const handleDelete = (id: string) => {
+    setExercises((prev) => prev.filter((e) => e._id !== id))
     toast.success('Đã xóa bài luyện nghe')
-    setDeleteTargetId(null)
   }
 
   const handleCreate = (e: React.FormEvent) => {
@@ -137,7 +133,7 @@ export function PracticeListeningPage() {
             <PracticeListeningCard
               key={item._id}
               item={item}
-              onDelete={(id) => setDeleteTargetId(id)}
+              onDelete={handleDelete}
             />
           ))
         )}
@@ -155,17 +151,6 @@ export function PracticeListeningPage() {
         onTotalQuestionsChange={setNewDuration}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreate}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(deleteTargetId)}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirm={handleDelete}
-        title="Xác nhận xóa bài luyện nghe?"
-        message="Dữ liệu bài nghe và các câu hỏi đính kèm sẽ bị xóa."
-        confirmText="Xóa bài nghe"
-        cancelText="Hủy bỏ"
-        variant="danger"
       />
     </div>
   )

@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
-import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useAdminStore } from '@/store/admin-store'
 import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
@@ -24,30 +23,23 @@ export function LearnersPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
 
-  const [modalUser, setModalUser] = useState<User | null>(null)
-  const [modalAction, setModalAction] = useState<'ban' | 'unban' | null>(null)
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false)
-
   const fetchLearners = useCallback(async () => {
     setIsLoading(true)
     try {
       const res = await userService.getAllUsers({
         role: 'STUDENT',
-        limit: 100,
-        search: searchTerm || undefined,
-        status: selectedStatus !== 'ALL' ? selectedStatus : undefined,
-        plan: selectedPlan !== 'ALL' ? selectedPlan : undefined,
+        limit: 50,
       })
 
       const items: UserProfile[] = res?.result || []
       const mappedUsers: User[] = items.map((u: UserProfile) => ({
-        id: u._id || u.user_id,
-        email: u.email,
+        id: u._id || u.user_id || '',
         full_name: u.full_name || u.email.split('@')[0],
+        email: u.email,
         avatar_url: u.avatar_url,
         gender: u.gender || 'OTHER',
         target_toeic_score: u.target_toeic_score || 650,
-        current_estimated_score: u.current_estimated_score || 500,
+        current_estimated_score: u.current_estimated_score || 450,
         learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
         status: (u.status as 'ACTIVE' | 'INACTIVE' | 'BANNED') || 'ACTIVE',
         is_premium: u.is_premium || false,
@@ -65,36 +57,16 @@ export function LearnersPage() {
       }))
       setUsers(mappedUsers)
     } catch (err) {
-      console.warn('Error fetching learners from backend:', err)
+      console.warn('Error fetching learners from API:', err)
       setUsers([])
     } finally {
       setIsLoading(false)
     }
-  }, [searchTerm, selectedStatus, selectedPlan])
+  }, [])
 
   useEffect(() => {
     fetchLearners()
   }, [fetchLearners])
-
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const matchSearch =
-        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchStatus = selectedStatus === 'ALL' || u.status === selectedStatus
-      const matchPlan =
-        selectedPlan === 'ALL' ||
-        (selectedPlan === 'premium' && u.is_premium) ||
-        (selectedPlan === 'free' && !u.is_premium)
-
-      return matchSearch && matchStatus && matchPlan
-    })
-  }, [users, searchTerm, selectedStatus, selectedPlan])
-
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredUsers.slice(start, start + pageSize)
-  }, [filteredUsers, currentPage, pageSize])
 
   const stats = useMemo(() => {
     return {
@@ -105,35 +77,25 @@ export function LearnersPage() {
     }
   }, [users])
 
-  const handleConfirmStatusChange = async () => {
-    if (!modalUser || !modalAction) return
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const matchSearch =
+        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchStatus =
+        selectedStatus === 'ALL' || u.status === selectedStatus
+      const matchPlan =
+        selectedPlan === 'ALL' ||
+        (selectedPlan === 'premium' && u.is_premium) ||
+        (selectedPlan === 'free' && !u.is_premium)
+      return matchSearch && matchStatus && matchPlan
+    })
+  }, [users, searchTerm, selectedStatus, selectedPlan])
 
-    setIsUpdatingStatus(true)
-    const newStatus = modalAction === 'ban' ? 'BLOCKED' : 'ACTIVE'
-
-    try {
-      await userService.updateUserStatus(modalUser.id, newStatus)
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === modalUser.id
-            ? { ...u, status: modalAction === 'ban' ? 'BANNED' : 'ACTIVE' }
-            : u
-        )
-      )
-      toast.success(
-        modalAction === 'ban'
-          ? `Đã khóa tài khoản ${modalUser.email}`
-          : `Đã mở khóa tài khoản ${modalUser.email}`
-      )
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại'
-      toast.error(msg)
-    } finally {
-      setIsUpdatingStatus(false)
-      setModalUser(null)
-      setModalAction(null)
-    }
-  }
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredUsers.slice(start, start + pageSize)
+  }, [filteredUsers, currentPage, pageSize])
 
   const handleResetFilters = () => {
     setSearchTerm('')
@@ -142,24 +104,36 @@ export function LearnersPage() {
     setCurrentPage(1)
   }
 
-  const handleOpenStatusModal = (user: User, action: 'ban' | 'unban') => {
-    setModalUser(user)
-    setModalAction(action)
+  const handleStatusChange = async (user: User, action: 'ban' | 'unban') => {
+    try {
+      const newStatus = action === 'ban' ? 'BLOCKED' : 'ACTIVE'
+      await userService.updateUserStatus(user.id, newStatus)
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === user.id ? { ...u, status: action === 'ban' ? 'BANNED' : 'ACTIVE' } : u
+        )
+      )
+      toast.success(
+        action === 'ban'
+          ? 'Đã khóa tài khoản học viên thành công!'
+          : 'Đã mở khóa tài khoản học viên thành công!'
+      )
+    } catch {
+      toast.error('Cập nhật trạng thái học viên thất bại')
+    }
   }
 
   const columns = useMemo(() => {
     return getLearnerColumns({
       onViewProfile: (userId) => setActiveNavItem(`user-profile:${userId}`),
-      onOpenStatusModal: handleOpenStatusModal,
+      onOpenStatusModal: handleStatusChange,
     })
   }, [setActiveNavItem])
 
   return (
     <div className="space-y-6">
-      {}
       <LearnerStatsOverview stats={stats} />
 
-      {}
       <DataTable<User>
         title="Quản Lý Học Viên"
         subtitle="Danh sách học viên, tiến độ học TOEIC và quản lý trạng thái tài khoản"
@@ -197,27 +171,6 @@ export function LearnersPage() {
             setCurrentPage(1)
           },
         }}
-      />
-
-      {}
-      <ConfirmModal
-        isOpen={Boolean(modalUser && modalAction)}
-        onClose={() => {
-          setModalUser(null)
-          setModalAction(null)
-        }}
-        onConfirm={handleConfirmStatusChange}
-        title={modalAction === 'ban' ? 'Khóa Tài Khoản Học Viên' : 'Mở Khóa Tài Khoản'}
-        message={
-          modalAction === 'ban'
-            ? `Bạn có chắc chắn muốn khóa tài khoản "${modalUser?.full_name}" (${modalUser?.email})? Học viên sẽ không thể đăng nhập hoặc làm bài thi.`
-            : `Mở khóa cho tài khoản "${modalUser?.full_name}" (${modalUser?.email})?`
-        }
-        confirmText={modalAction === 'ban' ? 'Khóa tài khoản' : 'Mở khóa'}
-        cancelText="Hủy bỏ"
-        variant={modalAction === 'ban' ? 'danger' : 'success'}
-        icon={modalAction === 'ban' ? 'ban' : undefined}
-        isLoading={isUpdatingStatus}
       />
     </div>
   )

@@ -2,6 +2,7 @@ import { BookOpen, Target, Layers, Users, Edit2, Trash2 } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import type { DataTableColumn } from '@/components/common/DataTable'
+import { Popconfirm } from '@/components/common/Popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/helpers/course.helper'
 
 interface GetCourseColumnsOptions {
@@ -9,7 +10,7 @@ interface GetCourseColumnsOptions {
   canEdit: boolean
   canDelete: boolean
   onEdit: (courseId: string) => void
-  onDelete: (courseId: string) => void
+  onDelete: (courseId: string) => Promise<void> | void
 }
 
 export function getCourseColumns({
@@ -63,22 +64,18 @@ export function getCourseColumns({
       key: 'category',
       title: 'Danh mục & Trình độ',
       render: (course) => (
-        <div className="space-y-1.5 py-1">
-          <div>
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold border whitespace-nowrap ${getCategoryBadgeClass(course.category)}`}
-            >
-              {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
-            </span>
-          </div>
-          <div>
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border whitespace-nowrap ${getLevelBadgeClass(course.level)}`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-              {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
-            </span>
-          </div>
+        <div className="flex flex-col gap-1 py-1 min-w-[140px]">
+          <span
+            className={`inline-flex items-center w-fit px-2.5 py-0.5 rounded-lg text-[11px] font-bold border whitespace-nowrap ${getCategoryBadgeClass(course.category)}`}
+          >
+            {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 w-fit px-2 py-0.5 rounded-md text-[10px] font-semibold border whitespace-nowrap ${getLevelBadgeClass(course.level)}`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+            {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
+          </span>
         </div>
       ),
     },
@@ -140,23 +137,35 @@ export function getCourseColumns({
           {canEdit && (
             <button
               onClick={() => onEdit(course.id)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800/80 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-300 border border-slate-200/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs"
+              className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all cursor-pointer shadow-2xs"
               title="Chỉnh sửa khóa học"
+              type="button"
             >
               <Edit2 className="w-4 h-4" />
             </button>
           )}
           {canDelete && (
-            <button
-              onClick={() => onDelete(course.id)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800/80 dark:hover:bg-rose-950/60 dark:hover:text-rose-300 border border-slate-200/60 dark:border-slate-700/60 text-slate-500 hover:text-rose-500 transition-all cursor-pointer shadow-2xs"
-              title="Xóa khóa học"
+            <Popconfirm
+              title="Xóa khóa học này?"
+              description="Hành động này không thể hoàn tác."
+              okText="Xóa"
+              cancelText="Hủy"
+              okType="danger"
+              placement="topRight"
+              onConfirm={() => onDelete(course.id)}
             >
-              <Trash2 className="w-4 h-4" />
-            </button>
+              <button
+                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer shadow-2xs"
+                title="Xóa khóa học"
+                type="button"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </Popconfirm>
           )}
         </div>
       ),
     },
   ]
 }
+

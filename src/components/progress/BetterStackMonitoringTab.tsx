@@ -40,6 +40,29 @@ interface BetterStackMonitoringTabProps {
     level: string
   }>) => void
   onSearchSubmit?: (searchTerm: string) => void
+  autoRefreshInterval?: number
+  onAutoRefreshChange?: (seconds: number) => void
+}
+
+const formatLogTimestamp = (ts: string) => {
+  if (!ts) return '—'
+  try {
+    const rawIso = ts.includes('Z') || ts.includes('+') ? ts : ts.replace(' ', 'T') + 'Z'
+    const d = new Date(rawIso)
+    if (isNaN(d.getTime())) return ts
+
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hours = String(d.getHours()).padStart(2, '0')
+    const mins = String(d.getMinutes()).padStart(2, '0')
+    const secs = String(d.getSeconds()).padStart(2, '0')
+    const millis = String(d.getMilliseconds()).padStart(3, '0')
+
+    return `${year}-${month}-${day} ${hours}:${mins}:${secs}.${millis}`
+  } catch {
+    return ts
+  }
 }
 
 export function BetterStackMonitoringTab({
@@ -49,6 +72,8 @@ export function BetterStackMonitoringTab({
   serverParams,
   onParamsChange,
   onSearchSubmit,
+  autoRefreshInterval = 0,
+  onAutoRefreshChange,
 }: BetterStackMonitoringTabProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -148,6 +173,23 @@ export function BetterStackMonitoringTab({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {onAutoRefreshChange && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-white">
+                <Radio className={`w-3.5 h-3.5 ${autoRefreshInterval > 0 ? 'text-emerald-300 animate-pulse' : 'text-slate-300'}`} />
+                <span>{isVi ? 'Tự động:' : 'Auto:'}</span>
+                <select
+                  value={autoRefreshInterval}
+                  onChange={(e) => onAutoRefreshChange(Number(e.target.value))}
+                  className="bg-transparent text-white font-bold text-xs focus:outline-hidden cursor-pointer"
+                >
+                  <option value={0} className="text-slate-900">{isVi ? 'Tắt' : 'Off'}</option>
+                  <option value={3} className="text-slate-900">3s ({isVi ? 'Nhanh' : 'Fast'})</option>
+                  <option value={5} className="text-slate-900">5s ({isVi ? 'Chuẩn' : 'Normal'})</option>
+                  <option value={10} className="text-slate-900">10s</option>
+                </select>
+              </div>
+            )}
+
             <button
               onClick={onRefresh}
               disabled={isLoading}
@@ -169,7 +211,6 @@ export function BetterStackMonitoringTab({
           </div>
         </div>
 
-        {}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/15">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <div className="flex items-center gap-2 text-emerald-200 text-xs font-semibold">
@@ -213,9 +254,7 @@ export function BetterStackMonitoringTab({
         </div>
       </div>
 
-      {}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 relative">
-        {}
         {isLoading && (
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs rounded-3xl z-20 flex items-center justify-center">
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
@@ -235,20 +274,25 @@ export function BetterStackMonitoringTab({
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   {isVi ? 'Live Tail: Luồng Log & Request Thời Gian Thực (Server-side)' : 'Live Tail: Real-time Request Stream'}
                 </h3>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  LIVE SQL
-                </span>
+                {autoRefreshInterval > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    LIVE ({autoRefreshInterval}s)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+                    SQL PAUSED
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isVi
-                  ? `Truy vấn trực tiếp ClickHouse SQL • Tổng số: ${totalLogs} logs`
-                  : `Direct ClickHouse SQL Query • Total: ${totalLogs} logs`}
+                  ? `Truy vấn trực tiếp ClickHouse SQL • Tổng số: ${totalLogs} logs • Múi giờ: GMT+7 (Việt Nam)`
+                  : `Direct ClickHouse SQL Query • Total: ${totalLogs} logs • Timezone: GMT+7`}
               </p>
             </div>
           </div>
 
-          {}
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -274,7 +318,6 @@ export function BetterStackMonitoringTab({
               )}
             </div>
 
-            {}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <Filter className="w-3.5 h-3.5 text-slate-400 ml-1.5" />
               {['ALL', 'INFO', 'WARN', 'ERROR'].map((lvl) => {
@@ -299,7 +342,6 @@ export function BetterStackMonitoringTab({
               })}
             </div>
 
-            {}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <select
                 value={currentLimit}
@@ -318,12 +360,11 @@ export function BetterStackMonitoringTab({
           </div>
         </div>
 
-        {}
         <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
           <table className="w-full text-left text-xs font-mono">
             <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-sans uppercase text-[10.5px] tracking-wider border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="py-3 px-4 w-44">{isVi ? 'Thời Gian (Time)' : 'Time'}</th>
+                <th className="py-3 px-4 w-48">{isVi ? 'Thời Gian (GMT+7)' : 'Time (GMT+7)'}</th>
                 <th className="py-3 px-4 w-36">{isVi ? 'Nguồn (Source)' : 'Source'}</th>
                 <th className="py-3 px-3 w-20">{isVi ? 'Mức độ' : 'Level'}</th>
                 <th className="py-3 px-4">{isVi ? 'Nội Dung Request / Message' : 'Message'}</th>
@@ -332,7 +373,7 @@ export function BetterStackMonitoringTab({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {liveLogs.length > 0 ? (
                 liveLogs.map((log: BetterStackLogItem, idx: number) => {
-                  const dateStr = log.timestamp.replace('T', ' ').replace('Z', '').slice(0, 23)
+                  const dateStr = formatLogTimestamp(log.timestamp)
                   return (
                     <tr
                       key={idx}

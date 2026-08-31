@@ -4,14 +4,14 @@ import {
   Trash2,
   CheckCircle2,
   Eye,
-  AlertTriangle,
 } from 'lucide-react'
 import type { CommunityPost } from '@/helpers/community.helper'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface CommunityPostCardProps {
   post: CommunityPost
   onUpdateStatus: (id: string, newStatus: 'APPROVED' | 'HIDDEN') => void
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void> | void
 }
 
 export function CommunityPostCard({
@@ -90,13 +90,23 @@ export function CommunityPostCard({
               <span>Duyệt bài</span>
             </button>
           )}
-          <button
-            onClick={() => onDelete(post.id)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Xóa bài viết"
+          <Popconfirm
+            title="Xóa bài viết này?"
+            description="Bài viết và toàn bộ bình luận liên quan sẽ bị xóa vĩnh viễn."
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
+            placement="topRight"
+            onConfirm={() => onDelete(post.id)}
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <button
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+              title="Xóa bài viết"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </Popconfirm>
         </div>
       </div>
     </div>

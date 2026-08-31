@@ -1,15 +1,15 @@
 import { PenTool, Trash2 } from 'lucide-react'
 import type { WritingExercise } from '@/types/api.types'
+import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface PracticeWritingCardProps {
   item: WritingExercise
   onToggleStatus?: (id: string, current: boolean) => void
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void> | void
 }
 
 export function PracticeWritingCard({
   item,
-  onToggleStatus,
   onDelete,
 }: PracticeWritingCardProps) {
   const itemId = item._id || ''
@@ -36,13 +36,23 @@ export function PracticeWritingCard({
         <span className="text-slate-500 font-semibold">Tối thiểu {item.min_words || 50} từ</span>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => onDelete(itemId)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Xóa đề viết"
+          <Popconfirm
+            title="Xóa đề bài viết này?"
+            description="Hành động này không thể hoàn tác."
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
+            placement="topRight"
+            onConfirm={() => onDelete(itemId)}
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <button
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+              title="Xóa đề viết"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </Popconfirm>
         </div>
       </div>
     </div>
