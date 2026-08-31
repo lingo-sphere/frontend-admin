@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
@@ -8,6 +8,7 @@ import { PracticeSetCard } from '@/components/practice/PracticeSetCard'
 import { CreatePracticeSetModal } from '@/components/practice/CreatePracticeSetModal'
 import { INITIAL_PRACTICE_SETS } from '@/helpers/practice.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
+import { Pagination } from '@/components/common/Pagination'
 
 export function PracticeExercisesPage() {
   const { i18n } = useTranslation()
@@ -17,6 +18,8 @@ export function PracticeExercisesPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(9)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -53,7 +56,7 @@ export function PracticeExercisesPage() {
 
   const handleDelete = (id: string) => {
     setPracticeSets((prev) => prev.filter((s) => s._id !== id))
-    toast.success('Đã xóa bộ bài tập luyện thi')
+    toast.success('Đã xóa bộ bài tập luyện thi thành công!')
   }
 
   const handleCreateSet = (e: React.FormEvent) => {
@@ -77,11 +80,22 @@ export function PracticeExercisesPage() {
     setNewDesc('')
   }
 
-  const filteredSets = practiceSets.filter((s) => {
-    const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchCat = filterCategory === 'ALL' || s.category === filterCategory
-    return matchSearch && matchCat
-  })
+  const filteredSets = useMemo(() => {
+    return practiceSets.filter((set) => {
+      const matchSearch =
+        set.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (set.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+      const matchCat = filterCategory === 'ALL' || set.category === filterCategory
+      return matchSearch && matchCat
+    })
+  }, [practiceSets, searchQuery, filterCategory])
+
+  const totalPages = Math.ceil(filteredSets.length / pageSize) || 1
+
+  const paginatedSets = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredSets.slice(start, start + pageSize)
+  }, [filteredSets, currentPage, pageSize])
 
   return (
     <div className="space-y-6">
@@ -89,18 +103,19 @@ export function PracticeExercisesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Award className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-            <span>Ngân Hàng Bài Tập Luyện Thi (Practice Sets)</span>
+            <span>{isVi ? 'Quản Lý Bài Tập Luyện Thi' : 'Practice Exercises & Question Sets'}</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý các bộ câu hỏi luyện Ngữ pháp, Từ vựng và Đọc hiểu Part 5 & 6 theo chuyên đề
+            {isVi
+              ? 'Ngân hàng đề luyện thi theo chủ đề Ngữ pháp, Từ vựng, Mini-Test và bài đọc TOEIC'
+              : 'Question banks categorized by Grammar, Vocabulary, Mini-Test and TOEIC Reading'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={fetchSets}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Làm mới"
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -109,7 +124,7 @@ export function PracticeExercisesPage() {
             className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Tạo bộ bài tập mới</span>
+            <span>{isVi ? 'Thêm bộ bài tập mới' : 'Add Practice Set'}</span>
           </button>
         </div>
       </div>
@@ -140,12 +155,12 @@ export function PracticeExercisesPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredSets.length === 0 ? (
+        {paginatedSets.length === 0 ? (
           <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            Không tìm thấy bộ bài tập nào phù hợp
+            {isVi ? 'Không tìm thấy bộ bài tập nào phù hợp' : 'No practice sets found'}
           </div>
         ) : (
-          filteredSets.map((set) => (
+          paginatedSets.map((set) => (
             <PracticeSetCard
               key={set._id}
               set={set}
@@ -155,6 +170,21 @@ export function PracticeExercisesPage() {
           ))
         )}
       </div>
+
+      {filteredSets.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 9, 18, 36]}
+          totalItems={filteredSets.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
 
       <CreatePracticeSetModal
         isOpen={showAddModal}

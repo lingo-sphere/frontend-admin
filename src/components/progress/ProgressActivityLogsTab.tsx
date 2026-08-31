@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Activity, Search, ChevronRight, Target, BookOpenCheck, Mic, GraduationCap } from 'lucide-react'
 import type { UserActivityLog } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/CustomSelect'
+import { Pagination } from '@/components/common/Pagination'
 
 interface ProgressActivityLogsTabProps {
   logs: UserActivityLog[]
@@ -21,6 +22,9 @@ export function ProgressActivityLogsTab({
 }: ProgressActivityLogsTabProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const actionOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả hành động' : 'All Actions' },
@@ -42,14 +46,23 @@ export function ProgressActivityLogsTab({
     }
   }
 
-  const filteredLogs = logs.filter((log) => {
-    const matchSearch =
-      search === '' ||
-      log.userName.toLowerCase().includes(search.toLowerCase()) ||
-      log.userEmail.toLowerCase().includes(search.toLowerCase())
-    const matchAction = actionFilter === 'ALL' || log.actionType === actionFilter
-    return matchSearch && matchAction
-  })
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const matchSearch =
+        search === '' ||
+        log.userName.toLowerCase().includes(search.toLowerCase()) ||
+        log.userEmail.toLowerCase().includes(search.toLowerCase())
+      const matchAction = actionFilter === 'ALL' || log.actionType === actionFilter
+      return matchSearch && matchAction
+    })
+  }, [logs, search, actionFilter])
+
+  const totalPages = Math.ceil(filteredLogs.length / pageSize) || 1
+
+  const paginatedLogs = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredLogs.slice(start, start + pageSize)
+  }, [filteredLogs, currentPage, pageSize])
 
   return (
     <div className="space-y-4">
@@ -59,7 +72,10 @@ export function ProgressActivityLogsTab({
           <input
             type="text"
             value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e) => {
+              onSearchChange(e.target.value)
+              setCurrentPage(1)
+            }}
             placeholder={isVi ? 'Tìm theo tên học viên, email...' : 'Search by learner name, email...'}
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
           />
@@ -67,7 +83,10 @@ export function ProgressActivityLogsTab({
 
         <CustomSelect
           value={actionFilter}
-          onChange={onActionFilterChange}
+          onChange={(val) => {
+            onActionFilterChange(val)
+            setCurrentPage(1)
+          }}
           options={actionOptions}
           className="w-56"
         />
@@ -85,14 +104,14 @@ export function ProgressActivityLogsTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
-              {filteredLogs.length === 0 ? (
+              {paginatedLogs.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-slate-400">
                     Không có nhật ký hoạt động nào
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => {
+                paginatedLogs.map((log) => {
                   const Icon = getIcon(log.actionType)
                   return (
                     <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
@@ -131,6 +150,21 @@ export function ProgressActivityLogsTab({
           </table>
         </div>
       </div>
+
+      {filteredLogs.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[10, 20, 50, 100]}
+          totalItems={filteredLogs.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }

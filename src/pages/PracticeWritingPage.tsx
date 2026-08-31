@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, PenTool } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
@@ -6,11 +7,17 @@ import type { WritingExercise } from '@/types/api.types'
 import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard'
 import { CreateWritingModal } from '@/components/practice/CreateWritingModal'
 import { INITIAL_WRITING_EXERCISES } from '@/helpers/practice.helper'
+import { Pagination } from '@/components/common/Pagination'
 
 export function PracticeWritingPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [exercises, setExercises] = useState<WritingExercise[]>(INITIAL_WRITING_EXERCISES)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(9)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -39,7 +46,7 @@ export function PracticeWritingPage() {
 
   const handleDelete = (id: string) => {
     setExercises((prev) => prev.filter((e) => e._id !== id))
-    toast.success('Đã xóa đề bài luyện viết')
+    toast.success('Đã xóa đề bài luyện viết thành công!')
   }
 
   const handleCreate = (e: React.FormEvent) => {
@@ -61,11 +68,20 @@ export function PracticeWritingPage() {
     setNewPrompt('')
   }
 
-  const filteredExercises = exercises.filter(
-    (e) =>
-      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.prompt.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredExercises = useMemo(() => {
+    return exercises.filter(
+      (e) =>
+        e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (e.prompt && e.prompt.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  }, [exercises, searchQuery])
+
+  const totalPages = Math.ceil(filteredExercises.length / pageSize) || 1
+
+  const paginatedExercises = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredExercises.slice(start, start + pageSize)
+  }, [filteredExercises, currentPage, pageSize])
 
   return (
     <div className="space-y-6">
@@ -73,18 +89,19 @@ export function PracticeWritingPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <PenTool className="w-7 h-7 text-purple-600 dark:text-purple-400" />
-            <span>Luyện Viết TOEIC Writing & Essay AI Grading</span>
+            <span>{isVi ? 'Quản Lý Luyện Viết & Luận TOEIC' : 'Writing & Essay Management'}</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý các đề viết Email, viết đoạn văn miêu tả và hệ thống gợi ý từ vựng chuyên ngành
+            {isVi
+              ? 'Ngân hàng đề thi viết luận, phản hồi Email kinh doanh và chấm điểm ngữ pháp bằng AI'
+              : 'Writing prompts and business email exercises with AI automated grading'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={fetchExercises}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Làm mới"
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -93,7 +110,7 @@ export function PracticeWritingPage() {
             className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white shadow-lg shadow-purple-600/30 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Thêm đề viết mới</span>
+            <span>{isVi ? 'Thêm đề viết mới' : 'Add Writing'}</span>
           </button>
         </div>
       </div>
@@ -104,18 +121,18 @@ export function PracticeWritingPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Tìm kiếm đề viết theo tiêu đề, ngữ cảnh..."
+          placeholder={isVi ? 'Tìm kiếm đề viết theo tiêu đề, ngữ cảnh...' : 'Search writing exercises...'}
           className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-purple-500"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredExercises.length === 0 ? (
+        {paginatedExercises.length === 0 ? (
           <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            Không tìm thấy đề luyện viết nào phù hợp
+            {isVi ? 'Không tìm thấy đề luyện viết nào phù hợp' : 'No writing exercises found'}
           </div>
         ) : (
-          filteredExercises.map((item) => (
+          paginatedExercises.map((item) => (
             <PracticeWritingCard
               key={item._id}
               item={item}
@@ -124,6 +141,21 @@ export function PracticeWritingPage() {
           ))
         )}
       </div>
+
+      {filteredExercises.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 9, 18, 36]}
+          totalItems={filteredExercises.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
 
       <CreateWritingModal
         isOpen={showAddModal}

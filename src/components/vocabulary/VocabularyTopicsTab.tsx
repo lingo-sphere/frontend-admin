@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react'
 import { Folder, Edit2, Plus } from 'lucide-react'
 import type { Topic } from '@/data/vocabulary-data'
 import { toast } from '@/store/toast-store'
+import { Pagination } from '@/components/common/Pagination'
 
 interface VocabularyTopicsTabProps {
   topics: Topic[]
@@ -13,6 +15,16 @@ export function VocabularyTopicsTab({
   onEditTopic = () => toast.info('Đang mở form chỉnh sửa chủ đề...'),
   onCreateTopic = () => toast.info('Đang mở form tạo chủ đề mới...'),
 }: VocabularyTopicsTabProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(6)
+
+  const totalPages = Math.ceil(topics.length / pageSize) || 1
+
+  const paginatedTopics = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return topics.slice(start, start + pageSize)
+  }, [topics, currentPage, pageSize])
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -34,7 +46,7 @@ export function VocabularyTopicsTab({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {topics.map((topic) => (
+        {paginatedTopics.map((topic) => (
           <div
             key={topic.id}
             className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-indigo-500/50 transition-all flex flex-col justify-between"
@@ -76,6 +88,21 @@ export function VocabularyTopicsTab({
           </div>
         ))}
       </div>
+
+      {topics.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 9, 12, 18]}
+          totalItems={topics.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }

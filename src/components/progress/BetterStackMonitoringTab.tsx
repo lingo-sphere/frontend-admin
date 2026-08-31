@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import type { BetterStackMonitoringData, ServiceHealthItem, BetterStackLogItem } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/CustomSelect'
+import { Pagination } from '@/components/common/Pagination'
 
 interface BetterStackMonitoringTabProps {
   data: BetterStackMonitoringData | null
@@ -426,72 +427,27 @@ export function BetterStackMonitoringTab({
           </table>
         </div>
 
-        {}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
-          <span className="text-slate-500">
-            {isVi
-              ? `Hiển thị ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
-                  currentPage * currentLimit,
-                  totalLogs
-                )} trên tổng số ${totalLogs} logs (Server-side)`
-              : `Showing ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
-                  currentPage * currentLimit,
-                  totalLogs
-                )} of ${totalLogs} logs (Server-side)`}
-          </span>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (onParamsChange && currentPage > 1) {
-                  onParamsChange({ page: currentPage - 1 })
+        {totalLogs > 0 && (
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={currentLimit}
+              pageSizeOptions={[10, 20, 50, 100]}
+              totalItems={totalLogs}
+              onPageChange={(page) => {
+                if (onParamsChange) {
+                  onParamsChange({ page })
                 }
               }}
-              disabled={currentPage <= 1 || isLoading}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
-              let pageNum = idx + 1
-              if (totalPages > 5 && currentPage > 3) {
-                pageNum = currentPage - 2 + idx
-                if (pageNum > totalPages) pageNum = totalPages - (4 - idx)
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => {
-                    if (onParamsChange) {
-                      onParamsChange({ page: pageNum })
-                    }
-                  }}
-                  disabled={isLoading}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    currentPage === pageNum
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
-
-            <button
-              onClick={() => {
-                if (onParamsChange && currentPage < totalPages) {
-                  onParamsChange({ page: currentPage + 1 })
+              onPageSizeChange={(limit) => {
+                if (onParamsChange) {
+                  onParamsChange({ limit, page: 1 })
                 }
               }}
-              disabled={currentPage >= totalPages || isLoading}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            />
           </div>
-        </div>
+        )}
       </div>
 
       {}
@@ -601,41 +557,19 @@ export function BetterStackMonitoringTab({
           })}
         </div>
 
-        {}
-        {totalServicesPages > 1 && (
-          <div className="flex items-center justify-between pt-2 text-xs flex-wrap gap-3">
-            <span className="text-slate-500">
-              {isVi
-                ? `Hiển thị ${(servicesPage - 1) * servicesPageSize + 1} - ${Math.min(
-                    servicesPage * servicesPageSize,
-                    filteredServices.length
-                  )} trên ${filteredServices.length} dịch vụ`
-                : `Showing ${(servicesPage - 1) * servicesPageSize + 1} - ${Math.min(
-                    servicesPage * servicesPageSize,
-                    filteredServices.length
-                  )} of ${filteredServices.length} services`}
-            </span>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setServicesPage((p) => Math.max(1, p - 1))}
-                disabled={servicesPage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="font-bold text-slate-700 dark:text-slate-300">
-                {servicesPage} / {totalServicesPages}
-              </span>
-              <button
-                onClick={() => setServicesPage((p) => Math.min(totalServicesPages, p + 1))}
-                disabled={servicesPage === totalServicesPages}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+        {filteredServices.length > 0 && (
+          <Pagination
+            currentPage={servicesPage}
+            totalPages={totalServicesPages}
+            pageSize={servicesPageSize}
+            pageSizeOptions={[6, 9, 12, 15]}
+            totalItems={filteredServices.length}
+            onPageChange={setServicesPage}
+            onPageSizeChange={(size) => {
+              setServicesPageSize(size)
+              setServicesPage(1)
+            }}
+          />
         )}
       </div>
 

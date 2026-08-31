@@ -1,14 +1,17 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { toast } from '@/store/toast-store'
 import { CommunityFilterBar } from '@/components/community/CommunityFilterBar'
 import { CommunityPostCard } from '@/components/community/CommunityPostCard'
 import type { CommunityPost } from '@/helpers/community.helper'
+import { Pagination } from '@/components/common/Pagination'
 
 export function CommunityPage() {
   const [posts, setPosts] = useState<CommunityPost[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(6)
 
   const handleUpdateStatus = (id: string, newStatus: 'APPROVED' | 'HIDDEN') => {
     setPosts(posts.map((p) => (p.id === id ? { ...p, status: newStatus } : p)))
@@ -24,13 +27,22 @@ export function CommunityPage() {
     toast.success('Đã xóa bài viết cộng đồng vi phạm')
   }
 
-  const filteredPosts = posts.filter((p) => {
-    const matchSearch =
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.author_name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchStatus = filterStatus === 'ALL' || p.status === filterStatus
-    return matchSearch && matchStatus
-  })
+  const filteredPosts = useMemo(() => {
+    return posts.filter((p) => {
+      const matchSearch =
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.author_name.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchStatus = filterStatus === 'ALL' || p.status === filterStatus
+      return matchSearch && matchStatus
+    })
+  }, [posts, searchQuery, filterStatus])
+
+  const totalPages = Math.ceil(filteredPosts.length / pageSize) || 1
+
+  const paginatedPosts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredPosts.slice(start, start + pageSize)
+  }, [filteredPosts, currentPage, pageSize])
 
   return (
     <div className="space-y-6">
@@ -47,17 +59,23 @@ export function CommunityPage() {
       <CommunityFilterBar
         searchQuery={searchQuery}
         filterStatus={filterStatus}
-        onSearchChange={setSearchQuery}
-        onStatusChange={setFilterStatus}
+        onSearchChange={(val) => {
+          setSearchQuery(val)
+          setCurrentPage(1)
+        }}
+        onStatusChange={(val) => {
+          setFilterStatus(val)
+          setCurrentPage(1)
+        }}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredPosts.length === 0 ? (
+        {paginatedPosts.length === 0 ? (
           <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
             Chưa có bài viết cộng đồng nào cần xử lý
           </div>
         ) : (
-          filteredPosts.map((post) => (
+          paginatedPosts.map((post) => (
             <CommunityPostCard
               key={post.id}
               post={post}
@@ -67,6 +85,21 @@ export function CommunityPage() {
           ))
         )}
       </div>
+
+      {filteredPosts.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 10, 20, 50]}
+          totalItems={filteredPosts.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }

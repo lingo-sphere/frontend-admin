@@ -8,6 +8,7 @@ import { PracticeListeningCard } from '@/components/practice/PracticeListeningCa
 import { CreateListeningModal } from '@/components/practice/CreateListeningModal'
 import { INITIAL_LISTENING_EXERCISES } from '@/helpers/practice.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
+import { Pagination } from '@/components/common/Pagination'
 
 export function PracticeListeningPage() {
   const { i18n } = useTranslation()
@@ -17,6 +18,8 @@ export function PracticeListeningPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('ALL')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(9)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -44,8 +47,23 @@ export function PracticeListeningPage() {
 
   const handleDelete = (id: string) => {
     setExercises((prev) => prev.filter((e) => e._id !== id))
-    toast.success('Đã xóa bài luyện nghe')
+    toast.success('Đã xóa bài luyện nghe thành công!')
   }
+
+  const filteredExercises = useMemo(() => {
+    return exercises.filter((ex) => {
+      const matchSearch = ex.title.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchType = filterType === 'ALL' || ex.exercise_type === filterType
+      return matchSearch && matchType
+    })
+  }, [exercises, searchQuery, filterType])
+
+  const totalPages = Math.ceil(filteredExercises.length / pageSize) || 1
+
+  const paginatedExercises = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredExercises.slice(start, start + pageSize)
+  }, [filteredExercises, currentPage, pageSize])
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,12 +84,6 @@ export function PracticeListeningPage() {
     setNewTitle('')
     setNewAudioUrl('')
   }
-
-  const filteredExercises = exercises.filter((e) => {
-    const matchSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchType = filterType === 'ALL' || e.exercise_type === filterType
-    return matchSearch && matchType
-  })
 
   return (
     <div className="space-y-6">
@@ -130,12 +142,12 @@ export function PracticeListeningPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredExercises.length === 0 ? (
+        {paginatedExercises.length === 0 ? (
           <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            Không tìm thấy bài nghe nào phù hợp
+            {isVi ? 'Không tìm thấy bài nghe nào phù hợp' : 'No listening exercises found'}
           </div>
         ) : (
-          filteredExercises.map((item) => (
+          paginatedExercises.map((item) => (
             <PracticeListeningCard
               key={item._id}
               item={item}
@@ -144,6 +156,21 @@ export function PracticeListeningPage() {
           ))
         )}
       </div>
+
+      {filteredExercises.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 9, 18, 36]}
+          totalItems={filteredExercises.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
 
       <CreateListeningModal
         isOpen={showAddModal}

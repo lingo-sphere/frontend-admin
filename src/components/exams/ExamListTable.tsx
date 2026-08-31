@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import {
   FileText,
   Search,
@@ -7,6 +8,7 @@ import {
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { Popconfirm } from '@/components/common/Popconfirm'
+import { Pagination } from '@/components/common/Pagination'
 
 interface ExamListTableProps {
   exams: ToeicExamItem[]
@@ -27,14 +29,26 @@ export function ExamListTable({
   onTogglePublish,
   onDeleteExam,
 }: ExamListTableProps) {
-  const filteredExams = exams.filter((exam) => {
-    const matchesSearch = exam.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-    const matchesType =
-      selectedType === 'ALL' || exam.type === selectedType
-    return matchesSearch && matchesType
-  })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  const filteredExams = useMemo(() => {
+    return exams.filter((exam) => {
+      const matchesSearch = exam.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+      const matchesType =
+        selectedType === 'ALL' || exam.type === selectedType
+      return matchesSearch && matchesType
+    })
+  }, [exams, searchQuery, selectedType])
+
+  const totalPages = Math.ceil(filteredExams.length / pageSize) || 1
+
+  const paginatedExams = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredExams.slice(start, start + pageSize)
+  }, [filteredExams, currentPage, pageSize])
 
   return (
     <div className="space-y-4">
@@ -96,14 +110,14 @@ export function ExamListTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 dark:divide-slate-800/60 dark:text-slate-200">
-              {filteredExams.length === 0 ? (
+              {paginatedExams.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     Không tìm thấy đề thi nào phù hợp
                   </td>
                 </tr>
               ) : (
-                filteredExams.map((exam) => (
+                paginatedExams.map((exam) => (
                   <tr
                     key={exam.id || exam._id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
@@ -179,6 +193,20 @@ export function ExamListTable({
           </table>
         </div>
       </div>
+
+      {filteredExams.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={filteredExams.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }

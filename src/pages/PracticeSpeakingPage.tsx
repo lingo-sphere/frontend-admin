@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Mic } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
@@ -6,11 +7,17 @@ import type { SpeakingExercise } from '@/types/api.types'
 import { PracticeSpeakingCard } from '@/components/practice/PracticeSpeakingCard'
 import { CreateSpeakingModal } from '@/components/practice/CreateSpeakingModal'
 import { INITIAL_SPEAKING_EXERCISES } from '@/helpers/practice.helper'
+import { Pagination } from '@/components/common/Pagination'
 
 export function PracticeSpeakingPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [exercises, setExercises] = useState<SpeakingExercise[]>(INITIAL_SPEAKING_EXERCISES)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(9)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -38,7 +45,7 @@ export function PracticeSpeakingPage() {
 
   const handleDelete = (id: string) => {
     setExercises((prev) => prev.filter((e) => e._id !== id))
-    toast.success('Đã xóa bài luyện nói')
+    toast.success('Đã xóa bài luyện nói thành công!')
   }
 
   const handleCreate = (e: React.FormEvent) => {
@@ -58,11 +65,20 @@ export function PracticeSpeakingPage() {
     setNewSentence('')
   }
 
-  const filteredExercises = exercises.filter(
-    (e) =>
-      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (e.prompt_text && e.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+  const filteredExercises = useMemo(() => {
+    return exercises.filter(
+      (e) =>
+        e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (e.prompt_text && e.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  }, [exercises, searchQuery])
+
+  const totalPages = Math.ceil(filteredExercises.length / pageSize) || 1
+
+  const paginatedExercises = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredExercises.slice(start, start + pageSize)
+  }, [filteredExercises, currentPage, pageSize])
 
   return (
     <div className="space-y-6">
@@ -70,18 +86,19 @@ export function PracticeSpeakingPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Mic className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
-            <span>Luyện Phát Âm & TOEIC Speaking AI Whisper</span>
+            <span>{isVi ? 'Quản Lý Luyện Nói & Phát Âm' : 'Speaking & Pronunciation Management'}</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý các đề luyện nói, câu đọc mẫu và chuẩn chấm điểm phát âm bằng AI
+            {isVi
+              ? 'Ngân hàng bài tập luyện nói, phát âm chuẩn IPA và chấm điểm tự động bằng mô hình AI'
+              : 'Speaking exercise bank with IPA pronunciation assessment powered by AI'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={fetchExercises}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Làm mới"
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -90,7 +107,7 @@ export function PracticeSpeakingPage() {
             className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Thêm bài nói mới</span>
+            <span>{isVi ? 'Thêm bài nói mới' : 'Add Speaking'}</span>
           </button>
         </div>
       </div>
@@ -101,18 +118,18 @@ export function PracticeSpeakingPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Tìm kiếm bài luyện nói theo tiêu đề, câu văn..."
+          placeholder={isVi ? 'Tìm kiếm bài luyện nói theo tiêu đề, câu văn...' : 'Search speaking exercises...'}
           className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredExercises.length === 0 ? (
+        {paginatedExercises.length === 0 ? (
           <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            Không tìm thấy bài luyện nói nào phù hợp
+            {isVi ? 'Không tìm thấy bài luyện nói nào phù hợp' : 'No speaking exercises found'}
           </div>
         ) : (
-          filteredExercises.map((item) => (
+          paginatedExercises.map((item) => (
             <PracticeSpeakingCard
               key={item._id}
               item={item}
@@ -121,6 +138,21 @@ export function PracticeSpeakingPage() {
           ))
         )}
       </div>
+
+      {filteredExercises.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 9, 18, 36]}
+          totalItems={filteredExercises.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
 
       <CreateSpeakingModal
         isOpen={showAddModal}

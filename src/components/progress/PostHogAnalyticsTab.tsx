@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import type { PostHogAnalyticsData, PostHogSessionReplay, PostHogLiveEventItem } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/CustomSelect'
+import { Pagination } from '@/components/common/Pagination'
 
 interface PostHogAnalyticsTabProps {
   data: PostHogAnalyticsData | null
@@ -525,72 +526,27 @@ export function PostHogAnalyticsTab({
           </table>
         </div>
 
-        {}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
-          <span className="text-slate-500">
-            {isVi
-              ? `Hiển thị ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
-                  currentPage * currentLimit,
-                  totalEvents
-                )} trên tổng số ${totalEvents} sự kiện (Server-side)`
-              : `Showing ${(currentPage - 1) * currentLimit + 1} - ${Math.min(
-                  currentPage * currentLimit,
-                  totalEvents
-                )} of ${totalEvents} events (Server-side)`}
-          </span>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (onParamsChange && currentPage > 1) {
-                  onParamsChange({ page: currentPage - 1 })
+        {totalEvents > 0 && (
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={currentLimit}
+              pageSizeOptions={[10, 20, 50, 100]}
+              totalItems={totalEvents}
+              onPageChange={(page) => {
+                if (onParamsChange) {
+                  onParamsChange({ page })
                 }
               }}
-              disabled={currentPage <= 1 || isLoading}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
-              let pageNum = idx + 1
-              if (totalPages > 5 && currentPage > 3) {
-                pageNum = currentPage - 2 + idx
-                if (pageNum > totalPages) pageNum = totalPages - (4 - idx)
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => {
-                    if (onParamsChange) {
-                      onParamsChange({ page: pageNum })
-                    }
-                  }}
-                  disabled={isLoading}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    currentPage === pageNum
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
-
-            <button
-              onClick={() => {
-                if (onParamsChange && currentPage < totalPages) {
-                  onParamsChange({ page: currentPage + 1 })
+              onPageSizeChange={(limit) => {
+                if (onParamsChange) {
+                  onParamsChange({ limit, page: 1 })
                 }
               }}
-              disabled={currentPage >= totalPages || isLoading}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            />
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

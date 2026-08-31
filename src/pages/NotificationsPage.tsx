@@ -226,7 +226,7 @@ export function NotificationsPage() {
         )}
       </div>
 
-      {totalPages > 1 && (
+      {filteredNotifications.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

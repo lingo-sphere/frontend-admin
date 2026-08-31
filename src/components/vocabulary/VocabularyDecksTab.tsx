@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react'
 import { Layers, Edit2, Plus } from 'lucide-react'
 import type { FlashcardDeck } from '@/data/vocabulary-data'
 import { toast } from '@/store/toast-store'
+import { Pagination } from '@/components/common/Pagination'
 
 interface VocabularyDecksTabProps {
   decks: FlashcardDeck[]
@@ -13,6 +15,16 @@ export function VocabularyDecksTab({
   onEditDeck = () => toast.info('Đang mở form chỉnh sửa bộ thẻ...'),
   onCreateDeck = () => toast.info('Đang mở form tạo bộ thẻ mới...'),
 }: VocabularyDecksTabProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(6)
+
+  const totalPages = Math.ceil(decks.length / pageSize) || 1
+
+  const paginatedDecks = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return decks.slice(start, start + pageSize)
+  }, [decks, currentPage, pageSize])
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -34,7 +46,7 @@ export function VocabularyDecksTab({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {decks.map((deck) => {
+        {paginatedDecks.map((deck) => {
           const isPublic = deck.visibility === 'PUBLIC' || deck.visibility === 'public'
           return (
             <div
@@ -80,6 +92,21 @@ export function VocabularyDecksTab({
           )
         })}
       </div>
+
+      {decks.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={[6, 9, 12, 18]}
+          totalItems={decks.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }
