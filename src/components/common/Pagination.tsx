@@ -78,9 +78,9 @@ export function Pagination({
         </div>
       )}
 
-      {/* 1. Page Numbers & Chevrons (< 1 ... 5 [6] 7 ... 50 >) */}
+      {}
       <ul className="flex items-center gap-1.5 list-none p-0 m-0">
-        {/* Previous Button (<) */}
+        {}
         <li
           onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
           className={`w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer ${
@@ -93,7 +93,7 @@ export function Pagination({
           <ChevronLeft className="w-4 h-4 stroke-[1.75]" />
         </li>
 
-        {/* Page List */}
+        {}
         {getPageNumbers().map((page, index) =>
           page === 'ellipsis' ? (
             <li
@@ -117,7 +117,7 @@ export function Pagination({
           )
         )}
 
-        {/* Next Button (>) */}
+        {}
         <li
           onClick={() => currentPage < safeTotalPages && onPageChange(currentPage + 1)}
           className={`w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer ${
@@ -131,7 +131,7 @@ export function Pagination({
         </li>
       </ul>
 
-      {/* 2. Page Size Dropdown ([ 10 / page v ]) */}
+      {}
       {onPageSizeChange && (
         <select
           value={pageSize}
@@ -146,7 +146,7 @@ export function Pagination({
         </select>
       )}
 
-      {/* 3. Go to Page Input (Go to [   ] Page) */}
+      {}
       <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
         <span>{goToText}</span>
         <input

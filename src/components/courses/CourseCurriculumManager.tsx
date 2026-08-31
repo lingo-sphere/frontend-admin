@@ -42,7 +42,7 @@ export function CourseCurriculumManager({
     modules.map((m) => m.id)
   )
 
-  // Modals state
+
   const [aiModalState, setAiModalState] = useState<{
     isOpen: boolean
     moduleId: string
@@ -269,7 +269,7 @@ export function CourseCurriculumManager({
                 key={mod.id}
                 className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden dark:border-slate-800 dark:bg-slate-950/40"
               >
-                {/* Chapter Header */}
+                {}
                 <div className="p-4 flex items-center justify-between gap-3 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                   <button
                     type="button"
@@ -289,7 +289,7 @@ export function CourseCurriculumManager({
                       ({mod.lessons.length} {isVi ? 'bài' : 'lessons'} · {modDuration} {isVi ? 'phút' : 'min'})
                     </span>
 
-                    {/* Test Badge */}
+                    {}
                     {questionCount > 0 && (
                       <span className="hidden sm:inline-flex items-center gap-1 rounded-md bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                         🎯 Bài Test ({questionCount} câu · {passingScore}%)
@@ -320,7 +320,7 @@ export function CourseCurriculumManager({
 
                 {isExpanded && (
                   <div className="p-4 sm:p-5 space-y-6">
-                    {/* Chapter Title & Description */}
+                    {}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
@@ -353,7 +353,7 @@ export function CourseCurriculumManager({
                       </div>
                     </div>
 
-                    {/* UNIFIED CHAPTER ASSESSMENT TEST CARD */}
+                    {}
                     <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 sm:p-5 space-y-3.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2.5">
@@ -372,7 +372,7 @@ export function CourseCurriculumManager({
                           </div>
                         </div>
 
-                        {/* Passing Score Input */}
+                        {}
                         <div className="flex items-center gap-1.5 self-start sm:self-auto bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                           <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                             {isVi ? 'Ngưỡng đạt:' : 'Passing Score:'}
@@ -396,7 +396,7 @@ export function CourseCurriculumManager({
                         </div>
                       </div>
 
-                      {/* Question Status & Action Buttons */}
+                      {}
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-indigo-500/15 bg-white/70 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
@@ -461,7 +461,7 @@ export function CourseCurriculumManager({
                       </div>
                     </div>
 
-                    {/* Lesson Videos List */}
+                    {}
                     <div className="space-y-3">
                       <p className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Film className="w-4 h-4 text-teal-500" />
@@ -574,7 +574,7 @@ export function CourseCurriculumManager({
                                 </div>
                               </div>
 
-                              {/* Video Uploader with Hierarchical Folder */}
+                              {}
                               <R2MediaUploader
                                 type="video"
                                 value={les.video_url}
@@ -590,7 +590,7 @@ export function CourseCurriculumManager({
                                 isVi={isVi}
                               />
 
-                              {/* Lesson Content Notes */}
+                              {}
                               <div className="space-y-1">
                                 <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                   <FileText className="w-3.5 h-3.5 text-slate-400" />
@@ -632,7 +632,7 @@ export function CourseCurriculumManager({
         </div>
       )}
 
-      {/* AI Quiz Generator Modal */}
+      {}
       <AiQuizGeneratorModal
         isOpen={aiModalState.isOpen}
         onClose={() => setAiModalState((prev) => ({ ...prev, isOpen: false }))}
@@ -643,7 +643,7 @@ export function CourseCurriculumManager({
         moduleDescription={aiModalState.moduleDescription}
       />
 
-      {/* Excel Quiz Importer Modal */}
+      {}
       <ExcelQuizImporterModal
         isOpen={excelModalState.isOpen}
         onClose={() => setExcelModalState((prev) => ({ ...prev, isOpen: false }))}
@@ -653,7 +653,7 @@ export function CourseCurriculumManager({
         moduleTitle={excelModalState.moduleTitle}
       />
 
-      {/* Question Viewer/Editor Modal */}
+      {}
       <ModuleQuestionViewerModal
         isOpen={viewerModalState.isOpen}
         onClose={() => setViewerModalState((prev) => ({ ...prev, isOpen: false }))}

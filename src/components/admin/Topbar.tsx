@@ -64,7 +64,7 @@ export function Topbar() {
           setTotalLearnersCount(analytics.overview.total_users)
         }
       } catch {
-        // do not set fake number
+
       }
     }
 
@@ -86,7 +86,7 @@ export function Topbar() {
     try {
       await notificationService.markAsRead(id)
     } catch {
-      // silent
+
     }
   }
 
@@ -96,7 +96,7 @@ export function Topbar() {
       await notificationService.markAllAsRead()
       toast.success('Đã đánh dấu tất cả thông báo là đã đọc')
     } catch {
-      // silent
+
     }
   }
 

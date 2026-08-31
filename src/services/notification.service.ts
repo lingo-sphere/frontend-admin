@@ -9,7 +9,7 @@ export interface CreateNotificationPayload {
   content_vi?: string
   category: string
   priority?: string
-  user_id?: string 
+  user_id?: string
   action_url?: string
 }
 

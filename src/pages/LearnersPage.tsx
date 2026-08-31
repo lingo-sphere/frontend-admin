@@ -156,10 +156,10 @@ export function LearnersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Overview KPI Cards */}
+      {}
       <LearnerStatsOverview stats={stats} />
 
-      {/* Main DataTable */}
+      {}
       <DataTable<User>
         title="Quản Lý Học Viên"
         subtitle="Danh sách học viên, tiến độ học TOEIC và quản lý trạng thái tài khoản"
@@ -199,7 +199,7 @@ export function LearnersPage() {
         }}
       />
 
-      {/* Confirmation Modal for Ban/Unban */}
+      {}
       <ConfirmModal
         isOpen={Boolean(modalUser && modalAction)}
         onClose={() => {

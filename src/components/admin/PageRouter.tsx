@@ -74,7 +74,7 @@ export function PageRouter() {
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
 
-  // Route RBAC Validation
+
   if (!isAdmin) {
     if (activeNavItem === 'courses' || activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
       if (!hasPermission('GET', '/courses') && !hasModulePermission('COURSES')) {

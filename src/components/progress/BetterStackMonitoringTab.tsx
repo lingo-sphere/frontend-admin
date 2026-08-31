@@ -127,7 +127,7 @@ export function BetterStackMonitoringTab({
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Banner & Status */}
+      {}
       <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-teal-500/10 relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
 
@@ -169,7 +169,7 @@ export function BetterStackMonitoringTab({
           </div>
         </div>
 
-        {/* Top 4 Quick Metric Cards inside Banner */}
+        {}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/15">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <div className="flex items-center gap-2 text-emerald-200 text-xs font-semibold">
@@ -213,9 +213,9 @@ export function BetterStackMonitoringTab({
         </div>
       </div>
 
-      {/* 2. BetterStack Live Tail & Telemetry Log Stream Table with Server-side Pagination */}
+      {}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 relative">
-        {/* Loading Overlay */}
+        {}
         {isLoading && (
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs rounded-3xl z-20 flex items-center justify-center">
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
@@ -248,7 +248,7 @@ export function BetterStackMonitoringTab({
             </div>
           </div>
 
-          {/* Filters, Search & PageSize Selector */}
+          {}
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -274,7 +274,7 @@ export function BetterStackMonitoringTab({
               )}
             </div>
 
-            {/* Level Filter */}
+            {}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <Filter className="w-3.5 h-3.5 text-slate-400 ml-1.5" />
               {['ALL', 'INFO', 'WARN', 'ERROR'].map((lvl) => {
@@ -299,7 +299,7 @@ export function BetterStackMonitoringTab({
               })}
             </div>
 
-            {/* Page Size */}
+            {}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <select
                 value={currentLimit}
@@ -318,7 +318,7 @@ export function BetterStackMonitoringTab({
           </div>
         </div>
 
-        {/* Live Tail Table */}
+        {}
         <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
           <table className="w-full text-left text-xs font-mono">
             <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-sans uppercase text-[10.5px] tracking-wider border-b border-slate-200 dark:border-slate-800">
@@ -383,7 +383,7 @@ export function BetterStackMonitoringTab({
           </table>
         </div>
 
-        {/* Live Logs Server-side Pagination Controls */}
+        {}
         <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
           <span className="text-slate-500">
             {isVi
@@ -451,7 +451,7 @@ export function BetterStackMonitoringTab({
         </div>
       </div>
 
-      {/* 3. Filter Bar for Services Grid */}
+      {}
       <div className="flex items-center justify-between gap-4 flex-wrap bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -484,7 +484,7 @@ export function BetterStackMonitoringTab({
         </div>
       </div>
 
-      {/* 4. Services Grid with Pagination */}
+      {}
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedServices.map((service: ServiceHealthItem) => {
@@ -528,7 +528,7 @@ export function BetterStackMonitoringTab({
                   {service.description}
                 </p>
 
-                {/* Uptime & Latency stats */}
+                {}
                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                     <Zap className="w-3.5 h-3.5 text-amber-500" />
@@ -543,7 +543,7 @@ export function BetterStackMonitoringTab({
                   </div>
                 </div>
 
-                {/* Visual 20-block uptime graph */}
+                {}
                 <div className="flex items-center gap-1 mt-3">
                   {Array.from({ length: 20 }).map((_, idx) => (
                     <div
@@ -558,7 +558,7 @@ export function BetterStackMonitoringTab({
           })}
         </div>
 
-        {/* Services Grid Pagination Bar */}
+        {}
         {totalServicesPages > 1 && (
           <div className="flex items-center justify-between pt-2 text-xs flex-wrap gap-3">
             <span className="text-slate-500">
@@ -596,7 +596,7 @@ export function BetterStackMonitoringTab({
         )}
       </div>
 
-      {/* 5. Incident Log Table */}
+      {}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">

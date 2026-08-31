@@ -78,7 +78,7 @@ export function PermissionModal({
         className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
@@ -101,7 +101,7 @@ export function PermissionModal({
           </button>
         </div>
 
-        {/* Form Body */}
+        {}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -183,7 +183,7 @@ export function PermissionModal({
             />
           </div>
 
-          {/* Footer */}
+          {}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"

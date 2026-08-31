@@ -1,15 +1,15 @@
-import { useState, useEffect, type FormEvent } from 'react'
-import { useTranslation } from 'react-i18next'
-import { ChevronLeft, Save, BookOpen, ExternalLink, X } from 'lucide-react'
-import { useAdminStore } from '@/store/admin-store'
-import { courseService } from '@/services/course.service'
-import { mediaService } from '@/services/media.service'
-import { toast } from '@/store/toast-store'
 import {
   CourseBasicInfoTab,
   type CourseFormData,
 } from '@/components/courses/CourseBasicInfoTab'
 import { CourseCurriculumManager } from '@/components/courses/CourseCurriculumManager'
+import { courseService } from '@/services/course.service'
+import { mediaService } from '@/services/media.service'
+import { useAdminStore } from '@/store/admin-store'
+import { toast } from '@/store/toast-store'
+import { BookOpen, ChevronLeft, Save, X } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface CourseFormPageProps {
   editCourseId?: string

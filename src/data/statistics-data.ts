@@ -97,10 +97,10 @@ export const dbEntityMetrics: DBEntityMetric[] = [
 export interface ActivityDayPoint {
   dateStr: string
   dayLabel: string
-  dau: number 
-  sessions: number 
-  minutesSpent: number 
-  xpGained: number 
+  dau: number
+  sessions: number
+  minutesSpent: number
+  xpGained: number
   newUsers: number
 }
 

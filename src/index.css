@@ -42,10 +42,10 @@
   }
 }
 
-/* ==========================================================================
-   LIGHT THEME DESIGN SYSTEM
-   Applied whenever html does not have 'dark' class, or has class 'light' / data-theme="light"
-   ========================================================================== */
+
+
+
+
 html:not(.dark),
 html.light,
 html[data-theme="light"] {
@@ -59,14 +59,14 @@ html[data-theme="light"] body {
   color: #0f172a !important;
 }
 
-/* 1. Shell & Main Background */
+
 html:not(.dark) .bg-slate-950,
 html.light .bg-slate-950,
 html[data-theme="light"] .bg-slate-950 {
   background-color: #f8fafc !important;
 }
 
-/* 2. Topbar Header */
+
 html:not(.dark) header,
 html.light header,
 html[data-theme="light"] header {
@@ -74,7 +74,7 @@ html[data-theme="light"] header {
   border-color: #e2e8f0 !important;
 }
 
-/* 3. Cards, Tables, Dropdowns, Modals, Filter Bars */
+
 html:not(.dark) .bg-slate-900,
 html:not(.dark) .bg-slate-900\/90,
 html:not(.dark) .bg-slate-900\/80,
@@ -100,7 +100,7 @@ html[data-theme="light"] .bg-slate-900\/40 {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
 }
 
-/* 4. Sub-panels, Inputs, Selects, Inner Boxes */
+
 html:not(.dark) .bg-slate-950\/80,
 html:not(.dark) .bg-slate-950\/70,
 html:not(.dark) .bg-slate-950\/60,
@@ -120,7 +120,7 @@ html[data-theme="light"] .bg-slate-950\/40 {
   color: #0f172a !important;
 }
 
-/* 5. Secondary Action Buttons (Like "Làm mới", "Hủy") */
+
 html:not(.dark) .bg-slate-800,
 html.light .bg-slate-800,
 html[data-theme="light"] .bg-slate-800 {
@@ -128,7 +128,7 @@ html[data-theme="light"] .bg-slate-800 {
   color: #334155 !important;
 }
 
-/* 6. Hover States */
+
 html:not(.dark) .hover\:bg-slate-800:hover,
 html:not(.dark) .hover\:bg-slate-800\/80:hover,
 html:not(.dark) .hover\:bg-slate-800\/60:hover,
@@ -154,7 +154,7 @@ html[data-theme="light"] .hover\:bg-slate-700:hover {
   color: #0f172a !important;
 }
 
-/* 7. Typography (Headings, Body, Labels) */
+
 html:not(.dark) .text-slate-100,
 html:not(.dark) .text-slate-200,
 html.light .text-slate-100,
@@ -182,7 +182,7 @@ html[data-theme="light"] .text-slate-500 {
   color: #64748b !important;
 }
 
-/* 8. Borders & Dividers */
+
 html:not(.dark) .border-slate-800,
 html:not(.dark) .border-slate-800\/80,
 html:not(.dark) .border-slate-800\/60,
@@ -219,14 +219,14 @@ html[data-theme="light"] .divide-slate-800\/50 > :not([hidden]) ~ :not([hidden])
   border-color: #e2e8f0 !important;
 }
 
-/* 9. Active Notification in Light Mode */
+
 html:not(.dark) .bg-indigo-950\/30,
 html.light .bg-indigo-950\/30,
 html[data-theme="light"] .bg-indigo-950\/30 {
   background-color: #eff6ff !important;
 }
 
-/* Custom Scrollbar */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -245,9 +245,9 @@ html[data-theme="light"] .bg-indigo-950\/30 {
   background: rgba(148, 163, 184, 0.5);
 }
 
-/* ==========================================================================
-   MODAL SMOOTH ANIMATIONS & KEYFRAMES
-   ========================================================================== */
+
+
+
 @keyframes modalBackdropFadeIn {
   0% {
     opacity: 0;
@@ -284,10 +284,10 @@ html[data-theme="light"] .bg-indigo-950\/30 {
   will-change: transform, opacity;
 }
 
-/* ==========================================================================
-   COMPLETELY HIDDEN SCROLLBAR UTILITY
-   Allows smooth mousewheel/touch scrolling while keeping the scrollbar 100% invisible
-   ========================================================================== */
+
+
+
+
 .sidebar-scroll,
 .no-scrollbar {
   overflow-y: auto !important;

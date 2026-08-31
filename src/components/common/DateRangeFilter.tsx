@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 
 interface DateRangeFilterProps {
-  value: string 
+  value: string
   onChange: (value: string) => void
   label?: string
 }

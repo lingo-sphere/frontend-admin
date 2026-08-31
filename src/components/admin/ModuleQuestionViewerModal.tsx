@@ -71,7 +71,7 @@ export function ModuleQuestionViewerModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop">
       <div className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-800 dark:bg-slate-900 animate-modal-content">
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 dark:bg-slate-950/70 p-5 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600/15 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 ring-1 ring-indigo-500/30">
@@ -92,7 +92,7 @@ export function ModuleQuestionViewerModal({
           </button>
         </div>
 
-        {/* Content */}
+        {}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -173,7 +173,7 @@ export function ModuleQuestionViewerModal({
                       </div>
                     </div>
 
-                    {/* Options */}
+                    {}
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {q.options.map((opt, optIdx) => {
                         const letter = letters[optIdx]
@@ -214,7 +214,7 @@ export function ModuleQuestionViewerModal({
                       })}
                     </div>
 
-                    {/* Explanation */}
+                    {}
                     {isEditing ? (
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
@@ -247,7 +247,7 @@ export function ModuleQuestionViewerModal({
           )}
         </div>
 
-        {/* Footer */}
+        {}
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
             Tổng cộng: <strong className="text-slate-900 dark:text-white">{items.length}</strong> câu hỏi.

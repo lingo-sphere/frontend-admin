@@ -48,7 +48,7 @@ export function R2MediaUploader({
   const handleFileSelect = async (file: File) => {
     if (!file) return
 
-    // Validate size: 200MB for video, 10MB for image
+
     const maxSize = isVideo ? 200 * 1024 * 1024 : 10 * 1024 * 1024
     if (file.size > maxSize) {
       setError(
@@ -64,7 +64,7 @@ export function R2MediaUploader({
     setUploadProgress(10)
 
     try {
-      // Simulate progress increments for responsive UX
+
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => (prev >= 85 ? prev : prev + 15))
       }, 300)
@@ -82,7 +82,7 @@ export function R2MediaUploader({
       onChange(uploadedUrl)
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Upload to Cloudflare R2 failed'
-      // Fallback local object URL or mock R2 url for local dev if backend R2 offline
+
       const fallbackUrl = URL.createObjectURL(file)
       onChange(fallbackUrl)
       setError(null)
@@ -108,7 +108,7 @@ export function R2MediaUploader({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {/* Label and mode switch */}
+      {}
       <div className="flex items-center justify-between">
         {label && (
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -133,7 +133,7 @@ export function R2MediaUploader({
       </div>
 
       {manualInputMode ? (
-        /* Manual URL / YouTube Input */
+
         <div className="flex gap-2">
           <input
             type="text"
@@ -169,7 +169,7 @@ export function R2MediaUploader({
           )}
         </div>
       ) : (
-        /* Cloudflare R2 Direct File Uploader */
+
         <div>
           <input
             ref={fileInputRef}
@@ -184,14 +184,14 @@ export function R2MediaUploader({
           />
 
           {value ? (
-            /* Uploaded Preview State */
+
             <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/40 dark:bg-emerald-950/20">
               <div
                 onClick={() => setShowPreviewModal(true)}
                 className="flex items-center gap-3 overflow-hidden cursor-pointer group flex-1"
                 title="Bấm để xem trước video/ảnh đã tải lên"
               >
-                {/* Media Preview Box */}
+                {}
                 {!isVideo && (
                   <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-black/5 dark:border-slate-800 relative">
                     <img src={value} alt="Preview" className="h-full w-full object-cover group-hover:opacity-90 transition-opacity" />
@@ -218,7 +218,7 @@ export function R2MediaUploader({
                 </div>
               </div>
 
-              {/* Actions */}
+              {}
               <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
                 <button
                   type="button"
@@ -261,7 +261,7 @@ export function R2MediaUploader({
               </div>
             </div>
           ) : isUploading ? (
-            /* Uploading Progress State */
+
             <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 dark:border-indigo-900/40 dark:bg-indigo-950/20 space-y-2">
               <div className="flex items-center justify-between text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                 <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ export function R2MediaUploader({
               </div>
             </div>
           ) : (
-            /* Drag & Drop Idle Zone */
+
             <div
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => {
@@ -326,7 +326,7 @@ export function R2MediaUploader({
         </div>
       )}
 
-      {/* Media Preview Modal */}
+      {}
       {showPreviewModal && value && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"

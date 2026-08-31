@@ -69,7 +69,7 @@ export function ExamsPage() {
         setExams(data)
       }
     } catch {
-      // Keep fallback exams
+
     } finally {
       setIsLoading(false)
     }
@@ -151,7 +151,7 @@ export function ExamsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -180,10 +180,10 @@ export function ExamsPage() {
         </div>
       </div>
 
-      {/* Top Overview KPI Cards */}
+      {}
       <ExamStatsOverview stats={stats} />
 
-      {/* Main Exam List Table */}
+      {}
       <ExamListTable
         exams={exams}
         searchQuery={searchQuery}
@@ -194,7 +194,7 @@ export function ExamsPage() {
         onDeleteExam={handleDeleteExam}
       />
 
-      {/* Create Exam Modal */}
+      {}
       <CreateExamModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}

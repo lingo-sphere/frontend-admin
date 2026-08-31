@@ -52,11 +52,11 @@ export function App() {
             triggerKickout(data.message)
           }
         } catch {
-          // ignore
+
         }
       }
     } catch {
-      // EventSource fallback
+
     }
 
     const handleSessionTerminated = (e: Event) => {

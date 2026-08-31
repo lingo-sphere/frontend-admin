@@ -147,10 +147,10 @@ export function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Overview KPI Cards */}
+      {}
       <AdminUserStatsOverview stats={stats} />
 
-      {/* Main DataTable */}
+      {}
       <DataTable<AdminUser>
         title="Quản Trị Viên & Giảng Viên"
         subtitle="Quản lý đội ngũ quản trị, cấp tài khoản giảng viên và phân quyền vận hành"
@@ -199,7 +199,7 @@ export function AdminUsersPage() {
         }}
       />
 
-      {/* Confirmation Modal for Ban/Unban */}
+      {}
       <ConfirmModal
         isOpen={Boolean(modalUser && modalAction)}
         onClose={() => {

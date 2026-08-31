@@ -1,22 +1,13 @@
+import { useState, useEffect } from 'react'
+import { Search, Plus, RotateCcw, Layers3 } from 'lucide-react'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { toast } from '@/store/toast-store'
 import type { FlashcardDeck } from '@/types/api.types'
-import {
-  BookOpen,
-  Layers3,
-  Plus,
-  RefreshCw,
-  Search,
-  Star,
-  Trash2,
-  Users
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { PublicDeckCard } from '@/components/vocabulary/PublicDeckCard'
+import { CreatePublicDeckModal } from '@/components/vocabulary/CreatePublicDeckModal'
 
 export function PublicDecksPage() {
-  const { t } = useTranslation()
   const [decks, setDecks] = useState<FlashcardDeck[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -32,8 +23,7 @@ export function PublicDecksPage() {
       if (realDecks) {
         setDecks(realDecks)
       }
-    } catch (err) {
-      console.warn('Error fetching public decks from backend:', err)
+    } catch {
       setDecks([])
     } finally {
       setIsLoading(false)
@@ -69,153 +59,95 @@ export function PublicDecksPage() {
 
   const confirmDelete = () => {
     if (!deleteTargetId) return
-    setDecks(decks.filter((d) => d._id !== deleteTargetId))
+    setDecks(decks.filter((d) => (d._id || '') !== deleteTargetId))
     toast.success('Đã xóa bộ thẻ công khai')
     setDeleteTargetId(null)
   }
 
-  const filteredDecks = decks.filter((d) =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase())),
+  const filteredDecks = decks.filter(
+    (d) =>
+      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   return (
-    <main className="page-content">
-      <div className="page-heading">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="eyebrow">
-            <span className="eyebrow-line" />
-            COMMUNITY & KNOWLEDGE DECKS
-          </div>
-          <h1 className="page-title">Bộ Thẻ Flashcard Công Khai</h1>
-          <p className="page-subtitle">
-            Quản lý, kiểm duyệt và phát hành các bộ thẻ từ vựng cộng đồng và hệ thống
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+            <Layers3 className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+            <span>Bộ Thẻ Từ Vựng Công Khai (Public Decks)</span>
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Quản lý các bộ thẻ từ vựng chuẩn do hệ thống hoặc giáo viên xuất bản cho toàn bộ cộng đồng
           </p>
         </div>
 
-        <div className="heading-actions">
-          <button className="icon-button" onClick={fetchDecks} title="Làm mới dữ liệu" type="button">
-            <RefreshCw className={`icon ${isLoading ? 'animate-spin text-indigo-400' : ''}`} />
-          </button>
-          <button className="primary-button" type="button" onClick={() => setShowAddModal(true)}>
-            <Plus className="icon" />
-            <span>Tạo bộ thẻ mới</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="table-toolbar" style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'center' }}>
-        <div className="search-box" style={{ flex: 1, minWidth: '240px' }}>
-          <Search className="icon" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm bộ thẻ Flashcard công khai..."
-            style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit', outline: 'none', fontSize: '13px' }}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredDecks.map((deck) => (
-          <div
-            key={deck._id}
-            className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 hover:border-slate-700 transition-all flex flex-col justify-between"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchDecks}
+            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            title="Làm mới"
           >
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1.5">
-                  <Layers3 className="w-3.5 h-3.5" />
-                  {deck.is_system ? 'Hệ thống' : 'Cộng đồng'}
-                </span>
-                <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
-                  <Star className="w-3.5 h-3.5 fill-amber-400" />
-                  <span>{deck.rating || 5.0}</span>
-                </div>
-              </div>
-
-              <h3 className="text-base font-bold text-slate-100 mb-1.5">{deck.title}</h3>
-              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed mb-4">
-                {deck.description || 'Chưa có mô tả cho bộ thẻ này.'}
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <BookOpen className="w-3.5 h-3.5 text-slate-500" />
-                  {deck.total_cards} thẻ
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3.5 h-3.5 text-slate-500" />
-                  {deck.enrolled_count?.toLocaleString() || 0} học
-                </span>
-              </div>
-
-              <button
-                className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors"
-                title="Xóa bộ thẻ"
-                onClick={() => setDeleteTargetId(deck._id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
+            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tạo bộ thẻ công khai</span>
+          </button>
+        </div>
       </div>
 
-      {showAddModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', maxWidth: '440px', width: '100%' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>Tạo bộ thẻ Flashcard công khai</h3>
-            <form onSubmit={handleCreateDeck}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Tên bộ thẻ</label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="VD: 500 từ vựng TOEIC thường gặp..."
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--surface-muted)', border: '1px solid var(--border)', color: 'inherit', fontSize: '13px' }}
-                />
-              </div>
+      <div className="relative max-w-md">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Tìm kiếm bộ thẻ theo tên, mô tả..."
+          className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
+        />
+      </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Mô tả ngắn</label>
-                <textarea
-                  rows={3}
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Mô tả nội dung và mục tiêu học..."
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--surface-muted)', border: '1px solid var(--border)', color: 'inherit', fontSize: '13px' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'transparent', color: 'inherit' }}>
-                  Hủy
-                </button>
-                <button type="submit" className="primary-button" style={{ padding: '8px 16px' }}>
-                  Tạo ngay
-                </button>
-              </div>
-            </form>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredDecks.length === 0 ? (
+          <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
+            Không tìm thấy bộ thẻ công khai nào
           </div>
-        </div>
-      )}
+        ) : (
+          filteredDecks.map((deck) => (
+            <PublicDeckCard
+              key={deck._id || ''}
+              deck={deck}
+              onDelete={(id) => setDeleteTargetId(id)}
+            />
+          ))
+        )}
+      </div>
+
+      <CreatePublicDeckModal
+        isOpen={showAddModal}
+        title={newTitle}
+        description={newDesc}
+        onTitleChange={setNewTitle}
+        onDescriptionChange={setNewDesc}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleCreateDeck}
+      />
 
       <ConfirmModal
         isOpen={Boolean(deleteTargetId)}
         onClose={() => setDeleteTargetId(null)}
         onConfirm={confirmDelete}
-        title="Xóa bộ thẻ Flashcard?"
-        description="Bộ thẻ công khai này sẽ bị gỡ khỏi hệ thống và người dùng sẽ không thể truy cập được nữa."
+        title="Xác nhận xóa bộ thẻ công khai?"
+        message="Học viên đang học bộ thẻ này sẽ không thể tiếp tục ôn tập bằng bộ thẻ này nữa."
         confirmText="Xóa vĩnh viễn"
-        cancelText="Hủy"
+        cancelText="Hủy bỏ"
         variant="danger"
       />
-    </main>
+    </div>
   )
 }

@@ -21,13 +21,13 @@ export function PermissionsPage() {
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Modals state
+
   const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [editingPerm, setEditingPerm] = useState<Permission | null>(null)
   const [deletePermId, setDeletePermId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Assign user role state
+
   const [users, setUsers] = useState<UserProfile[]>([])
   const [userSearch, setUserSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
@@ -69,7 +69,7 @@ export function PermissionsPage() {
     loadData()
   }, [])
 
-  // Permission CRUD Handlers
+
   const handleOpenCreatePerm = () => {
     setEditingPerm(null)
     setIsPermModalOpen(true)
@@ -122,7 +122,7 @@ export function PermissionsPage() {
     }
   }
 
-  // Assign user role
+
   const handleAssignRole = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) {
@@ -151,7 +151,7 @@ export function PermissionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
@@ -164,7 +164,7 @@ export function PermissionsPage() {
         </div>
       </div>
 
-      {/* Tabs Navigation (Tab 2 và Tab 3) */}
+      {}
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-fit">
         <button
           onClick={() => setActiveTab('permissions')}
@@ -191,7 +191,7 @@ export function PermissionsPage() {
         </button>
       </div>
 
-      {/* Tab 1: Permissions List (Screenshot 1) */}
+      {}
       {activeTab === 'permissions' && (
         <PermissionsListTab
           permissions={permissions}
@@ -203,7 +203,7 @@ export function PermissionsPage() {
         />
       )}
 
-      {/* Tab 2: Assign Role */}
+      {}
       {activeTab === 'assign' && (
         <AssignRoleTab
           users={users}
@@ -219,7 +219,7 @@ export function PermissionsPage() {
         />
       )}
 
-      {/* Permission Edit / Create Modal */}
+      {}
       <PermissionModal
         isOpen={isPermModalOpen}
         onClose={() => setIsPermModalOpen(false)}
@@ -229,7 +229,7 @@ export function PermissionsPage() {
         availableModules={availableModules}
       />
 
-      {/* Confirm Delete Permission Modal */}
+      {}
       <ConfirmModal
         isOpen={!!deletePermId}
         onClose={() => setDeletePermId(null)}

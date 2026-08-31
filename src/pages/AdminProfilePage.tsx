@@ -1,17 +1,16 @@
-import { useState, useEffect, useMemo } from 'react'
-import { ChevronLeft, Loader2, CheckCircle2 } from 'lucide-react'
+import { authService } from '@/services/auth.service'
+import { userService } from '@/services/user.service'
 import { useAdminStore } from '@/store/admin-store'
 import { useAuthStore } from '@/store/auth-store'
-import { userService } from '@/services/user.service'
-import { authService } from '@/services/auth.service'
-import { mediaService } from '@/services/media.service'
 import { toast } from '@/store/toast-store'
+import { CheckCircle2, ChevronLeft, Loader2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
-import type { AdminProfileData } from '@/helpers/admin-profile.helper'
-import { evaluatePasswordStrength } from '@/helpers/admin-profile.helper'
 import { AdminProfileHeader } from '@/components/admin-profile/AdminProfileHeader'
 import { AdminProfileInfoForm } from '@/components/admin-profile/AdminProfileInfoForm'
 import { AdminProfileSecurityForm } from '@/components/admin-profile/AdminProfileSecurityForm'
+import type { AdminProfileData } from '@/helpers/admin-profile.helper'
+import { evaluatePasswordStrength } from '@/helpers/admin-profile.helper'
 
 export function AdminProfilePage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
@@ -34,7 +33,7 @@ export function AdminProfilePage() {
     confirmPassword: '',
   })
 
-  // 3-Level Password Strength Evaluator (Yếu / Trung bình / Mạnh)
+
   const passwordStrength = useMemo(() => {
     return evaluatePasswordStrength(form.newPassword)
   }, [form.newPassword])
@@ -116,7 +115,7 @@ export function AdminProfilePage() {
 
     setIsSaving(true)
     try {
-      // 1. Password change if requested
+
       if (form.newPassword) {
         if (!form.currentPassword) {
           toast.error('Vui lòng nhập mật khẩu hiện tại để xác nhận đổi mật khẩu')
@@ -141,7 +140,7 @@ export function AdminProfilePage() {
         toast.success('Đổi mật khẩu bảo mật thành công!')
       }
 
-      // 2. Profile basic info update
+
       await userService.updateMyProfile({
         full_name: form.name.trim(),
         phone_number: form.phone.trim(),
@@ -188,7 +187,7 @@ export function AdminProfilePage() {
 
   return (
     <div className="w-full px-[10px] space-y-6">
-      {/* Top Header */}
+      {}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -210,7 +209,7 @@ export function AdminProfilePage() {
         </div>
       </div>
 
-      {/* Profile Overview Card with Interactive Avatar */}
+      {}
       <AdminProfileHeader
         profileData={profileData}
         bio={form.bio}
@@ -218,10 +217,10 @@ export function AdminProfilePage() {
         onAvatarChange={handleAvatarChange}
       />
 
-      {/* Main Inline Editable Profile Form in 2-Column Grid */}
+      {}
       <form onSubmit={handleSaveProfile} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Column 1: Personal & Contact Information */}
+          {}
           <AdminProfileInfoForm
             name={form.name}
             email={profileData.email}
@@ -232,7 +231,7 @@ export function AdminProfilePage() {
             onBioChange={(val) => setForm((prev) => ({ ...prev, bio: val }))}
           />
 
-          {/* Column 2: Security & Password Change */}
+          {}
           <AdminProfileSecurityForm
             currentPassword={form.currentPassword}
             newPassword={form.newPassword}
@@ -244,7 +243,7 @@ export function AdminProfilePage() {
           />
         </div>
 
-        {/* Action Bottom Bar */}
+        {}
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"

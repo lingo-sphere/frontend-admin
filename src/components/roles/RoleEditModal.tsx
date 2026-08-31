@@ -41,7 +41,7 @@ export function RoleEditModal({
     }
   }, [editingRole, isOpen])
 
-  // Phân nhóm quyền theo Module
+
   const groupedPermissions = useMemo(() => {
     const map: Record<string, Permission[]> = {}
     for (const perm of allPermissions) {
@@ -54,7 +54,7 @@ export function RoleEditModal({
 
   const moduleNames = useMemo(() => Object.keys(groupedPermissions).sort(), [groupedPermissions])
 
-  // Mở rộng tất cả module mặc định khi mở modal
+
   useEffect(() => {
     if (isOpen) {
       const initialExpanded: Record<string, boolean> = {}
@@ -82,10 +82,10 @@ export function RoleEditModal({
     const modPermIds = modPerms.map((p) => p._id)
 
     if (currentChecked) {
-      // Đang bật -> Tắt tất cả quyền trong module này
+
       setSelectedPermIds((prev) => prev.filter((id) => !modPermIds.includes(id)))
     } else {
-      // Đang tắt -> Bật tất cả quyền trong module này
+
       setSelectedPermIds((prev) => Array.from(new Set([...prev, ...modPermIds])))
     }
   }
@@ -124,7 +124,7 @@ export function RoleEditModal({
         className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col h-[85vh] max-h-[850px] animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
+        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
@@ -147,11 +147,11 @@ export function RoleEditModal({
           </button>
         </div>
 
-        {/* Modal Form */}
+        {}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* Scrollable Body - ONLY 1 SCROLLBAR IN MODAL */}
+          {}
           <div className="flex-1 overflow-y-auto p-6 space-y-5">
-            {/* Top Form Grid */}
+            {}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -223,7 +223,7 @@ export function RoleEditModal({
             </div>
           </div>
 
-          {/* Permissions Accordion Section */}
+          {}
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -247,7 +247,7 @@ export function RoleEditModal({
               </div>
             </div>
 
-            {/* Accordion Module List (Unified Scroll) */}
+            {}
             <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-800 p-2 bg-slate-50/50 dark:bg-slate-950/40">
               {moduleNames.map((mod) => {
                 const modPerms = groupedPermissions[mod] || []
@@ -273,7 +273,7 @@ export function RoleEditModal({
                     key={mod}
                     className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs"
                   >
-                    {/* Module Accordion Header */}
+                    {}
                     <div className="flex items-center justify-between px-4 py-3 bg-slate-100/70 dark:bg-slate-800/60 select-none">
                       <button
                         type="button"
@@ -291,7 +291,7 @@ export function RoleEditModal({
                         </span>
                       </button>
 
-                      {/* Master Switch for this module */}
+                      {}
                       <div className="flex items-center gap-2 pl-3">
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
                           {isAllSelected ? 'Bỏ chọn hết' : 'Chọn tất cả'}
@@ -312,7 +312,7 @@ export function RoleEditModal({
                       </div>
                     </div>
 
-                    {/* Module Permissions Grid (2 columns) */}
+                    {}
                     {isExpanded && (
                       <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/80">
                         {filteredModPerms.map((perm) => {
@@ -328,7 +328,7 @@ export function RoleEditModal({
                                   : 'bg-slate-50/50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                               }`}
                             >
-                              {/* Toggle Switch */}
+                              {}
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -346,7 +346,7 @@ export function RoleEditModal({
                                 />
                               </button>
 
-                              {/* Permission Info */}
+                              {}
                               <div className="flex-1 min-w-0">
                                 <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                                   {perm.name}
@@ -376,7 +376,7 @@ export function RoleEditModal({
           </div>
         </div>
 
-        {/* Sticky Modal Footer */}
+        {}
           <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 backdrop-blur-xs shrink-0">
             <span className="text-xs text-slate-500 dark:text-slate-400">
               Đã chọn <strong className="text-blue-600 dark:text-blue-400">{selectedPermIds.length}</strong> / {allPermissions.length} quyền

@@ -122,7 +122,7 @@ export function PostHogAnalyticsTab({
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Banner */}
+      {}
       <div className="bg-gradient-to-r from-indigo-900 via-indigo-700 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-500/10 relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
 
@@ -164,7 +164,7 @@ export function PostHogAnalyticsTab({
           </div>
         </div>
 
-        {/* Quick KPI Summary Cards */}
+        {}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/15">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <div className="flex items-center gap-2 text-teal-200 text-xs font-semibold">
@@ -208,9 +208,9 @@ export function PostHogAnalyticsTab({
         </div>
       </div>
 
-      {/* 2. Top Events & Top Pages */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Events */}
+        {}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -246,7 +246,7 @@ export function PostHogAnalyticsTab({
           </div>
         </div>
 
-        {/* Top Pages */}
+        {}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -286,7 +286,7 @@ export function PostHogAnalyticsTab({
         </div>
       </div>
 
-      {/* 3. Session Replay Videos with Pagination */}
+      {}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2.5">
@@ -365,7 +365,7 @@ export function PostHogAnalyticsTab({
           </div>
         )}
 
-        {/* Replays Pagination Bar */}
+        {}
         {totalReplayPages > 1 && (
           <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
             <span className="text-slate-500">
@@ -403,9 +403,9 @@ export function PostHogAnalyticsTab({
         )}
       </div>
 
-      {/* 4. Live Event Stream with Server-side Pagination & Search */}
+      {}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 relative">
-        {/* Loading Overlay */}
+        {}
         {isLoading && (
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs rounded-3xl z-20 flex items-center justify-center">
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
@@ -453,7 +453,7 @@ export function PostHogAnalyticsTab({
               )}
             </div>
 
-            {/* Page Size Selector */}
+            {}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span>{isVi ? 'Số dòng:' : 'Page size:'}</span>
               <select
@@ -523,7 +523,7 @@ export function PostHogAnalyticsTab({
           </table>
         </div>
 
-        {/* Live Events Server-side Pagination Controls */}
+        {}
         <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
           <span className="text-slate-500">
             {isVi

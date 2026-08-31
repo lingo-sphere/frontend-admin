@@ -62,7 +62,7 @@ export function CustomSelect({
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
-      {/* Trigger Button */}
+      {}
       <button
         type="button"
         disabled={disabled}
@@ -107,7 +107,7 @@ export function CustomSelect({
         />
       </button>
 
-      {/* Dropdown Menu Popup with Strong Dark Mode Contrast */}
+      {}
       {isOpen && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[220px] max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 shadow-2xl shadow-slate-900/15 dark:shadow-black/90 ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
           <div className="space-y-1">

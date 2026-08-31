@@ -142,7 +142,7 @@ export function VocabularyPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -178,7 +178,7 @@ export function VocabularyPage() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {}
       <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 w-fit">
         <button
           onClick={() => setActiveTab('words')}
@@ -217,7 +217,7 @@ export function VocabularyPage() {
         </button>
       </div>
 
-      {/* Tab: Words DataTable */}
+      {}
       {activeTab === 'words' && (
         <DataTable<LexicalItem>
           columns={columns}
@@ -246,13 +246,13 @@ export function VocabularyPage() {
         />
       )}
 
-      {/* Tab: Topics */}
+      {}
       {activeTab === 'topics' && <VocabularyTopicsTab topics={topics} />}
 
-      {/* Tab: Flashcard Decks */}
+      {}
       {activeTab === 'decks' && <VocabularyDecksTab decks={decks} />}
 
-      {/* Delete Modal */}
+      {}
       <ConfirmModal
         isOpen={Boolean(deleteWordId)}
         onClose={() => setDeleteWordId(null)}

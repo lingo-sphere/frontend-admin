@@ -267,7 +267,7 @@ export function CourseBasicInfoTab({
         </div>
       </div>
 
-      {/* Course Final Test Section */}
+      {}
       <div className="rounded-2xl border border-indigo-500/20 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
@@ -286,7 +286,7 @@ export function CourseBasicInfoTab({
             </div>
           </div>
 
-          {/* Passing Score Input */}
+          {}
           <div className="flex items-center gap-1.5 self-start sm:self-auto bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
             <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
               {isVi ? 'Ngưỡng tốt nghiệp:' : 'Pass score:'}
@@ -307,7 +307,7 @@ export function CourseBasicInfoTab({
           </div>
         </div>
 
-        {/* Final Test Upload & Creation Tools */}
+        {}
         <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 sm:p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -380,7 +380,7 @@ export function CourseBasicInfoTab({
         </div>
       </div>
 
-      {/* AI Modal for Course Final Test */}
+      {}
       <AiQuizGeneratorModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
@@ -389,7 +389,7 @@ export function CourseBasicInfoTab({
         moduleDescription={`Mục tiêu: ${formData.target_score} điểm. ${formData.description || ''}`}
       />
 
-      {/* Excel Importer Modal for Course Final Test */}
+      {}
       <ExcelQuizImporterModal
         isOpen={isExcelModalOpen}
         onClose={() => setIsExcelModalOpen(false)}
@@ -397,7 +397,7 @@ export function CourseBasicInfoTab({
         moduleTitle={`Final Test Khóa Học: ${formData.title || 'Khóa học'}`}
       />
 
-      {/* Questions Viewer for Course Final Test */}
+      {}
       <ModuleQuestionViewerModal
         isOpen={isViewerModalOpen}
         onClose={() => setIsViewerModalOpen(false)}

@@ -16,7 +16,7 @@ export function RolesPage() {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Modals state
+
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [deleteRoleId, setDeleteRoleId] = useState<string | null>(null)
@@ -65,7 +65,7 @@ export function RolesPage() {
     }
   }
 
-  // Role CRUD Handlers
+
   const handleOpenCreateRole = () => {
     setEditingRole(null)
     setIsRoleModalOpen(true)
@@ -119,7 +119,7 @@ export function RolesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
@@ -132,7 +132,7 @@ export function RolesPage() {
         </div>
       </div>
 
-      {/* Roles List Table (Screenshot 2) */}
+      {}
       <RolesListTab
         roles={roles}
         permissions={permissions}
@@ -144,7 +144,7 @@ export function RolesPage() {
         isLoading={isLoading}
       />
 
-      {/* Role Edit / Create Modal (Screenshots 3 & 4) */}
+      {}
       <RoleEditModal
         isOpen={isRoleModalOpen}
         onClose={() => setIsRoleModalOpen(false)}
@@ -154,7 +154,7 @@ export function RolesPage() {
         isSubmitting={isSubmitting}
       />
 
-      {/* Confirm Delete Role Modal */}
+      {}
       <ConfirmModal
         isOpen={!!deleteRoleId}
         onClose={() => setDeleteRoleId(null)}

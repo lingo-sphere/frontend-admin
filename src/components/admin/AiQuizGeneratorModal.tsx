@@ -120,7 +120,7 @@ export function AiQuizGeneratorModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop">
       <div className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-800 dark:bg-slate-900 animate-modal-content">
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 dark:bg-slate-950/70 p-5 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400 ring-1 ring-violet-500/30">
@@ -147,9 +147,9 @@ export function AiQuizGeneratorModal({
           </button>
         </div>
 
-        {/* Body Content */}
+        {}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Controls Bar */}
+          {}
           <div className="rounded-2xl border border-violet-200/80 bg-violet-50/60 dark:border-violet-900/50 dark:bg-violet-950/20 p-5 space-y-4 shadow-xs">
             <div>
               <label className="mb-1.5 block text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -219,7 +219,7 @@ export function AiQuizGeneratorModal({
             </div>
           </div>
 
-          {/* Questions Preview Section */}
+          {}
           {generatedQuestions.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -290,7 +290,7 @@ export function AiQuizGeneratorModal({
                         </div>
                       </div>
 
-                      {/* Options Grid */}
+                      {}
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         {q.options.map((opt, optIdx) => {
                           const letter = letters[optIdx]
@@ -332,7 +332,7 @@ export function AiQuizGeneratorModal({
                         })}
                       </div>
 
-                      {/* Explanation */}
+                      {}
                       {q.explanation && (
                         <div className="rounded-xl bg-slate-100/80 p-2.5 text-[11px] text-slate-700 dark:bg-slate-900 dark:text-slate-300 border border-slate-200/60 dark:border-slate-800">
                           <span className="font-bold text-violet-600 dark:text-violet-400">💡 Giải thích: </span>
@@ -347,7 +347,7 @@ export function AiQuizGeneratorModal({
           )}
         </div>
 
-        {/* Footer */}
+        {}
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
             {generatedQuestions.length > 0

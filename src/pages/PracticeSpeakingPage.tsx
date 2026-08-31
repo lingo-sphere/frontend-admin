@@ -1,403 +1,155 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import {
-  Plus,
-  RotateCcw,
-  Trash2,
-  Mic,
-} from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, RotateCcw, Search, Mic } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 import type { SpeakingExercise } from '@/types/api.types'
-
-const INITIAL_SPEAKING_EXERCISES: SpeakingExercise[] = [
-  {
-    _id: 'spk_01',
-    title: 'Luyện Phát Âm: Introduce Yourself in an Interview',
-    prompt_text: 'Good morning, my name is Alex and I have three years of experience in digital marketing.',
-    phonetic_guide: '/ɡʊd ˈmɔːnɪŋ maɪ neɪm ɪz .../',
-    difficulty: 'BEGINNER',
-  },
-  {
-    _id: 'spk_02',
-    title: 'Mô Tả Tranh TOEIC Speaking Part 2: Working at Coffee Shop',
-    prompt_text: 'In this picture, I can see a woman sitting by the window with her laptop and a cup of coffee.',
-    phonetic_guide: '/ɪn ðɪs ˈpɪktʃər aɪ kæn siː .../',
-    difficulty: 'INTERMEDIATE',
-  },
-  {
-    _id: 'spk_03',
-    title: 'Trình Bày Ý Kiến TOEIC Speaking Part 5: Remote Work Policy',
-    prompt_text: 'In my opinion, offering flexible working hours boosts employee satisfaction and overall productivity.',
-    phonetic_guide: '/ɪn maɪ əˈpɪnjən ˈɒfərɪŋ .../',
-    difficulty: 'ADVANCED',
-  },
-]
+import { PracticeSpeakingCard } from '@/components/practice/PracticeSpeakingCard'
+import { CreateSpeakingModal } from '@/components/practice/CreateSpeakingModal'
+import { INITIAL_SPEAKING_EXERCISES } from '@/helpers/practice.helper'
 
 export function PracticeSpeakingPage() {
-  const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
-
-  const [speakingList, setSpeakingList] = useState<SpeakingExercise[]>(INITIAL_SPEAKING_EXERCISES)
-  const [filterTitle, setFilterTitle] = useState<string>('')
-  const [filterDifficulty, setFilterDifficulty] = useState<string>('ALL')
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-
+  const [exercises, setExercises] = useState<SpeakingExercise[]>(INITIAL_SPEAKING_EXERCISES)
+  const [isLoading, setIsLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
-  const [showAddModal, setShowAddModal] = useState<boolean>(false)
-  const [newTitle, setNewTitle] = useState<string>('')
-  const [newPrompt, setNewPrompt] = useState<string>('')
-  const [newPhonetic, setNewPhonetic] = useState<string>('')
-  const [newDifficulty, setNewDifficulty] = useState<string>('INTERMEDIATE')
+  const [showAddModal, setShowAddModal] = useState(false)
 
-  const loadData = async () => {
+  const [newTitle, setNewTitle] = useState('')
+  const [newType, setNewType] = useState('READ_ALOUD')
+  const [newSentence, setNewSentence] = useState('')
+  const [newAccuracy, setNewAccuracy] = useState(75)
+
+  const fetchExercises = async () => {
     setIsLoading(true)
     try {
-      const list = await practiceService.getAllSpeakingExercises()
-      if (list && Array.isArray(list) && list.length > 0) {
-        setSpeakingList(list)
+      const data = await practiceService.getAllSpeakingExercises()
+      if (data && data.length > 0) {
+        setExercises(data)
       }
-    } catch (err) {
-      console.warn('API warning:', err)
+    } catch {
+
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    loadData()
+    fetchExercises()
   }, [])
 
-  const handleSearch = (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setSearchQuery(filterTitle.trim().toLowerCase())
-  }
-
-  const handleReset = () => {
-    setFilterTitle('')
-    setFilterDifficulty('ALL')
-    setSearchQuery('')
-  }
-
-  const filteredList = useMemo(() => {
-    return speakingList.filter((s) => {
-      const matchSearch =
-        !searchQuery ||
-        s.title.toLowerCase().includes(searchQuery) ||
-        s.prompt_text.toLowerCase().includes(searchQuery)
-      const matchDiff = filterDifficulty === 'ALL' || s.difficulty === filterDifficulty
-      return matchSearch && matchDiff
-    })
-  }, [speakingList, searchQuery, filterDifficulty])
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTitle.trim()) {
-      toast.error('Vui lòng nhập tiêu đề bài luyện nói')
-      return
-    }
-
-    try {
-      const created: SpeakingExercise = {
-        _id: `spk_${Date.now()}`,
-        title: newTitle,
-        prompt_text: newPrompt || 'Sample prompt text for speaking evaluation.',
-        phonetic_guide: newPhonetic || '/sample phonetic/',
-        difficulty: newDifficulty,
-      }
-      setSpeakingList([created, ...speakingList])
-      toast.success('Tạo bài luyện nói AI thành công!')
-      setShowAddModal(false)
-      setNewTitle('')
-      setNewPrompt('')
-      setNewPhonetic('')
-    } catch {
-      toast.error('Tạo mới thất bại')
-    }
-  }
-
-  const confirmDelete = () => {
+  const handleDelete = () => {
     if (!deleteTargetId) return
-    setSpeakingList(speakingList.filter((i) => i._id !== deleteTargetId))
-    toast.success('Đã xóa bài luyện nói thành công')
+    setExercises((prev) => prev.filter((e) => e._id !== deleteTargetId))
+    toast.success('Đã xóa bài luyện nói')
     setDeleteTargetId(null)
   }
 
-  const getDifficultyBadge = (diff: string) => {
-    switch (diff?.toUpperCase()) {
-      case 'BEGINNER':
-        return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
-      case 'ADVANCED':
-        return 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20'
-      default:
-        return 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20'
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newTitle.trim() || !newSentence.trim()) return
+
+    const newItem: SpeakingExercise = {
+      _id: `spk_${Date.now()}`,
+      title: newTitle,
+      prompt_text: newSentence,
+      difficulty: 'INTERMEDIATE',
     }
+    setExercises([newItem, ...exercises])
+    toast.success('Tạo bài luyện nói mới thành công!')
+    setShowAddModal(false)
+    setNewTitle('')
+    setNewSentence('')
   }
 
+  const filteredExercises = exercises.filter(
+    (e) =>
+      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.prompt_text && e.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
+
   return (
-    <div className="space-y-4">
-      {/* 1. Filter Card (Roles Page Style) */}
-      <form
-        onSubmit={handleSearch}
-        className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs"
-      >
-        <div className="flex flex-wrap items-center gap-6">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-16 text-right">
-              Tiêu đề:
-            </span>
-            <input
-              type="text"
-              value={filterTitle}
-              onChange={(e) => setFilterTitle(e.target.value)}
-              placeholder="nhập đề bài luyện nói..."
-              className="h-9 w-60 sm:w-80 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 text-right">
-              Cấp độ:
-            </span>
-            <select
-              value={filterDifficulty}
-              onChange={(e) => setFilterDifficulty(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-all"
-            >
-              <option value="ALL">Tất cả cấp độ</option>
-              <option value="BEGINNER">Cơ bản (Beginner)</option>
-              <option value="INTERMEDIATE">Trung cấp (Intermediate)</option>
-              <option value="ADVANCED">Nâng cao (Advanced)</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2.5 ml-auto">
-            <button
-              type="submit"
-              className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            >
-              Tìm kiếm
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="h-9 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            >
-              Làm lại
-            </button>
-          </div>
-        </div>
-      </form>
-
-      {/* 2. Main Data Table Card (Roles Page Style) */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        {/* Table Top Bar */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            Danh sách Bài Luyện Nói AI ({filteredList.length})
-          </h3>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 h-8.5 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-xs transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm mới</span>
-            </button>
-
-            <button
-              onClick={loadData}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-              title="Làm mới"
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
-            </button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+            <Mic className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+            <span>Luyện Phát Âm & TOEIC Speaking AI Whisper</span>
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Quản lý các đề luyện nói, câu đọc mẫu và chuẩn chấm điểm phát âm bằng AI
+          </p>
         </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 font-bold">
-                <th className="py-3.5 px-4 w-12 text-center">STT</th>
-                <th className="py-3.5 px-4 min-w-[220px]">Đề bài luyện nói</th>
-                <th className="py-3.5 px-4 min-w-[300px]">Nội dung phát âm mẫu</th>
-                <th className="py-3.5 px-4 min-w-[160px]">Phiên âm IPA</th>
-                <th className="py-3.5 px-4 w-28">Cấp độ</th>
-                <th className="py-3.5 px-4 w-24 text-center">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-              {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Không tìm thấy bài luyện nói nào phù hợp
-                  </td>
-                </tr>
-              ) : (
-                filteredList.map((item, index) => (
-                  <tr
-                    key={item._id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="py-3.5 px-4 text-center font-mono text-slate-500 font-semibold">
-                      {index + 1}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <Mic className="w-4 h-4 text-purple-500 shrink-0" />
-                        <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                          {item.title}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">
-                      {item.prompt_text}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-indigo-600 dark:text-indigo-400">
-                      {item.phonetic_guide || '---'}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold border ${getDifficultyBadge(item.difficulty)}`}>
-                        {item.difficulty}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <button
-                        onClick={() => setDeleteTargetId(item._id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchExercises}
+            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            title="Làm mới"
+          >
+            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Thêm bài nói mới</span>
+          </button>
         </div>
       </div>
 
-      {/* 3. Create Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Tạo mới Bài Luyện Nói AI
-            </h3>
+      <div className="relative max-w-md">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Tìm kiếm bài luyện nói theo tiêu đề, câu văn..."
+          className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500"
+        />
+      </div>
 
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Tiêu đề đề bài:
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="nhập tên bài luyện nói..."
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Đoạn văn phát âm mẫu:
-                </label>
-                <textarea
-                  rows={3}
-                  value={newPrompt}
-                  onChange={(e) => setNewPrompt(e.target.value)}
-                  placeholder="nhập đoạn văn phát âm mẫu..."
-                  className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Gợi ý phiên âm IPA:
-                </label>
-                <input
-                  type="text"
-                  value={newPhonetic}
-                  onChange={(e) => setNewPhonetic(e.target.value)}
-                  placeholder="/həˈləʊ wɜːld/"
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Cấp độ khó:
-                </label>
-                <select
-                  value={newDifficulty}
-                  onChange={(e) => setNewDifficulty(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                >
-                  <option value="BEGINNER">Cơ bản (Beginner)</option>
-                  <option value="INTERMEDIATE">Trung cấp (Intermediate)</option>
-                  <option value="ADVANCED">Nâng cao (Advanced)</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="h-9 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-xs cursor-pointer"
-                >
-                  Tạo mới
-                </button>
-              </div>
-            </form>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredExercises.length === 0 ? (
+          <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
+            Không tìm thấy bài luyện nói nào phù hợp
           </div>
-        </div>
-      )}
+        ) : (
+          filteredExercises.map((item) => (
+            <PracticeSpeakingCard
+              key={item._id}
+              item={item}
+              onDelete={(id) => setDeleteTargetId(id)}
+            />
+          ))
+        )}
+      </div>
 
-      {/* 4. Delete Modal */}
-      {deleteTargetId && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center">
-              <Trash2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                Xác nhận xóa?
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Bài luyện nói sẽ bị gỡ bỏ khỏi hệ thống.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-2.5 pt-2">
-              <button
-                onClick={() => setDeleteTargetId(null)}
-                className="h-9 px-4 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="h-9 px-5 rounded-lg bg-rose-600 hover:bg-rose-700 text-xs font-semibold text-white shadow-xs cursor-pointer"
-              >
-                Xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateSpeakingModal
+        isOpen={showAddModal}
+        title={newTitle}
+        type={newType}
+        sentence={newSentence}
+        accuracy={newAccuracy}
+        onTitleChange={setNewTitle}
+        onTypeChange={setNewType}
+        onSentenceChange={setNewSentence}
+        onAccuracyChange={setNewAccuracy}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleCreate}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={handleDelete}
+        title="Xác nhận xóa bài luyện nói?"
+        message="Học viên sẽ không thể tiếp tục ghi âm và chấm bài với câu luyện nói này."
+        confirmText="Xóa bài nói"
+        cancelText="Hủy bỏ"
+        variant="danger"
+      />
     </div>
   )
 }

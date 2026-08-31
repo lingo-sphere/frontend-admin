@@ -171,10 +171,10 @@ export function CoursesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Overview KPI Cards */}
+      {}
       <CourseStatsOverview stats={stats} />
 
-      {/* Main DataTable & Grid View */}
+      {}
       <DataTable<Course>
         title="Quản Lý Khóa Học & Lộ Trình"
         subtitle="Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi"
@@ -239,7 +239,7 @@ export function CoursesPage() {
         }}
       />
 
-      {/* Confirm Delete Modal */}
+      {}
       <ConfirmModal
         isOpen={Boolean(deleteCourseId)}
         onClose={() => setDeleteCourseId(null)}
