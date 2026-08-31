@@ -88,7 +88,8 @@ export function CoursesPage() {
   const fetchCourses = async () => {
     setIsLoading(true)
     try {
-      const data = await courseService.getAllCourses()
+      const res = await courseService.getAllCourses({ pageSize: 50 })
+      const data: ApiCourse[] = Array.isArray(res) ? res : (res?.result || [])
       if (data && data.length > 0) {
         const mappedCourses: Course[] = data.map((c: ApiCourse) => ({
           id: c._id || '',
@@ -111,9 +112,12 @@ export function CoursesPage() {
           avg_progress: 58,
         }))
         setCourses(mappedCourses)
+      } else {
+        setCourses([])
       }
     } catch (err) {
-      console.warn('Using default course data:', err)
+      console.warn('Error loading courses:', err)
+      setCourses([])
     } finally {
       setIsLoading(false)
     }

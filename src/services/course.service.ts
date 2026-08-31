@@ -1,6 +1,6 @@
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Course, CourseModule, Lesson, LessonQuestion } from '@/types/api.types'
+import type { Course, CourseModule, Lesson, LessonQuestion, PaginatedResult } from '@/types/api.types'
 
 export interface CourseFilterParams {
   category?: string
@@ -11,8 +11,8 @@ export interface CourseFilterParams {
 
 export const courseService = {
 
-  async getAllCourses(params?: CourseFilterParams): Promise<Course[]> {
-    return api.get<Course[]>(API_CONFIG.ENDPOINTS.COURSES.LIST, params as Record<string, unknown>)
+  async getAllCourses(params?: CourseFilterParams & { current?: number; pageSize?: number; limit?: number; page?: number }): Promise<PaginatedResult<Course>> {
+    return api.get<PaginatedResult<Course>>(API_CONFIG.ENDPOINTS.COURSES.LIST, params as Record<string, unknown>)
   },
 
   async getCourseById(id: string): Promise<Course> {

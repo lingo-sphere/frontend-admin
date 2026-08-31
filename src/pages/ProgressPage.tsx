@@ -98,7 +98,9 @@ export function ProgressPage() {
         }
       }
       if (coursesRes.status === 'fulfilled' && coursesRes.value) {
-        setCoursesCount(coursesRes.value.length)
+        const cVal = coursesRes.value
+        const count = Array.isArray(cVal) ? cVal.length : (cVal?.meta?.total ?? cVal?.result?.length ?? 0)
+        setCoursesCount(count)
       }
       if (vocabRes.status === 'fulfilled' && vocabRes.value) {
         setVocabCount(vocabRes.value.length)

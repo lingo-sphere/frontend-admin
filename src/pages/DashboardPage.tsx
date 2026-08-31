@@ -75,7 +75,9 @@ export function DashboardPage() {
         setAnalytics(analyticsData.value)
       }
       if (coursesData.status === 'fulfilled' && coursesData.value) {
-        setTotalCoursesCount(coursesData.value.length)
+        const cVal = coursesData.value
+        const count = Array.isArray(cVal) ? cVal.length : (cVal?.meta?.total ?? cVal?.result?.length ?? 0)
+        setTotalCoursesCount(count)
       }
     } catch (err) {
       console.warn('Using local fallback stats:', err)
