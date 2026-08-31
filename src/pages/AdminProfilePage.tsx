@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ChevronLeft,
@@ -66,6 +66,40 @@ export function AdminProfilePage() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  // 3-Level Password Strength Evaluator (Yếu / Trung bình / Mạnh)
+  const passwordStrength = useMemo(() => {
+    const pwd = form.newPassword
+    if (!pwd) {
+      return {
+        score: 0,
+        label: '',
+        color: '',
+        checks: { length: false, mixedCase: false, number: false, special: false },
+      }
+    }
+
+    const checks = {
+      length: pwd.length >= 8,
+      mixedCase: /[a-z]/.test(pwd) && /[A-Z]/.test(pwd),
+      number: /\d/.test(pwd),
+      special: /[^a-zA-Z0-9]/.test(pwd),
+    }
+
+    let passedCount = 0
+    if (checks.length) passedCount++
+    if (checks.mixedCase) passedCount++
+    if (checks.number) passedCount++
+    if (checks.special) passedCount++
+
+    if (passedCount <= 1 || pwd.length < 6) {
+      return { score: 1, label: 'Yếu', color: 'rose', checks }
+    }
+    if (passedCount <= 3) {
+      return { score: 2, label: 'Trung bình', color: 'amber', checks }
+    }
+    return { score: 3, label: 'Mạnh', color: 'emerald', checks }
+  }, [form.newPassword])
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -174,17 +208,23 @@ export function AdminProfilePage() {
     try {
       // 1. Password change if requested
       if (form.newPassword) {
-        if (form.newPassword !== form.confirmPassword) {
-          toast.error('Mật khẩu xác nhận không khớp với mật khẩu mới')
-          setIsSaving(false)
-          return
-        }
         if (!form.currentPassword) {
           toast.error('Vui lòng nhập mật khẩu hiện tại để xác nhận đổi mật khẩu')
           setIsSaving(false)
           return
         }
+        if (form.newPassword === form.currentPassword) {
+          toast.error('Mật khẩu mới không được trùng với mật khẩu hiện tại')
+          setIsSaving(false)
+          return
+        }
+        if (form.newPassword !== form.confirmPassword) {
+          toast.error('Mật khẩu xác nhận không khớp với mật khẩu mới')
+          setIsSaving(false)
+          return
+        }
         await authService.changePassword(profileData.id, {
+          old_password: form.currentPassword,
           current_password: form.currentPassword,
           new_password: form.newPassword,
         })
@@ -237,7 +277,7 @@ export function AdminProfilePage() {
   if (!profileData) return null
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full px-[10px] space-y-6">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -261,7 +301,7 @@ export function AdminProfilePage() {
       </div>
 
       {/* Profile Overview Card with Interactive Avatar */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <div className="w-full p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-6">
         {/* Avatar Container with Upload Overlay */}
         <div className="relative group shrink-0">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden bg-gradient-to-tr from-teal-500 to-indigo-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-white text-3xl font-black shadow-lg ring-4 ring-slate-100 dark:ring-slate-800/80">
@@ -344,162 +384,277 @@ export function AdminProfilePage() {
             </span>
           </div>
 
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
             {form.bio || 'Tổng quản trị viên hệ sinh thái LingoSphere, phụ trách kiểm duyệt nội dung và phân quyền bảo mật.'}
           </p>
         </div>
       </div>
 
-      {/* Main Inline Editable Profile Form */}
+      {/* Main Inline Editable Profile Form in 2-Column Grid */}
       <form onSubmit={handleSaveProfile} className="space-y-6">
-        {/* Section 1: Personal & Contact Information */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Thông Tin Định Danh & Liên Hệ
-            </h3>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Column 1: Personal & Contact Information */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5 flex flex-col justify-between">
+            <div className="space-y-5">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Thông Tin Định Danh & Liên Hệ
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Cập nhật họ tên hiển thị và thông tin liên lạc cá nhân
+                  </p>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>Họ và tên</span>
-                <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Nhập họ và tên..."
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                required
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <span>Họ và tên</span>
+                    <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Nhập họ và tên..."
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                    required
+                  />
+                </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Email Quản trị viên
-              </label>
-              <input
-                type="email"
-                value={profileData.email}
-                disabled
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-not-allowed"
-              />
-            </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Email Quản trị viên
+                  </label>
+                  <input
+                    type="email"
+                    value={profileData.email}
+                    disabled
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-slate-400" />
-                <span>Số điện thoại</span>
-              </label>
-              <input
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="Ví dụ: 0987654321"
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-              />
-            </div>
-
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-slate-400" />
-                <span>Giới thiệu ngắn (Bio)</span>
-              </label>
-              <textarea
-                value={form.bio}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                rows={3}
-                placeholder="Viết một vài dòng giới thiệu về vai trò và trách nhiệm của bạn trong hệ thống..."
-                className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all leading-relaxed"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Security & Password Change */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <KeyRound className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Bảo Mật & Đổi Mật Khẩu
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Bỏ trống các ô bên dưới nếu bạn không có nhu cầu thay đổi mật khẩu đăng nhập
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Mật khẩu hiện tại
-              </label>
-              <div className="relative flex items-center">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Số điện thoại</span>
+                </label>
                 <input
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  value={form.currentPassword}
-                  onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                  type="text"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Ví dụ: 0987654321"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Giới thiệu ngắn (Bio)</span>
+                </label>
+                <textarea
+                  value={form.bio}
+                  onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                  rows={3}
+                  placeholder="Viết một vài dòng giới thiệu về vai trò và trách nhiệm của bạn trong hệ thống..."
+                  className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all leading-relaxed"
+                />
               </div>
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Mật khẩu mới
-              </label>
-              <div className="relative flex items-center">
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={form.newPassword}
-                  onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          {/* Column 2: Security & Password Change */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5 flex flex-col justify-between">
+            <div className="space-y-5">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <KeyRound className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Bảo Mật & Đổi Mật Khẩu
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Bỏ trống các ô bên dưới nếu bạn không có nhu cầu đổi mật khẩu
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Xác nhận mật khẩu mới
-              </label>
-              <div className="relative flex items-center">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Mật khẩu hiện tại
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={form.currentPassword}
+                    onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Mật khẩu mới
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={form.newPassword}
+                      onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Xác nhận mật khẩu
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={form.confirmPassword}
+                      onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3-Level Password Strength Meter */}
+              {form.newPassword && (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">
+                      Độ mạnh mật khẩu:
+                    </span>
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded-md text-[11px] ${
+                        passwordStrength.score === 1
+                          ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
+                          : passwordStrength.score === 2
+                          ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'
+                          : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                      }`}
+                    >
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+
+                  {/* 3 Progress Bars */}
+                  <div className="grid grid-cols-3 gap-2 h-2">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        passwordStrength.score >= 1
+                          ? passwordStrength.score === 1
+                            ? 'bg-rose-500 shadow-sm shadow-rose-500/50'
+                            : passwordStrength.score === 2
+                            ? 'bg-amber-500 shadow-sm shadow-amber-500/50'
+                            : 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                          : 'bg-slate-200 dark:bg-slate-800'
+                      }`}
+                    />
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        passwordStrength.score >= 2
+                          ? passwordStrength.score === 2
+                            ? 'bg-amber-500 shadow-sm shadow-amber-500/50'
+                            : 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                          : 'bg-slate-200 dark:bg-slate-800'
+                      }`}
+                    />
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        passwordStrength.score >= 3
+                          ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                          : 'bg-slate-200 dark:bg-slate-800'
+                      }`}
+                    />
+                  </div>
+
+                  {/* Checklist criteria */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
+                    <div
+                      className={`flex items-center gap-1.5 transition-colors ${
+                        passwordStrength.checks.length
+                          ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                          : 'text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
+                      <span className="font-mono">{passwordStrength.checks.length ? '✓' : '○'}</span>
+                      <span>Tối thiểu 8 ký tự</span>
+                    </div>
+
+                    <div
+                      className={`flex items-center gap-1.5 transition-colors ${
+                        passwordStrength.checks.mixedCase
+                          ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                          : 'text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
+                      <span className="font-mono">{passwordStrength.checks.mixedCase ? '✓' : '○'}</span>
+                      <span>Chữ hoa & chữ thường (A-z)</span>
+                    </div>
+
+                    <div
+                      className={`flex items-center gap-1.5 transition-colors ${
+                        passwordStrength.checks.number
+                          ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                          : 'text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
+                      <span className="font-mono">{passwordStrength.checks.number ? '✓' : '○'}</span>
+                      <span>Ít nhất 1 chữ số (0-9)</span>
+                    </div>
+
+                    <div
+                      className={`flex items-center gap-1.5 transition-colors ${
+                        passwordStrength.checks.special
+                          ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                          : 'text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
+                      <span className="font-mono">{passwordStrength.checks.special ? '✓' : '○'}</span>
+                      <span>Ký tự đặc biệt (@, #, $, ...)</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                💡 <span className="font-semibold text-slate-700 dark:text-slate-300">Khuyến nghị bảo mật:</span> Sử dụng mật khẩu tối thiểu 8 ký tự gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt để bảo vệ tài khoản quản trị tối cao.
               </div>
             </div>
           </div>
@@ -510,7 +665,7 @@ export function AdminProfilePage() {
           <button
             type="button"
             onClick={() => setActiveNavItem('dashboard')}
-            className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
           >
             Hủy / Quay lại
           </button>
