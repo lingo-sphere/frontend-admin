@@ -144,7 +144,7 @@ export function R2MediaUploader({
                 ? 'https://www.youtube.com/watch?v=... hoặc https://r2.lingosphere.../video.mp4'
                 : 'https://r2.lingosphere.edu.vn/.../thumbnail.jpg'
             }
-            className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-mono text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+            className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-mono text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
           />
           {value && (
             <>
