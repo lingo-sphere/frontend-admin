@@ -36,15 +36,15 @@ export function CourseFilterBar({
 
   const levelOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả trình độ' : 'All Levels' },
-    { value: 'BEGINNER', label: isVi ? 'Sơ cấp' : 'Beginner', badge: 'A1-A2', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'INTERMEDIATE', label: isVi ? 'Trung cấp' : 'Intermediate', badge: 'B1-B2', badgeClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' },
-    { value: 'ADVANCED', label: isVi ? 'Nâng cao' : 'Advanced', badge: 'C1', badgeClass: 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400' },
+    { value: 'BEGINNER', label: isVi ? 'Sơ cấp (A1 - A2)' : 'Beginner (A1 - A2)' },
+    { value: 'INTERMEDIATE', label: isVi ? 'Trung cấp (B1 - B2)' : 'Intermediate (B1 - B2)' },
+    { value: 'ADVANCED', label: isVi ? 'Nâng cao (C1)' : 'Advanced (C1)' },
   ], [isVi])
 
   const statusOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả trạng thái' : 'All Status' },
-    { value: 'PUBLISHED', label: isVi ? 'Đã xuất bản' : 'Published', badge: isVi ? 'Xuất bản' : 'Public', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'DRAFT', label: isVi ? 'Bản nháp' : 'Draft', badge: isVi ? 'Nháp' : 'Draft', badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+    { value: 'PUBLISHED', label: isVi ? 'Đã xuất bản' : 'Published' },
+    { value: 'DRAFT', label: isVi ? 'Bản nháp' : 'Draft' },
   ], [isVi])
 
   return (

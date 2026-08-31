@@ -31,11 +31,11 @@ export function PermissionModal({
   const [description, setDescription] = useState('')
 
   const methodOptions = useMemo(() => [
-    { value: 'GET', label: isVi ? 'GET - Lấy dữ liệu' : 'GET - Read Data', badge: 'GET', badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-    { value: 'POST', label: isVi ? 'POST - Tạo mới' : 'POST - Create', badge: 'POST', badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
-    { value: 'PUT', label: isVi ? 'PUT - Cập nhật' : 'PUT - Update Full', badge: 'PUT', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-    { value: 'PATCH', label: isVi ? 'PATCH - Sửa một phần' : 'PATCH - Partial Edit', badge: 'PATCH', badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
-    { value: 'DELETE', label: isVi ? 'DELETE - Xóa' : 'DELETE - Remove', badge: 'DELETE', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+    { value: 'GET', label: isVi ? 'GET - Lấy dữ liệu' : 'GET - Read Data' },
+    { value: 'POST', label: isVi ? 'POST - Tạo mới' : 'POST - Create' },
+    { value: 'PUT', label: isVi ? 'PUT - Cập nhật' : 'PUT - Update Full' },
+    { value: 'PATCH', label: isVi ? 'PATCH - Sửa một phần' : 'PATCH - Partial Edit' },
+    { value: 'DELETE', label: isVi ? 'DELETE - Xóa' : 'DELETE - Remove' },
   ], [isVi])
 
   const defaultModules = [

@@ -43,16 +43,16 @@ export function NotificationFilterBar({
     { value: 'ALL', label: isVietnamese ? 'Tất cả mức độ' : 'All Priorities' },
     { value: 'LOW', label: isVietnamese ? 'Thấp' : 'Low' },
     { value: 'NORMAL', label: isVietnamese ? 'Bình thường' : 'Normal' },
-    { value: 'HIGH', label: isVietnamese ? 'Quan trọng' : 'High', badge: isVietnamese ? 'Cao' : 'HIGH', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-    { value: 'URGENT', label: isVietnamese ? 'Khẩn cấp' : 'Urgent', badge: isVietnamese ? 'Khẩn' : 'URGENT', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
-    { value: 'CRITICAL', label: isVietnamese ? 'Nghiêm trọng' : 'Critical', badge: isVietnamese ? 'Nghiêm trọng' : 'CRITICAL', badgeClass: 'bg-rose-600 text-white' },
+    { value: 'HIGH', label: isVietnamese ? 'Quan trọng' : 'High' },
+    { value: 'URGENT', label: isVietnamese ? 'Khẩn cấp' : 'Urgent' },
+    { value: 'CRITICAL', label: isVietnamese ? 'Nghiêm trọng' : 'Critical' },
   ], [isVietnamese])
 
   const statusOptions = useMemo(() => [
     { value: 'ALL', label: isVietnamese ? 'Tất cả trạng thái' : 'All Status' },
-    { value: 'UNREAD', label: isVietnamese ? 'Chưa đọc' : 'Unread', badge: 'New', badgeClass: 'bg-rose-500 text-white' },
+    { value: 'UNREAD', label: isVietnamese ? 'Chưa đọc' : 'Unread' },
     { value: 'READ', label: isVietnamese ? 'Đã đọc' : 'Read' },
-    { value: 'PINNED', label: isVietnamese ? 'Đã ghim' : 'Pinned', badge: 'Pinned', badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+    { value: 'PINNED', label: isVietnamese ? 'Đã ghim' : 'Pinned' },
   ], [isVietnamese])
 
   return (

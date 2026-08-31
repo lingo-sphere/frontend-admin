@@ -29,15 +29,15 @@ export function LearnerFilterBar({
 
   const statusOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả trạng thái' : 'All Status' },
-    { value: 'ACTIVE', label: isVi ? 'Đang hoạt động' : 'Active', badge: isVi ? 'Hoạt động' : 'Active', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'INACTIVE', label: isVi ? 'Chưa kích hoạt' : 'Inactive', badge: isVi ? 'Chờ kích hoạt' : 'Inactive', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
-    { value: 'BANNED', label: isVi ? 'Đã bị khóa' : 'Banned', badge: isVi ? 'Bị khóa' : 'Banned', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+    { value: 'ACTIVE', label: isVi ? 'Đang hoạt động' : 'Active' },
+    { value: 'INACTIVE', label: isVi ? 'Chưa kích hoạt' : 'Inactive' },
+    { value: 'BANNED', label: isVi ? 'Đã bị khóa' : 'Banned' },
   ], [isVi])
 
   const planOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả gói học' : 'All Plans' },
     { value: 'free', label: isVi ? 'Gói Miễn Phí' : 'Free Plan' },
-    { value: 'premium', label: isVi ? 'Gói Trả Phí' : 'Premium Plan', badge: 'VIP', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
+    { value: 'premium', label: isVi ? 'Gói Trả Phí (VIP)' : 'Premium Plan (VIP)' },
   ], [isVi])
 
   return (

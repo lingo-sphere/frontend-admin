@@ -26,14 +26,14 @@ export function AdminUserFilterBar({
 
   const roleOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả vai trò' : 'All Roles' },
-    { value: 'ADMIN', label: isVi ? 'Quản trị viên' : 'Administrator', badge: isVi ? 'Quản trị' : 'Admin', badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20' },
-    { value: 'TEACHER', label: isVi ? 'Giảng viên' : 'Teacher', badge: isVi ? 'Giảng viên' : 'Teacher', badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' },
+    { value: 'ADMIN', label: isVi ? 'Quản trị viên' : 'Administrator' },
+    { value: 'TEACHER', label: isVi ? 'Giảng viên' : 'Teacher' },
   ], [isVi])
 
   const statusOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả trạng thái' : 'All Status' },
-    { value: 'ACTIVE', label: isVi ? 'Đang hoạt động' : 'Active', badge: isVi ? 'Hoạt động' : 'Active', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'INACTIVE', label: isVi ? 'Đã bị khóa' : 'Blocked', badge: isVi ? 'Bị khóa' : 'Blocked', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+    { value: 'ACTIVE', label: isVi ? 'Đang hoạt động' : 'Active' },
+    { value: 'INACTIVE', label: isVi ? 'Đã bị khóa' : 'Blocked' },
   ], [isVi])
 
   return (

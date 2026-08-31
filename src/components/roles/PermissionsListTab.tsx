@@ -267,7 +267,6 @@ export function PermissionsListTab({
           ...modulesList.map((mod) => ({
             value: mod,
             label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
-            badge: mod,
           })),
         ]}
         className="w-56"

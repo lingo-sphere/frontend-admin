@@ -64,13 +64,14 @@ export function CustomSelect({
     const spaceBelow = window.innerHeight - rect.bottom
     const spaceAbove = rect.top
     const estimatedHeight = Math.min(Math.max(options.length * 40 + 40, 120), 280)
+    const minDropdownWidth = Math.max(rect.width, 220)
 
     const placeTop = spaceBelow < estimatedHeight && spaceAbove > spaceBelow
 
     setCoords({
       top: placeTop ? Math.max(8, rect.top - estimatedHeight - 6) : rect.bottom + 6,
-      left: Math.max(8, Math.min(rect.left, window.innerWidth - Math.max(rect.width, 180) - 8)),
-      width: Math.max(rect.width, 160),
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - minDropdownWidth - 12)),
+      width: minDropdownWidth,
       placement: placeTop ? 'top' : 'bottom',
     })
   }, [options.length])
@@ -196,9 +197,9 @@ export function CustomSelect({
               position: 'fixed',
               top: `${coords.top}px`,
               left: `${coords.left}px`,
-              width: `${coords.width}px`,
-              minWidth: '170px',
-              maxWidth: '380px',
+              minWidth: `${Math.max(coords.width, 220)}px`,
+              maxWidth: 'calc(100vw - 24px)',
+              width: 'max-content',
               zIndex: 99999,
               transformOrigin: coords.placement === 'top' ? 'bottom' : 'top',
             }}
@@ -251,7 +252,7 @@ export function CustomSelect({
                             {option.icon}
                           </span>
                         )}
-                        <span className="truncate">{option.label}</span>
+                        <span className="whitespace-nowrap">{option.label}</span>
                         {option.badge && (
                           <span
                             className={`shrink-0 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${

@@ -21,10 +21,10 @@ export function CommunityFilterBar({
 
   const statusOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả trạng thái' : 'All Status' },
-    { value: 'APPROVED', label: isVi ? 'Đã duyệt' : 'Approved', badge: isVi ? 'Đã duyệt' : 'Approved', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'PENDING_REVIEW', label: isVi ? 'Chờ kiểm duyệt' : 'Pending Review', badge: isVi ? 'Chờ duyệt' : 'Pending', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
-    { value: 'FLAGGED', label: isVi ? 'Bị báo cáo' : 'Flagged', badge: isVi ? 'Báo cáo' : 'Flagged', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
-    { value: 'HIDDEN', label: isVi ? 'Đã ẩn' : 'Hidden', badge: isVi ? 'Đã ẩn' : 'Hidden', badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+    { value: 'APPROVED', label: isVi ? 'Đã duyệt' : 'Approved' },
+    { value: 'PENDING_REVIEW', label: isVi ? 'Chờ kiểm duyệt' : 'Pending Review' },
+    { value: 'FLAGGED', label: isVi ? 'Bị báo cáo' : 'Flagged' },
+    { value: 'HIDDEN', label: isVi ? 'Đã ẩn' : 'Hidden' },
   ], [isVi])
 
   return (

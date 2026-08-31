@@ -21,12 +21,12 @@ export function VocabularyFilterBar({
 
   const levelOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả trình độ CEFR' : 'All CEFR Levels' },
-    { value: 'A1', label: isVi ? 'A1 - Sơ cấp cơ bản' : 'A1 - Beginner', badge: 'A1', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'A2', label: isVi ? 'A2 - Sơ cấp nâng cao' : 'A2 - Elementary', badge: 'A2', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-    { value: 'B1', label: isVi ? 'B1 - Trung cấp' : 'B1 - Intermediate', badge: 'B1', badgeClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' },
-    { value: 'B2', label: isVi ? 'B2 - Trung cấp cao' : 'B2 - Upper Intermediate', badge: 'B2', badgeClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' },
-    { value: 'C1', label: isVi ? 'C1 - Cao cấp' : 'C1 - Advanced', badge: 'C1', badgeClass: 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400' },
-    { value: 'C2', label: isVi ? 'C2 - Thành thạo' : 'C2 - Mastery', badge: 'C2', badgeClass: 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400' },
+    { value: 'A1', label: isVi ? 'A1 - Sơ cấp cơ bản' : 'A1 - Beginner' },
+    { value: 'A2', label: isVi ? 'A2 - Sơ cấp nâng cao' : 'A2 - Elementary' },
+    { value: 'B1', label: isVi ? 'B1 - Trung cấp' : 'B1 - Intermediate' },
+    { value: 'B2', label: isVi ? 'B2 - Trung cấp cao' : 'B2 - Upper Intermediate' },
+    { value: 'C1', label: isVi ? 'C1 - Cao cấp' : 'C1 - Advanced' },
+    { value: 'C2', label: isVi ? 'C2 - Thành thạo' : 'C2 - Mastery' },
   ], [isVi])
 
   return (

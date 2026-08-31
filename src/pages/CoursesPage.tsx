@@ -33,24 +33,16 @@ export function CoursesPage() {
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
-  const [totalStudentsCount, setTotalStudentsCount] = useState<number>(0)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const fetchCourses = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [res, analyticsRes] = await Promise.allSettled([
-        courseService.getAllCourses({ pageSize: 50 }),
-        userService.getSystemAnalytics(),
-      ])
+      const res = await courseService.getAllCourses({ pageSize: 50 })
 
-      if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
-        setTotalStudentsCount(analyticsRes.value.overview?.total_users || 0)
-      }
-
-      if (res.status === 'fulfilled' && res.value) {
-        const raw = res.value
+      if (res) {
+        const raw = res
         const data: ApiCourse[] = Array.isArray(raw) ? raw : (raw?.result || [])
         if (data && data.length > 0) {
           const mappedCourses: Course[] = data.map((c: ApiCourse) => ({
@@ -96,10 +88,7 @@ export function CoursesPage() {
   const stats = useMemo(() => {
     const total = courses.length
     const published = courses.filter((c) => c.is_published).length
-    const totalStudents =
-      totalStudentsCount > 0
-        ? totalStudentsCount
-        : courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
+    const totalStudents = courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
 
     const scores = courses.map((c) => c.target_score).filter(Boolean)
     const minScore = scores.length ? Math.min(...scores) : 450
@@ -107,7 +96,7 @@ export function CoursesPage() {
     const targetBand = scores.length > 1 && minScore !== maxScore ? `${minScore} - ${maxScore}+` : `${maxScore || 750}+`
 
     return { total, published, totalStudents, targetBand }
-  }, [courses, totalStudentsCount])
+  }, [courses])
 
   const filteredCourses = useMemo(() => {
     const list = courses.filter((c) => {
