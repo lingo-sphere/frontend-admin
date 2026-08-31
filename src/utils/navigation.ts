@@ -36,7 +36,8 @@ export function navItemToPath(navItem: string): string {
   if (navItem === 'monitoring-betterstack' || navItem === 'betterstack') return '/monitoring/betterstack'
   if (navItem === 'notifications') return '/notifications'
   if (navItem === 'settings') return '/settings'
-  if (navItem === 'roles' || navItem === 'permissions') return '/roles'
+  if (navItem === 'roles') return '/roles'
+  if (navItem === 'permissions') return '/permissions'
   if (navItem === 'admin-profile') return '/profile'
   if (navItem.startsWith('admin-profile:')) {
     const id = navItem.split(':')[1]
@@ -82,7 +83,8 @@ export function pathToNavItem(pathname: string): string {
   if (pathname === '/monitoring/betterstack' || pathname === '/betterstack') return 'monitoring-betterstack'
   if (pathname === '/notifications') return 'notifications'
   if (pathname === '/settings') return 'settings'
-  if (pathname === '/roles' || pathname === '/permissions') return 'roles'
+  if (pathname === '/roles') return 'roles'
+  if (pathname === '/permissions') return 'permissions'
   if (pathname === '/profile') return 'admin-profile'
   if (pathname.startsWith('/profile/')) {
     return `admin-profile:${pathname.replace('/profile/', '')}`
