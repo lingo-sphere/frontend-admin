@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
-import { Plus, RotateCcw, Edit2, Trash2, Sparkles } from 'lucide-react'
+import { Plus, RotateCcw, Edit2, Trash2, Sparkles, Shield, Search } from 'lucide-react'
 import type { Role, Permission } from '@/types/api.types'
-import { Pagination } from '@/components/common/Pagination'
+import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 
 interface RolesListTabProps {
   roles: Role[]
@@ -26,8 +26,6 @@ export function RolesListTab({
 }: RolesListTabProps) {
   const [filterName, setFilterName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -37,7 +35,7 @@ export function RolesListTab({
     setCurrentPage(1)
   }
 
-  const handleReset = () => {
+  const handleResetFilters = () => {
     setFilterName('')
     setSearchQuery('')
     setCurrentPage(1)
@@ -53,12 +51,9 @@ export function RolesListTab({
     })
   }, [roles, searchQuery])
 
-  const totalItems = filteredRoles.length
-  const totalPages = Math.ceil(totalItems / pageSize) || 1
-
   const paginatedRoles = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize
-    return filteredRoles.slice(startIndex, startIndex + pageSize)
+    const start = (currentPage - 1) * pageSize
+    return filteredRoles.slice(start, start + pageSize)
   }, [filteredRoles, currentPage, pageSize])
 
   const formatDate = (dateStr?: string) => {
@@ -74,202 +69,162 @@ export function RolesListTab({
     return `${day}-${month}-${year} ${hours}:${mins}:${secs}`
   }
 
-  return (
-    <div className="space-y-4">
-      {/* 1. Filter Card (Screenshot 2 Style) */}
-      <form
-        onSubmit={handleSearch}
-        className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs"
-      >
-        <div className="flex flex-wrap items-center gap-6">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-12 text-right">
-              Name:
-            </span>
-            <input
-              type="text"
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
-              placeholder="nhập dữ liệu"
-              className="h-9 w-60 sm:w-80 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-            />
+  const columns: DataTableColumn<Role>[] = [
+    {
+      key: 'name',
+      title: 'Tên Vai Trò (Role)',
+      render: (role) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
+            <Shield className="w-4 h-4" />
           </div>
-
-          <div className="flex items-center gap-2.5 ml-auto">
-            <button
-              type="submit"
-              className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            >
-              Tìm kiếm
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="h-9 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            >
-              Làm lại
-            </button>
-          </div>
-        </div>
-      </form>
-
-      {/* 2. Main Data Table Card */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        {/* Table Top Bar */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            Danh sách Roles (Vai Trò)
-          </h3>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onSeedDefaultRBAC}
-              className="flex items-center gap-1.5 h-8.5 px-3 rounded-lg border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors"
-              title="Tự động khởi tạo quyền hạn mẫu"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Khởi tạo RBAC Mẫu</span>
-            </button>
-
-            <button
-              onClick={onOpenCreateRole}
-              className="flex items-center gap-1.5 h-8.5 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-xs transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm mới</span>
-            </button>
-
-            <button
-              onClick={onRefresh}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-              title="Làm mới"
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 font-bold">
-                <th className="py-3 px-4 w-12 text-center">Id</th>
-                <th className="py-3 px-4 min-w-[160px]">Name</th>
-                <th className="py-3 px-4 min-w-[200px]">Miêu tả</th>
-                <th className="py-3 px-4 w-36">Quyền hạn</th>
-                <th className="py-3 px-4 w-28">Trạng thái</th>
-                <th className="py-3 px-4 min-w-[150px]">CreatedAt</th>
-                <th className="py-3 px-4 min-w-[150px]">UpdatedAt</th>
-                <th className="py-3 px-4 w-24 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-              {paginatedRoles.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
-                    Không tìm thấy Vai trò nào phù hợp
-                  </td>
-                </tr>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-900 dark:text-slate-100">{role.name}</span>
+              {role.is_active ? (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                  Hoạt động
+                </span>
               ) : (
-                paginatedRoles.map((role, index) => {
-                  const permCount = role.permissions?.length || 0
-                  const isRoleActive = role.is_active !== false
-                  const itemIndex = (currentPage - 1) * pageSize + index + 1
-
-                  return (
-                    <tr
-                      key={role._id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-                    >
-                      <td className="py-3 px-4 text-center font-mono text-slate-500 font-semibold">
-                        {itemIndex}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-xs uppercase px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
-                          {role.name}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
-                        {role.description || '-'}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-semibold text-[11px] text-indigo-600 dark:text-indigo-400">
-                          {role.name === 'SUPER_ADMIN' || role.name === 'ADMIN'
-                            ? `Toàn quyền (${permissions.length})`
-                            : `${permCount} Permissions`}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                            isRoleActive
-                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
-                              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                          }`}
-                        >
-                          {isRoleActive ? 'ACTIVE' : 'INACTIVE'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                        {formatDate(role.created_at)}
-                      </td>
-                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                        {formatDate(role.updated_at)}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => onOpenEditRole(role)}
-                            className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
-                            title="Chỉnh sửa vai trò"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          {role.name !== 'SUPER_ADMIN' && role.name !== 'ADMIN' && (
-                            <button
-                              onClick={() => onDeleteRole(role._id)}
-                              className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-                              title="Xóa vai trò"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+                  Tắt
+                </span>
               )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Table Footer Stats & Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <span>
-            Hiển thị <strong>{paginatedRoles.length}</strong> / <strong>{totalItems}</strong> vai trò (Tổng <strong>{roles.length}</strong>)
-          </span>
-
-          {totalItems > 0 && (
-            <div className="w-full sm:w-auto">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                pageSize={pageSize}
-                pageSizeOptions={[5, 10, 20, 50]}
-                onPageChange={(page) => setCurrentPage(page)}
-                onPageSizeChange={(size) => {
-                  setPageSize(size)
-                  setCurrentPage(1)
-                }}
-                showTotal={false}
-              />
             </div>
-          )}
+            {role.description && (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                {role.description}
+              </p>
+            )}
+          </div>
         </div>
+      ),
+    },
+    {
+      key: 'permissions_count',
+      title: 'Quyền Hạn (Permissions)',
+      render: (role) => {
+        const count = Array.isArray(role.permissions) ? role.permissions.length : 0
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
+            {count} quyền hạn
+          </span>
+        )
+      },
+    },
+    {
+      key: 'created_at',
+      title: 'Ngày Tạo',
+      render: (role) => (
+        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+          {formatDate(role.created_at)}
+        </span>
+      ),
+    },
+    {
+      key: 'updated_at',
+      title: 'Ngày Cập Nhật',
+      render: (role) => (
+        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+          {formatDate(role.updated_at)}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      title: 'Thao Tác',
+      align: 'right',
+      render: (role) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => onOpenEditRole(role)}
+            className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+            title="Chỉnh sửa vai trò"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onDeleteRole(role._id)}
+            className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+            title="Xóa vai trò"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ]
+
+  const filterSlot = (
+    <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+      <div className="relative flex-1 sm:w-72">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={filterName}
+          onChange={(e) => setFilterName(e.target.value)}
+          placeholder="Tìm kiếm vai trò theo tên..."
+          className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+        />
       </div>
+      <button
+        type="submit"
+        className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer"
+      >
+        Tìm kiếm
+      </button>
+    </form>
+  )
+
+  const extraActions = (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={onSeedDefaultRBAC}
+        className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer"
+        title="Tự động khởi tạo quyền hạn mẫu"
+      >
+        <Sparkles className="w-4 h-4" />
+        <span>Khởi tạo RBAC Mẫu</span>
+      </button>
+
+      <button
+        onClick={onOpenCreateRole}
+        className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition-all cursor-pointer"
+      >
+        <Plus className="w-4 h-4" />
+        <span>Thêm mới</span>
+      </button>
+
+      <button
+        onClick={onRefresh}
+        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+        title="Làm mới"
+      >
+        <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+      </button>
     </div>
+  )
+
+  return (
+    <DataTable<Role>
+      columns={columns}
+      data={paginatedRoles}
+      rowKey={(r) => r._id}
+      isLoading={isLoading}
+      emptyText="Không tìm thấy vai trò nào phù hợp"
+      filterSlot={filterSlot}
+      extraActions={extraActions}
+      onResetFilters={handleResetFilters}
+      pagination={{
+        currentPage,
+        pageSize,
+        totalItems: filteredRoles.length,
+        onPageChange: setCurrentPage,
+        onPageSizeChange: (size) => {
+          setPageSize(size)
+          setCurrentPage(1)
+        },
+      }}
+    />
   )
 }
