@@ -84,7 +84,7 @@ export function BetterStackMonitoringTab({
   const [searchInput, setSearchInput] = useState<string>(serverParams?.search || '')
 
   const [servicesPage, setServicesPage] = useState<number>(1)
-  const [servicesPageSize, setServicesPageSize] = useState<number>(9)
+  const [servicesPageSize, setServicesPageSize] = useState<number>(8)
 
   const services = data?.services || []
   const liveLogs = data?.live_logs || []
@@ -485,7 +485,7 @@ export function BetterStackMonitoringTab({
 
       {}
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {paginatedServices.map((service: ServiceHealthItem) => {
             const Icon = getServiceIcon(service.type)
 
@@ -562,7 +562,7 @@ export function BetterStackMonitoringTab({
             currentPage={servicesPage}
             totalPages={totalServicesPages}
             pageSize={servicesPageSize}
-            pageSizeOptions={[6, 9, 12, 15]}
+            pageSizeOptions={[8, 12, 16, 24]}
             totalItems={filteredServices.length}
             onPageChange={setServicesPage}
             onPageSizeChange={(size) => {

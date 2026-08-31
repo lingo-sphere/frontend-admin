@@ -55,7 +55,7 @@ export function PostHogAnalyticsTab({
   const [searchInput, setSearchInput] = useState<string>(serverParams?.search || '')
 
   const [replaysPage, setReplaysPage] = useState<number>(1)
-  const [replaysPageSize, setReplaysPageSize] = useState<number>(6)
+  const [replaysPageSize, setReplaysPageSize] = useState<number>(8)
 
   const getEventBadge = (eventName: string) => {
     switch (eventName) {
@@ -313,7 +313,7 @@ export function PostHogAnalyticsTab({
         </div>
 
         {paginatedReplays.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginatedReplays.map((rep: PostHogSessionReplay) => (
               <div
                 key={rep.session_id}
@@ -367,40 +367,20 @@ export function PostHogAnalyticsTab({
           </div>
         )}
 
-        {}
-        {totalReplayPages > 1 && (
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-3">
-            <span className="text-slate-500">
-              {isVi
-                ? `Hiển thị ${(replaysPage - 1) * replaysPageSize + 1} - ${Math.min(
-                    replaysPage * replaysPageSize,
-                    replays.length
-                  )} trên ${replays.length} bản ghi`
-                : `Showing ${(replaysPage - 1) * replaysPageSize + 1} - ${Math.min(
-                    replaysPage * replaysPageSize,
-                    replays.length
-                  )} of ${replays.length} replays`}
-            </span>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setReplaysPage((p) => Math.max(1, p - 1))}
-                disabled={replaysPage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="font-bold text-slate-700 dark:text-slate-300">
-                {replaysPage} / {totalReplayPages}
-              </span>
-              <button
-                onClick={() => setReplaysPage((p) => Math.min(totalReplayPages, p + 1))}
-                disabled={replaysPage === totalReplayPages}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+        {replays.length > 0 && (
+          <div className="pt-2">
+            <Pagination
+              currentPage={replaysPage}
+              totalPages={totalReplayPages}
+              pageSize={replaysPageSize}
+              pageSizeOptions={[4, 8, 12, 16]}
+              totalItems={replays.length}
+              onPageChange={setReplaysPage}
+              onPageSizeChange={(size) => {
+                setReplaysPageSize(size)
+                setReplaysPage(1)
+              }}
+            />
           </div>
         )}
       </div>
