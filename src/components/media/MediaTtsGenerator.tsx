@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Volume2, Sparkles, CheckCircle, Play } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -20,29 +21,29 @@ export function MediaTtsGenerator({
   onVoiceChange,
   onSubmit,
 }: MediaTtsGeneratorProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   return (
     <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
       <div className="flex items-center gap-2">
         <Volume2 className="w-5 h-5 text-sky-500" />
-        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-          Công Cụ Sinh Giọng Đọc Phát Âm Tự Động (AI Text-to-Speech)
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          {isVi ? 'Tạo âm thanh phát âm (AI Text-to-Speech)' : 'Generate Pronunciation Audio (AI TTS)'}
         </h3>
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Chuyển đổi văn bản câu hỏi, đoạn văn nghe TOEIC Part 1 - 4 thành file Audio MP3 chuẩn quốc tế và tự động lưu vào Cloudflare R2.
-      </p>
 
-      <form onSubmit={onSubmit} className="space-y-4 pt-2">
+      <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-            Nội dung tiếng Anh cần đọc <span className="text-rose-500">*</span>
+            {isVi ? 'Văn bản tiếng Anh cần sinh audio' : 'English text for audio generation'}
           </label>
           <textarea
             rows={3}
             required
             value={ttsText}
             onChange={(e) => onTtsTextChange(e.target.value)}
-            placeholder="Nhập văn bản tiếng Anh cần sinh audio..."
+            placeholder={isVi ? 'Nhập văn bản tiếng Anh cần sinh audio...' : 'Enter English text...'}
             className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
           />
         </div>
@@ -50,18 +51,18 @@ export function MediaTtsGenerator({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Giọng đọc (Voice Persona)
+              {isVi ? 'Giọng đọc' : 'Voice Persona'}
             </label>
             <CustomSelect
               value={selectedVoice}
               onChange={onVoiceChange}
               options={[
-                { value: 'alloy', label: 'Alloy (Chuẩn Mỹ - Neutral US)', badge: 'US' },
-                { value: 'echo', label: 'Echo (Nam tính, trầm ấm - Warm Male)', badge: 'Male' },
-                { value: 'fable', label: 'Fable (Anh - Anh, British RP)', badge: 'UK' },
-                { value: 'onyx', label: 'Onyx (Nam phát thanh viên)', badge: 'Pro' },
-                { value: 'nova', label: 'Nova (Nữ trẻ trung, năng động)', badge: 'Female' },
-                { value: 'shimmer', label: 'Shimmer (Nữ nhẹ nhàng, truyền cảm)', badge: 'Female' },
+                { value: 'alloy', label: isVi ? 'Alloy (Giọng chuẩn Mỹ)' : 'Alloy (Neutral US)', badge: 'US' },
+                { value: 'echo', label: isVi ? 'Echo (Giọng nam trầm ấm)' : 'Echo (Warm Male)', badge: 'Male' },
+                { value: 'fable', label: isVi ? 'Fable (Giọng Anh - Anh)' : 'Fable (British RP)', badge: 'UK' },
+                { value: 'onyx', label: isVi ? 'Onyx (Giọng nam chuyên nghiệp)' : 'Onyx (Professional Male)', badge: 'Pro' },
+                { value: 'nova', label: isVi ? 'Nova (Giọng nữ trẻ trung)' : 'Nova (Energetic Female)', badge: 'Female' },
+                { value: 'shimmer', label: isVi ? 'Shimmer (Giọng nữ truyền cảm)' : 'Shimmer (Expressive Female)', badge: 'Female' },
               ]}
               className="w-full"
             />

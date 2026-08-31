@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
@@ -9,6 +10,9 @@ import { INITIAL_PRACTICE_SETS } from '@/helpers/practice.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
 export function PracticeExercisesPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [practiceSets, setPracticeSets] = useState<PracticeSet[]>(INITIAL_PRACTICE_SETS)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -117,7 +121,7 @@ export function PracticeExercisesPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm theo tiêu đề bài tập..."
+            placeholder={isVi ? 'Tìm kiếm theo tiêu đề bài tập...' : 'Search practice exercises...'}
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
           />
         </div>
@@ -126,12 +130,12 @@ export function PracticeExercisesPage() {
           value={filterCategory}
           onChange={setFilterCategory}
           options={[
-            { value: 'ALL', label: 'Tất cả phân loại' },
-            { value: 'GRAMMAR', label: 'Ngữ pháp (Grammar)' },
-            { value: 'VOCABULARY', label: 'Từ vựng (Vocabulary)' },
-            { value: 'TOEIC_READING', label: 'TOEIC Reading' },
+            { value: 'ALL', label: isVi ? 'Tất cả phân loại' : 'All Categories' },
+            { value: 'GRAMMAR', label: isVi ? 'Ngữ pháp' : 'Grammar' },
+            { value: 'VOCABULARY', label: isVi ? 'Từ vựng' : 'Vocabulary' },
+            { value: 'TOEIC_READING', label: isVi ? 'Đọc hiểu TOEIC' : 'TOEIC Reading' },
           ]}
-          className="w-56"
+          className="w-48"
         />
       </div>
 

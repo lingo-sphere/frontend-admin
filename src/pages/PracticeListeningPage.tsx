@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Headphones } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
 import { toast } from '@/store/toast-store'
@@ -9,6 +10,9 @@ import { INITIAL_LISTENING_EXERCISES } from '@/helpers/practice.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
 export function PracticeListeningPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [exercises, setExercises] = useState<ListeningExercise[]>(INITIAL_LISTENING_EXERCISES)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -107,7 +111,7 @@ export function PracticeListeningPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm theo tiêu đề bài nghe..."
+            placeholder={isVi ? 'Tìm kiếm theo tiêu đề bài nghe...' : 'Search listening exercises...'}
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-sky-500"
           />
         </div>
@@ -116,12 +120,12 @@ export function PracticeListeningPage() {
           value={filterType}
           onChange={setFilterType}
           options={[
-            { value: 'ALL', label: 'Tất cả định dạng' },
-            { value: 'DICTATION', label: 'Chép chính tả (Dictation)' },
-            { value: 'MULTIPLE_CHOICE', label: 'Trắc nghiệm nghe' },
-            { value: 'FILL_BLANK', label: 'Điền từ còn thiếu' },
+            { value: 'ALL', label: isVi ? 'Tất cả định dạng' : 'All Formats' },
+            { value: 'DICTATION', label: isVi ? 'Chép chính tả' : 'Dictation' },
+            { value: 'MULTIPLE_CHOICE', label: isVi ? 'Trắc nghiệm nghe' : 'Multiple Choice' },
+            { value: 'FILL_BLANK', label: isVi ? 'Điền từ còn thiếu' : 'Fill in Blank' },
           ]}
-          className="w-56"
+          className="w-48"
         />
       </div>
 

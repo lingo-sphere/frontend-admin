@@ -1,18 +1,27 @@
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BookOpen } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
-const WORD_TYPES = [
-  'NOUN',
-  'VERB',
-  'ADJECTIVE',
-  'ADVERB',
-  'PREPOSITION',
-  'CONJUNCTION',
-  'PRONOUN',
-  'PHRASE',
+const WORD_TYPES_MAP = [
+  { value: 'NOUN', vi: 'Danh từ', en: 'Noun' },
+  { value: 'VERB', vi: 'Động từ', en: 'Verb' },
+  { value: 'ADJECTIVE', vi: 'Tính từ', en: 'Adjective' },
+  { value: 'ADVERB', vi: 'Trạng từ', en: 'Adverb' },
+  { value: 'PREPOSITION', vi: 'Giới từ', en: 'Preposition' },
+  { value: 'CONJUNCTION', vi: 'Liên từ', en: 'Conjunction' },
+  { value: 'PRONOUN', vi: 'Đại từ', en: 'Pronoun' },
+  { value: 'PHRASE', vi: 'Cụm từ', en: 'Phrase' },
 ]
 
-const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+const CEFR_LEVELS_MAP = [
+  { value: 'A1', vi: 'A1 - Sơ cấp cơ bản', en: 'A1 - Beginner' },
+  { value: 'A2', vi: 'A2 - Sơ cấp nâng cao', en: 'A2 - Elementary' },
+  { value: 'B1', vi: 'B1 - Trung cấp', en: 'B1 - Intermediate' },
+  { value: 'B2', vi: 'B2 - Trung cấp cao', en: 'B2 - Upper Intermediate' },
+  { value: 'C1', vi: 'C1 - Cao cấp', en: 'C1 - Advanced' },
+  { value: 'C2', vi: 'C2 - Thành thạo', en: 'C2 - Mastery' },
+]
 
 interface VocabularyBasicInfoFormProps {
   word: string
@@ -43,17 +52,35 @@ export function VocabularyBasicInfoForm({
   onPronunciationUkChange,
   onAudioUrlUsChange,
 }: VocabularyBasicInfoFormProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
+  const wordTypeOptions = useMemo(() => {
+    return WORD_TYPES_MAP.map((item) => ({
+      value: item.value,
+      label: isVi ? item.vi : item.en,
+    }))
+  }, [isVi])
+
+  const cefrOptions = useMemo(() => {
+    return CEFR_LEVELS_MAP.map((lvl) => ({
+      value: lvl.value,
+      label: isVi ? lvl.vi : lvl.en,
+      badge: lvl.value,
+    }))
+  }, [isVi])
+
   return (
     <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
       <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
         <BookOpen className="w-4 h-4 text-indigo-500" />
-        <span>Thông Tin Từ Vựng Cơ Bản</span>
+        <span>{isVi ? 'Thông tin từ vựng cơ bản' : 'Basic Vocabulary Info'}</span>
       </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            Từ vựng (English Word) <span className="text-rose-500">*</span>
+            {isVi ? 'Từ vựng tiếng Anh' : 'English Word'} <span className="text-rose-500">*</span>
           </label>
           <input
             type="text"
@@ -67,24 +94,24 @@ export function VocabularyBasicInfoForm({
 
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            Từ loại (Part of Speech)
+            {isVi ? 'Từ loại' : 'Part of Speech'}
           </label>
           <CustomSelect
             value={wordType}
             onChange={onWordTypeChange}
-            options={WORD_TYPES.map((t) => ({ value: t, label: t }))}
+            options={wordTypeOptions}
             className="w-full"
           />
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            Trình độ CEFR
+            {isVi ? 'Trình độ CEFR' : 'CEFR Level'}
           </label>
           <CustomSelect
             value={cefrLevel}
             onChange={onCefrLevelChange}
-            options={CEFR_LEVELS.map((lvl) => ({ value: lvl, label: lvl, badge: lvl }))}
+            options={cefrOptions}
             className="w-full"
           />
         </div>

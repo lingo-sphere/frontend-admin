@@ -41,11 +41,11 @@ export function NotificationFilterBar({
 
   const priorityOptions = useMemo(() => [
     { value: 'ALL', label: isVietnamese ? 'Tất cả mức độ' : 'All Priorities' },
-    { value: 'LOW', label: 'Thấp (Low)' },
-    { value: 'NORMAL', label: 'Bình thường (Normal)' },
-    { value: 'HIGH', label: 'Quan trọng (High)', badge: 'HIGH', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-    { value: 'URGENT', label: 'Khẩn cấp (Urgent)', badge: 'URGENT', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
-    { value: 'CRITICAL', label: 'Nghiêm trọng (Critical)', badge: 'CRITICAL', badgeClass: 'bg-rose-600 text-white' },
+    { value: 'LOW', label: isVietnamese ? 'Thấp' : 'Low' },
+    { value: 'NORMAL', label: isVietnamese ? 'Bình thường' : 'Normal' },
+    { value: 'HIGH', label: isVietnamese ? 'Quan trọng' : 'High', badge: isVietnamese ? 'Cao' : 'HIGH', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+    { value: 'URGENT', label: isVietnamese ? 'Khẩn cấp' : 'Urgent', badge: isVietnamese ? 'Khẩn' : 'URGENT', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+    { value: 'CRITICAL', label: isVietnamese ? 'Nghiêm trọng' : 'Critical', badge: isVietnamese ? 'Nghiêm trọng' : 'CRITICAL', badgeClass: 'bg-rose-600 text-white' },
   ], [isVietnamese])
 
   const statusOptions = useMemo(() => [

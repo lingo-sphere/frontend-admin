@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useId } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, Check, Search } from 'lucide-react'
 
 export interface SelectOption {
@@ -34,13 +35,18 @@ export function CustomSelect({
   value,
   onChange,
   options,
-  placeholder = 'Chọn...',
+  placeholder,
   disabled = false,
   className = '',
   size = 'md',
   showSearch,
-  searchPlaceholder = 'Tìm kiếm...',
+  searchPlaceholder,
 }: CustomSelectProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+  const defaultPlaceholder = placeholder ?? (isVi ? 'Chọn...' : 'Select...')
+  const defaultSearchPlaceholder = searchPlaceholder ?? (isVi ? 'Tìm kiếm...' : 'Search...')
+
   const [isOpen, setIsOpen] = useState(false)
   const [coords, setCoords] = useState<Coords | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -160,7 +166,7 @@ export function CustomSelect({
                 : 'text-slate-400 dark:text-slate-500 font-normal'
             }`}
           >
-            {selectedOption ? selectedOption.label : placeholder}
+            {selectedOption ? selectedOption.label : defaultPlaceholder}
           </span>
           {selectedOption?.badge && (
             <span
@@ -204,7 +210,7 @@ export function CustomSelect({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder={searchPlaceholder}
+                  placeholder={defaultSearchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-7.5 pr-2.5 py-1 text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500"
@@ -266,7 +272,7 @@ export function CustomSelect({
                 })
               ) : (
                 <div className="py-4 text-center text-xs text-slate-400">
-                  Không có tùy chọn phù hợp
+                  {isVi ? 'Không có tùy chọn phù hợp' : 'No matching options'}
                 </div>
               )}
             </div>

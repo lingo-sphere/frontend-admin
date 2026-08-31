@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Brain, Sparkles } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -22,29 +23,34 @@ export function AiQuizGeneratorForm({
   onDifficultyChange,
   onSubmit,
 }: AiQuizGeneratorFormProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   return (
     <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
       <div className="flex items-center gap-2">
         <Brain className="w-5 h-5 text-purple-500" />
         <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-          Công Cụ Sinh Câu Hỏi Trắc Nghiệm Tự Động (AI Quiz Generator)
+          {isVi ? 'Tạo câu hỏi trắc nghiệm tự động (AI)' : 'Generate AI Quiz Questions'}
         </h3>
       </div>
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        Nhập chủ đề bất kỳ để AI tự động biên soạn câu hỏi 4 lựa chọn (A, B, C, D) kèm đáp án đúng và giải thích sư phạm chi tiết bằng tiếng Việt.
+        {isVi
+          ? 'Nhập chủ đề bất kỳ để AI tự động biên soạn câu hỏi 4 lựa chọn kèm đáp án đúng và giải thích chi tiết.'
+          : 'Enter any topic for AI to automatically compose 4-choice questions with answers and detailed explanations.'}
       </p>
 
       <form onSubmit={onSubmit} className="space-y-4 pt-2">
         <div>
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-            Chủ đề / Ngữ cảnh bài tập <span className="text-rose-500">*</span>
+            {isVi ? 'Chủ đề / Ngữ cảnh bài tập' : 'Topic / Context'} <span className="text-rose-500">*</span>
           </label>
           <input
             type="text"
             required
             value={topic}
             onChange={(e) => onTopicChange(e.target.value)}
-            placeholder="VD: TOEIC Part 5 Incomplete Sentences, Customer Service Email..."
+            placeholder={isVi ? 'VD: TOEIC Part 5 Incomplete Sentences, Customer Service Email...' : 'e.g. TOEIC Part 5 Incomplete Sentences...'}
             className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
           />
         </div>
@@ -52,16 +58,16 @@ export function AiQuizGeneratorForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Số lượng câu hỏi
+              {isVi ? 'Số lượng câu hỏi' : 'Number of Questions'}
             </label>
             <CustomSelect
               value={String(questionCount)}
               onChange={(val) => onQuestionCountChange(Number(val))}
               options={[
-                { value: '2', label: '2 câu hỏi' },
-                { value: '3', label: '3 câu hỏi (Khuyến nghị)', badge: 'Recommended' },
-                { value: '5', label: '5 câu hỏi' },
-                { value: '10', label: '10 câu hỏi' },
+                { value: '2', label: isVi ? '2 câu hỏi' : '2 questions' },
+                { value: '3', label: isVi ? '3 câu hỏi' : '3 questions', badge: isVi ? 'Khuyên dùng' : 'Recommended' },
+                { value: '5', label: isVi ? '5 câu hỏi' : '5 questions' },
+                { value: '10', label: isVi ? '10 câu hỏi' : '10 questions' },
               ]}
               className="w-full"
             />
@@ -69,15 +75,15 @@ export function AiQuizGeneratorForm({
 
           <div>
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Độ khó (Target Level)
+              {isVi ? 'Độ khó' : 'Target Difficulty'}
             </label>
             <CustomSelect
               value={difficulty}
               onChange={onDifficultyChange}
               options={[
-                { value: 'EASY', label: 'Cơ bản (TOEIC 350 - 500)', badge: '350-500' },
-                { value: 'MEDIUM', label: 'Trung cấp (TOEIC 550 - 750)', badge: '550-750' },
-                { value: 'HARD', label: 'Nâng cao (TOEIC 800 - 990)', badge: '800-990' },
+                { value: 'EASY', label: isVi ? 'Cơ bản (350 - 500)' : 'Beginner (350 - 500)', badge: '350-500' },
+                { value: 'MEDIUM', label: isVi ? 'Trung cấp (550 - 750)' : 'Intermediate (550 - 750)', badge: '550-750' },
+                { value: 'HARD', label: isVi ? 'Nâng cao (800 - 990)' : 'Advanced (800 - 990)', badge: '800-990' },
               ]}
               className="w-full"
             />

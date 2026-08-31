@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -13,6 +14,9 @@ export function CreateExamModal({
   onClose,
   onSubmit,
 }: CreateExamModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [title, setTitle] = useState('')
   const [type, setType] = useState('FULL_TEST')
   const [duration, setDuration] = useState(120)
@@ -80,10 +84,10 @@ export function CreateExamModal({
                 value={type}
                 onChange={setType}
                 options={[
-                  { value: 'FULL_TEST', label: 'Full Test (200 câu)', badge: '200Q' },
-                  { value: 'MINI_TEST', label: 'Mini Test' },
-                  { value: 'PRE_TEST', label: 'Pre-Test' },
-                  { value: 'POST_MINI_TEST', label: 'Post-Mini Test' },
+                  { value: 'FULL_TEST', label: isVi ? 'Đề thi đầy đủ (200 câu)' : 'Full Test (200 questions)', badge: isVi ? '200 câu' : '200Q' },
+                  { value: 'MINI_TEST', label: isVi ? 'Đề thi rút gọn' : 'Mini Test' },
+                  { value: 'PRE_TEST', label: isVi ? 'Đề kiểm tra đầu vào' : 'Pre-Test' },
+                  { value: 'POST_MINI_TEST', label: isVi ? 'Đề kiểm tra sau khóa' : 'Post-Mini Test' },
                 ]}
                 className="w-full"
               />

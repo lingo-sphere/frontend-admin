@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -36,37 +37,40 @@ export function CreatePracticeSetModal({
   onClose,
   onSubmit,
 }: CreatePracticeSetModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   if (!isOpen) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
+        className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Tạo Bộ Bài Tập Luyện Thi Mới
+            {isVi ? 'Thêm bộ bài tập luyện tập mới' : 'Add New Practice Set'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <X className="w-4 h-4" />
+          <button onClick={onClose} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Tiêu đề bộ bài tập <span className="text-rose-500">*</span>
+              {isVi ? 'Tiêu đề bộ bài tập' : 'Practice Set Title'} <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
-              placeholder="VD: Chuyên đề Mệnh đề quan hệ & Đại từ quan hệ"
+              placeholder={isVi ? 'VD: Chuyên đề Mệnh đề quan hệ & Đại từ quan hệ' : 'e.g. Relative Clauses & Relative Pronouns'}
               className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
             />
           </div>
@@ -74,16 +78,16 @@ export function CreatePracticeSetModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Phân loại
+                {isVi ? 'Phân loại' : 'Category'}
               </label>
               <CustomSelect
                 value={category}
                 onChange={onCategoryChange}
                 options={[
-                  { value: 'GRAMMAR', label: 'Ngữ pháp (Grammar)' },
-                  { value: 'VOCABULARY', label: 'Từ vựng (Vocabulary)' },
-                  { value: 'TOEIC_READING', label: 'TOEIC Reading (Part 5-7)' },
-                  { value: 'MINI_TEST', label: 'Mini Practice Test' },
+                  { value: 'GRAMMAR', label: isVi ? 'Ngữ pháp' : 'Grammar' },
+                  { value: 'VOCABULARY', label: isVi ? 'Từ vựng' : 'Vocabulary' },
+                  { value: 'TOEIC_READING', label: isVi ? 'Đọc hiểu TOEIC' : 'TOEIC Reading' },
+                  { value: 'MINI_TEST', label: isVi ? 'Đề luyện tập rút gọn' : 'Mini Practice Test' },
                 ]}
                 className="w-full"
               />
@@ -91,15 +95,15 @@ export function CreatePracticeSetModal({
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Độ khó
+                {isVi ? 'Độ khó' : 'Difficulty'}
               </label>
               <CustomSelect
                 value={difficulty}
                 onChange={onDifficultyChange}
                 options={[
-                  { value: 'BEGINNER', label: 'Cơ bản (350 - 500)', badge: '350-500' },
-                  { value: 'INTERMEDIATE', label: 'Trung cấp (550 - 750)', badge: '550-750' },
-                  { value: 'ADVANCED', label: 'Nâng cao (800+)', badge: '800+' },
+                  { value: 'BEGINNER', label: isVi ? 'Cơ bản (350 - 500)' : 'Beginner (350 - 500)', badge: '350-500' },
+                  { value: 'INTERMEDIATE', label: isVi ? 'Trung cấp (550 - 750)' : 'Intermediate (550 - 750)', badge: '550-750' },
+                  { value: 'ADVANCED', label: isVi ? 'Nâng cao (800+)' : 'Advanced (800+)', badge: '800+' },
                 ]}
                 className="w-full"
               />
@@ -109,7 +113,7 @@ export function CreatePracticeSetModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Số câu hỏi
+                {isVi ? 'Số câu hỏi' : 'Number of Questions'}
               </label>
               <input
                 type="number"
@@ -122,7 +126,7 @@ export function CreatePracticeSetModal({
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Thời lượng (phút)
+                {isVi ? 'Thời lượng (phút)' : 'Duration (mins)'}
               </label>
               <input
                 type="number"

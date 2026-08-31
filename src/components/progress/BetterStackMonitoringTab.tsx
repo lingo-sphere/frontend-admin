@@ -353,9 +353,9 @@ export function BetterStackMonitoringTab({
                 }
               }}
               options={[
-                { value: '10', label: '10 / trang' },
-                { value: '20', label: '20 / trang' },
-                { value: '50', label: '50 / trang' },
+                { value: '10', label: isVi ? '10 / trang' : '10 / page' },
+                { value: '20', label: isVi ? '20 / trang' : '20 / page' },
+                { value: '50', label: isVi ? '50 / trang' : '50 / page' },
               ]}
               className="w-32"
             />

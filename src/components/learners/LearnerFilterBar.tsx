@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'
 import type { FilterStatus, FilterPlan } from '@/helpers/learner.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
@@ -12,19 +14,6 @@ interface LearnerFilterBarProps {
   onPlanChange: (val: FilterPlan) => void
 }
 
-const statusOptions = [
-  { value: 'ALL', label: 'Tất cả trạng thái' },
-  { value: 'ACTIVE', label: 'Đang hoạt động', badge: 'Active', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-  { value: 'INACTIVE', label: 'Chưa kích hoạt', badge: 'Inactive', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
-  { value: 'BANNED', label: 'Đã bị khóa', badge: 'Banned', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
-]
-
-const planOptions = [
-  { value: 'ALL', label: 'Tất cả gói học' },
-  { value: 'free', label: 'Gói Miễn Phí (Free)' },
-  { value: 'premium', label: 'Gói Trả Phí (VIP / Pro)', badge: 'PRO', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
-]
-
 export function LearnerFilterBar({
   searchTerm,
   searchQuery,
@@ -34,7 +23,23 @@ export function LearnerFilterBar({
   selectedPlan,
   onPlanChange,
 }: LearnerFilterBarProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const currentSearch = searchTerm !== undefined ? searchTerm : (searchQuery || '')
+
+  const statusOptions = useMemo(() => [
+    { value: 'ALL', label: isVi ? 'Tất cả trạng thái' : 'All Status' },
+    { value: 'ACTIVE', label: isVi ? 'Đang hoạt động' : 'Active', badge: isVi ? 'Hoạt động' : 'Active', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+    { value: 'INACTIVE', label: isVi ? 'Chưa kích hoạt' : 'Inactive', badge: isVi ? 'Chờ kích hoạt' : 'Inactive', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
+    { value: 'BANNED', label: isVi ? 'Đã bị khóa' : 'Banned', badge: isVi ? 'Bị khóa' : 'Banned', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+  ], [isVi])
+
+  const planOptions = useMemo(() => [
+    { value: 'ALL', label: isVi ? 'Tất cả gói học' : 'All Plans' },
+    { value: 'free', label: isVi ? 'Gói Miễn Phí' : 'Free Plan' },
+    { value: 'premium', label: isVi ? 'Gói Trả Phí' : 'Premium Plan', badge: 'VIP', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
+  ], [isVi])
+
   return (
     <>
       <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
@@ -43,7 +48,7 @@ export function LearnerFilterBar({
           type="text"
           value={currentSearch}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Tìm tên, email học viên..."
+          placeholder={isVi ? 'Tìm tên, email học viên...' : 'Search learner by name, email...'}
           className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
         />
         {currentSearch && (
@@ -67,7 +72,7 @@ export function LearnerFilterBar({
         value={selectedPlan}
         onChange={(val) => onPlanChange(val as FilterPlan)}
         options={planOptions}
-        className="w-48"
+        className="w-44"
       />
     </>
   )

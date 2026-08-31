@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Activity, Search, ChevronRight, Target, BookOpenCheck, Mic, GraduationCap } from 'lucide-react'
 import type { UserActivityLog } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/CustomSelect'
@@ -10,13 +12,6 @@ interface ProgressActivityLogsTabProps {
   onActionFilterChange: (val: string) => void
 }
 
-const actionOptions = [
-  { value: 'ALL', label: 'Tất cả hành động' },
-  { value: 'TOEIC_TEST', label: 'Làm bài thi TOEIC' },
-  { value: 'VOCAB_STUDY', label: 'Học từ vựng Flashcard' },
-  { value: 'AI_CHAT', label: 'Luyện nói với AI' },
-]
-
 export function ProgressActivityLogsTab({
   logs,
   search,
@@ -24,6 +19,16 @@ export function ProgressActivityLogsTab({
   onSearchChange,
   onActionFilterChange,
 }: ProgressActivityLogsTabProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
+  const actionOptions = useMemo(() => [
+    { value: 'ALL', label: isVi ? 'Tất cả hành động' : 'All Actions' },
+    { value: 'TOEIC_TEST', label: isVi ? 'Làm bài thi TOEIC' : 'Take TOEIC Test' },
+    { value: 'VOCAB_STUDY', label: isVi ? 'Học từ vựng Flashcard' : 'Study Flashcards' },
+    { value: 'AI_CHAT', label: isVi ? 'Luyện nói với AI' : 'Practice with AI' },
+  ], [isVi])
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'TOEIC_TEST':
@@ -55,7 +60,7 @@ export function ProgressActivityLogsTab({
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Tìm theo tên học viên, email..."
+            placeholder={isVi ? 'Tìm theo tên học viên, email...' : 'Search by learner name, email...'}
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
           />
         </div>

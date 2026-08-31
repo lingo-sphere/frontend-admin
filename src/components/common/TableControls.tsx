@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   SlidersHorizontal,
   Columns,
@@ -39,6 +40,9 @@ export function TableControls({
   onResetFilters,
   totalCount,
 }: TableControlsProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [showDensityDropdown, setShowDensityDropdown] = useState(false)
   const [showColumnDropdown, setShowColumnDropdown] = useState(false)
 
@@ -74,6 +78,12 @@ export function TableControls({
 
   const visibleColumnCount = columns ? columns.filter((c) => c.visible).length : 0
 
+  const densityOptions = useMemo(() => [
+    { key: 'compact', label: isVi ? 'Nhỏ gọn' : 'Compact' },
+    { key: 'middle', label: isVi ? 'Vừa' : 'Default' },
+    { key: 'comfortable', label: isVi ? 'Thoải mái' : 'Spacious' },
+  ] as const, [isVi])
+
   return (
     <div className="flex items-center gap-2">
 
@@ -87,7 +97,7 @@ export function TableControls({
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="Dạng lưới thẻ (Grid)"
+            title={isVi ? 'Dạng lưới thẻ' : 'Grid View'}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
@@ -99,7 +109,7 @@ export function TableControls({
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="Dạng danh sách bảng (Table)"
+            title={isVi ? 'Dạng danh sách bảng' : 'Table View'}
           >
             <List className="w-4 h-4" />
           </button>
@@ -115,11 +125,15 @@ export function TableControls({
               ? 'bg-indigo-600/15 text-indigo-400 border-indigo-500/30'
               : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
           }`}
-          title="Kích thước dòng bảng"
+          title={isVi ? 'Kích thước dòng bảng' : 'Row Density'}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           <span>
-            {density === 'compact' ? 'Nhỏ gọn' : density === 'comfortable' ? 'Thoải mái' : 'Vừa'}
+            {density === 'compact'
+              ? (isVi ? 'Nhỏ gọn' : 'Compact')
+              : density === 'comfortable'
+              ? (isVi ? 'Thoải mái' : 'Spacious')
+              : (isVi ? 'Vừa' : 'Default')}
           </span>
           <ChevronDown className="w-3 h-3 opacity-60" />
         </button>
@@ -127,15 +141,9 @@ export function TableControls({
         {showDensityDropdown && (
           <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-              Kích thước bảng
+              {isVi ? 'Kích thước bảng' : 'Density'}
             </div>
-            {(
-              [
-                { key: 'compact', label: 'Nhỏ gọn (Compact)' },
-                { key: 'middle', label: 'Vừa (Mặc định)' },
-                { key: 'comfortable', label: 'Thoải mái (Spacious)' },
-              ] as const
-            ).map((opt) => (
+            {densityOptions.map((opt) => (
               <button
                 key={opt.key}
                 type="button"

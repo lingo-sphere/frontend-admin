@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -32,6 +33,8 @@ export function CreateWritingModal({
   onClose,
   onSubmit,
 }: CreateWritingModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   if (!isOpen) return null
 
   return (
@@ -76,9 +79,9 @@ export function CreateWritingModal({
                 value={type}
                 onChange={onTypeChange}
                 options={[
-                  { value: 'EMAIL_REPLY', label: 'Viết Email phản hồi' },
-                  { value: 'OPINION_ESSAY', label: 'Viết bài luận quan điểm' },
-                  { value: 'PICTURE_SENTENCE', label: 'Viết câu theo tranh' },
+                  { value: 'EMAIL_REPLY', label: isVi ? 'Viết Email phản hồi' : 'Email Response' },
+                  { value: 'OPINION_ESSAY', label: isVi ? 'Viết bài luận quan điểm' : 'Opinion Essay' },
+                  { value: 'PICTURE_SENTENCE', label: isVi ? 'Viết câu theo tranh' : 'Picture Sentence' },
                 ]}
                 className="w-full"
               />

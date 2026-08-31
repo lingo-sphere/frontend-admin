@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -28,6 +29,8 @@ export function CreateListeningModal({
   onClose,
   onSubmit,
 }: CreateListeningModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   if (!isOpen) return null
 
   return (
@@ -72,10 +75,10 @@ export function CreateListeningModal({
                 value={type}
                 onChange={onTypeChange}
                 options={[
-                  { value: 'PHOTO_DESCRIPTION', label: 'Part 1 - Mô tả tranh' },
-                  { value: 'QUESTION_RESPONSE', label: 'Part 2 - Hỏi & Đáp' },
-                  { value: 'SHORT_CONVERSATION', label: 'Part 3 - Đoạn hội thoại' },
-                  { value: 'SHORT_TALK', label: 'Part 4 - Bài nói ngắn' },
+                  { value: 'PHOTO_DESCRIPTION', label: isVi ? 'Phần 1 - Mô tả tranh' : 'Part 1 - Photo Description' },
+                  { value: 'QUESTION_RESPONSE', label: isVi ? 'Phần 2 - Hỏi đáp' : 'Part 2 - Question Response' },
+                  { value: 'SHORT_CONVERSATION', label: isVi ? 'Phần 3 - Hội thoại ngắn' : 'Part 3 - Short Conversation' },
+                  { value: 'SHORT_TALK', label: isVi ? 'Phần 4 - Bài nói chuyện' : 'Part 4 - Short Talk' },
                 ]}
                 className="w-full"
               />

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Edit2, Trash2, Search, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
@@ -22,6 +23,9 @@ export function PermissionsListTab({
   onRefresh,
   isLoading,
 }: PermissionsListTabProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [filterName, setFilterName] = useState('')
   const [filterApi, setFilterApi] = useState('')
   const [filterModule, setFilterModule] = useState('ALL')
@@ -233,10 +237,10 @@ export function PermissionsListTab({
           setCurrentPage(1)
         }}
         options={[
-          { value: 'ALL', label: 'Tất cả phân hệ (Modules)' },
+          { value: 'ALL', label: isVi ? 'Tất cả phân hệ' : 'All Modules' },
           ...modulesList.map((mod) => ({
             value: mod,
-            label: `Phân hệ ${mod}`,
+            label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
             badge: mod,
           })),
         ]}

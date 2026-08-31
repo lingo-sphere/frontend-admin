@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -8,20 +10,23 @@ interface CommunityFilterBarProps {
   onStatusChange: (val: string) => void
 }
 
-const statusOptions = [
-  { value: 'ALL', label: 'Tất cả trạng thái' },
-  { value: 'APPROVED', label: 'Đã duyệt (Approved)', badge: 'Approved', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
-  { value: 'PENDING_REVIEW', label: 'Chờ kiểm duyệt', badge: 'Pending', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
-  { value: 'FLAGGED', label: 'Bị báo cáo (Flagged)', badge: 'Flagged', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
-  { value: 'HIDDEN', label: 'Đã ẩn (Hidden)', badge: 'Hidden', badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
-]
-
 export function CommunityFilterBar({
   searchQuery,
   filterStatus,
   onSearchChange,
   onStatusChange,
 }: CommunityFilterBarProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
+  const statusOptions = useMemo(() => [
+    { value: 'ALL', label: isVi ? 'Tất cả trạng thái' : 'All Status' },
+    { value: 'APPROVED', label: isVi ? 'Đã duyệt' : 'Approved', badge: isVi ? 'Đã duyệt' : 'Approved', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+    { value: 'PENDING_REVIEW', label: isVi ? 'Chờ kiểm duyệt' : 'Pending Review', badge: isVi ? 'Chờ duyệt' : 'Pending', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
+    { value: 'FLAGGED', label: isVi ? 'Bị báo cáo' : 'Flagged', badge: isVi ? 'Báo cáo' : 'Flagged', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+    { value: 'HIDDEN', label: isVi ? 'Đã ẩn' : 'Hidden', badge: isVi ? 'Đã ẩn' : 'Hidden', badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+  ], [isVi])
+
   return (
     <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
       <div className="relative w-full sm:w-80">
@@ -30,7 +35,7 @@ export function CommunityFilterBar({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Tìm bài viết theo tiêu đề, tác giả..."
+          placeholder={isVi ? 'Tìm bài viết theo tiêu đề, tác giả...' : 'Search posts by title, author...'}
           className="w-full h-10 pl-10 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
         />
         {searchQuery && (
@@ -48,7 +53,7 @@ export function CommunityFilterBar({
           value={filterStatus}
           onChange={onStatusChange}
           options={statusOptions}
-          className="w-52"
+          className="w-48"
         />
       </div>
     </div>

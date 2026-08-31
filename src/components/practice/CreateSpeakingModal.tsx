@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -28,37 +29,43 @@ export function CreateSpeakingModal({
   onClose,
   onSubmit,
 }: CreateSpeakingModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   if (!isOpen) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
+        className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Tạo Bài Luyện Nói & Phát Âm Mới
+            {isVi ? 'Thêm bài tập luyện nói mới' : 'Add New Speaking Exercise'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <X className="w-4 h-4" />
+          <button 
+            onClick={onClose} 
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Tiêu đề bài luyện nói <span className="text-rose-500">*</span>
+              {isVi ? 'Tiêu đề bài luyện nói' : 'Speaking Exercise Title'} <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
-              placeholder="VD: Phỏng vấn công việc - Giới thiệu kinh nghiệm làm việc"
+              placeholder={isVi ? 'VD: Phỏng vấn công việc - Giới thiệu kinh nghiệm' : 'e.g. Job Interview - Experience Introduction'}
               className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
             />
           </div>
@@ -66,15 +73,15 @@ export function CreateSpeakingModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Dạng bài nói
+                {isVi ? 'Dạng bài nói' : 'Speaking Format'}
               </label>
               <CustomSelect
                 value={type}
                 onChange={onTypeChange}
                 options={[
-                  { value: 'READ_ALOUD', label: 'Đọc to văn bản (Read Aloud)' },
-                  { value: 'DESCRIBE_PICTURE', label: 'Mô tả hình ảnh' },
-                  { value: 'RESPOND_QUESTIONS', label: 'Trả lời câu hỏi tình huống' },
+                  { value: 'READ_ALOUD', label: isVi ? 'Đọc to văn bản' : 'Read Aloud' },
+                  { value: 'DESCRIBE_PICTURE', label: isVi ? 'Mô tả hình ảnh' : 'Describe Picture' },
+                  { value: 'RESPOND_QUESTIONS', label: isVi ? 'Trả lời câu hỏi tình huống' : 'Respond to Questions' },
                 ]}
                 className="w-full"
               />

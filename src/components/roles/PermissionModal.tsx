@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/CustomSelect'
@@ -20,11 +21,22 @@ export function PermissionModal({
   isSubmitting,
   availableModules,
 }: PermissionModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [name, setName] = useState('')
   const [apiPath, setApiPath] = useState('')
   const [method, setMethod] = useState<'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'>('GET')
   const [module, setModule] = useState('COURSES')
   const [description, setDescription] = useState('')
+
+  const methodOptions = useMemo(() => [
+    { value: 'GET', label: isVi ? 'GET - Lấy dữ liệu' : 'GET - Read Data', badge: 'GET', badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+    { value: 'POST', label: isVi ? 'POST - Tạo mới' : 'POST - Create', badge: 'POST', badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+    { value: 'PUT', label: isVi ? 'PUT - Cập nhật' : 'PUT - Update Full', badge: 'PUT', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+    { value: 'PATCH', label: isVi ? 'PATCH - Sửa một phần' : 'PATCH - Partial Edit', badge: 'PATCH', badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+    { value: 'DELETE', label: isVi ? 'DELETE - Xóa' : 'DELETE - Remove', badge: 'DELETE', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+  ], [isVi])
 
   const defaultModules = [
     'COURSES',
@@ -126,13 +138,7 @@ export function PermissionModal({
               <CustomSelect
                 value={method}
                 onChange={(val) => setMethod(val as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH')}
-                options={[
-                  { value: 'GET', label: 'GET (Xem / Lấy dữ liệu)', badge: 'GET', badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-                  { value: 'POST', label: 'POST (Tạo mới)', badge: 'POST', badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
-                  { value: 'PUT', label: 'PUT (Cập nhật toàn bộ)', badge: 'PUT', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-                  { value: 'PATCH', label: 'PATCH (Cập nhật một phần)', badge: 'PATCH', badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
-                  { value: 'DELETE', label: 'DELETE (Xóa)', badge: 'DELETE', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
-                ]}
+                options={methodOptions}
                 className="w-full"
               />
             </div>

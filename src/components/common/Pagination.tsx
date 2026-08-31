@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'
 
@@ -24,12 +25,17 @@ export function Pagination({
   onPageSizeChange,
   totalItems,
   showTotal = false,
-  goToText = 'Go to',
-  pageText = 'Page',
+  goToText,
+  pageText,
 }: PaginationProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [jumpValue, setJumpValue] = useState('')
 
   const safeTotalPages = Math.max(1, totalPages)
+  const defaultGoTo = goToText ?? (isVi ? 'Đến' : 'Go to')
+  const defaultPage = pageText ?? (isVi ? 'Trang' : 'Page')
 
   const handleJump = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && jumpValue) {
@@ -139,15 +145,14 @@ export function Pagination({
           onChange={(val) => onPageSizeChange(parseInt(val, 10))}
           options={pageSizeOptions.map((size) => ({
             value: String(size),
-            label: `${size} / page`,
+            label: isVi ? `${size} / trang` : `${size} / page`,
           }))}
           className="w-28"
         />
       )}
 
-      {}
       <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-        <span>{goToText}</span>
+        <span>{defaultGoTo}</span>
         <input
           type="text"
           value={jumpValue}
@@ -155,7 +160,7 @@ export function Pagination({
           onKeyDown={handleJump}
           className="w-11 h-8 px-1.5 text-center rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:border-blue-500 transition-colors shadow-2xs"
         />
-        <span>{pageText}</span>
+        <span>{defaultPage}</span>
       </div>
     </div>
   )
