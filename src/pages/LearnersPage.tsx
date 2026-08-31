@@ -25,42 +25,39 @@ export function LearnersPage() {
   const [selectedPlan, setSelectedPlan] = useState<FilterPlan>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const fetchLearners = useCallback(async () => {
     setIsLoading(true)
     try {
-      const res = await userService.getAllUsers({
-        role: 'STUDENT',
-        limit: 50,
-      })
-
-      const items: UserProfile[] = res?.result || []
-      const mappedUsers: User[] = items.map((u: UserProfile) => ({
+      const res = await userService.getAllUsers({ role: 'LEARNER', limit: 100 })
+      const items: UserProfile[] = Array.isArray(res) ? res : (res?.result || [])
+      const mapped: User[] = items.map((u: UserProfile) => ({
         id: u._id || u.user_id || '',
         full_name: u.full_name || u.email.split('@')[0],
         email: u.email,
-        avatar_url: u.avatar_url,
-        gender: u.gender || 'OTHER',
         target_toeic_score: u.target_toeic_score || 650,
         current_estimated_score: u.current_estimated_score || 450,
-        learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
-        status: (u.status as 'ACTIVE' | 'INACTIVE' | 'BANNED') || 'ACTIVE',
+        total_xp: u.total_xp || 0,
+        current_streak: u.current_streak || 0,
         is_premium: u.is_premium || false,
+        status: u.status === 'BLOCKED' ? 'BANNED' : 'ACTIVE',
+        avatar_url: u.avatar_url,
+        gender: u.gender || 'OTHER',
+        learning_goal_minutes_per_day: u.learning_goal_minutes_per_day || 20,
         current_plan_slug: u.current_plan_slug || (u.is_premium ? 'vip' : 'free'),
         created_at: u.created_at || new Date().toISOString(),
-        total_xp: u.total_xp || 0,
         level: u.level || 1,
-        current_streak: u.current_streak || 0,
         longest_streak: 10,
-        gems: 50,
+        gems: u.gems || 50,
         lessons_completed: 12,
         vocabulary_reviewed: 120,
         practice_sessions: 15,
         exams_completed: 2,
       }))
-      setUsers(mappedUsers)
-    } catch (err) {
-      console.warn('Error fetching learners from API:', err)
+      setUsers(mapped)
+    } catch {
       setUsers([])
     } finally {
       setIsLoading(false)
@@ -81,7 +78,7 @@ export function LearnersPage() {
   }, [users])
 
   const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
+    const list = users.filter((u) => {
       const matchSearch =
         u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -93,7 +90,19 @@ export function LearnersPage() {
         (selectedPlan === 'free' && !u.is_premium)
       return matchSearch && matchStatus && matchPlan
     })
-  }, [users, searchTerm, selectedStatus, selectedPlan])
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'user') {
+        const nameA = (a.full_name || a.email).toLowerCase()
+        const nameB = (b.full_name || b.email).toLowerCase()
+        const comp = nameA.localeCompare(nameB)
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      return 0
+    })
+  }, [users, searchTerm, selectedStatus, selectedPlan, sortKey, sortOrder])
 
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -104,6 +113,8 @@ export function LearnersPage() {
     setSearchTerm('')
     setSelectedStatus('ALL')
     setSelectedPlan('ALL')
+    setSortKey(null)
+    setSortOrder(null)
     setCurrentPage(1)
   }
 
@@ -142,13 +153,20 @@ export function LearnersPage() {
         title={isVi ? 'Quản Lý Học Viên' : 'Learner Management'}
         subtitle={
           isVi
-            ? 'Danh sách học viên, tiến độ học TOEIC và quản lý trạng thái tài khoản'
-            : 'Learner directory, TOEIC progress tracking, and account status management'
+            ? 'Theo dõi mục tiêu TOEIC, tiến trình học tập, XP và trạng thái tài khoản học viên'
+            : 'Track TOEIC targets, learning progress, XP, and learner account statuses'
         }
         isLoading={isLoading}
         columns={columns}
         data={paginatedUsers}
         rowKey={(u) => u.id}
+        sortKey={sortKey}
+        sortOrder={sortOrder}
+        onSortChange={(k, o) => {
+          setSortKey(k)
+          setSortOrder(o)
+          setCurrentPage(1)
+        }}
         onResetFilters={handleResetFilters}
         extraActions={
           <button

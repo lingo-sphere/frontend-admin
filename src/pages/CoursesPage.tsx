@@ -34,6 +34,8 @@ export function CoursesPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
   const [totalStudentsCount, setTotalStudentsCount] = useState<number>(0)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const fetchCourses = useCallback(async () => {
     setIsLoading(true)
@@ -108,7 +110,7 @@ export function CoursesPage() {
   }, [courses, totalStudentsCount])
 
   const filteredCourses = useMemo(() => {
-    return courses.filter((c) => {
+    const list = courses.filter((c) => {
       const matchSearch =
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -121,7 +123,24 @@ export function CoursesPage() {
 
       return matchSearch && matchCategory && matchLevel && matchStatus
     })
-  }, [courses, searchQuery, filterCategory, filterLevel, filterStatus])
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'info') {
+        const titleA = a.title.toLowerCase()
+        const titleB = b.title.toLowerCase()
+        const comp = titleA.localeCompare(titleB)
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'price') {
+        const priceA = a.price || 0
+        const priceB = b.price || 0
+        return sortOrder === 'asc' ? priceA - priceB : priceB - priceA
+      }
+      return 0
+    })
+  }, [courses, searchQuery, filterCategory, filterLevel, filterStatus, sortKey, sortOrder])
 
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
@@ -133,6 +152,8 @@ export function CoursesPage() {
     setFilterCategory('ALL')
     setFilterLevel('ALL')
     setFilterStatus('ALL')
+    setSortKey(null)
+    setSortOrder(null)
     setCurrentPage(1)
   }
 
@@ -187,6 +208,13 @@ export function CoursesPage() {
             onDelete={handleDeleteCourse}
           />
         )}
+        sortKey={sortKey}
+        sortOrder={sortOrder}
+        onSortChange={(k, o) => {
+          setSortKey(k)
+          setSortOrder(o)
+          setCurrentPage(1)
+        }}
         onResetFilters={handleResetFilters}
         extraActions={
           <>

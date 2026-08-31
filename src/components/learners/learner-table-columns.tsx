@@ -21,6 +21,7 @@ export function getLearnerColumns({
     {
       key: 'user',
       title: isVi ? 'Học viên' : 'Learner',
+      sortable: true,
       render: (u) => {
         const name = u.full_name || u.email.split('@')[0]
         return (

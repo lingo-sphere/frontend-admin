@@ -74,6 +74,7 @@ export function getAdminUserColumns({
     {
       key: 'created_at',
       title: isVi ? 'Ngày tạo' : 'Created At',
+      sortable: true,
       render: (user) => (
         <span className="text-xs text-slate-500 dark:text-slate-400">
           {user.created_at

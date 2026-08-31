@@ -24,6 +24,8 @@ export function AdminUsersPage() {
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const fetchAdmins = useCallback(async () => {
     setIsLoading(true)
@@ -68,7 +70,7 @@ export function AdminUsersPage() {
   }, [fetchAdmins])
 
   const filteredAdmins = useMemo(() => {
-    return admins.filter((a) => {
+    const list = admins.filter((a) => {
       const matchSearch =
         a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -80,7 +82,18 @@ export function AdminUsersPage() {
 
       return matchSearch && matchRole && matchStatus
     })
-  }, [admins, searchTerm, selectedRole, selectedStatus])
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'created_at') {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      return 0
+    })
+  }, [admins, searchTerm, selectedRole, selectedStatus, sortKey, sortOrder])
 
   const paginatedAdmins = useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -120,6 +133,8 @@ export function AdminUsersPage() {
     setSearchTerm('')
     setSelectedRole('ALL')
     setSelectedStatus('ALL')
+    setSortKey(null)
+    setSortOrder(null)
     setCurrentPage(1)
   }
 
@@ -146,6 +161,13 @@ export function AdminUsersPage() {
         columns={columns}
         data={paginatedAdmins}
         rowKey={(a) => a.id}
+        sortKey={sortKey}
+        sortOrder={sortOrder}
+        onSortChange={(k, o) => {
+          setSortKey(k)
+          setSortOrder(o)
+          setCurrentPage(1)
+        }}
         onResetFilters={handleResetFilters}
         extraActions={
           <div className="flex items-center gap-2.5">

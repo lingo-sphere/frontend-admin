@@ -6,7 +6,7 @@ import {
   type ColumnOption,
 } from '@/components/common/TableControls'
 import { Pagination } from '@/components/common/Pagination'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
 
 export interface DataTableColumn<T> {
   key: string
@@ -16,6 +16,7 @@ export interface DataTableColumn<T> {
   width?: string
   align?: 'left' | 'center' | 'right'
   hidden?: boolean
+  sortable?: boolean
 }
 
 export interface DataTableProps<T> {
@@ -34,6 +35,10 @@ export interface DataTableProps<T> {
   viewMode?: 'table' | 'grid'
   onViewModeChange?: (mode: 'table' | 'grid') => void
   renderGridItem?: (record: T, index: number) => React.ReactNode
+
+  sortKey?: string | null
+  sortOrder?: 'asc' | 'desc' | null
+  onSortChange?: (key: string, order: 'asc' | 'desc' | null) => void
 
   pagination?: {
     currentPage: number
@@ -60,6 +65,9 @@ export function DataTable<T extends object>({
   viewMode = 'table',
   onViewModeChange,
   renderGridItem,
+  sortKey,
+  sortOrder,
+  onSortChange,
   pagination,
   onRowClick,
 }: DataTableProps<T>) {
@@ -67,6 +75,29 @@ export function DataTable<T extends object>({
   const isVi = i18n.language === 'vi'
 
   const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
+
+  const [internalSortKey, setInternalSortKey] = useState<string | null>(null)
+  const [internalSortOrder, setInternalSortOrder] = useState<'asc' | 'desc' | null>(null)
+
+  const activeSortKey = sortKey !== undefined ? sortKey : internalSortKey
+  const activeSortOrder = sortOrder !== undefined ? sortOrder : internalSortOrder
+
+  const handleHeaderClick = (colKey: string, isSortable?: boolean) => {
+    if (!isSortable) return
+    let nextOrder: 'asc' | 'desc' | null = 'asc'
+    if (activeSortKey === colKey) {
+      if (activeSortOrder === 'asc') nextOrder = 'desc'
+      else if (activeSortOrder === 'desc') nextOrder = null
+      else nextOrder = 'asc'
+    }
+
+    if (onSortChange) {
+      onSortChange(colKey, nextOrder)
+    } else {
+      setInternalSortKey(nextOrder ? colKey : null)
+      setInternalSortOrder(nextOrder)
+    }
+  }
 
   const [density, setDensity] = useState<TableDensity>('middle')
 
@@ -164,15 +195,41 @@ export function DataTable<T extends object>({
                     <th
                       key={col.key}
                       style={{ width: col.width }}
+                      onClick={() => handleHeaderClick(col.key, col.sortable)}
                       className={`py-3.5 px-4 ${
                         col.align === 'right'
                           ? 'text-right'
                           : col.align === 'center'
                           ? 'text-center'
                           : 'text-left'
+                      } ${
+                        col.sortable
+                          ? 'cursor-pointer select-none group hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors'
+                          : ''
                       }`}
                     >
-                      {col.title}
+                      <div
+                        className={`inline-flex items-center gap-1.5 ${
+                          col.align === 'right'
+                            ? 'justify-end'
+                            : col.align === 'center'
+                            ? 'justify-center'
+                            : 'justify-start'
+                        }`}
+                      >
+                        <span>{col.title}</span>
+                        {col.sortable && (
+                          <span className="shrink-0 transition-colors">
+                            {activeSortKey === col.key && activeSortOrder === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                            ) : activeSortKey === col.key && activeSortOrder === 'desc' ? (
+                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                            ) : (
+                              <ChevronsUpDown className="w-3.5 h-3.5 text-slate-400/50 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </th>
                   ))}
                 </tr>

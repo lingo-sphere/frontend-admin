@@ -24,6 +24,7 @@ export function getCourseColumns({
     {
       key: 'info',
       title: isVi ? 'Khóa học & Lộ trình' : 'Course & Roadmap',
+      sortable: true,
       render: (course) => (
         <div className="flex items-center gap-3.5 py-1">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
@@ -105,6 +106,7 @@ export function getCourseColumns({
     {
       key: 'price',
       title: isVi ? 'Học phí' : 'Price',
+      sortable: true,
       render: (course) => (
         <div className="whitespace-nowrap py-1">
           <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">

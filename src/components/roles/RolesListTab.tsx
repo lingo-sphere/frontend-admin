@@ -33,6 +33,8 @@ export function RolesListTab({
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -43,18 +45,38 @@ export function RolesListTab({
   const handleResetFilters = () => {
     setFilterName('')
     setSearchQuery('')
+    setSortKey(null)
+    setSortOrder(null)
     setCurrentPage(1)
   }
 
   const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) return roles
-    const q = searchQuery.toLowerCase().trim()
-    return roles.filter(
-      (r) =>
-        r.name?.toLowerCase().includes(q) ||
-        r.description?.toLowerCase().includes(q)
-    )
-  }, [roles, searchQuery])
+    let list = roles
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(
+        (r) =>
+          r.name?.toLowerCase().includes(q) ||
+          r.description?.toLowerCase().includes(q)
+      )
+    }
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'created_at') {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      if (sortKey === 'updated_at') {
+        const timeA = a.updated_at ? new Date(a.updated_at).getTime() : 0
+        const timeB = b.updated_at ? new Date(b.updated_at).getTime() : 0
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      return 0
+    })
+  }, [roles, searchQuery, sortKey, sortOrder])
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -120,6 +142,7 @@ export function RolesListTab({
     {
       key: 'created_at',
       title: isVi ? 'Ngày Tạo' : 'Created At',
+      sortable: true,
       render: (role) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(role.created_at)}
@@ -129,6 +152,7 @@ export function RolesListTab({
     {
       key: 'updated_at',
       title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
+      sortable: true,
       render: (role) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(role.updated_at)}
@@ -232,6 +256,13 @@ export function RolesListTab({
       rowKey={(r) => r._id}
       isLoading={isLoading}
       emptyText={isVi ? 'Không tìm thấy vai trò nào phù hợp' : 'No matching roles found'}
+      sortKey={sortKey}
+      sortOrder={sortOrder}
+      onSortChange={(k, o) => {
+        setSortKey(k)
+        setSortOrder(o)
+        setCurrentPage(1)
+      }}
       filterSlot={filterSlot}
       extraActions={extraActions}
       onResetFilters={handleResetFilters}

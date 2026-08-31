@@ -33,6 +33,8 @@ export function PermissionsListTab({
   const [searchQuery, setSearchQuery] = useState({ name: '', api: '', module: 'ALL' })
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -49,6 +51,8 @@ export function PermissionsListTab({
     setFilterApi('')
     setFilterModule('ALL')
     setSearchQuery({ name: '', api: '', module: 'ALL' })
+    setSortKey(null)
+    setSortOrder(null)
     setCurrentPage(1)
   }
 
@@ -58,13 +62,29 @@ export function PermissionsListTab({
   }, [permissions])
 
   const filteredData = useMemo(() => {
-    return permissions.filter((p) => {
+    const list = permissions.filter((p) => {
       const matchName = !searchQuery.name || p.name.toLowerCase().includes(searchQuery.name)
       const matchApi = !searchQuery.api || (p.api_path || '').toLowerCase().includes(searchQuery.api)
       const matchModule = searchQuery.module === 'ALL' || (p.module || '').toUpperCase() === searchQuery.module
       return matchName && matchApi && matchModule
     })
-  }, [permissions, searchQuery])
+
+    if (!sortKey || !sortOrder) return list
+
+    return [...list].sort((a, b) => {
+      if (sortKey === 'created_at') {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      if (sortKey === 'updated_at') {
+        const timeA = a.updated_at ? new Date(a.updated_at).getTime() : 0
+        const timeB = b.updated_at ? new Date(b.updated_at).getTime() : 0
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      return 0
+    })
+  }, [permissions, searchQuery, sortKey, sortOrder])
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -154,6 +174,7 @@ export function PermissionsListTab({
     {
       key: 'created_at',
       title: isVi ? 'Ngày Tạo' : 'Created At',
+      sortable: true,
       render: (perm) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(perm.created_at)}
@@ -163,6 +184,7 @@ export function PermissionsListTab({
     {
       key: 'updated_at',
       title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
+      sortable: true,
       render: (perm) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(perm.updated_at)}
@@ -287,6 +309,13 @@ export function PermissionsListTab({
       rowKey={(p) => p._id}
       isLoading={isLoading}
       emptyText={isVi ? 'Không tìm thấy quyền hạn nào phù hợp' : 'No matching permissions found'}
+      sortKey={sortKey}
+      sortOrder={sortOrder}
+      onSortChange={(k, o) => {
+        setSortKey(k)
+        setSortOrder(o)
+        setCurrentPage(1)
+      }}
       filterSlot={filterSlot}
       extraActions={extraActions}
       onResetFilters={handleResetFilters}
