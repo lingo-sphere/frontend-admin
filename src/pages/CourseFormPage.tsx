@@ -183,7 +183,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 w-full px-[10px] pb-12">
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"

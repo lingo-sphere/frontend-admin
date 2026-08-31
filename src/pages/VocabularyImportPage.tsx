@@ -72,7 +72,7 @@ export function VocabularyImportPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full px-[10px] space-y-6">
 
       <div className="flex items-center gap-3">
         <button

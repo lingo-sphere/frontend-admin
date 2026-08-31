@@ -385,7 +385,7 @@ export function CourseCurriculumManager({
                                     mod.id,
                                     les.id,
                                     'duration_minutes',
-                                    Number(e.target.value)
+                                    Math.max(1, Number(e.target.value) || 1)
                                   )
                                 }
                                 className="w-full h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"

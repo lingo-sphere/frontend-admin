@@ -1,5 +1,19 @@
+import { useState } from 'react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
+
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .trim()
+}
 
 export interface CourseFormData {
   title: string
@@ -45,7 +59,7 @@ export interface CourseModule {
 interface CourseBasicInfoTabProps {
   formData: CourseFormData
   onChange: (updated: Partial<CourseFormData>) => void
-  onGenerateSlug: () => void
+  onGenerateSlug?: () => void
   isVi: boolean
 }
 
@@ -55,6 +69,28 @@ export function CourseBasicInfoTab({
   onGenerateSlug,
   isVi,
 }: CourseBasicInfoTabProps) {
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
+
+  const handleTitleChange = (newTitle: string) => {
+    if (!isSlugManuallyEdited) {
+      onChange({ title: newTitle, slug: generateSlug(newTitle) })
+    } else {
+      onChange({ title: newTitle })
+    }
+  }
+
+  const handleSlugChange = (newSlug: string) => {
+    setIsSlugManuallyEdited(true)
+    onChange({ slug: newSlug })
+  }
+
+  const handleAutoSlug = () => {
+    setIsSlugManuallyEdited(false)
+    const generated = generateSlug(formData.title)
+    onChange({ slug: generated })
+    onGenerateSlug?.()
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
@@ -71,7 +107,7 @@ export function CourseBasicInfoTab({
               type="text"
               required
               value={formData.title}
-              onChange={(e) => onChange({ title: e.target.value })}
+              onChange={(e) => handleTitleChange(e.target.value)}
               placeholder={isVi ? 'VD: TOEIC Master 750+ Chuyên Sâu Listening & Reading' : 'Course Title'}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
@@ -84,8 +120,8 @@ export function CourseBasicInfoTab({
               </label>
               <button
                 type="button"
-                onClick={onGenerateSlug}
-                className="text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                onClick={handleAutoSlug}
+                className="text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400 cursor-pointer"
               >
                 {isVi ? 'Tạo tự động' : 'Auto Generate'}
               </button>
@@ -94,7 +130,7 @@ export function CourseBasicInfoTab({
               type="text"
               required
               value={formData.slug}
-              onChange={(e) => onChange({ slug: e.target.value })}
+              onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="toeic-master-750-chuyen-sau"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-mono text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
@@ -140,8 +176,10 @@ export function CourseBasicInfoTab({
             </label>
             <input
               type="number"
+              min={0}
+              max={990}
               value={formData.target_score}
-              onChange={(e) => onChange({ target_score: Number(e.target.value) })}
+              onChange={(e) => onChange({ target_score: Math.max(0, Math.min(990, Number(e.target.value) || 0)) })}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
@@ -152,8 +190,9 @@ export function CourseBasicInfoTab({
             </label>
             <input
               type="number"
+              min={0}
               value={formData.price}
-              onChange={(e) => onChange({ price: Number(e.target.value) })}
+              onChange={(e) => onChange({ price: Math.max(0, Number(e.target.value) || 0) })}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
@@ -164,8 +203,9 @@ export function CourseBasicInfoTab({
             </label>
             <input
               type="number"
+              min={0}
               value={formData.discount_price}
-              onChange={(e) => onChange({ discount_price: Number(e.target.value) })}
+              onChange={(e) => onChange({ discount_price: Math.max(0, Number(e.target.value) || 0) })}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
