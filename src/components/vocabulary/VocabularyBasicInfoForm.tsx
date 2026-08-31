@@ -1,4 +1,5 @@
 import { BookOpen } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 const WORD_TYPES = [
   'NOUN',
@@ -68,34 +69,24 @@ export function VocabularyBasicInfoForm({
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
             Từ loại (Part of Speech)
           </label>
-          <select
+          <CustomSelect
             value={wordType}
-            onChange={(e) => onWordTypeChange(e.target.value)}
-            className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-          >
-            {WORD_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+            onChange={onWordTypeChange}
+            options={WORD_TYPES.map((t) => ({ value: t, label: t }))}
+            className="w-full"
+          />
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
             Trình độ CEFR
           </label>
-          <select
+          <CustomSelect
             value={cefrLevel}
-            onChange={(e) => onCefrLevelChange(e.target.value)}
-            className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-          >
-            {CEFR_LEVELS.map((lvl) => (
-              <option key={lvl} value={lvl}>
-                {lvl}
-              </option>
-            ))}
-          </select>
+            onChange={onCefrLevelChange}
+            options={CEFR_LEVELS.map((lvl) => ({ value: lvl, label: lvl, badge: lvl }))}
+            className="w-full"
+          />
         </div>
 
         <div className="space-y-1">

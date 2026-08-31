@@ -1,4 +1,5 @@
 import { Volume2, Sparkles, CheckCircle, Play } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface MediaTtsGeneratorProps {
   ttsText: string
@@ -51,18 +52,19 @@ export function MediaTtsGenerator({
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Giọng đọc (Voice Persona)
             </label>
-            <select
+            <CustomSelect
               value={selectedVoice}
-              onChange={(e) => onVoiceChange(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
-            >
-              <option value="alloy">Alloy (Trung tính, chuẩn Mỹ - Neutral US)</option>
-              <option value="echo">Echo (Nam tính, trầm ấm - Warm Male)</option>
-              <option value="fable">Fable (Anh - Anh chuẩn, British RP Accent)</option>
-              <option value="onyx">Onyx (Nam phát thanh viên, chuyên nghiệp)</option>
-              <option value="nova">Nova (Nữ trẻ trung, năng động)</option>
-              <option value="shimmer">Shimmer (Nữ nhẹ nhàng, truyền cảm)</option>
-            </select>
+              onChange={onVoiceChange}
+              options={[
+                { value: 'alloy', label: 'Alloy (Chuẩn Mỹ - Neutral US)', badge: 'US' },
+                { value: 'echo', label: 'Echo (Nam tính, trầm ấm - Warm Male)', badge: 'Male' },
+                { value: 'fable', label: 'Fable (Anh - Anh, British RP)', badge: 'UK' },
+                { value: 'onyx', label: 'Onyx (Nam phát thanh viên)', badge: 'Pro' },
+                { value: 'nova', label: 'Nova (Nữ trẻ trung, năng động)', badge: 'Female' },
+                { value: 'shimmer', label: 'Shimmer (Nữ nhẹ nhàng, truyền cảm)', badge: 'Female' },
+              ]}
+              className="w-full"
+            />
           </div>
 
           <div className="flex items-end">

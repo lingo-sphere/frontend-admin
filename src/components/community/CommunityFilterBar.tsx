@@ -1,4 +1,5 @@
 import { Search, X } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface CommunityFilterBarProps {
   searchQuery: string
@@ -6,6 +7,14 @@ interface CommunityFilterBarProps {
   onSearchChange: (val: string) => void
   onStatusChange: (val: string) => void
 }
+
+const statusOptions = [
+  { value: 'ALL', label: 'Tất cả trạng thái' },
+  { value: 'APPROVED', label: 'Đã duyệt (Approved)', badge: 'Approved', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'PENDING_REVIEW', label: 'Chờ kiểm duyệt', badge: 'Pending', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
+  { value: 'FLAGGED', label: 'Bị báo cáo (Flagged)', badge: 'Flagged', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+  { value: 'HIDDEN', label: 'Đã ẩn (Hidden)', badge: 'Hidden', badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+]
 
 export function CommunityFilterBar({
   searchQuery,
@@ -35,17 +44,12 @@ export function CommunityFilterBar({
       </div>
 
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        <select
+        <CustomSelect
           value={filterStatus}
-          onChange={(e) => onStatusChange(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-        >
-          <option value="ALL">Tất cả trạng thái</option>
-          <option value="APPROVED">Đã duyệt (Approved)</option>
-          <option value="PENDING_REVIEW">Chờ kiểm duyệt</option>
-          <option value="FLAGGED">Bị báo cáo (Flagged)</option>
-          <option value="HIDDEN">Đã ẩn (Hidden)</option>
-        </select>
+          onChange={onStatusChange}
+          options={statusOptions}
+          className="w-52"
+        />
       </div>
     </div>
   )

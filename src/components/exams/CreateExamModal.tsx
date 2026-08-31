@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface CreateExamModalProps {
   isOpen: boolean
@@ -75,16 +76,17 @@ export function CreateExamModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Loại đề thi
               </label>
-              <select
+              <CustomSelect
                 value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-              >
-                <option value="FULL_TEST">Full Test (200 câu)</option>
-                <option value="MINI_TEST">Mini Test</option>
-                <option value="PRE_TEST">Pre-Test</option>
-                <option value="POST_MINI_TEST">Post-Mini Test</option>
-              </select>
+                onChange={setType}
+                options={[
+                  { value: 'FULL_TEST', label: 'Full Test (200 câu)', badge: '200Q' },
+                  { value: 'MINI_TEST', label: 'Mini Test' },
+                  { value: 'PRE_TEST', label: 'Pre-Test' },
+                  { value: 'POST_MINI_TEST', label: 'Post-Mini Test' },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1">

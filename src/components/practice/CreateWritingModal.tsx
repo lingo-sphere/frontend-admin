@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface CreateWritingModalProps {
   isOpen: boolean
@@ -71,15 +72,16 @@ export function CreateWritingModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Dạng bài viết
               </label>
-              <select
+              <CustomSelect
                 value={type}
-                onChange={(e) => onTypeChange(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
-              >
-                <option value="EMAIL_REPLY">Viết Email phản hồi</option>
-                <option value="OPINION_ESSAY">Viết bài luận quan điểm</option>
-                <option value="PICTURE_SENTENCE">Viết câu theo tranh</option>
-              </select>
+                onChange={onTypeChange}
+                options={[
+                  { value: 'EMAIL_REPLY', label: 'Viết Email phản hồi' },
+                  { value: 'OPINION_ESSAY', label: 'Viết bài luận quan điểm' },
+                  { value: 'PICTURE_SENTENCE', label: 'Viết câu theo tranh' },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1">

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface PaginationProps {
   currentPage: number
@@ -131,19 +132,17 @@ export function Pagination({
         </li>
       </ul>
 
-      {}
       {onPageSizeChange && (
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
-          className="h-8 px-2.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs focus:outline-none focus:border-blue-500 cursor-pointer transition-colors shadow-2xs hover:border-slate-300 dark:hover:border-slate-700"
-        >
-          {pageSizeOptions.map((size) => (
-            <option key={size} value={size}>
-              {size} / page
-            </option>
-          ))}
-        </select>
+        <CustomSelect
+          size="sm"
+          value={String(pageSize)}
+          onChange={(val) => onPageSizeChange(parseInt(val, 10))}
+          options={pageSizeOptions.map((size) => ({
+            value: String(size),
+            label: `${size} / page`,
+          }))}
+          className="w-28"
+        />
       )}
 
       {}

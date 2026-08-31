@@ -22,6 +22,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import type { BetterStackMonitoringData, ServiceHealthItem, BetterStackLogItem } from '@/types/api.types'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface BetterStackMonitoringTabProps {
   data: BetterStackMonitoringData | null
@@ -174,19 +175,20 @@ export function BetterStackMonitoringTab({
 
           <div className="flex flex-wrap items-center gap-3">
             {onAutoRefreshChange && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-white">
+              <div className="flex items-center gap-1.5">
                 <Radio className={`w-3.5 h-3.5 ${autoRefreshInterval > 0 ? 'text-emerald-300 animate-pulse' : 'text-slate-300'}`} />
-                <span>{isVi ? 'Tự động:' : 'Auto:'}</span>
-                <select
-                  value={autoRefreshInterval}
-                  onChange={(e) => onAutoRefreshChange(Number(e.target.value))}
-                  className="bg-transparent text-white font-bold text-xs focus:outline-hidden cursor-pointer"
-                >
-                  <option value={0} className="text-slate-900">{isVi ? 'Tắt' : 'Off'}</option>
-                  <option value={3} className="text-slate-900">3s ({isVi ? 'Nhanh' : 'Fast'})</option>
-                  <option value={5} className="text-slate-900">5s ({isVi ? 'Chuẩn' : 'Normal'})</option>
-                  <option value={10} className="text-slate-900">10s</option>
-                </select>
+                <CustomSelect
+                  size="sm"
+                  value={String(autoRefreshInterval)}
+                  onChange={(val) => onAutoRefreshChange(Number(val))}
+                  options={[
+                    { value: '0', label: isVi ? 'Tự động: Tắt' : 'Auto: Off' },
+                    { value: '3', label: isVi ? 'Tự động: 3s' : 'Auto: 3s', badge: 'Fast' },
+                    { value: '5', label: isVi ? 'Tự động: 5s' : 'Auto: 5s', badge: 'Normal' },
+                    { value: '10', label: isVi ? 'Tự động: 10s' : 'Auto: 10s' },
+                  ]}
+                  className="w-36"
+                />
               </div>
             )}
 
@@ -342,21 +344,21 @@ export function BetterStackMonitoringTab({
               })}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <select
-                value={currentLimit}
-                onChange={(e) => {
-                  if (onParamsChange) {
-                    onParamsChange({ limit: Number(e.target.value), page: 1 })
-                  }
-                }}
-                className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-hidden"
-              >
-                <option value={10}>10 / trang</option>
-                <option value={20}>20 / trang</option>
-                <option value={50}>50 / trang</option>
-              </select>
-            </div>
+            <CustomSelect
+              size="sm"
+              value={String(currentLimit)}
+              onChange={(val) => {
+                if (onParamsChange) {
+                  onParamsChange({ limit: Number(val), page: 1 })
+                }
+              }}
+              options={[
+                { value: '10', label: '10 / trang' },
+                { value: '20', label: '20 / trang' },
+                { value: '50', label: '50 / trang' },
+              ]}
+              className="w-32"
+            />
           </div>
         </div>
 

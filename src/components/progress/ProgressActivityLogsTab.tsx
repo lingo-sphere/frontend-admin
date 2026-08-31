@@ -1,5 +1,6 @@
 import { Activity, Search, ChevronRight, Target, BookOpenCheck, Mic, GraduationCap } from 'lucide-react'
 import type { UserActivityLog } from '@/types/api.types'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface ProgressActivityLogsTabProps {
   logs: UserActivityLog[]
@@ -8,6 +9,13 @@ interface ProgressActivityLogsTabProps {
   onSearchChange: (val: string) => void
   onActionFilterChange: (val: string) => void
 }
+
+const actionOptions = [
+  { value: 'ALL', label: 'Tất cả hành động' },
+  { value: 'TOEIC_TEST', label: 'Làm bài thi TOEIC' },
+  { value: 'VOCAB_STUDY', label: 'Học từ vựng Flashcard' },
+  { value: 'AI_CHAT', label: 'Luyện nói với AI' },
+]
 
 export function ProgressActivityLogsTab({
   logs,
@@ -52,16 +60,12 @@ export function ProgressActivityLogsTab({
           />
         </div>
 
-        <select
+        <CustomSelect
           value={actionFilter}
-          onChange={(e) => onActionFilterChange(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-        >
-          <option value="ALL">Tất cả hành động</option>
-          <option value="TOEIC_TEST">Làm bài thi TOEIC</option>
-          <option value="VOCAB_STUDY">Học từ vựng Flashcard</option>
-          <option value="AI_CHAT">Luyện nói với AI</option>
-        </select>
+          onChange={onActionFilterChange}
+          options={actionOptions}
+          className="w-56"
+        />
       </div>
 
       <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">

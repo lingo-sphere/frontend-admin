@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface CreatePracticeSetModalProps {
   isOpen: boolean
@@ -75,31 +76,33 @@ export function CreatePracticeSetModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Phân loại
               </label>
-              <select
+              <CustomSelect
                 value={category}
-                onChange={(e) => onCategoryChange(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-              >
-                <option value="GRAMMAR">Ngữ pháp (Grammar)</option>
-                <option value="VOCABULARY">Từ vựng (Vocabulary)</option>
-                <option value="TOEIC_READING">TOEIC Reading (Part 5-7)</option>
-                <option value="MINI_TEST">Mini Practice Test</option>
-              </select>
+                onChange={onCategoryChange}
+                options={[
+                  { value: 'GRAMMAR', label: 'Ngữ pháp (Grammar)' },
+                  { value: 'VOCABULARY', label: 'Từ vựng (Vocabulary)' },
+                  { value: 'TOEIC_READING', label: 'TOEIC Reading (Part 5-7)' },
+                  { value: 'MINI_TEST', label: 'Mini Practice Test' },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Độ khó
               </label>
-              <select
+              <CustomSelect
                 value={difficulty}
-                onChange={(e) => onDifficultyChange(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-              >
-                <option value="BEGINNER">Cơ bản (350 - 500)</option>
-                <option value="INTERMEDIATE">Trung cấp (550 - 750)</option>
-                <option value="ADVANCED">Nâng cao (800+)</option>
-              </select>
+                onChange={onDifficultyChange}
+                options={[
+                  { value: 'BEGINNER', label: 'Cơ bản (350 - 500)', badge: '350-500' },
+                  { value: 'INTERMEDIATE', label: 'Trung cấp (550 - 750)', badge: '550-750' },
+                  { value: 'ADVANCED', label: 'Nâng cao (800+)', badge: '800+' },
+                ]}
+                className="w-full"
+              />
             </div>
           </div>
 

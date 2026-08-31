@@ -1,4 +1,5 @@
 import { Brain, Sparkles } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface AiQuizGeneratorFormProps {
   topic: string
@@ -53,31 +54,33 @@ export function AiQuizGeneratorForm({
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Số lượng câu hỏi
             </label>
-            <select
-              value={questionCount}
-              onChange={(e) => onQuestionCountChange(Number(e.target.value))}
-              className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
-            >
-              <option value={2}>2 câu hỏi</option>
-              <option value={3}>3 câu hỏi (Khuyến nghị)</option>
-              <option value={5}>5 câu hỏi</option>
-              <option value={10}>10 câu hỏi</option>
-            </select>
+            <CustomSelect
+              value={String(questionCount)}
+              onChange={(val) => onQuestionCountChange(Number(val))}
+              options={[
+                { value: '2', label: '2 câu hỏi' },
+                { value: '3', label: '3 câu hỏi (Khuyến nghị)', badge: 'Recommended' },
+                { value: '5', label: '5 câu hỏi' },
+                { value: '10', label: '10 câu hỏi' },
+              ]}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Độ khó (Target Level)
             </label>
-            <select
+            <CustomSelect
               value={difficulty}
-              onChange={(e) => onDifficultyChange(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
-            >
-              <option value="EASY">Cơ bản (TOEIC 350 - 500)</option>
-              <option value="MEDIUM">Trung cấp (TOEIC 550 - 750)</option>
-              <option value="HARD">Nâng cao (TOEIC 800 - 990)</option>
-            </select>
+              onChange={onDifficultyChange}
+              options={[
+                { value: 'EASY', label: 'Cơ bản (TOEIC 350 - 500)', badge: '350-500' },
+                { value: 'MEDIUM', label: 'Trung cấp (TOEIC 550 - 750)', badge: '550-750' },
+                { value: 'HARD', label: 'Nâng cao (TOEIC 800 - 990)', badge: '800-990' },
+              ]}
+              className="w-full"
+            />
           </div>
         </div>
 

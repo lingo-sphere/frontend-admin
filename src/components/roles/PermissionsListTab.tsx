@@ -3,6 +3,7 @@ import { Plus, RotateCcw, Edit2, Trash2, Search, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { Popconfirm } from '@/components/common/Popconfirm'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface PermissionsListTabProps {
   permissions: Permission[]
@@ -223,22 +224,24 @@ export function PermissionsListTab({
         />
       </div>
 
-      <select
+      <CustomSelect
+        size="sm"
         value={filterModule}
-        onChange={(e) => {
-          setFilterModule(e.target.value)
-          setSearchQuery((prev) => ({ ...prev, module: e.target.value }))
+        onChange={(val) => {
+          setFilterModule(val)
+          setSearchQuery((prev) => ({ ...prev, module: val }))
           setCurrentPage(1)
         }}
-        className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer"
-      >
-        <option value="ALL">Tất cả phân hệ (Modules)</option>
-        {modulesList.map((mod) => (
-          <option key={mod} value={mod}>
-            Phân hệ {mod}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: 'ALL', label: 'Tất cả phân hệ (Modules)' },
+          ...modulesList.map((mod) => ({
+            value: mod,
+            label: `Phân hệ ${mod}`,
+            badge: mod,
+          })),
+        ]}
+        className="w-56"
+      />
 
       <button
         type="submit"

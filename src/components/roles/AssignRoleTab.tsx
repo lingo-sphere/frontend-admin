@@ -1,5 +1,6 @@
 import { Search, UserCheck, CheckCircle, AlertCircle } from 'lucide-react'
 import type { Role, UserProfile } from '@/types/api.types'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface AssignRoleTabProps {
   users: UserProfile[]
@@ -113,17 +114,16 @@ export function AssignRoleTab({
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
                 Chọn vai trò mới cần cấp
               </label>
-              <select
+              <CustomSelect
                 value={assignRoleName}
-                onChange={(e) => onRoleNameChange(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer"
-              >
-                {roles.map((r) => (
-                  <option key={r._id} value={r.name}>
-                    {r.name} - {r.description || r.name}
-                  </option>
-                ))}
-              </select>
+                onChange={onRoleNameChange}
+                options={roles.map((r) => ({
+                  value: r.name,
+                  label: `${r.name} - ${r.description || r.name}`,
+                  badge: r.name,
+                }))}
+                className="w-full"
+              />
             </div>
 
             <button

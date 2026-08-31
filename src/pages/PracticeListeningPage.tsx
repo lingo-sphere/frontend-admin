@@ -6,6 +6,7 @@ import type { ListeningExercise } from '@/types/api.types'
 import { PracticeListeningCard } from '@/components/practice/PracticeListeningCard'
 import { CreateListeningModal } from '@/components/practice/CreateListeningModal'
 import { INITIAL_LISTENING_EXERCISES } from '@/helpers/practice.helper'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 export function PracticeListeningPage() {
   const [exercises, setExercises] = useState<ListeningExercise[]>(INITIAL_LISTENING_EXERCISES)
@@ -111,16 +112,17 @@ export function PracticeListeningPage() {
           />
         </div>
 
-        <select
+        <CustomSelect
           value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
-        >
-          <option value="ALL">Tất cả định dạng</option>
-          <option value="DICTATION">Chép chính tả (Dictation)</option>
-          <option value="MULTIPLE_CHOICE">Trắc nghiệm nghe (Multiple Choice)</option>
-          <option value="FILL_BLANK">Điền từ còn thiếu (Fill in Blank)</option>
-        </select>
+          onChange={setFilterType}
+          options={[
+            { value: 'ALL', label: 'Tất cả định dạng' },
+            { value: 'DICTATION', label: 'Chép chính tả (Dictation)' },
+            { value: 'MULTIPLE_CHOICE', label: 'Trắc nghiệm nghe' },
+            { value: 'FILL_BLANK', label: 'Điền từ còn thiếu' },
+          ]}
+          className="w-56"
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

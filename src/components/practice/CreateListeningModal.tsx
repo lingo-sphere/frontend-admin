@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface CreateListeningModalProps {
   isOpen: boolean
@@ -67,16 +68,17 @@ export function CreateListeningModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Dạng bài nghe
               </label>
-              <select
+              <CustomSelect
                 value={type}
-                onChange={(e) => onTypeChange(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
-              >
-                <option value="PHOTO_DESCRIPTION">Part 1 - Mô tả tranh</option>
-                <option value="QUESTION_RESPONSE">Part 2 - Hỏi & Đáp</option>
-                <option value="SHORT_CONVERSATION">Part 3 - Đoạn hội thoại</option>
-                <option value="SHORT_TALK">Part 4 - Bài nói ngắn</option>
-              </select>
+                onChange={onTypeChange}
+                options={[
+                  { value: 'PHOTO_DESCRIPTION', label: 'Part 1 - Mô tả tranh' },
+                  { value: 'QUESTION_RESPONSE', label: 'Part 2 - Hỏi & Đáp' },
+                  { value: 'SHORT_CONVERSATION', label: 'Part 3 - Đoạn hội thoại' },
+                  { value: 'SHORT_TALK', label: 'Part 4 - Bài nói ngắn' },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1">

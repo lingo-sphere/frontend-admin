@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Search, X } from 'lucide-react'
 import type {
   FilterCategory,
@@ -5,6 +6,7 @@ import type {
   FilterStatus,
 } from '@/helpers/notification.helper'
 import { categoryLabels } from '@/data/notifications-data'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface NotificationFilterBarProps {
   searchTerm: string
@@ -29,6 +31,30 @@ export function NotificationFilterBar({
   onPriorityChange,
   onStatusChange,
 }: NotificationFilterBarProps) {
+  const categoryOptions = useMemo(() => [
+    { value: 'ALL', label: isVietnamese ? 'Tất cả danh mục' : 'All Categories' },
+    ...Object.entries(categoryLabels).map(([key, label]) => ({
+      value: key,
+      label: isVietnamese ? label.vi : label.en,
+    })),
+  ], [isVietnamese])
+
+  const priorityOptions = useMemo(() => [
+    { value: 'ALL', label: isVietnamese ? 'Tất cả mức độ' : 'All Priorities' },
+    { value: 'LOW', label: 'Thấp (Low)' },
+    { value: 'NORMAL', label: 'Bình thường (Normal)' },
+    { value: 'HIGH', label: 'Quan trọng (High)', badge: 'HIGH', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+    { value: 'URGENT', label: 'Khẩn cấp (Urgent)', badge: 'URGENT', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+    { value: 'CRITICAL', label: 'Nghiêm trọng (Critical)', badge: 'CRITICAL', badgeClass: 'bg-rose-600 text-white' },
+  ], [isVietnamese])
+
+  const statusOptions = useMemo(() => [
+    { value: 'ALL', label: isVietnamese ? 'Tất cả trạng thái' : 'All Status' },
+    { value: 'UNREAD', label: isVietnamese ? 'Chưa đọc' : 'Unread', badge: 'New', badgeClass: 'bg-rose-500 text-white' },
+    { value: 'READ', label: isVietnamese ? 'Đã đọc' : 'Read' },
+    { value: 'PINNED', label: isVietnamese ? 'Đã ghim' : 'Pinned', badge: 'Pinned', badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+  ], [isVietnamese])
+
   return (
     <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
       <div className="relative w-full md:w-80">
@@ -55,42 +81,26 @@ export function NotificationFilterBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-        <select
+        <CustomSelect
           value={selectedCategory}
-          onChange={(e) => onCategoryChange(e.target.value as FilterCategory)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-        >
-          <option value="ALL">{isVietnamese ? 'Tất cả danh mục' : 'All Categories'}</option>
-          {Object.entries(categoryLabels).map(([key, label]) => (
-            <option key={key} value={key}>
-              {isVietnamese ? label.vi : label.en}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => onCategoryChange(val as FilterCategory)}
+          options={categoryOptions}
+          className="w-48"
+        />
 
-        <select
+        <CustomSelect
           value={selectedPriority}
-          onChange={(e) => onPriorityChange(e.target.value as FilterPriority)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-        >
-          <option value="ALL">{isVietnamese ? 'Mức độ ưu tiên' : 'All Priorities'}</option>
-          <option value="LOW">Thấp (Low)</option>
-          <option value="NORMAL">Bình thường (Normal)</option>
-          <option value="HIGH">Quan trọng (High)</option>
-          <option value="URGENT">Khẩn cấp (Urgent)</option>
-          <option value="CRITICAL">Nghiêm trọng (Critical)</option>
-        </select>
+          onChange={(val) => onPriorityChange(val as FilterPriority)}
+          options={priorityOptions}
+          className="w-44"
+        />
 
-        <select
+        <CustomSelect
           value={selectedStatus}
-          onChange={(e) => onStatusChange(e.target.value as FilterStatus)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-        >
-          <option value="ALL">{isVietnamese ? 'Tất cả trạng thái' : 'All Status'}</option>
-          <option value="UNREAD">{isVietnamese ? 'Chưa đọc' : 'Unread'}</option>
-          <option value="READ">{isVietnamese ? 'Đã đọc' : 'Read'}</option>
-          <option value="PINNED">{isVietnamese ? 'Đã ghim' : 'Pinned'}</option>
-        </select>
+          onChange={(val) => onStatusChange(val as FilterStatus)}
+          options={statusOptions}
+          className="w-40"
+        />
       </div>
     </div>
   )

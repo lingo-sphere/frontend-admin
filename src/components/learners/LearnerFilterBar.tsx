@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react'
 import type { FilterStatus, FilterPlan } from '@/helpers/learner.helper'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface LearnerFilterBarProps {
   searchTerm?: string
@@ -10,6 +11,19 @@ interface LearnerFilterBarProps {
   selectedPlan: FilterPlan
   onPlanChange: (val: FilterPlan) => void
 }
+
+const statusOptions = [
+  { value: 'ALL', label: 'Tất cả trạng thái' },
+  { value: 'ACTIVE', label: 'Đang hoạt động', badge: 'Active', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'INACTIVE', label: 'Chưa kích hoạt', badge: 'Inactive', badgeClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400' },
+  { value: 'BANNED', label: 'Đã bị khóa', badge: 'Banned', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+]
+
+const planOptions = [
+  { value: 'ALL', label: 'Tất cả gói học' },
+  { value: 'free', label: 'Gói Miễn Phí (Free)' },
+  { value: 'premium', label: 'Gói Trả Phí (VIP / Pro)', badge: 'PRO', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
+]
 
 export function LearnerFilterBar({
   searchTerm,
@@ -42,26 +56,19 @@ export function LearnerFilterBar({
         )}
       </div>
 
-      <select
+      <CustomSelect
         value={selectedStatus}
-        onChange={(e) => onStatusChange(e.target.value as FilterStatus)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả trạng thái</option>
-        <option value="ACTIVE">Đang hoạt động</option>
-        <option value="INACTIVE">Chưa kích hoạt</option>
-        <option value="BANNED">Đã bị khóa</option>
-      </select>
+        onChange={(val) => onStatusChange(val as FilterStatus)}
+        options={statusOptions}
+        className="w-44"
+      />
 
-      <select
+      <CustomSelect
         value={selectedPlan}
-        onChange={(e) => onPlanChange(e.target.value as FilterPlan)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả gói học</option>
-        <option value="free">Gói Miễn Phí (Free)</option>
-        <option value="premium">Gói Trả Phí (VIP / Pro)</option>
-      </select>
+        onChange={(val) => onPlanChange(val as FilterPlan)}
+        options={planOptions}
+        className="w-48"
+      />
     </>
   )
 }

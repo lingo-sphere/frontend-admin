@@ -21,6 +21,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import type { PostHogAnalyticsData, PostHogSessionReplay, PostHogLiveEventItem } from '@/types/api.types'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface PostHogAnalyticsTabProps {
   data: PostHogAnalyticsData | null
@@ -453,23 +454,24 @@ export function PostHogAnalyticsTab({
               )}
             </div>
 
-            {}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span>{isVi ? 'Số dòng:' : 'Page size:'}</span>
-              <select
-                value={currentLimit}
-                onChange={(e) => {
+              <CustomSelect
+                size="sm"
+                value={String(currentLimit)}
+                onChange={(val) => {
                   if (onParamsChange) {
-                    onParamsChange({ limit: Number(e.target.value), page: 1 })
+                    onParamsChange({ limit: Number(val), page: 1 })
                   }
                 }}
-                className="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-hidden"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
+                options={[
+                  { value: '5', label: '5' },
+                  { value: '10', label: '10' },
+                  { value: '20', label: '20' },
+                  { value: '50', label: '50' },
+                ]}
+                className="w-20"
+              />
             </div>
           </div>
         </div>

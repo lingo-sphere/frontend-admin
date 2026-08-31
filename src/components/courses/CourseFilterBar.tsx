@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react'
 import type { FilterCategory, FilterLevel, FilterStatus } from '@/helpers/course.helper'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface CourseFilterBarProps {
   searchQuery: string
@@ -11,6 +12,25 @@ interface CourseFilterBarProps {
   filterStatus: FilterStatus
   onStatusChange: (val: FilterStatus) => void
 }
+
+const categoryOptions = [
+  { value: 'ALL', label: 'Tất cả danh mục' },
+  { value: 'TOEIC_2_SKILLS', label: 'TOEIC 2 Kỹ Năng (LR)' },
+  { value: 'TOEIC_4_SKILLS', label: 'TOEIC 4 Kỹ Năng (Full)' },
+]
+
+const levelOptions = [
+  { value: 'ALL', label: 'Tất cả trình độ' },
+  { value: 'BEGINNER', label: 'Sơ cấp (Beginner)', badge: 'A1-A2', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'INTERMEDIATE', label: 'Trung cấp (Intermediate)', badge: 'B1-B2', badgeClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' },
+  { value: 'ADVANCED', label: 'Nâng cao (Advanced)', badge: 'C1', badgeClass: 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400' },
+]
+
+const statusOptions = [
+  { value: 'ALL', label: 'Tất cả trạng thái' },
+  { value: 'PUBLISHED', label: 'Đã xuất bản (Public)', badge: 'Public', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'DRAFT', label: 'Bản nháp (Draft)', badge: 'Draft', badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+]
 
 export function CourseFilterBar({
   searchQuery,
@@ -43,36 +63,26 @@ export function CourseFilterBar({
         )}
       </div>
 
-      <select
+      <CustomSelect
         value={filterCategory}
-        onChange={(e) => onCategoryChange(e.target.value as FilterCategory)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả danh mục</option>
-        <option value="TOEIC_2_SKILLS">TOEIC 2 Kỹ Năng (Listening - Reading)</option>
-        <option value="TOEIC_4_SKILLS">TOEIC 4 Kỹ Năng (Full Skills L-R-S-W)</option>
-      </select>
+        onChange={(val) => onCategoryChange(val as FilterCategory)}
+        options={categoryOptions}
+        className="w-52"
+      />
 
-      <select
+      <CustomSelect
         value={filterLevel}
-        onChange={(e) => onLevelChange(e.target.value as FilterLevel)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả trình độ</option>
-        <option value="BEGINNER">Sơ cấp (Beginner)</option>
-        <option value="INTERMEDIATE">Trung cấp (Intermediate)</option>
-        <option value="ADVANCED">Nâng cao (Advanced)</option>
-      </select>
+        onChange={(val) => onLevelChange(val as FilterLevel)}
+        options={levelOptions}
+        className="w-48"
+      />
 
-      <select
+      <CustomSelect
         value={filterStatus}
-        onChange={(e) => onStatusChange(e.target.value as FilterStatus)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả trạng thái</option>
-        <option value="PUBLISHED">Đã xuất bản (Public)</option>
-        <option value="DRAFT">Bản nháp (Draft)</option>
-      </select>
+        onChange={(val) => onStatusChange(val as FilterStatus)}
+        options={statusOptions}
+        className="w-44"
+      />
     </>
   )
 }

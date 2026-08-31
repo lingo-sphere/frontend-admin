@@ -1,4 +1,5 @@
 import { Search, X } from 'lucide-react'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface VocabularyFilterBarProps {
   searchWord: string
@@ -6,6 +7,16 @@ interface VocabularyFilterBarProps {
   filterLevel: string
   onLevelChange: (val: string) => void
 }
+
+const levelOptions = [
+  { value: 'ALL', label: 'Tất cả trình độ CEFR' },
+  { value: 'A1', label: 'A1 - Sơ cấp cơ bản', badge: 'A1', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'A2', label: 'A2 - Sơ cấp nâng cao', badge: 'A2', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'B1', label: 'B1 - Trung cấp', badge: 'B1', badgeClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' },
+  { value: 'B2', label: 'B2 - Trung cấp cao', badge: 'B2', badgeClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' },
+  { value: 'C1', label: 'C1 - Cao cấp', badge: 'C1', badgeClass: 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400' },
+  { value: 'C2', label: 'C2 - Thành thạo', badge: 'C2', badgeClass: 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400' },
+]
 
 export function VocabularyFilterBar({
   searchWord,
@@ -34,19 +45,12 @@ export function VocabularyFilterBar({
         )}
       </div>
 
-      <select
+      <CustomSelect
         value={filterLevel}
-        onChange={(e) => onLevelChange(e.target.value)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả trình độ CEFR</option>
-        <option value="A1">A1 - Sơ cấp cơ bản</option>
-        <option value="A2">A2 - Sơ cấp nâng cao</option>
-        <option value="B1">B1 - Trung cấp</option>
-        <option value="B2">B2 - Trung cấp cao</option>
-        <option value="C1">C1 - Cao cấp</option>
-        <option value="C2">C2 - Thành thạo</option>
-      </select>
+        onChange={onLevelChange}
+        options={levelOptions}
+        className="w-56"
+      />
     </>
   )
 }

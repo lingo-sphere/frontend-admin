@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface PermissionModalProps {
   isOpen: boolean
@@ -122,17 +123,18 @@ export function PermissionModal({
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                 <span className="text-rose-500">*</span> Method
               </label>
-              <select
+              <CustomSelect
                 value={method}
-                onChange={(e) => setMethod(e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH')}
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer"
-              >
-                <option value="GET">GET (Xem / Lấy dữ liệu)</option>
-                <option value="POST">POST (Tạo mới dữ liệu)</option>
-                <option value="PUT">PUT (Cập nhật toàn bộ)</option>
-                <option value="PATCH">PATCH (Cập nhật một phần)</option>
-                <option value="DELETE">DELETE (Xóa dữ liệu)</option>
-              </select>
+                onChange={(val) => setMethod(val as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH')}
+                options={[
+                  { value: 'GET', label: 'GET (Xem / Lấy dữ liệu)', badge: 'GET', badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+                  { value: 'POST', label: 'POST (Tạo mới)', badge: 'POST', badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+                  { value: 'PUT', label: 'PUT (Cập nhật toàn bộ)', badge: 'PUT', badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+                  { value: 'PATCH', label: 'PATCH (Cập nhật một phần)', badge: 'PATCH', badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+                  { value: 'DELETE', label: 'DELETE (Xóa)', badge: 'DELETE', badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1.5">

@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react'
 import type { FilterRole, FilterStatus } from '@/helpers/admin-user.helper'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 interface AdminUserFilterBarProps {
   searchTerm: string
@@ -9,6 +10,18 @@ interface AdminUserFilterBarProps {
   selectedStatus: FilterStatus
   onStatusChange: (val: FilterStatus) => void
 }
+
+const roleOptions = [
+  { value: 'ALL', label: 'Tất cả vai trò' },
+  { value: 'ADMIN', label: 'Quản trị viên (Admin)', badge: 'ADMIN', badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20' },
+  { value: 'TEACHER', label: 'Giảng viên (Teacher)', badge: 'TEACHER', badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' },
+]
+
+const statusOptions = [
+  { value: 'ALL', label: 'Tất cả trạng thái' },
+  { value: 'ACTIVE', label: 'Đang hoạt động', badge: 'Active', badgeClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' },
+  { value: 'INACTIVE', label: 'Đã khóa / Tạm dừng', badge: 'Blocked', badgeClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' },
+]
 
 export function AdminUserFilterBar({
   searchTerm,
@@ -39,25 +52,19 @@ export function AdminUserFilterBar({
         )}
       </div>
 
-      <select
+      <CustomSelect
         value={selectedRole}
-        onChange={(e) => onRoleChange(e.target.value as FilterRole)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả vai trò</option>
-        <option value="ADMIN">Quản trị viên (Admin)</option>
-        <option value="TEACHER">Giảng viên (Teacher)</option>
-      </select>
+        onChange={(val) => onRoleChange(val as FilterRole)}
+        options={roleOptions}
+        className="w-52"
+      />
 
-      <select
+      <CustomSelect
         value={selectedStatus}
-        onChange={(e) => onStatusChange(e.target.value as FilterStatus)}
-        className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-      >
-        <option value="ALL">Tất cả trạng thái</option>
-        <option value="ACTIVE">Đang hoạt động</option>
-        <option value="INACTIVE">Đã khóa / Tạm dừng</option>
-      </select>
+        onChange={(val) => onStatusChange(val as FilterStatus)}
+        options={statusOptions}
+        className="w-48"
+      />
     </>
   )
 }

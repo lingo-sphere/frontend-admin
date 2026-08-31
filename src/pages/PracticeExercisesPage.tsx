@@ -6,6 +6,7 @@ import type { PracticeSet } from '@/types/api.types'
 import { PracticeSetCard } from '@/components/practice/PracticeSetCard'
 import { CreatePracticeSetModal } from '@/components/practice/CreatePracticeSetModal'
 import { INITIAL_PRACTICE_SETS } from '@/helpers/practice.helper'
+import { CustomSelect } from '@/components/common/CustomSelect'
 
 export function PracticeExercisesPage() {
   const [practiceSets, setPracticeSets] = useState<PracticeSet[]>(INITIAL_PRACTICE_SETS)
@@ -121,16 +122,17 @@ export function PracticeExercisesPage() {
           />
         </div>
 
-        <select
+        <CustomSelect
           value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-        >
-          <option value="ALL">Tất cả phân loại</option>
-          <option value="GRAMMAR">Ngữ pháp (Grammar)</option>
-          <option value="VOCABULARY">Từ vựng (Vocabulary)</option>
-          <option value="TOEIC_READING">TOEIC Reading</option>
-        </select>
+          onChange={setFilterCategory}
+          options={[
+            { value: 'ALL', label: 'Tất cả phân loại' },
+            { value: 'GRAMMAR', label: 'Ngữ pháp (Grammar)' },
+            { value: 'VOCABULARY', label: 'Từ vựng (Vocabulary)' },
+            { value: 'TOEIC_READING', label: 'TOEIC Reading' },
+          ]}
+          className="w-56"
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
