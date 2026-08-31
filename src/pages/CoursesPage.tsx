@@ -28,6 +28,7 @@ import { useAdminStore } from '@/store/admin-store'
 import { usePermission } from '@/hooks/use-permission'
 import { Can } from '@/components/common/Can'
 import { courseService } from '@/services/course.service'
+import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
 
 type FilterCategory = 'ALL' | 'TOEIC_LISTENING' | 'TOEIC_READING' | 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS' | 'GRAMMAR' | 'VOCABULARY'
@@ -84,36 +85,51 @@ export function CoursesPage() {
 
   const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [totalStudentsCount, setTotalStudentsCount] = useState<number>(0)
 
   const fetchCourses = async () => {
     setIsLoading(true)
     try {
-      const res = await courseService.getAllCourses({ pageSize: 50 })
-      const data: ApiCourse[] = Array.isArray(res) ? res : (res?.result || [])
-      if (data && data.length > 0) {
-        const mappedCourses: Course[] = data.map((c: ApiCourse) => ({
-          id: c._id || '',
-          title: c.title,
-          slug: c.slug || '',
-          description: c.description || '',
-          thumbnail_url: c.thumbnail_url || '',
-          target_score: c.target_score || 500,
-          category: (c.category as Course['category']) || 'TOEIC_LISTENING',
-          level: (c.level as Course['level']) || 'BEGINNER',
-          total_modules: c.modules?.length || 1,
-          total_lessons: (c.modules || []).reduce((acc: number, m: ApiCourseModule) => acc + (m.lessons?.length || 0), 0) || 1,
-          price: c.price || 0,
-          is_published: c.is_published ?? true,
-          author_id: c.author_id || '',
-          author_name: 'LingoSphere Instructor',
-          created_at: c.created_at || new Date().toISOString(),
-          enrollments: c.students_count || 120,
-          completed_count: Math.round((c.students_count || 120) * 0.4),
-          avg_progress: 58,
-        }))
-        setCourses(mappedCourses)
-      } else {
-        setCourses([])
+      const [res, analyticsRes] = await Promise.allSettled([
+        courseService.getAllCourses({ pageSize: 50 }),
+        userService.getSystemAnalytics(),
+      ])
+
+      if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
+        setTotalStudentsCount(analyticsRes.value.overview?.total_users || 0)
+      }
+
+      if (res.status === 'fulfilled' && res.value) {
+        const raw = res.value
+        const data: ApiCourse[] = Array.isArray(raw) ? raw : (raw?.result || [])
+        if (data && data.length > 0) {
+          const mappedCourses: Course[] = data.map((c: ApiCourse) => ({
+            id: c._id || '',
+            title: c.title,
+            slug: c.slug || '',
+            description: c.description || '',
+            thumbnail_url: c.thumbnail_url || '',
+            target_score: c.target_score || 500,
+            category: (c.category as Course['category']) || 'TOEIC_LISTENING',
+            level: (c.level as Course['level']) || 'BEGINNER',
+            total_modules: c.total_modules || c.modules?.length || 0,
+            total_lessons:
+              c.total_lessons ||
+              (c.modules || []).reduce((acc: number, m: ApiCourseModule) => acc + (m.lessons?.length || 0), 0) ||
+              0,
+            price: c.price || 0,
+            is_published: c.is_published ?? true,
+            author_id: c.author_id || '',
+            author_name: 'LingoSphere Instructor',
+            created_at: c.created_at || new Date().toISOString(),
+            enrollments: c.students_count || 0,
+            completed_count: Math.round((c.students_count || 0) * 0.4),
+            avg_progress: 58,
+          }))
+          setCourses(mappedCourses)
+        } else {
+          setCourses([])
+        }
       }
     } catch (err) {
       console.warn('Error loading courses:', err)
@@ -130,10 +146,18 @@ export function CoursesPage() {
   const stats = useMemo(() => {
     const total = courses.length
     const published = courses.filter((c) => c.is_published).length
-    const totalStudents = courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
-    const avgScore = courses.length ? Math.round(courses.reduce((acc, c) => acc + (c.target_score || 500), 0) / courses.length) : 650
-    return { total, published, totalStudents, avgScore }
-  }, [courses])
+    const totalStudents =
+      totalStudentsCount > 0
+        ? totalStudentsCount
+        : courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
+
+    const scores = courses.map((c) => c.target_score).filter(Boolean)
+    const minScore = scores.length ? Math.min(...scores) : 450
+    const maxScore = scores.length ? Math.max(...scores) : 850
+    const targetBand = scores.length > 1 && minScore !== maxScore ? `${minScore} - ${maxScore}+` : `${maxScore || 750}+`
+
+    return { total, published, totalStudents, targetBand }
+  }, [courses, totalStudentsCount])
 
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
@@ -435,7 +459,7 @@ export function CoursesPage() {
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mục Tiêu TOEIC</p>
-            <p className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight">{stats.avgScore}+</p>
+            <p className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight">{stats.targetBand}</p>
           </div>
           <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
             <Sparkles className="w-5 h-5" />

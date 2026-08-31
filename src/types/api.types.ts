@@ -169,6 +169,8 @@ export interface Course {
   is_published?: boolean
   rating?: number
   students_count?: number
+  total_modules?: number
+  total_lessons?: number
   skills?: string[]
   modules?: CourseModule[]
   created_at?: string
