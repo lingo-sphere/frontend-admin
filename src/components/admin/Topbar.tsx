@@ -51,13 +51,39 @@ export function Topbar() {
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      const activeEl = document.activeElement as HTMLElement | null
+      const isInputFocused =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.tagName === 'SELECT' ||
+          activeEl.isContentEditable ||
+          Boolean(activeEl.closest('input, textarea, select, [contenteditable="true"]')))
+
+      const isModifierPressed = e.metaKey || e.ctrlKey
+      const isKPressed =
+        e.key?.toLowerCase() === 'k' ||
+        e.code === 'KeyK'
+      const isSlashPressed =
+        e.key === '/' ||
+        e.code === 'Slash'
+
+      if (isModifierPressed && isKPressed) {
         e.preventDefault()
+        e.stopPropagation()
         setSearchModalOpen((prev) => !prev)
+        return
+      }
+
+      if (!isInputFocused && !isModifierPressed && !e.altKey && (isKPressed || isSlashPressed)) {
+        e.preventDefault()
+        e.stopPropagation()
+        setSearchModalOpen(true)
       }
     }
-    window.addEventListener('keydown', handleGlobalKeyDown)
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+
+    window.addEventListener('keydown', handleGlobalKeyDown, true)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown, true)
   }, [])
 
   useEffect(() => {
