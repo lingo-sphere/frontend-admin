@@ -133,6 +133,15 @@ export function CoursesPage() {
         const comp = titleA.localeCompare(titleB)
         return sortOrder === 'asc' ? comp : -comp
       }
+      if (sortKey === 'category') {
+        const comp = a.category.localeCompare(b.category)
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'level') {
+        const levelWeight: Record<string, number> = { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 3 }
+        const diff = (levelWeight[a.level] || 0) - (levelWeight[b.level] || 0)
+        return sortOrder === 'asc' ? diff : -diff
+      }
       if (sortKey === 'price') {
         const priceA = a.price || 0
         const priceB = b.price || 0

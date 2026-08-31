@@ -63,21 +63,27 @@ export function getCourseColumns({
     },
     {
       key: 'category',
-      title: isVi ? 'Danh mục & Trình độ' : 'Category & Level',
+      title: isVi ? 'Danh mục' : 'Category',
+      sortable: true,
       render: (course) => (
-        <div className="flex flex-col gap-1 py-1 min-w-[140px]">
-          <span
-            className={`inline-flex items-center w-fit px-2.5 py-0.5 rounded-lg text-[11px] font-bold border whitespace-nowrap ${getCategoryBadgeClass(course.category)}`}
-          >
-            {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
-          </span>
-          <span
-            className={`inline-flex items-center gap-1 w-fit px-2 py-0.5 rounded-md text-[10px] font-semibold border whitespace-nowrap ${getLevelBadgeClass(course.level)}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-            {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
-          </span>
-        </div>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap shadow-2xs ${getCategoryBadgeClass(course.category)}`}
+        >
+          {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
+        </span>
+      ),
+    },
+    {
+      key: 'level',
+      title: isVi ? 'Trình độ' : 'Level',
+      sortable: true,
+      render: (course) => (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border whitespace-nowrap shadow-2xs ${getLevelBadgeClass(course.level)}`}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+          <span>{levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}</span>
+        </span>
       ),
     },
     {
