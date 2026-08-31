@@ -34,6 +34,18 @@ export const mediaAdminService = {
     return await api.upload<{ file_url: string; url?: string; public_url?: string }>('/media/upload', file, { folder })
   },
 
+  async confirmMedia(fileUrls: string[], contentId?: string): Promise<{ modifiedCount?: number }> {
+    if (!fileUrls || fileUrls.length === 0) return { modifiedCount: 0 }
+    try {
+      return await api.post<{ modifiedCount?: number }>('/media/confirm', {
+        file_urls: fileUrls.filter(Boolean),
+        content_id: contentId,
+      })
+    } catch {
+      return { modifiedCount: 0 }
+    }
+  },
+
   async generateTts(text: string, voice = 'alloy', speed = 1.0): Promise<{ audio_url: string; duration_seconds?: number }> {
     return api.post<{ audio_url: string; duration_seconds?: number }>('/media/tts/generate', {
       text,

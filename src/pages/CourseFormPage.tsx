@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Save, BookOpen, ExternalLink, X } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { courseService } from '@/services/course.service'
+import { mediaService } from '@/services/media.service'
 import { toast } from '@/store/toast-store'
 import {
   CourseBasicInfoTab,
@@ -158,11 +159,26 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         })),
       }
 
+      const allMediaUrls: string[] = []
+      if (formData.thumbnail_url) allMediaUrls.push(formData.thumbnail_url)
+      formData.modules.forEach((mod) => {
+        mod.lessons.forEach((les) => {
+          if (les.video_url) allMediaUrls.push(les.video_url)
+        })
+      })
+
       if (isEditMode && currentCourseId) {
         await courseService.updateCourse(currentCourseId, payload)
+        if (allMediaUrls.length > 0) {
+          mediaService.confirmMedia(allMediaUrls, currentCourseId).catch(() => {})
+        }
         toast.success(`Đã cập nhật khóa học "${formData.title}" thành công!`)
       } else {
-        await courseService.createCourse(payload)
+        const created = await courseService.createCourse(payload)
+        const newCourseId = (created as { _id?: string; id?: string })?._id || (created as { _id?: string; id?: string })?.id
+        if (allMediaUrls.length > 0) {
+          mediaService.confirmMedia(allMediaUrls, newCourseId).catch(() => {})
+        }
         toast.success(`Đã tạo khóa học mới "${formData.title}" thành công!`)
       }
 
