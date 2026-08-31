@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   TableControls,
   type TableDensity,
@@ -50,7 +51,7 @@ export function DataTable<T extends object>({
   data,
   rowKey = (record) => (record as { _id?: string; id?: string })._id || (record as { _id?: string; id?: string }).id || String(Math.random()),
   isLoading = false,
-  emptyText = 'Không tìm thấy dữ liệu nào phù hợp',
+  emptyText,
   title,
   subtitle,
   filterSlot,
@@ -62,6 +63,10 @@ export function DataTable<T extends object>({
   pagination,
   onRowClick,
 }: DataTableProps<T>) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
+  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
 
   const [density, setDensity] = useState<TableDensity>('middle')
 
@@ -135,11 +140,11 @@ export function DataTable<T extends object>({
           {isLoading ? (
             <div className="col-span-full py-16 flex flex-col items-center justify-center gap-2 text-slate-400">
               <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-              <span className="text-xs">Đang tải dữ liệu...</span>
+              <span className="text-xs">{isVi ? 'Đang tải dữ liệu...' : 'Loading data...'}</span>
             </div>
           ) : data.length === 0 ? (
             <div className="col-span-full py-16 text-center text-xs text-slate-400">
-              {emptyText}
+              {resolvedEmptyText}
             </div>
           ) : (
             data.map((record, idx) => (
@@ -181,7 +186,7 @@ export function DataTable<T extends object>({
                     >
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-                        <span className="text-xs">Đang tải dữ liệu...</span>
+                        <span className="text-xs">{isVi ? 'Đang tải dữ liệu...' : 'Loading data...'}</span>
                       </div>
                     </td>
                   </tr>
@@ -191,7 +196,7 @@ export function DataTable<T extends object>({
                       colSpan={visibleColumns.length}
                       className="py-16 text-center text-slate-400"
                     >
-                      {emptyText}
+                      {resolvedEmptyText}
                     </td>
                   </tr>
                 ) : (

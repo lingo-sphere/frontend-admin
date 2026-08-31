@@ -97,17 +97,17 @@ export function ProgressActivityLogsTab({
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500 font-semibold">
-                <th className="pb-3 px-3">Học viên</th>
-                <th className="pb-3 px-3">Hành động</th>
-                <th className="pb-3 px-3">Điểm / XP</th>
-                <th className="pb-3 px-3">Thời gian</th>
+                <th className="pb-3 px-3">{isVi ? 'Học viên' : 'Learner'}</th>
+                <th className="pb-3 px-3">{isVi ? 'Hành động' : 'Action'}</th>
+                <th className="pb-3 px-3">{isVi ? 'Điểm / XP' : 'Score / XP'}</th>
+                <th className="pb-3 px-3">{isVi ? 'Thời gian' : 'Timestamp'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
               {paginatedLogs.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-slate-400">
-                    Không có nhật ký hoạt động nào
+                    {isVi ? 'Không có nhật ký hoạt động nào' : 'No activity logs found'}
                   </td>
                 </tr>
               ) : (
@@ -133,14 +133,14 @@ export function ProgressActivityLogsTab({
                           <div className="w-6 h-6 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center">
                             <Icon className="w-3.5 h-3.5" />
                           </div>
-                          <span>{log.actionNameVi}</span>
+                          <span>{isVi ? log.actionNameVi : log.actionNameEn || log.actionNameVi}</span>
                         </div>
                       </td>
                       <td className="py-3 px-3 font-bold text-teal-600 dark:text-teal-400">
                         {log.scoreOrXP || '-'}
                       </td>
                       <td className="py-3 px-3 text-slate-400">
-                        {new Date(log.timestamp).toLocaleString('vi-VN')}
+                        {new Date(log.timestamp).toLocaleString(isVi ? 'vi-VN' : 'en-US')}
                       </td>
                     </tr>
                   )

@@ -23,7 +23,7 @@ export function getCourseColumns({
   return [
     {
       key: 'info',
-      title: 'Khóa học & Lộ trình',
+      title: isVi ? 'Khóa học & Lộ trình' : 'Course & Roadmap',
       render: (course) => (
         <div className="flex items-center gap-3.5 py-1">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
@@ -62,7 +62,7 @@ export function getCourseColumns({
     },
     {
       key: 'category',
-      title: 'Danh mục & Trình độ',
+      title: isVi ? 'Danh mục & Trình độ' : 'Category & Level',
       render: (course) => (
         <div className="flex flex-col gap-1 py-1 min-w-[140px]">
           <span
@@ -81,36 +81,43 @@ export function getCourseColumns({
     },
     {
       key: 'stats',
-      title: 'Số bài & Học viên',
+      title: isVi ? 'Số bài & Học viên' : 'Lessons & Learners',
       render: (course) => (
         <div className="space-y-1 py-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-750 dark:text-slate-200 whitespace-nowrap">
             <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span>
-              {course.total_modules} chương · {course.total_lessons} video
+              {isVi
+                ? `${course.total_modules} chương · ${course.total_lessons} bài học`
+                : `${course.total_modules} modules · ${course.total_lessons} lessons`}
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
             <Users className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            <span>{course.enrollments.toLocaleString('vi-VN')} học viên</span>
+            <span>
+              {course.enrollments.toLocaleString(isVi ? 'vi-VN' : 'en-US')}{' '}
+              {isVi ? 'học viên' : 'learners'}
+            </span>
           </div>
         </div>
       ),
     },
     {
       key: 'price',
-      title: 'Học phí',
+      title: isVi ? 'Học phí' : 'Price',
       render: (course) => (
         <div className="whitespace-nowrap py-1">
           <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
-            {course.price ? `${course.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}
+            {course.price
+              ? (isVi ? `${course.price.toLocaleString('vi-VN')} đ` : `$${Math.round(course.price / 25000)}`)
+              : (isVi ? 'Miễn phí' : 'Free')}
           </span>
         </div>
       ),
     },
     {
       key: 'status',
-      title: 'Trạng thái',
+      title: isVi ? 'Trạng thái' : 'Status',
       render: (course) => (
         <div className="whitespace-nowrap py-1">
           <span
@@ -123,14 +130,16 @@ export function getCourseColumns({
             <span
               className={`w-2 h-2 rounded-full ${course.is_published ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}
             />
-            {course.is_published ? 'Đã xuất bản' : 'Bản nháp'}
+            {course.is_published
+              ? (isVi ? 'Đã xuất bản' : 'Published')
+              : (isVi ? 'Bản nháp' : 'Draft')}
           </span>
         </div>
       ),
     },
     {
       key: 'actions',
-      title: 'Thao tác',
+      title: isVi ? 'Thao tác' : 'Actions',
       align: 'right',
       render: (course) => (
         <div className="flex items-center justify-end gap-1.5 py-1">
@@ -138,7 +147,7 @@ export function getCourseColumns({
             <button
               onClick={() => onEdit(course.id)}
               className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all cursor-pointer shadow-2xs"
-              title="Chỉnh sửa khóa học"
+              title={isVi ? 'Chỉnh sửa khóa học' : 'Edit course'}
               type="button"
             >
               <Edit2 className="w-4 h-4" />
@@ -146,17 +155,21 @@ export function getCourseColumns({
           )}
           {canDelete && (
             <Popconfirm
-              title="Xóa khóa học này?"
-              description="Hành động này không thể hoàn tác."
-              okText="Xóa"
-              cancelText="Hủy"
+              title={isVi ? 'Xóa khóa học này?' : 'Delete this course?'}
+              description={
+                isVi
+                  ? 'Hành động này không thể hoàn tác.'
+                  : 'This action cannot be undone.'
+              }
+              okText={isVi ? 'Xóa' : 'Delete'}
+              cancelText={isVi ? 'Hủy' : 'Cancel'}
               okType="danger"
               placement="topRight"
               onConfirm={() => onDelete(course.id)}
             >
               <button
                 className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer shadow-2xs"
-                title="Xóa khóa học"
+                title={isVi ? 'Xóa khóa học' : 'Delete course'}
                 type="button"
               >
                 <Trash2 className="w-4 h-4" />

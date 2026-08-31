@@ -4,18 +4,20 @@ import type { DataTableColumn } from '@/components/common/DataTable'
 import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface GetAdminUserColumnsOptions {
+  isVi?: boolean
   onEditUser: (userId: string) => void
   onOpenStatusModal: (user: AdminUser, action: 'ban' | 'unban') => Promise<void> | void
 }
 
 export function getAdminUserColumns({
+  isVi = true,
   onEditUser,
   onOpenStatusModal,
 }: GetAdminUserColumnsOptions): DataTableColumn<AdminUser>[] {
   return [
     {
       key: 'user',
-      title: 'Quản trị viên / Giảng viên',
+      title: isVi ? 'Quản trị viên / Giảng viên' : 'Admin / Teacher',
       render: (user) => (
         <div
           className="flex items-center gap-3 cursor-pointer"
@@ -43,18 +45,18 @@ export function getAdminUserColumns({
     },
     {
       key: 'role',
-      title: 'Vai trò phân quyền',
+      title: isVi ? 'Vai trò phân quyền' : 'Assigned Role',
       render: (user) => (
         <>
           {user.role === 'ADMIN' ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
               <Shield className="w-3 h-3" />
-              <span>Quản trị viên</span>
+              <span>{isVi ? 'Quản trị viên' : 'Administrator'}</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
               <GraduationCap className="w-3 h-3" />
-              <span>Giảng viên</span>
+              <span>{isVi ? 'Giảng viên' : 'Teacher'}</span>
             </span>
           )}
         </>
@@ -62,7 +64,7 @@ export function getAdminUserColumns({
     },
     {
       key: 'phone',
-      title: 'Số điện thoại',
+      title: isVi ? 'Số điện thoại' : 'Phone Number',
       render: (user) => (
         <span className="text-xs text-slate-600 dark:text-slate-400">
           {user.phone || '—'}
@@ -71,16 +73,18 @@ export function getAdminUserColumns({
     },
     {
       key: 'created_at',
-      title: 'Ngày tạo',
+      title: isVi ? 'Ngày tạo' : 'Created At',
       render: (user) => (
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          {user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : '—'}
+          {user.created_at
+            ? new Date(user.created_at).toLocaleDateString(isVi ? 'vi-VN' : 'en-US')
+            : '—'}
         </span>
       ),
     },
     {
       key: 'status',
-      title: 'Trạng thái',
+      title: isVi ? 'Trạng thái' : 'Status',
       render: (user) => (
         <span
           className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
@@ -89,37 +93,41 @@ export function getAdminUserColumns({
               : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
           }`}
         >
-          {user.is_active ? 'Hoạt động' : 'Tạm khóa'}
+          {user.is_active ? (isVi ? 'Hoạt động' : 'Active') : (isVi ? 'Tạm khóa' : 'Blocked')}
         </span>
       ),
     },
     {
       key: 'actions',
-      title: 'Thao tác',
+      title: isVi ? 'Thao tác' : 'Actions',
       align: 'right',
       render: (user) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onEditUser(user.id)}
             className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title="Chỉnh sửa tài khoản"
+            title={isVi ? 'Chỉnh sửa tài khoản' : 'Edit account'}
             type="button"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           {user.is_active ? (
             <Popconfirm
-              title="Khóa tài khoản này?"
-              description="Tài khoản này sẽ bị tạm dừng truy cập vào hệ thống quản trị."
-              okText="Khóa tài khoản"
-              cancelText="Hủy"
+              title={isVi ? 'Khóa tài khoản này?' : 'Block this account?'}
+              description={
+                isVi
+                  ? 'Tài khoản này sẽ bị tạm dừng truy cập vào hệ thống quản trị.'
+                  : 'This account will be suspended from accessing the admin console.'
+              }
+              okText={isVi ? 'Khóa tài khoản' : 'Block'}
+              cancelText={isVi ? 'Hủy' : 'Cancel'}
               okType="danger"
               placement="topRight"
               onConfirm={() => onOpenStatusModal(user, 'ban')}
             >
               <button
                 className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                title="Khóa tài khoản"
+                title={isVi ? 'Khóa tài khoản' : 'Block account'}
                 type="button"
               >
                 <Ban className="w-3.5 h-3.5" />
@@ -127,17 +135,21 @@ export function getAdminUserColumns({
             </Popconfirm>
           ) : (
             <Popconfirm
-              title="Mở khóa tài khoản này?"
-              description="Tài khoản này sẽ có thể đăng nhập lại vào hệ thống quản trị."
-              okText="Mở khóa"
-              cancelText="Hủy"
+              title={isVi ? 'Mở khóa tài khoản này?' : 'Unblock this account?'}
+              description={
+                isVi
+                  ? 'Tài khoản này sẽ có thể đăng nhập lại vào hệ thống quản trị.'
+                  : 'This account will be able to log into the admin console again.'
+              }
+              okText={isVi ? 'Mở khóa' : 'Unblock'}
+              cancelText={isVi ? 'Hủy' : 'Cancel'}
               okType="primary"
               placement="topRight"
               onConfirm={() => onOpenStatusModal(user, 'unban')}
             >
               <button
                 className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer"
-                title="Mở khóa tài khoản"
+                title={isVi ? 'Mở khóa tài khoản' : 'Unblock account'}
                 type="button"
               >
                 <CheckCircle className="w-3.5 h-3.5" />

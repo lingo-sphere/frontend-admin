@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { FileText, CheckCircle, Award, Clock } from 'lucide-react'
 
 interface ExamStatsOverviewProps {
@@ -10,12 +11,15 @@ interface ExamStatsOverviewProps {
 }
 
 export function ExamStatsOverview({ stats }: ExamStatsOverviewProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Tổng Đề Thi
+            {isVi ? 'Tổng Đề Thi' : 'Total Exams'}
           </p>
           <p className="text-2xl font-bold text-slate-900 dark:text-white">
             {stats.total}
@@ -29,7 +33,7 @@ export function ExamStatsOverview({ stats }: ExamStatsOverviewProps) {
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Đã Xuất Bản
+            {isVi ? 'Đã Xuất Bản' : 'Published Exams'}
           </p>
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {stats.published}
@@ -43,10 +47,10 @@ export function ExamStatsOverview({ stats }: ExamStatsOverviewProps) {
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Lượt Thi Toàn Hệ Thống
+            {isVi ? 'Lượt Thi Toàn Hệ Thống' : 'System-wide Attempts'}
           </p>
           <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-            {stats.totalAttempts.toLocaleString('vi-VN')}
+            {stats.totalAttempts.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
           </p>
         </div>
         <div className="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
@@ -57,7 +61,7 @@ export function ExamStatsOverview({ stats }: ExamStatsOverviewProps) {
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Điểm Trung Bình ETS
+            {isVi ? 'Điểm Trung Bình ETS' : 'ETS Average Score'}
           </p>
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
             {stats.avgScore} <span className="text-xs font-normal text-slate-400">/ 990</span>

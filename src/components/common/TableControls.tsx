@@ -175,10 +175,10 @@ export function TableControls({
                 ? 'bg-indigo-600/15 text-indigo-400 border-indigo-500/30'
                 : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
             }`}
-            title="Cài đặt hiển thị cột bảng"
+            title={isVi ? 'Cài đặt hiển thị cột bảng' : 'Configure column visibility'}
           >
             <Columns className="w-3.5 h-3.5" />
-            <span>Cột</span>
+            <span>{isVi ? 'Cột' : 'Columns'}</span>
             {visibleColumnCount < columns.length && (
               <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-[10px]">
                 {visibleColumnCount}/{columns.length}
@@ -191,14 +191,14 @@ export function TableControls({
             <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="flex items-center justify-between px-2 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Hiển thị cột ({visibleColumnCount}/{columns.length})
+                  {isVi ? `Hiển thị cột (${visibleColumnCount}/${columns.length})` : `Columns (${visibleColumnCount}/${columns.length})`}
                 </span>
                 <button
                   type="button"
                   onClick={resetColumns}
                   className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
                 >
-                  Hiện tất cả
+                  {isVi ? 'Hiện tất cả' : 'Show all'}
                 </button>
               </div>
 
@@ -232,10 +232,10 @@ export function TableControls({
           type="button"
           onClick={onResetFilters}
           className="h-9 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Đặt lại bộ lọc về mặc định"
+          title={isVi ? 'Đặt lại bộ lọc về mặc định' : 'Reset filters to default'}
         >
           <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-          <span>Đặt lại</span>
+          <span>{isVi ? 'Đặt lại' : 'Reset'}</span>
         </button>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
 import { useAdminStore } from '@/store/admin-store'
@@ -12,6 +13,8 @@ import { AdminUserFilterBar } from '@/components/admin-users/AdminUserFilterBar'
 import { getAdminUserColumns } from '@/components/admin-users/admin-user-table-columns'
 
 export function AdminUsersPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
   const [admins, setAdmins] = useState<AdminUser[]>([])
@@ -122,18 +125,23 @@ export function AdminUsersPage() {
 
   const columns = useMemo(() => {
     return getAdminUserColumns({
+      isVi,
       onEditUser: (userId) => setActiveNavItem(`admin-user-edit:${userId}`),
       onOpenStatusModal: handleStatusChange,
     })
-  }, [setActiveNavItem])
+  }, [isVi, setActiveNavItem])
 
   return (
     <div className="space-y-6">
       <AdminUserStatsOverview stats={stats} />
 
       <DataTable<AdminUser>
-        title="Quản Trị Viên & Giảng Viên"
-        subtitle="Quản lý đội ngũ quản trị, cấp tài khoản giảng viên và phân quyền vận hành"
+        title={isVi ? 'Quản Trị Viên & Giảng Viên' : 'Admins & Teachers'}
+        subtitle={
+          isVi
+            ? 'Quản lý đội ngũ quản trị, cấp tài khoản giảng viên và phân quyền vận hành'
+            : 'Manage administrative staff, grant instructor access, and assign operation roles'
+        }
         isLoading={isLoading}
         columns={columns}
         data={paginatedAdmins}
@@ -146,14 +154,14 @@ export function AdminUsersPage() {
               className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
-              <span>Làm mới</span>
+              <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
             </button>
             <button
               onClick={() => setActiveNavItem('admin-user-create')}
               className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Thêm Thành Viên Mới</span>
+              <span>{isVi ? 'Thêm Thành Viên Mới' : 'Add New Member'}</span>
             </button>
           </div>
         }

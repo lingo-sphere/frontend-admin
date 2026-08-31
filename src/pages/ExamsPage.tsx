@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'
 import { examAdminService, type ToeicExamItem } from '@/services/exam.service'
 import { toast } from '@/store/toast-store'
@@ -55,6 +56,9 @@ const INITIAL_EXAMS: ToeicExamItem[] = [
 ]
 
 export function ExamsPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [exams, setExams] = useState<ToeicExamItem[]>(INITIAL_EXAMS)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -97,12 +101,20 @@ export function ExamsPage() {
       setExams((prev) =>
         prev.map((e) => ((e.id || e._id) === id ? { ...e, is_published: !current } : e))
       )
-      toast.success('Cập nhật trạng thái xuất bản thành công!')
+      toast.success(
+        isVi
+          ? 'Cập nhật trạng thái xuất bản thành công!'
+          : 'Publish status updated successfully!'
+      )
     } catch {
       setExams((prev) =>
         prev.map((e) => ((e.id || e._id) === id ? { ...e, is_published: !current } : e))
       )
-      toast.success('Đã chuyển đổi trạng thái đề thi (Local)!')
+      toast.success(
+        isVi
+          ? 'Đã chuyển đổi trạng thái đề thi (Local)!'
+          : 'Toggled exam status (Local)!'
+      )
     }
   }
 
@@ -110,10 +122,10 @@ export function ExamsPage() {
     try {
       await examAdminService.deleteExam(id)
       setExams((prev) => prev.filter((e) => (e.id || e._id) !== id))
-      toast.success('Đã xóa đề thi thành công!')
+      toast.success(isVi ? 'Đã xóa đề thi thành công!' : 'Exam deleted successfully!')
     } catch {
       setExams((prev) => prev.filter((e) => (e.id || e._id) !== id))
-      toast.success('Đã xóa đề thi khỏi danh sách!')
+      toast.success(isVi ? 'Đã xóa đề thi khỏi danh sách!' : 'Exam removed from list!')
     }
   }
 
@@ -129,7 +141,7 @@ export function ExamsPage() {
         setExams((prev) => [created, ...prev])
       }
       setShowAddModal(false)
-      toast.success('Thêm mới đề thi TOEIC thành công!')
+      toast.success(isVi ? 'Thêm mới đề thi TOEIC thành công!' : 'Added new TOEIC exam successfully!')
     } catch {
       const fallbackExam: ToeicExamItem = {
         id: `exam_${Date.now()}`,
@@ -144,20 +156,21 @@ export function ExamsPage() {
       }
       setExams((prev) => [fallbackExam, ...prev])
       setShowAddModal(false)
-      toast.success('Đã tạo đề thi mới (Local)!')
+      toast.success(isVi ? 'Đã tạo đề thi mới (Local)!' : 'Created new exam (Local)!')
     }
   }
 
   return (
     <div className="space-y-6">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Quản Lý Đề Thi TOEIC & Kiểm Tra
+            {isVi ? 'Quản Lý Đề Thi TOEIC & Kiểm Tra' : 'TOEIC Exam & Test Management'}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Ngân hàng đề thi TOEIC Full Test 200 câu, Mini-Test 50 câu, Pre-Test Baseline và Post-Mini Test theo chương
+            {isVi
+              ? 'Ngân hàng đề thi TOEIC Full Test 200 câu, Mini-Test 50 câu, Pre-Test Baseline và Post-Mini Test theo chương'
+              : 'Question bank for TOEIC Full Test (200Q), Mini-Test (50Q), Baseline Pre-Test, and Chapter Post-Mini Tests'}
           </p>
         </div>
 
@@ -167,14 +180,14 @@ export function ExamsPage() {
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
-            <span>Làm mới</span>
+            <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Tạo Đề Thi Mới</span>
+            <span>{isVi ? 'Tạo Đề Thi Mới' : 'Create New Exam'}</span>
           </button>
         </div>
       </div>

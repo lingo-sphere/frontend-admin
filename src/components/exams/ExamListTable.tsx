@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FileText,
   Search,
@@ -29,6 +30,9 @@ export function ExamListTable({
   onTogglePublish,
   onDeleteExam,
 }: ExamListTableProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -60,7 +64,7 @@ export function ExamListTable({
           />
           <input
             type="text"
-            placeholder="Tìm kiếm đề thi theo tên..."
+            placeholder={isVi ? 'Tìm kiếm đề thi theo tên...' : 'Search exams by title...'}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
@@ -80,7 +84,7 @@ export function ExamListTable({
                 }`}
               >
                 {type === 'ALL'
-                  ? 'Tất cả'
+                  ? (isVi ? 'Tất cả' : 'All')
                   : type === 'FULL_TEST'
                     ? 'Full Test (200c)'
                     : type === 'MINI_TEST'
@@ -99,21 +103,21 @@ export function ExamListTable({
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
-                <th className="py-3.5 px-4">Tên đề thi</th>
-                <th className="py-3.5 px-4">Loại đề</th>
-                <th className="py-3.5 px-4">Thời lượng</th>
-                <th className="py-3.5 px-4">Số câu</th>
-                <th className="py-3.5 px-4">Lượt thi</th>
-                <th className="py-3.5 px-4">Điểm TB</th>
-                <th className="py-3.5 px-4">Trạng thái</th>
-                <th className="py-3.5 px-4 text-right">Thao tác</th>
+                <th className="py-3.5 px-4">{isVi ? 'Tên đề thi' : 'Exam Title'}</th>
+                <th className="py-3.5 px-4">{isVi ? 'Loại đề' : 'Type'}</th>
+                <th className="py-3.5 px-4">{isVi ? 'Thời lượng' : 'Duration'}</th>
+                <th className="py-3.5 px-4">{isVi ? 'Số câu' : 'Questions'}</th>
+                <th className="py-3.5 px-4">{isVi ? 'Lượt thi' : 'Attempts'}</th>
+                <th className="py-3.5 px-4">{isVi ? 'Điểm TB' : 'Avg Score'}</th>
+                <th className="py-3.5 px-4">{isVi ? 'Trạng thái' : 'Status'}</th>
+                <th className="py-3.5 px-4 text-right">{isVi ? 'Thao tác' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 dark:divide-slate-800/60 dark:text-slate-200">
               {paginatedExams.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
-                    Không tìm thấy đề thi nào phù hợp
+                    {isVi ? 'Không tìm thấy đề thi nào phù hợp' : 'No matching exams found'}
                   </td>
                 </tr>
               ) : (
@@ -136,17 +140,17 @@ export function ExamListTable({
                     <td className="py-3.5 px-4">
                       <span className="flex items-center gap-1">
                         <Clock size={13} className="text-slate-400" />
-                        {exam.duration_minutes} phút
+                        {exam.duration_minutes} {isVi ? 'phút' : 'mins'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="flex items-center gap-1">
                         <HelpCircle size={13} className="text-slate-400" />
-                        {exam.total_questions} câu
+                        {exam.total_questions} {isVi ? 'câu' : 'questions'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
-                      {(exam.total_attempts || 0).toLocaleString()}
+                      {(exam.total_attempts || 0).toLocaleString(isVi ? 'vi-VN' : 'en-US')}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-teal-600 dark:text-teal-400">
                       {exam.avg_score || 0} pts
@@ -162,23 +166,29 @@ export function ExamListTable({
                             : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                         }`}
                       >
-                        {exam.is_published ? 'Xuất bản' : 'Bản nháp'}
+                        {exam.is_published
+                          ? (isVi ? 'Xuất bản' : 'Published')
+                          : (isVi ? 'Bản nháp' : 'Draft')}
                       </button>
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Popconfirm
-                          title="Xóa đề thi này?"
-                          description="Hành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu câu hỏi liên quan."
-                          okText="Xóa"
-                          cancelText="Hủy"
+                          title={isVi ? 'Xóa đề thi này?' : 'Delete this exam?'}
+                          description={
+                            isVi
+                              ? 'Hành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu câu hỏi liên quan.'
+                              : 'This action cannot be undone and will delete all related questions.'
+                          }
+                          okText={isVi ? 'Xóa' : 'Delete'}
+                          cancelText={isVi ? 'Hủy' : 'Cancel'}
                           okType="danger"
                           placement="topRight"
                           onConfirm={() => onDeleteExam(exam.id || exam._id || '')}
                         >
                           <button
                             className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                            title="Xóa đề thi"
+                            title={isVi ? 'Xóa đề thi' : 'Delete exam'}
                             type="button"
                           >
                             <Trash2 size={14} />

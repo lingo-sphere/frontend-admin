@@ -165,8 +165,12 @@ export function CoursesPage() {
       <CourseStatsOverview stats={stats} />
 
       <DataTable<Course>
-        title="Quản Lý Khóa Học & Lộ Trình"
-        subtitle="Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi"
+        title={isVi ? 'Quản Lý Khóa Học & Lộ Trình' : 'Course & Curriculum Management'}
+        subtitle={
+          isVi
+            ? 'Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi'
+            : 'Author curriculum, video lecture modules, exercises, and question bank system'
+        }
         isLoading={isLoading}
         columns={columns}
         data={paginatedCourses}
@@ -191,7 +195,7 @@ export function CoursesPage() {
               className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
-              <span>Làm mới</span>
+              <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
             </button>
             <Can do="POST" on="/courses">
               <button
@@ -199,7 +203,7 @@ export function CoursesPage() {
                 className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Thêm khóa học mới</span>
+                <span>{isVi ? 'Thêm khóa học mới' : 'Add New Course'}</span>
               </button>
             </Can>
           </>

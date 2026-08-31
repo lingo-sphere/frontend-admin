@@ -50,7 +50,7 @@ export function CreateExamModal({
       >
         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Tạo Đề Thi Mới
+            {isVi ? 'Tạo Đề Thi Mới' : 'Create New Exam'}
           </h3>
           <button
             onClick={onClose}
@@ -63,14 +63,14 @@ export function CreateExamModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Tên đề thi <span className="text-rose-500">*</span>
+              {isVi ? 'Tên đề thi' : 'Exam Title'} <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="VD: ETS TOEIC 2024 - Test 02"
+              placeholder={isVi ? 'VD: ETS TOEIC 2024 - Test 02' : 'e.g. ETS TOEIC 2024 - Test 02'}
               className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
@@ -78,7 +78,7 @@ export function CreateExamModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Loại đề thi
+                {isVi ? 'Loại đề thi' : 'Exam Type'}
               </label>
               <CustomSelect
                 value={type}
@@ -95,7 +95,7 @@ export function CreateExamModal({
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Thời lượng (phút)
+                {isVi ? 'Thời lượng (phút)' : 'Duration (mins)'}
               </label>
               <input
                 type="number"
@@ -113,14 +113,16 @@ export function CreateExamModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
             >
-              Hủy
+              {isVi ? 'Hủy' : 'Cancel'}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-xs cursor-pointer"
             >
-              {isSubmitting ? 'Đang tạo...' : 'Tạo Đề Thi'}
+              {isSubmitting
+                ? (isVi ? 'Đang tạo...' : 'Creating...')
+                : (isVi ? 'Tạo Đề Thi' : 'Create Exam')}
             </button>
           </div>
         </form>

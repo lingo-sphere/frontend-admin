@@ -102,7 +102,7 @@ export function PermissionsListTab({
   const columns: DataTableColumn<Permission>[] = [
     {
       key: 'name',
-      title: 'Tên Quyền Hạn (Permission)',
+      title: isVi ? 'Tên Quyền Hạn (Permission)' : 'Permission Name',
       render: (perm) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800/50 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold shrink-0">
@@ -121,7 +121,7 @@ export function PermissionsListTab({
     },
     {
       key: 'api_path',
-      title: 'Đường Dẫn API',
+      title: isVi ? 'Đường Dẫn API' : 'API Path',
       render: (perm) => (
         <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           {perm.api_path}
@@ -130,7 +130,7 @@ export function PermissionsListTab({
     },
     {
       key: 'method',
-      title: 'Phương Thức',
+      title: isVi ? 'Phương Thức' : 'HTTP Method',
       align: 'center',
       render: (perm) => (
         <span
@@ -144,7 +144,7 @@ export function PermissionsListTab({
     },
     {
       key: 'module',
-      title: 'Phân Hệ (Module)',
+      title: isVi ? 'Phân Hệ (Module)' : 'Module',
       render: (perm) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase tracking-wide">
           {perm.module || 'GENERAL'}
@@ -153,7 +153,7 @@ export function PermissionsListTab({
     },
     {
       key: 'created_at',
-      title: 'Ngày Tạo',
+      title: isVi ? 'Ngày Tạo' : 'Created At',
       render: (perm) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(perm.created_at)}
@@ -162,7 +162,7 @@ export function PermissionsListTab({
     },
     {
       key: 'updated_at',
-      title: 'Ngày Cập Nhật',
+      title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
       render: (perm) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(perm.updated_at)}
@@ -171,30 +171,34 @@ export function PermissionsListTab({
     },
     {
       key: 'actions',
-      title: 'Thao Tác',
+      title: isVi ? 'Thao Tác' : 'Actions',
       align: 'right',
       render: (perm) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onOpenEditPerm(perm)}
             className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title="Chỉnh sửa quyền hạn"
+            title={isVi ? 'Chỉnh sửa quyền hạn' : 'Edit permission'}
             type="button"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           <Popconfirm
-            title="Xóa quyền hạn này?"
-            description="Hành động này không thể hoàn tác."
-            okText="Xóa"
-            cancelText="Hủy"
+            title={isVi ? 'Xóa quyền hạn này?' : 'Delete this permission?'}
+            description={
+              isVi
+                ? 'Hành động này không thể hoàn tác.'
+                : 'This action cannot be undone.'
+            }
+            okText={isVi ? 'Xóa' : 'Delete'}
+            cancelText={isVi ? 'Hủy' : 'Cancel'}
             okType="danger"
             placement="topRight"
             onConfirm={() => onDeletePerm(perm._id)}
           >
             <button
               className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-              title="Xóa quyền hạn"
+              title={isVi ? 'Xóa quyền hạn' : 'Delete permission'}
               type="button"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -213,7 +217,7 @@ export function PermissionsListTab({
           type="text"
           value={filterName}
           onChange={(e) => setFilterName(e.target.value)}
-          placeholder="Tìm theo tên..."
+          placeholder={isVi ? 'Tìm theo tên...' : 'Search by name...'}
           className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
         />
       </div>
@@ -223,7 +227,7 @@ export function PermissionsListTab({
           type="text"
           value={filterApi}
           onChange={(e) => setFilterApi(e.target.value)}
-          placeholder="Lọc API (ví dụ /courses)..."
+          placeholder={isVi ? 'Lọc API (ví dụ /courses)...' : 'Filter API (e.g. /courses)...'}
           className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all font-mono"
         />
       </div>
@@ -251,7 +255,7 @@ export function PermissionsListTab({
         type="submit"
         className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer"
       >
-        Tìm kiếm
+        {isVi ? 'Tìm kiếm' : 'Search'}
       </button>
     </form>
   )
@@ -263,13 +267,13 @@ export function PermissionsListTab({
         className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition-all cursor-pointer"
       >
         <Plus className="w-4 h-4" />
-        <span>Thêm mới</span>
+        <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
       </button>
 
       <button
         onClick={onRefresh}
         className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-        title="Làm mới"
+        title={isVi ? 'Làm mới' : 'Refresh'}
       >
         <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
       </button>
@@ -282,7 +286,7 @@ export function PermissionsListTab({
       data={paginatedData}
       rowKey={(p) => p._id}
       isLoading={isLoading}
-      emptyText="Không tìm thấy quyền hạn nào phù hợp"
+      emptyText={isVi ? 'Không tìm thấy quyền hạn nào phù hợp' : 'No matching permissions found'}
       filterSlot={filterSlot}
       extraActions={extraActions}
       onResetFilters={handleResetFilters}

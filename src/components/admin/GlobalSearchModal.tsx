@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Search,
   LayoutDashboard,
@@ -23,8 +24,10 @@ import { useAdminStore } from '@/store/admin-store'
 
 interface NavSearchItem {
   id: string
-  title: string
-  subtitle: string
+  titleVi: string
+  titleEn: string
+  subtitleVi: string
+  subtitleEn: string
   category: 'NAVIGATION' | 'ACTION'
   icon: typeof LayoutDashboard
   navTarget: string
@@ -33,120 +36,150 @@ interface NavSearchItem {
 const NAVIGATION_INDEX: NavSearchItem[] = [
   {
     id: 'nav-dashboard',
-    title: 'Tổng quan hệ thống',
-    subtitle: 'Thống kê hoạt động, doanh thu và DAU/MAU',
+    titleVi: 'Tổng quan hệ thống',
+    titleEn: 'System Overview',
+    subtitleVi: 'Thống kê hoạt động, doanh thu và DAU/MAU',
+    subtitleEn: 'System activity, revenue metrics and DAU/MAU statistics',
     category: 'NAVIGATION',
     icon: LayoutDashboard,
     navTarget: 'dashboard',
   },
   {
     id: 'nav-learners',
-    title: 'Quản lý Học viên',
-    subtitle: 'Danh sách học viên, tiến độ TOEIC, gói cước',
+    titleVi: 'Quản lý Học viên',
+    titleEn: 'Learner Management',
+    subtitleVi: 'Danh sách học viên, tiến độ TOEIC, gói cước',
+    subtitleEn: 'Learner list, TOEIC progress, and subscription plans',
     category: 'NAVIGATION',
     icon: Users,
     navTarget: 'users',
   },
   {
     id: 'nav-courses',
-    title: 'Quản lý Khóa học',
-    subtitle: 'Khóa học TOEIC 2 kỹ năng, 4 kỹ năng và giáo trình',
+    titleVi: 'Quản lý Khóa học',
+    titleEn: 'Course Management',
+    subtitleVi: 'Khóa học TOEIC 2 kỹ năng, 4 kỹ năng và giáo trình',
+    subtitleEn: 'TOEIC courses, syllabus, and curriculum management',
     category: 'NAVIGATION',
     icon: BookOpen,
     navTarget: 'courses',
   },
   {
     id: 'nav-vocabulary',
-    title: 'Kho Từ vựng & Flashcards',
-    subtitle: 'Từ điển song ngữ, phiên âm IPA, bộ thẻ SRS',
+    titleVi: 'Kho Từ vựng & Flashcards',
+    titleEn: 'Vocabulary & Flashcards',
+    subtitleVi: 'Từ điển song ngữ, phiên âm IPA, bộ thẻ SRS',
+    subtitleEn: 'Bilingual dictionary, IPA phonetics, and SRS flashcard decks',
     category: 'NAVIGATION',
     icon: Layers,
     navTarget: 'vocabulary',
   },
   {
     id: 'nav-exams',
-    title: 'Ngân hàng Đề thi TOEIC',
-    subtitle: 'Đề Full Test 7 Parts, Mini Test và ma trận đề thi',
+    titleVi: 'Ngân hàng Đề thi TOEIC',
+    titleEn: 'TOEIC Exam Bank',
+    subtitleVi: 'Đề Full Test 7 Parts, Mini Test và ma trận đề thi',
+    subtitleEn: 'Full Test 7 Parts, Mini Test, and question matrices',
     category: 'NAVIGATION',
     icon: FileCheck,
     navTarget: 'exams',
   },
   {
     id: 'nav-listening',
-    title: 'Luyện Nghe Listening & Dictation',
-    subtitle: 'Bài nghe chép chính tả Part 1-4 và Audio Cloudflare R2',
+    titleVi: 'Luyện Nghe Listening & Dictation',
+    titleEn: 'Listening & Dictation',
+    subtitleVi: 'Bài nghe chép chính tả Part 1-4 và Audio Cloudflare R2',
+    subtitleEn: 'Dictation practice Part 1-4 and Cloudflare R2 audio',
     category: 'NAVIGATION',
     icon: Headphones,
     navTarget: 'practice-listening',
   },
   {
     id: 'nav-speaking',
-    title: 'Luyện Nói & Phát âm AI Whisper',
-    subtitle: 'Nhận diện phát âm chuẩn bản xứ và thang điểm chấm',
+    titleVi: 'Luyện Nói & Phát âm AI Whisper',
+    titleEn: 'Speaking & Pronunciation AI',
+    subtitleVi: 'Nhận diện phát âm chuẩn bản xứ và thang điểm chấm',
+    subtitleEn: 'Native pronunciation assessment and AI scoring',
     category: 'NAVIGATION',
     icon: Mic,
     navTarget: 'practice-speaking',
   },
   {
     id: 'nav-writing',
-    title: 'Luyện Viết Writing & Essay',
-    subtitle: 'Viết email thương mại và bài luận chấm AI',
+    titleVi: 'Luyện Viết Writing & Essay',
+    titleEn: 'Writing & Essay Grading',
+    subtitleVi: 'Viết email thương mại và bài luận chấm AI',
+    subtitleEn: 'Business email composition and AI essay grading',
     category: 'NAVIGATION',
     icon: PenTool,
     navTarget: 'practice-writing',
   },
   {
     id: 'nav-roles',
-    title: 'Phân quyền & Vai trò',
-    subtitle: 'Quản trị RBAC, tài khoản Admin, Giảng viên',
+    titleVi: 'Phân quyền & Vai trò',
+    titleEn: 'Roles & RBAC Permissions',
+    subtitleVi: 'Quản trị RBAC, tài khoản Admin, Giảng viên',
+    subtitleEn: 'RBAC management, Admin, and Teacher access controls',
     category: 'NAVIGATION',
     icon: Shield,
     navTarget: 'roles',
   },
   {
     id: 'nav-ai',
-    title: 'Gia sư AI & Prompting',
-    subtitle: 'Cấu hình Groq LPU, Gemini Flash và sinh đề thi tự động',
+    titleVi: 'Gia sư AI & Prompting',
+    titleEn: 'AI Tutor & Prompts',
+    subtitleVi: 'Cấu hình Groq LPU, Gemini Flash và sinh đề thi tự động',
+    subtitleEn: 'Configure Groq LPU, Gemini Flash, and quiz generation',
     category: 'NAVIGATION',
     icon: Bot,
     navTarget: 'ai',
   },
   {
     id: 'nav-media',
-    title: 'Quản lý Media & R2 Storage',
-    subtitle: 'Dung lượng lưu trữ Cloudflare R2, sinh giọng nói TTS',
+    titleVi: 'Quản lý Media & R2 Storage',
+    titleEn: 'Media & R2 Storage',
+    subtitleVi: 'Dung lượng lưu trữ Cloudflare R2, sinh giọng nói TTS',
+    subtitleEn: 'Cloudflare R2 storage quota and Text-to-Speech generation',
     category: 'NAVIGATION',
     icon: HardDrive,
     navTarget: 'media',
   },
   {
     id: 'nav-notifications',
-    title: 'Thông báo & Chiến dịch nhắc học',
-    subtitle: 'Push Notification, Email nhắc Streak học viên',
+    titleVi: 'Thông báo & Chiến dịch nhắc học',
+    titleEn: 'Notifications & Campaigns',
+    subtitleVi: 'Push Notification, Email nhắc Streak học viên',
+    subtitleEn: 'Push notifications and learner study streak reminders',
     category: 'NAVIGATION',
     icon: Bell,
     navTarget: 'notifications',
   },
   {
     id: 'nav-progress',
-    title: 'Giám sát & Báo cáo hệ thống',
-    subtitle: 'Phân tích điểm TOEIC, BetterStack Uptime, PostHog',
+    titleVi: 'Giám sát & Báo cáo hệ thống',
+    titleEn: 'Monitoring & System Reports',
+    subtitleVi: 'Phân tích điểm TOEIC, BetterStack Uptime, PostHog',
+    subtitleEn: 'TOEIC analytics, BetterStack Uptime, and PostHog metrics',
     category: 'NAVIGATION',
     icon: Activity,
     navTarget: 'progress',
   },
   {
     id: 'nav-settings',
-    title: 'Cài đặt hệ thống',
-    subtitle: 'Gói thanh toán, cấu hình AI, bảo mật',
+    titleVi: 'Cài đặt hệ thống',
+    titleEn: 'System Settings',
+    subtitleVi: 'Gói thanh toán, cấu hình AI, bảo mật',
+    subtitleEn: 'Payment plans, AI configurations, and security preferences',
     category: 'NAVIGATION',
     icon: Settings,
     navTarget: 'settings',
   },
   {
     id: 'nav-profile',
-    title: 'Hồ sơ Quản trị viên',
-    subtitle: 'Đổi mật khẩu, cập nhật họ tên và ảnh đại diện',
+    titleVi: 'Hồ sơ Quản trị viên',
+    titleEn: 'Admin Profile',
+    subtitleVi: 'Đổi mật khẩu, cập nhật họ tên và ảnh đại diện',
+    subtitleEn: 'Change password, update name, and profile avatar',
     category: 'ACTION',
     icon: User,
     navTarget: 'admin-profile:me',
@@ -159,6 +192,9 @@ interface GlobalSearchModalProps {
 }
 
 export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -172,15 +208,23 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
     }
   }, [isOpen])
 
+  const localizedItems = useMemo(() => {
+    return NAVIGATION_INDEX.map((item) => ({
+      ...item,
+      title: isVi ? item.titleVi : item.titleEn,
+      subtitle: isVi ? item.subtitleVi : item.subtitleEn,
+    }))
+  }, [isVi])
+
   const filteredItems = useMemo(() => {
-    if (!query.trim()) return NAVIGATION_INDEX
+    if (!query.trim()) return localizedItems
     const q = query.toLowerCase().trim()
-    return NAVIGATION_INDEX.filter(
+    return localizedItems.filter(
       (item) =>
         item.title.toLowerCase().includes(q) ||
         item.subtitle.toLowerCase().includes(q)
     )
-  }, [query])
+  }, [localizedItems, query])
 
   useEffect(() => {
     setSelectedIndex(0)
@@ -232,7 +276,11 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Tìm nhanh trang, tính năng, học viên, khóa học... (Gõ phím để tìm)"
+            placeholder={
+              isVi
+                ? 'Tìm nhanh trang, tính năng, học viên, khóa học... (Gõ phím để tìm)'
+                : 'Quick search pages, features, learners, courses... (Type to search)'
+            }
             className="w-full bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-0"
           />
           {query ? (
@@ -252,8 +300,14 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
         <div className="max-h-96 overflow-y-auto p-2 divide-y divide-slate-100 dark:divide-slate-800/40">
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-slate-400 space-y-1">
-              <p className="text-sm font-semibold">Không tìm thấy kết quả phù hợp</p>
-              <p className="text-xs">Thử tìm với từ khóa khác như "Khóa học", "Từ vựng", "Học viên"...</p>
+              <p className="text-sm font-semibold">
+                {isVi ? 'Không tìm thấy kết quả phù hợp' : 'No matching results found'}
+              </p>
+              <p className="text-xs">
+                {isVi
+                  ? 'Thử tìm với từ khóa khác như "Khóa học", "Từ vựng", "Học viên"...'
+                  : 'Try searching with other keywords like "Courses", "Vocabulary", "Learners"...'}
+              </p>
             </div>
           ) : (
             filteredItems.map((item, index) => {
@@ -293,7 +347,9 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
 
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400">
-                      {item.category === 'ACTION' ? 'Thao tác' : 'Điều hướng'}
+                      {item.category === 'ACTION'
+                        ? (isVi ? 'Thao tác' : 'Action')
+                        : (isVi ? 'Điều hướng' : 'Navigate')}
                     </span>
                     <ArrowRight
                       className={`w-4 h-4 transition-transform ${
@@ -318,16 +374,16 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
               <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[10px]">
                 ↓
               </kbd>{' '}
-              để chuyển
+              {isVi ? 'để chuyển' : 'to navigate'}
             </span>
             <span>
               <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[10px]">
                 ↵
               </kbd>{' '}
-              để chọn
+              {isVi ? 'để chọn' : 'to select'}
             </span>
           </div>
-          <span>Tìm kiếm toàn cục LingoSphere</span>
+          <span>{isVi ? 'Tìm kiếm toàn cục LingoSphere' : 'LingoSphere Global Search'}</span>
         </div>
       </div>
     </div>

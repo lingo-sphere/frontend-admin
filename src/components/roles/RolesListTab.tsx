@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Edit2, Trash2, Sparkles, Shield, Search } from 'lucide-react'
 import type { Role, Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
@@ -25,6 +26,9 @@ export function RolesListTab({
   onSeedDefaultRBAC,
   isLoading,
 }: RolesListTabProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [filterName, setFilterName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -42,20 +46,20 @@ export function RolesListTab({
     setCurrentPage(1)
   }
 
-  const filteredRoles = useMemo(() => {
-    return roles.filter((r) => {
-      if (!searchQuery) return true
-      return (
-        r.name.toLowerCase().includes(searchQuery) ||
-        (r.description || '').toLowerCase().includes(searchQuery)
-      )
-    })
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return roles
+    const q = searchQuery.toLowerCase().trim()
+    return roles.filter(
+      (r) =>
+        r.name?.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q)
+    )
   }, [roles, searchQuery])
 
-  const paginatedRoles = useMemo(() => {
+  const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredRoles.slice(start, start + pageSize)
-  }, [filteredRoles, currentPage, pageSize])
+    return filteredData.slice(start, start + pageSize)
+  }, [filteredData, currentPage, pageSize])
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-'
@@ -73,7 +77,7 @@ export function RolesListTab({
   const columns: DataTableColumn<Role>[] = [
     {
       key: 'name',
-      title: 'Tên Vai Trò (Role)',
+      title: isVi ? 'Tên Vai Trò (Role)' : 'Role Name',
       render: (role) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
@@ -84,11 +88,11 @@ export function RolesListTab({
               <span className="font-bold text-slate-900 dark:text-slate-100">{role.name}</span>
               {role.is_active ? (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                  Hoạt động
+                  {isVi ? 'Hoạt động' : 'Active'}
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
-                  Tắt
+                  {isVi ? 'Tắt' : 'Disabled'}
                 </span>
               )}
             </div>
@@ -103,19 +107,19 @@ export function RolesListTab({
     },
     {
       key: 'permissions_count',
-      title: 'Quyền Hạn (Permissions)',
+      title: isVi ? 'Quyền Hạn (Permissions)' : 'Permissions',
       render: (role) => {
         const count = Array.isArray(role.permissions) ? role.permissions.length : 0
         return (
           <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
-            {count} quyền hạn
+            {count} {isVi ? 'quyền hạn' : 'permissions'}
           </span>
         )
       },
     },
     {
       key: 'created_at',
-      title: 'Ngày Tạo',
+      title: isVi ? 'Ngày Tạo' : 'Created At',
       render: (role) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(role.created_at)}
@@ -124,7 +128,7 @@ export function RolesListTab({
     },
     {
       key: 'updated_at',
-      title: 'Ngày Cập Nhật',
+      title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
       render: (role) => (
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {formatDate(role.updated_at)}
@@ -133,30 +137,34 @@ export function RolesListTab({
     },
     {
       key: 'actions',
-      title: 'Thao Tác',
+      title: isVi ? 'Thao Tác' : 'Actions',
       align: 'right',
       render: (role) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onOpenEditRole(role)}
             className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title="Chỉnh sửa vai trò"
+            title={isVi ? 'Chỉnh sửa vai trò' : 'Edit role'}
             type="button"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           <Popconfirm
-            title="Xóa vai trò này?"
-            description="Hành động này không thể hoàn tác."
-            okText="Xóa"
-            cancelText="Hủy"
+            title={isVi ? 'Xóa vai trò này?' : 'Delete this role?'}
+            description={
+              isVi
+                ? 'Hành động này không thể hoàn tác.'
+                : 'This action cannot be undone.'
+            }
+            okText={isVi ? 'Xóa' : 'Delete'}
+            cancelText={isVi ? 'Hủy' : 'Cancel'}
             okType="danger"
             placement="topRight"
             onConfirm={() => onDeleteRole(role._id)}
           >
             <button
               className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-              title="Xóa vai trò"
+              title={isVi ? 'Xóa vai trò' : 'Delete role'}
               type="button"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -175,7 +183,7 @@ export function RolesListTab({
           type="text"
           value={filterName}
           onChange={(e) => setFilterName(e.target.value)}
-          placeholder="Tìm kiếm vai trò theo tên..."
+          placeholder={isVi ? 'Tìm kiếm vai trò theo tên...' : 'Search roles by name...'}
           className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
         />
       </div>
@@ -183,7 +191,7 @@ export function RolesListTab({
         type="submit"
         className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer"
       >
-        Tìm kiếm
+        {isVi ? 'Tìm kiếm' : 'Search'}
       </button>
     </form>
   )
@@ -193,10 +201,10 @@ export function RolesListTab({
       <button
         onClick={onSeedDefaultRBAC}
         className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer"
-        title="Tự động khởi tạo quyền hạn mẫu"
+        title={isVi ? 'Tự động khởi tạo quyền hạn mẫu' : 'Initialize default RBAC permissions'}
       >
         <Sparkles className="w-4 h-4" />
-        <span>Khởi tạo RBAC Mẫu</span>
+        <span>{isVi ? 'Khởi tạo RBAC Mẫu' : 'Seed Default RBAC'}</span>
       </button>
 
       <button
@@ -204,13 +212,13 @@ export function RolesListTab({
         className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition-all cursor-pointer"
       >
         <Plus className="w-4 h-4" />
-        <span>Thêm mới</span>
+        <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
       </button>
 
       <button
         onClick={onRefresh}
         className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-        title="Làm mới"
+        title={isVi ? 'Làm mới' : 'Refresh'}
       >
         <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
       </button>
@@ -220,17 +228,17 @@ export function RolesListTab({
   return (
     <DataTable<Role>
       columns={columns}
-      data={paginatedRoles}
+      data={paginatedData}
       rowKey={(r) => r._id}
       isLoading={isLoading}
-      emptyText="Không tìm thấy vai trò nào phù hợp"
+      emptyText={isVi ? 'Không tìm thấy vai trò nào phù hợp' : 'No matching roles found'}
       filterSlot={filterSlot}
       extraActions={extraActions}
       onResetFilters={handleResetFilters}
       pagination={{
         currentPage,
         pageSize,
-        totalItems: filteredRoles.length,
+        totalItems: filteredData.length,
         onPageChange: setCurrentPage,
         onPageSizeChange: (size) => {
           setPageSize(size)

@@ -4,12 +4,14 @@ import type { DataTableColumn } from '@/components/common/DataTable'
 import { Popconfirm } from '@/components/common/Popconfirm'
 
 interface GetLearnerColumnsOptions {
+  isVi?: boolean
   onViewDetails?: (userId: string) => void
   onViewProfile?: (userId: string) => void
   onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
 }
 
 export function getLearnerColumns({
+  isVi = true,
   onViewDetails,
   onViewProfile,
   onOpenStatusModal,
@@ -18,7 +20,7 @@ export function getLearnerColumns({
   return [
     {
       key: 'user',
-      title: 'Học viên',
+      title: isVi ? 'Học viên' : 'Learner',
       render: (u) => {
         const name = u.full_name || u.email.split('@')[0]
         return (
@@ -49,7 +51,7 @@ export function getLearnerColumns({
     },
     {
       key: 'target',
-      title: 'Mục tiêu & Trình độ',
+      title: isVi ? 'Mục tiêu & Trình độ' : 'Target & Level',
       render: (u) => (
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400">
@@ -57,7 +59,7 @@ export function getLearnerColumns({
             <span>Target {u.target_toeic_score || 650}+</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Ước lượng: {u.current_estimated_score || 450}
+            {isVi ? 'Ước lượng:' : 'Estimated:'} {u.current_estimated_score || 450}
           </p>
         </div>
       ),
@@ -73,14 +75,14 @@ export function getLearnerColumns({
           </span>
           <span className="flex items-center gap-1 text-xs font-semibold text-rose-500">
             <Flame className="w-3.5 h-3.5 fill-rose-500" />
-            {u.current_streak || 0} ngày
+            {u.current_streak || 0} {isVi ? 'ngày' : 'days'}
           </span>
         </div>
       ),
     },
     {
       key: 'plan',
-      title: 'Gói học',
+      title: isVi ? 'Gói học' : 'Plan',
       render: (u) => {
         return (
           <span
@@ -91,14 +93,14 @@ export function getLearnerColumns({
             }`}
           >
             {u.is_premium && <Crown className="w-3 h-3 text-amber-500" />}
-            <span>{u.is_premium ? 'VIP Premium' : 'Miễn phí'}</span>
+            <span>{u.is_premium ? 'VIP Premium' : (isVi ? 'Miễn phí' : 'Free')}</span>
           </span>
         )
       },
     },
     {
       key: 'status',
-      title: 'Trạng thái',
+      title: isVi ? 'Trạng thái' : 'Status',
       render: (u) => (
         <span
           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
@@ -107,13 +109,13 @@ export function getLearnerColumns({
               : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
           }`}
         >
-          {u.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}
+          {u.status === 'ACTIVE' ? (isVi ? 'Hoạt động' : 'Active') : (isVi ? 'Tạm khóa' : 'Blocked')}
         </span>
       ),
     },
     {
       key: 'actions',
-      title: 'Thao tác',
+      title: isVi ? 'Thao tác' : 'Actions',
       align: 'right',
       render: (u) => {
         const isActive = u.status === 'ACTIVE'
@@ -121,17 +123,21 @@ export function getLearnerColumns({
           <div className="flex items-center justify-end gap-1.5">
             {isActive ? (
               <Popconfirm
-                title="Khóa tài khoản học viên này?"
-                description="Học viên này sẽ bị tạm dừng truy cập vào hệ thống."
-                okText="Khóa tài khoản"
-                cancelText="Hủy"
+                title={isVi ? 'Khóa tài khoản học viên này?' : 'Block this learner account?'}
+                description={
+                  isVi
+                    ? 'Học viên này sẽ bị tạm dừng truy cập vào hệ thống.'
+                    : 'This learner will be suspended from accessing the system.'
+                }
+                okText={isVi ? 'Khóa tài khoản' : 'Block'}
+                cancelText={isVi ? 'Hủy' : 'Cancel'}
                 okType="danger"
                 placement="topRight"
                 onConfirm={() => onOpenStatusModal(u, 'ban')}
               >
                 <button
                   className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                  title="Khóa tài khoản học viên"
+                  title={isVi ? 'Khóa tài khoản học viên' : 'Block learner account'}
                   type="button"
                 >
                   <Ban className="w-3.5 h-3.5" />
@@ -139,17 +145,21 @@ export function getLearnerColumns({
               </Popconfirm>
             ) : (
               <Popconfirm
-                title="Mở khóa tài khoản học viên?"
-                description="Học viên này sẽ có thể đăng nhập lại vào hệ thống."
-                okText="Mở khóa"
-                cancelText="Hủy"
+                title={isVi ? 'Mở khóa tài khoản học viên?' : 'Unblock this learner account?'}
+                description={
+                  isVi
+                    ? 'Học viên này sẽ có thể đăng nhập lại vào hệ thống.'
+                    : 'This learner will be able to log into the platform again.'
+                }
+                okText={isVi ? 'Mở khóa' : 'Unblock'}
+                cancelText={isVi ? 'Hủy' : 'Cancel'}
                 okType="primary"
                 placement="topRight"
                 onConfirm={() => onOpenStatusModal(u, 'unban')}
               >
                 <button
                   className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer"
-                  title="Mở khóa tài khoản"
+                  title={isVi ? 'Mở khóa tài khoản' : 'Unblock learner account'}
                   type="button"
                 >
                   <CheckCircle className="w-3.5 h-3.5" />

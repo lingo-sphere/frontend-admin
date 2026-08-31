@@ -265,14 +265,16 @@ export function Topbar() {
                       className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium transition-colors cursor-pointer"
                       onClick={markAllAsRead}
                     >
-                      Đọc tất cả
+                      {isVietnamese ? 'Đọc tất cả' : 'Mark all as read'}
                     </button>
                   )}
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-800/60 my-2 max-h-72 overflow-y-auto pr-1">
                   {notifications.length === 0 ? (
-                    <p className="py-6 text-center text-xs text-slate-400">Không có thông báo mới nào</p>
+                    <p className="py-6 text-center text-xs text-slate-400">
+                      {isVietnamese ? 'Không có thông báo mới nào' : 'No new notifications'}
+                    </p>
                   ) : (
                     notifications.map((notif) => {
                       const notifId = (notif as { _id?: string })._id || (notif as { id?: string }).id || ''
@@ -311,7 +313,7 @@ export function Topbar() {
                     className="w-full py-2 rounded-xl text-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                     onClick={goToNotifications}
                   >
-                    Xem tất cả thông báo →
+                    {isVietnamese ? 'Xem tất cả thông báo →' : 'View all notifications →'}
                   </button>
                 </div>
               </div>
@@ -341,7 +343,7 @@ export function Topbar() {
                   {fullName}
                 </span>
                 <span className="text-[11px] font-semibold text-teal-600 dark:text-teal-400">
-                  {role === 'ADMIN' ? 'Quản trị viên' : role}
+                  {role === 'ADMIN' ? (isVietnamese ? 'Quản trị viên' : 'Administrator') : role}
                 </span>
               </div>
               <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -377,7 +379,7 @@ export function Topbar() {
                   className="w-full px-3 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <UserIcon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                  <span>Hồ sơ cá nhân</span>
+                  <span>{isVietnamese ? 'Hồ sơ cá nhân' : 'My Profile'}</span>
                 </button>
 
                 <button
@@ -388,7 +390,7 @@ export function Topbar() {
                   className="w-full px-3 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Shield className="w-3.5 h-3.5 text-teal-500 dark:text-teal-400" />
-                  <span>Cài đặt hệ thống</span>
+                  <span>{isVietnamese ? 'Cài đặt hệ thống' : 'System Settings'}</span>
                 </button>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
@@ -401,7 +403,7 @@ export function Topbar() {
                   className="w-full px-3 py-2 text-left text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Đăng xuất</span>
+                  <span>{isVietnamese ? 'Đăng xuất' : 'Sign Out'}</span>
                 </button>
               </div>
             )}
@@ -413,10 +415,14 @@ export function Topbar() {
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={handleLogout}
-        title="Xác nhận đăng xuất"
-        description="Bạn có chắc chắn muốn đăng xuất khỏi hệ thống LingoSphere Admin Console không?"
-        confirmText="Đăng xuất"
-        cancelText="Hủy bỏ"
+        title={isVietnamese ? 'Xác nhận đăng xuất' : 'Confirm Sign Out'}
+        description={
+          isVietnamese
+            ? 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống LingoSphere Admin Console không?'
+            : 'Are you sure you want to sign out of LingoSphere Admin Console?'
+        }
+        confirmText={isVietnamese ? 'Đăng xuất' : 'Sign Out'}
+        cancelText={isVietnamese ? 'Hủy bỏ' : 'Cancel'}
         variant="danger"
       />
 

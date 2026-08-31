@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
 import { useAdminStore } from '@/store/admin-store'
@@ -13,6 +14,8 @@ import { LearnerFilterBar } from '@/components/learners/LearnerFilterBar'
 import { getLearnerColumns } from '@/components/learners/learner-table-columns'
 
 export function LearnersPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
   const [users, setUsers] = useState<User[]>([])
@@ -125,18 +128,23 @@ export function LearnersPage() {
 
   const columns = useMemo(() => {
     return getLearnerColumns({
+      isVi,
       onViewProfile: (userId) => setActiveNavItem(`user-profile:${userId}`),
       onOpenStatusModal: handleStatusChange,
     })
-  }, [setActiveNavItem])
+  }, [isVi, setActiveNavItem])
 
   return (
     <div className="space-y-6">
       <LearnerStatsOverview stats={stats} />
 
       <DataTable<User>
-        title="Quản Lý Học Viên"
-        subtitle="Danh sách học viên, tiến độ học TOEIC và quản lý trạng thái tài khoản"
+        title={isVi ? 'Quản Lý Học Viên' : 'Learner Management'}
+        subtitle={
+          isVi
+            ? 'Danh sách học viên, tiến độ học TOEIC và quản lý trạng thái tài khoản'
+            : 'Learner directory, TOEIC progress tracking, and account status management'
+        }
         isLoading={isLoading}
         columns={columns}
         data={paginatedUsers}
@@ -148,7 +156,7 @@ export function LearnersPage() {
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
-            <span>Làm mới</span>
+            <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
         }
         filterSlot={

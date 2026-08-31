@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, Bookmark, Layers, RotateCcw, FileSpreadsheet, Plus } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
 import { useAdminStore } from '@/store/admin-store'
@@ -18,6 +19,8 @@ import { VocabularyTopicsTab } from '@/components/vocabulary/VocabularyTopicsTab
 import { VocabularyDecksTab } from '@/components/vocabulary/VocabularyDecksTab'
 
 export function VocabularyPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
   const [activeTab, setActiveTab] = useState<VocabularyTabType>('words')
@@ -126,20 +129,23 @@ export function VocabularyPage() {
 
   const columns = useMemo(() => {
     return getVocabularyColumns({
+      isVi,
       onEditWord: (wordId) => setActiveNavItem(`vocab-edit:${wordId}`),
       onDeleteWord: handleDeleteWord,
     })
-  }, [setActiveNavItem])
+  }, [isVi, setActiveNavItem])
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Kho Từ Vựng & Bộ Thẻ Flashcard
+            {isVi ? 'Kho Từ Vựng & Bộ Thẻ Flashcard' : 'Vocabulary & Flashcard Decks'}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý từ vựng chuẩn khung CEFR (A1-C2), bảng phát âm IPA, bộ thẻ ôn tập và chủ đề
+            {isVi
+              ? 'Quản lý từ vựng chuẩn khung CEFR (A1-C2), bảng phát âm IPA, bộ thẻ ôn tập và chủ đề'
+              : 'Manage CEFR standard vocabulary (A1-C2), IPA phonetics, review decks, and topic categories'}
           </p>
         </div>
 
@@ -149,21 +155,21 @@ export function VocabularyPage() {
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-500' : ''}`} />
-            <span>Làm mới</span>
+            <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
           <button
             onClick={() => setActiveNavItem('vocabulary-import')}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-teal-500" />
-            <span>Nhập File CSV</span>
+            <span>{isVi ? 'Nhập File CSV' : 'Import CSV'}</span>
           </button>
           <button
             onClick={() => setActiveNavItem('vocab-create')}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Thêm Từ Vựng Mới</span>
+            <span>{isVi ? 'Thêm Từ Vựng Mới' : 'Add New Word'}</span>
           </button>
         </div>
       </div>
@@ -178,7 +184,9 @@ export function VocabularyPage() {
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
-          <span>Kho từ vựng ({words.length})</span>
+          <span>
+            {isVi ? `Kho từ vựng (${words.length})` : `Word Bank (${words.length})`}
+          </span>
         </button>
 
         <button
@@ -190,7 +198,9 @@ export function VocabularyPage() {
           }`}
         >
           <Bookmark className="w-3.5 h-3.5" />
-          <span>Chủ đề ({topics.length})</span>
+          <span>
+            {isVi ? `Chủ đề (${topics.length})` : `Topics (${topics.length})`}
+          </span>
         </button>
 
         <button
@@ -202,7 +212,9 @@ export function VocabularyPage() {
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Bộ thẻ công khai ({decks.length})</span>
+          <span>
+            {isVi ? `Bộ thẻ công khai (${decks.length})` : `Public Decks (${decks.length})`}
+          </span>
         </button>
       </div>
 
