@@ -49,9 +49,17 @@ export function PermissionModal({
     'AI',
     'ROLES',
     'PERMISSIONS',
+    'PROGRESS',
+    'COMMUNITY',
   ]
 
-  const allModuleOptions = Array.from(new Set([...defaultModules, ...availableModules])).sort()
+  const moduleOptions = useMemo(() => {
+    const list = Array.from(new Set([...defaultModules, ...availableModules])).filter(Boolean).sort()
+    return list.map((m) => ({
+      value: m,
+      label: isVi ? `Phân hệ ${m}` : `Module ${m}`,
+    }))
+  }, [availableModules, isVi])
 
   useEffect(() => {
     if (editingPerm) {
@@ -91,7 +99,6 @@ export function PermissionModal({
         className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
@@ -114,7 +121,6 @@ export function PermissionModal({
           </button>
         </div>
 
-        {}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -145,22 +151,16 @@ export function PermissionModal({
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <span className="text-rose-500">*</span> Phân hệ (Module)
+                <span className="text-rose-500">*</span> {isVi ? 'Phân hệ (Module)' : 'Module'}
               </label>
-              <input
-                type="text"
-                list="modules-datalist"
+              <CustomSelect
                 value={module}
-                onChange={(e) => setModule(e.target.value)}
-                placeholder="VD: COURSES, USERS"
-                required
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-semibold uppercase text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                onChange={(val) => setModule(val)}
+                options={moduleOptions}
+                showSearch={true}
+                searchPlaceholder={isVi ? 'Tìm kiếm module...' : 'Search module...'}
+                className="w-full"
               />
-              <datalist id="modules-datalist">
-                {allModuleOptions.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
             </div>
           </div>
 
