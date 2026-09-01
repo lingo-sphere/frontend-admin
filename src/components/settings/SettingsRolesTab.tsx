@@ -64,7 +64,7 @@ export function SettingsRolesTab({ onSeedRBAC }: SettingsRolesTabProps) {
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mr-2">
-              LEARNER
+              STUDENT
             </span>
             <span className="text-sm font-semibold text-slate-200">
               Học viên / Người học

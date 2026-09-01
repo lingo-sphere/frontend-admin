@@ -32,7 +32,7 @@ export interface ApiError {
   path?: string
 }
 
-export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER' | 'GUEST'
+export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'STUDENT' | 'GUEST'
 
 export interface PermissionItem {
   _id: string

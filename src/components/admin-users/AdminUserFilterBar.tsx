@@ -32,7 +32,7 @@ export function AdminUserFilterBar({
   const roleOptions = useMemo(() => [
     { value: 'ALL', label: isVi ? 'Tất cả vai trò' : 'All Roles' },
     { value: 'ADMIN', label: isVi ? 'Quản trị viên' : 'Administrator' },
-    { value: 'TEACHER', label: isVi ? 'Giảng viên' : 'Teacher' },
+    { value: 'INSTRUCTOR', label: isVi ? 'Giảng viên' : 'Instructor' },
   ], [isVi])
 
   const statusOptions = useMemo(() => [

@@ -34,7 +34,7 @@ export interface AdminUser {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'TEACHER'
+  role: 'ADMIN' | 'INSTRUCTOR'
   avatar?: string
   last_active: string
   is_active: boolean

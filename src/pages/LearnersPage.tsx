@@ -36,7 +36,7 @@ export function LearnersPage() {
   const fetchLearners = useCallback(async () => {
     setIsLoading(true)
     try {
-      const res = await userService.getAllUsers({ role: 'LEARNER', limit: 100 })
+      const res = await userService.getAllUsers({ role: 'STUDENT', limit: 100 })
       const items: UserProfile[] = Array.isArray(res) ? res : (res?.result || [])
       const mapped: User[] = items.map((u: UserProfile) => ({
         id: u._id || u.user_id || '',

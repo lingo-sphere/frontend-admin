@@ -15,7 +15,7 @@ interface AdminUserFormData {
   email: string
   password: string
   full_name: string
-  role: 'ADMIN' | 'TEACHER'
+  role: 'ADMIN' | 'INSTRUCTOR'
   status: 'ACTIVE' | 'BLOCKED'
 }
 
@@ -48,7 +48,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
               email: profile.email || '',
               password: '',
               full_name: profile.full_name || '',
-              role: profile.role === 'INSTRUCTOR' ? 'TEACHER' : 'ADMIN',
+              role: profile.role === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN',
               status: profile.status === 'BLOCKED' ? 'BLOCKED' : 'ACTIVE',
             })
           }

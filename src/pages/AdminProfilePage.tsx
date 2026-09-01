@@ -49,7 +49,7 @@ export function AdminProfilePage() {
       try {
         const res = await userService.getMyProfile()
         const rawRole = String(authUser?.role || authProfile?.role || 'ADMIN').toUpperCase()
-        const userRole: 'ADMIN' | 'TEACHER' = rawRole === 'INSTRUCTOR' || rawRole === 'TEACHER' ? 'TEACHER' : 'ADMIN'
+        const userRole: 'ADMIN' | 'INSTRUCTOR' = rawRole === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN'
 
         const loaded: AdminProfileData = {
           id: res?.user_id || authUser?.user_id || 'admin-root',
@@ -77,7 +77,7 @@ export function AdminProfilePage() {
           id: authUser?.user_id || 'admin-root',
           name: authUser?.full_name || 'Admin Master',
           email: authUser?.email || 'admin@lingosphere.edu.vn',
-          role: (authUser?.role || 'ADMIN').toUpperCase() as 'ADMIN' | 'TEACHER',
+          role: (authUser?.role || 'ADMIN').toUpperCase() as 'ADMIN' | 'INSTRUCTOR',
           avatar: authUser?.avatar_url || '',
           phone: '',
           bio: '',

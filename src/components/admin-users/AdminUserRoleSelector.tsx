@@ -6,9 +6,9 @@
 import { Shield, GraduationCap } from 'lucide-react'
 
 interface AdminUserRoleSelectorProps {
-  selectedRole: 'ADMIN' | 'TEACHER'
+  selectedRole: 'ADMIN' | 'INSTRUCTOR'
   selectedStatus: 'ACTIVE' | 'BLOCKED'
-  onRoleChange: (role: 'ADMIN' | 'TEACHER') => void
+  onRoleChange: (role: 'ADMIN' | 'INSTRUCTOR') => void
   onStatusChange: (status: 'ACTIVE' | 'BLOCKED') => void
 }
 
@@ -51,9 +51,9 @@ export function AdminUserRoleSelector({
             </div>
 
             <div
-              onClick={() => onRoleChange('TEACHER')}
+              onClick={() => onRoleChange('INSTRUCTOR')}
               className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                selectedRole === 'TEACHER'
+                selectedRole === 'INSTRUCTOR'
                   ? 'bg-teal-50/50 dark:bg-teal-500/10 border-teal-500 ring-2 ring-teal-500/20'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
               }`}
@@ -61,7 +61,7 @@ export function AdminUserRoleSelector({
               <div className="flex items-center gap-2.5 mb-1.5">
                 <GraduationCap className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Giảng Viên (TEACHER)
+                  Giảng Viên (INSTRUCTOR)
                 </h4>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">

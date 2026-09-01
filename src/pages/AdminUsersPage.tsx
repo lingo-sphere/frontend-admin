@@ -54,7 +54,7 @@ export function AdminUsersPage() {
         id: u._id || u.user_id,
         name: u.full_name || u.email.split('@')[0],
         email: u.email,
-        role: u.role === 'INSTRUCTOR' ? 'TEACHER' : 'ADMIN',
+        role: u.role === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN',
         is_active: u.status === 'ACTIVE',
         avatar: u.avatar_url,
         created_at: u.created_at || new Date().toISOString(),
@@ -109,7 +109,7 @@ export function AdminUsersPage() {
     return {
       total: admins.length,
       admins: admins.filter((a) => a.role === 'ADMIN').length,
-      teachers: admins.filter((a) => a.role === 'TEACHER').length,
+      teachers: admins.filter((a) => a.role === 'INSTRUCTOR').length,
       active: admins.filter((a) => a.is_active).length,
     }
   }, [admins])

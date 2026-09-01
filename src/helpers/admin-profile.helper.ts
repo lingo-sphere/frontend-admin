@@ -7,7 +7,7 @@ export interface AdminProfileData {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'TEACHER'
+  role: 'ADMIN' | 'INSTRUCTOR'
   avatar?: string
   phone?: string
   bio?: string
