@@ -29,6 +29,8 @@ export const API_CONFIG = {
       ADMIN_USERS: '/users/admin/users',
       ADMIN_ANALYTICS: '/users/admin/analytics/overview',
       UPDATE_STATUS: (userId: string) => `/users/admin/${userId}/status`,
+      CREATE_ADMIN_USER: '/auth/admin/users',
+      UPDATE_ADMIN_USER: (userId: string) => `/auth/admin/users/${userId}/update`,
       PROFILE: '/users/profile',
       PROFILE_BY_ID: (userId: string) => `/users/profile/${userId}`,
       SETTINGS: '/users/settings',

@@ -35,27 +35,64 @@ export function AdminUsersPage() {
   const fetchAdmins = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [adminRes, teacherRes] = await Promise.allSettled([
+      const [adminRes, teacherRes, allRes] = await Promise.allSettled([
         userService.getAllUsers({ role: 'ADMIN', limit: 50 }),
         userService.getAllUsers({ role: 'INSTRUCTOR', limit: 50 }),
+        userService.getAllUsers({ limit: 100 }),
       ])
 
       const items: UserProfile[] = []
-      if (adminRes.status === 'fulfilled' && adminRes.value) {
-        const adminList = Array.isArray(adminRes.value) ? adminRes.value : (adminRes.value.result || [])
-        items.push(...adminList)
+      const seenIds = new Set<string>()
+
+      const extractList = (val: any): UserProfile[] => {
+        if (!val) return []
+        if (Array.isArray(val)) return val
+        if (Array.isArray(val.result)) return val.result
+        if (Array.isArray(val.data)) return val.data
+        if (Array.isArray(val.items)) return val.items
+        return []
       }
+
+      if (adminRes.status === 'fulfilled' && adminRes.value) {
+        extractList(adminRes.value).forEach((u) => {
+          const uid = u.user_id || u._id
+          if (uid && !seenIds.has(uid)) {
+            seenIds.add(uid)
+            items.push(u)
+          }
+        })
+      }
+
       if (teacherRes.status === 'fulfilled' && teacherRes.value) {
-        const teacherList = Array.isArray(teacherRes.value) ? teacherRes.value : (teacherRes.value.result || [])
-        items.push(...teacherList)
+        extractList(teacherRes.value).forEach((u) => {
+          const uid = u.user_id || u._id
+          if (uid && !seenIds.has(uid)) {
+            seenIds.add(uid)
+            items.push(u)
+          }
+        })
+      }
+
+      // Also check allRes to catch any newly created admins/instructors
+      if (allRes.status === 'fulfilled' && allRes.value) {
+        extractList(allRes.value).forEach((u) => {
+          const roleUpper = (u.role || '').toUpperCase()
+          if (roleUpper === 'ADMIN' || roleUpper === 'INSTRUCTOR') {
+            const uid = u.user_id || u._id
+            if (uid && !seenIds.has(uid)) {
+              seenIds.add(uid)
+              items.push(u)
+            }
+          }
+        })
       }
 
       const mapped: AdminUser[] = items.map((u: UserProfile) => ({
         id: u._id || u.user_id,
         name: u.full_name || u.email.split('@')[0],
         email: u.email,
-        role: u.role === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN',
-        is_active: u.status === 'ACTIVE',
+        role: u.role?.toUpperCase() === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN',
+        is_active: u.status?.toUpperCase() === 'ACTIVE',
         avatar: u.avatar_url,
         created_at: u.created_at || new Date().toISOString(),
         last_active: 'Vừa xong',

@@ -81,15 +81,29 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
 
     setIsSubmitting(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600))
-      toast.success(
-        isEditing
-          ? 'Cập nhật tài khoản quản trị viên thành công!'
-          : 'Tạo tài khoản quản trị viên mới thành công!'
-      )
+      if (isEditing && editUserId) {
+        await userService.updateAdminUser(editUserId, {
+          email: formData.email.trim(),
+          full_name: formData.full_name.trim(),
+          role: formData.role,
+          status: formData.status,
+          password: formData.password ? formData.password : undefined,
+        })
+        toast.success('Cập nhật tài khoản quản trị viên thành công!')
+      } else {
+        await userService.createAdminUser({
+          email: formData.email.trim(),
+          full_name: formData.full_name.trim(),
+          role: formData.role,
+          status: formData.status,
+          password: formData.password,
+        })
+        toast.success('Tạo tài khoản quản trị viên mới thành công!')
+      }
       setActiveNavItem('admins')
-    } catch {
-      toast.error('Có lỗi xảy ra khi lưu thông tin')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi lưu thông tin'
+      toast.error(msg)
     } finally {
       setIsSubmitting(false)
     }

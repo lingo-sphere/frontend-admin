@@ -24,6 +24,14 @@ export const userService = {
     return api.get<PaginatedResult<UserProfile>>(API_CONFIG.ENDPOINTS.USERS.ADMIN_USERS, params as Record<string, unknown>)
   },
 
+  async createAdminUser(data: { email: string; password?: string; full_name: string; role: string; status?: string }): Promise<UserProfile> {
+    return api.post<UserProfile>(API_CONFIG.ENDPOINTS.USERS.CREATE_ADMIN_USER, data)
+  },
+
+  async updateAdminUser(userId: string, data: Partial<{ email: string; password?: string; full_name: string; role: string; status?: string }>): Promise<UserProfile> {
+    return api.post<UserProfile>(API_CONFIG.ENDPOINTS.USERS.UPDATE_ADMIN_USER(userId), data)
+  },
+
   async updateUserStatus(userId: string, status: 'ACTIVE' | 'BLOCKED' | 'SUSPENDED', reason?: string): Promise<{ message: string; user_id: string; status: string }> {
     return api.patch<{ message: string; user_id: string; status: string }>(
       API_CONFIG.ENDPOINTS.USERS.UPDATE_STATUS(userId),
