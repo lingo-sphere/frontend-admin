@@ -144,19 +144,21 @@ export function Pagination({
       </ul>
 
       {onPageSizeChange && (
-        <CustomSelect
-          size="sm"
-          value={String(pageSize)}
-          onChange={(val) => onPageSizeChange(parseInt(val, 10))}
-          options={pageSizeOptions.map((size) => ({
-            value: String(size),
-            label: isVi ? `${size} / trang` : `${size} / page`,
-          }))}
-          className="w-28"
-        />
+        <div className="w-28 shrink-0">
+          <CustomSelect
+            size="sm"
+            value={String(pageSize)}
+            onChange={(val) => onPageSizeChange(parseInt(val, 10))}
+            options={pageSizeOptions.map((size) => ({
+              value: String(size),
+              label: isVi ? `${size} / trang` : `${size} / page`,
+            }))}
+            className="w-full"
+          />
+        </div>
       )}
 
-      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 shrink-0">
         <span>{defaultGoTo}</span>
         <input
           type="text"

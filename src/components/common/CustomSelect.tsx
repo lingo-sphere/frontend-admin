@@ -119,8 +119,13 @@ export function CustomSelect({
     lg: 'h-12 px-4 py-2.5 text-sm rounded-2xl gap-2.5',
   }
 
+  const hasWidthClass = className && /\bw-\S+/.test(className)
+
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative ${hasWidthClass ? '' : 'w-full'} ${className}`}
+    >
       <button
         id={id}
         type="button"
