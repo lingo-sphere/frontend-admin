@@ -8,13 +8,11 @@ import {
   ChevronDown,
   ChevronRight,
   Film,
-  Sparkles,
   FileSpreadsheet,
   Award,
   Eye,
 } from 'lucide-react'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
-import { AiQuizGeneratorModal } from '@/components/admin/AiQuizGeneratorModal'
 import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModal'
 import { ModuleQuestionViewerModal } from '@/components/admin/ModuleQuestionViewerModal'
 import type {
@@ -41,18 +39,6 @@ export function CourseCurriculumManager({
   const [expandedModules, setExpandedModules] = useState<string[]>(
     modules.map((m) => m.id)
   )
-
-
-  const [aiModalState, setAiModalState] = useState<{
-    isOpen: boolean
-    moduleId: string
-    moduleTitle: string
-    moduleDescription?: string
-  }>({
-    isOpen: false,
-    moduleId: '',
-    moduleTitle: '',
-  })
 
   const [excelModalState, setExcelModalState] = useState<{
     isOpen: boolean
@@ -410,22 +396,6 @@ export function CourseCurriculumManager({
                           <button
                             type="button"
                             onClick={() =>
-                              setAiModalState({
-                                isOpen: true,
-                                moduleId: mod.id,
-                                moduleTitle: mod.title || `Chương ${modIdx + 1}`,
-                                moduleDescription: mod.description,
-                              })
-                            }
-                            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:from-violet-500 hover:to-indigo-500 transition-all cursor-pointer"
-                          >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span>AI Tạo Đề</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
                               setExcelModalState({
                                 isOpen: true,
                                 moduleId: mod.id,
@@ -435,7 +405,7 @@ export function CourseCurriculumManager({
                             className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
                           >
                             <FileSpreadsheet className="h-3.5 w-3.5" />
-                            <span>Import Excel</span>
+                            <span>Upload File Excel (.xlsx)</span>
                           </button>
 
                           {questionCount > 0 && (
@@ -623,42 +593,51 @@ export function CourseCurriculumManager({
                           )
                         })
                       )}
+
+                      {mod.lessons.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => addLesson(mod.id)}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-teal-400/60 dark:border-teal-600/40 bg-teal-50/40 hover:bg-teal-50 dark:bg-teal-950/20 dark:hover:bg-teal-900/30 text-teal-700 dark:text-teal-400 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>{isVi ? 'Thêm Video Bài Học Mới' : 'Add New Video Lesson'}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             )
           })}
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={addModule}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-indigo-300 dark:border-indigo-800/80 bg-indigo-50/40 hover:bg-indigo-50 dark:bg-indigo-950/20 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{isVi ? 'Thêm Chương Học Mới' : 'Add New Chapter'}</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {}
-      <AiQuizGeneratorModal
-        isOpen={aiModalState.isOpen}
-        onClose={() => setAiModalState((prev) => ({ ...prev, isOpen: false }))}
-        onApplyQuestions={(q) =>
-          handleApplyQuestions(aiModalState.moduleId, q)
-        }
-        moduleTitle={aiModalState.moduleTitle}
-        moduleDescription={aiModalState.moduleDescription}
-      />
-
-      {}
       <ExcelQuizImporterModal
         isOpen={excelModalState.isOpen}
         onClose={() => setExcelModalState((prev) => ({ ...prev, isOpen: false }))}
-        onApplyQuestions={(q) =>
+        onApplyQuestions={(q: QuizQuestionItem[]) =>
           handleApplyQuestions(excelModalState.moduleId, q)
         }
         moduleTitle={excelModalState.moduleTitle}
       />
 
-      {}
       <ModuleQuestionViewerModal
         isOpen={viewerModalState.isOpen}
         onClose={() => setViewerModalState((prev) => ({ ...prev, isOpen: false }))}
         questions={viewerModalState.questions}
-        onSaveQuestions={(q) =>
+        onSaveQuestions={(q: QuizQuestionItem[]) =>
           handleApplyQuestions(viewerModalState.moduleId, q)
         }
         moduleTitle={viewerModalState.moduleTitle}

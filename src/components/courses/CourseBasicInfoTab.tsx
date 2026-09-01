@@ -1,10 +1,8 @@
-import { useState, useMemo, useEffect } from 'react'
-import { Sparkles, FileSpreadsheet, Eye, Award } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { FileSpreadsheet, Eye, Award } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import { CustomSelect, type SelectOption } from '@/components/common/CustomSelect'
-import { examService, type ToeicExamItem } from '@/services/exam.service'
-import { AiQuizGeneratorModal } from '@/components/admin/AiQuizGeneratorModal'
 import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModal'
 import { ModuleQuestionViewerModal } from '@/components/admin/ModuleQuestionViewerModal'
 import type { QuizQuestionItem } from '@/services/ai.service'
@@ -80,16 +78,8 @@ export function CourseBasicInfoTab({
   isVi,
   courseFolder,
 }: CourseBasicInfoTabProps) {
-  const [exams, setExams] = useState<ToeicExamItem[]>([])
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false)
   const [isViewerModalOpen, setIsViewerModalOpen] = useState(false)
-
-  useEffect(() => {
-    examService.getExams().then((res) => {
-      if (Array.isArray(res)) setExams(res)
-    })
-  }, [])
 
   const categoryOptions: SelectOption[] = useMemo(() => {
     return Object.entries(categoryLabels).map(([key, label]) => ({
@@ -105,20 +95,7 @@ export function CourseBasicInfoTab({
     }))
   }, [isVi])
 
-  const examOptions: SelectOption[] = useMemo(() => {
-    const defaultOpt: SelectOption = {
-      value: '',
-      label: isVi ? '-- Soạn trực tiếp bằng AI / Excel --' : '-- Direct AI / Excel quiz --',
-    }
-    const list = exams.map((ex) => ({
-      value: ex.id || ex._id || '',
-      label: `${ex.title} (${ex.type || 'EXAM'})`,
-    }))
-    return [defaultOpt, ...list]
-  }, [exams, isVi])
-
   const finalQuestionsCount = formData.final_test_questions?.length || 0
-  const finalPassingScore = formData.final_test_passing_score || 70
 
   return (
     <div className="space-y-6">
@@ -267,7 +244,6 @@ export function CourseBasicInfoTab({
         </div>
       </div>
 
-      {}
       <div className="rounded-2xl border border-indigo-500/20 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
@@ -280,35 +256,14 @@ export function CourseBasicInfoTab({
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {isVi
-                  ? 'Upload đề thi từ file Excel (.xlsx), dùng AI tạo tự động hoặc liên kết đề thi có sẵn.'
-                  : 'Upload exam from Excel (.xlsx), generate with AI, or link existing exam.'}
+                  ? 'Upload đề thi tốt nghiệp cuối khóa từ file Excel (.xlsx).'
+                  : 'Upload graduation final exam from Excel file (.xlsx).'}
               </p>
             </div>
           </div>
-
-          {}
-          <div className="flex items-center gap-1.5 self-start sm:self-auto bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
-            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-              {isVi ? 'Ngưỡng tốt nghiệp:' : 'Pass score:'}
-            </span>
-            <input
-              type="number"
-              min={10}
-              max={100}
-              value={finalPassingScore}
-              onChange={(e) =>
-                onChange({
-                  final_test_passing_score: Math.max(10, Math.min(100, Number(e.target.value) || 70)),
-                })
-              }
-              className="w-12 h-7 text-center rounded-lg border border-slate-200 bg-white text-xs font-bold text-indigo-600 dark:bg-slate-900 dark:border-slate-700 dark:text-indigo-400"
-            />
-            <span className="text-[11px] font-bold text-slate-500">%</span>
-          </div>
         </div>
 
-        {}
-        <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 sm:p-5 space-y-4">
+        <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -327,19 +282,10 @@ export function CourseBasicInfoTab({
               <button
                 type="button"
                 onClick={() => setIsExcelModalOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 <span>Upload File Excel (.xlsx)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsAiModalOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:from-violet-500 hover:to-indigo-500 transition-all cursor-pointer"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>AI Sinh Đề Tự Động</span>
               </button>
 
               {finalQuestionsCount > 0 && (
@@ -354,42 +300,9 @@ export function CourseBasicInfoTab({
               )}
             </div>
           </div>
-
-          <div className="pt-3 border-t border-indigo-500/10 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                {isVi ? 'Hoặc liên kết đề thi có sẵn từ kho Exam (Tùy chọn):' : 'Or link existing exam from bank:'}
-              </label>
-              <CustomSelect
-                options={examOptions}
-                value={formData.final_test_exam_id || ''}
-                onChange={(val) => onChange({ final_test_exam_id: val })}
-                placeholder={isVi ? 'Chọn bài Final Test...' : 'Select Final Test...'}
-              />
-            </div>
-
-            <div className="flex items-center rounded-xl bg-indigo-50/70 p-3 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40">
-              <p className="text-[11px] text-indigo-700 dark:text-indigo-300 leading-relaxed">
-                💡 <strong>{isVi ? 'Mẹo giảng dạy:' : 'Teaching Tip:'}</strong>{' '}
-                {isVi
-                  ? 'Bạn có thể upload file Excel đề thi tốt nghiệp 20 - 50 câu hoặc để AI đọc tên khóa học & mục tiêu điểm để tự động sinh trọn bộ đề thi.'
-                  : 'Upload an Excel exam file or use AI to generate 20-50 questions matching target score.'}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
-      {}
-      <AiQuizGeneratorModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        onApplyQuestions={(q) => onChange({ final_test_questions: q })}
-        moduleTitle={`Đề Thi Tốt Nghiệp Final Test - ${formData.title || 'Khóa học'}`}
-        moduleDescription={`Mục tiêu: ${formData.target_score} điểm. ${formData.description || ''}`}
-      />
-
-      {}
       <ExcelQuizImporterModal
         isOpen={isExcelModalOpen}
         onClose={() => setIsExcelModalOpen(false)}
@@ -397,7 +310,6 @@ export function CourseBasicInfoTab({
         moduleTitle={`Final Test Khóa Học: ${formData.title || 'Khóa học'}`}
       />
 
-      {}
       <ModuleQuestionViewerModal
         isOpen={isViewerModalOpen}
         onClose={() => setIsViewerModalOpen(false)}
