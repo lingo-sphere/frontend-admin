@@ -28,7 +28,10 @@ export interface ChangePasswordPayload {
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    return api.post<LoginResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, credentials)
+    return api.post<LoginResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
+      ...credentials,
+      remember_me: credentials.rememberMe !== false,
+    })
   },
 
   async register(payload: RegisterPayload): Promise<LoginResponse> {
