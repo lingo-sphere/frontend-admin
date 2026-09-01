@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyImportDropzone.tsx
+ * @description Component giao diện VocabularyImportDropzone phục vụ khu vực Quản trị Admin
+ */
+
 import { Upload, FileText } from 'lucide-react'
 
 interface VocabularyImportDropzoneProps {

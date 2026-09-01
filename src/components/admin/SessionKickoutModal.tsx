@@ -1,3 +1,8 @@
+/**
+ * @file SessionKickoutModal.tsx
+ * @description Component giao diện SessionKickoutModal phục vụ khu vực Quản trị Admin
+ */
+
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { useSessionSync } from '@/hooks/use-session-sync'
 

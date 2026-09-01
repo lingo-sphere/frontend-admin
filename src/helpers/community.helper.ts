@@ -1,3 +1,8 @@
+/**
+ * @file community.helper.ts
+ * @description Mã nguồn thành phần community.helper.ts
+ */
+
 export interface CommunityPost {
   id: string
   author_name: string

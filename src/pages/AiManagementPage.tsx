@@ -1,3 +1,8 @@
+/**
+ * @file AiManagementPage.tsx
+ * @description Trang quản trị AiManagementPage trong giao diện Admin
+ */
+
 import { useState } from 'react'
 import { Brain } from 'lucide-react'
 import { aiAdminService, type GenerateQuizItem } from '@/services/ai.service'

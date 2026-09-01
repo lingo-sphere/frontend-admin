@@ -1,3 +1,8 @@
+/**
+ * @file CourseBasicInfoTab.tsx
+ * @description Component giao diện CourseBasicInfoTab phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { FileSpreadsheet, Eye, Award } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'

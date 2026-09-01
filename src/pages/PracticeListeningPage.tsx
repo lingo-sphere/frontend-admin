@@ -1,3 +1,8 @@
+/**
+ * @file PracticeListeningPage.tsx
+ * @description Trang quản trị PracticeListeningPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Headphones } from 'lucide-react'

@@ -1,3 +1,8 @@
+/**
+ * @file use-theme-sync.ts
+ * @description Custom React hook use-theme-sync trong ứng dụng Admin
+ */
+
 import { useEffect } from 'react'
 import { useAdminStore } from '@/store/admin-store'
 

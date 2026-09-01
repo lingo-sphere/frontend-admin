@@ -1,3 +1,8 @@
+/**
+ * @file SettingsPlansTab.tsx
+ * @description Component giao diện SettingsPlansTab phục vụ khu vực Quản trị Admin
+ */
+
 import { Crown, Star, Check, Plus } from 'lucide-react'
 import type { SubscriptionPlan } from '@/types/api.types'
 import { formatPrice } from '@/helpers/settings.helper'

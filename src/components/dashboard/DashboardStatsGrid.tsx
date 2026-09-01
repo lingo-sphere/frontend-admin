@@ -1,3 +1,8 @@
+/**
+ * @file DashboardStatsGrid.tsx
+ * @description Component giao diện DashboardStatsGrid phục vụ khu vực Quản trị Admin
+ */
+
 import { Users, GraduationCap, Crown, BookOpenCheck } from 'lucide-react'
 import type { SystemAnalyticsOverview } from '@/types/api.types'
 

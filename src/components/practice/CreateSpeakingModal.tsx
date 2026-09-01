@@ -1,3 +1,8 @@
+/**
+ * @file CreateSpeakingModal.tsx
+ * @description Component giao diện CreateSpeakingModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'

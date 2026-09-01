@@ -1,3 +1,8 @@
+/**
+ * @file CommunityPage.tsx
+ * @description Trang quản trị CommunityPage trong giao diện Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { toast } from '@/store/toast-store'

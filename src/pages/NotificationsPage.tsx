@@ -1,3 +1,8 @@
+/**
+ * @file NotificationsPage.tsx
+ * @description Trang quản trị NotificationsPage trong giao diện Admin
+ */
+
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

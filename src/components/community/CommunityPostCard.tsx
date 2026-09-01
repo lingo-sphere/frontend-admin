@@ -1,3 +1,8 @@
+/**
+ * @file CommunityPostCard.tsx
+ * @description Component giao diện CommunityPostCard phục vụ khu vực Quản trị Admin
+ */
+
 import {
   MessageSquare,
   ThumbsUp,

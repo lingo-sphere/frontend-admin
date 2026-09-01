@@ -1,3 +1,8 @@
+/**
+ * @file GlobalSearchModal.tsx
+ * @description Component giao diện GlobalSearchModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

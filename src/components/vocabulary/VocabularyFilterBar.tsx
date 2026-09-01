@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyFilterBar.tsx
+ * @description Component giao diện VocabularyFilterBar phục vụ khu vực Quản trị Admin
+ */
+
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'

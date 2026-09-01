@@ -1,3 +1,8 @@
+/**
+ * @file AdminProfileHeader.tsx
+ * @description Component giao diện AdminProfileHeader phục vụ khu vực Quản trị Admin
+ */
+
 import { Shield, GraduationCap } from 'lucide-react'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import type { AdminProfileData } from '@/helpers/admin-profile.helper'

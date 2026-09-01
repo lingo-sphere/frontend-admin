@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyImportPage.tsx
+ * @description Trang quản trị VocabularyImportPage trong giao diện Admin
+ */
+
 import { useState } from 'react'
 import { ChevronLeft, Download } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'

@@ -1,3 +1,8 @@
+/**
+ * @file CourseFormPage.tsx
+ * @description Trang quản trị CourseFormPage trong giao diện Admin
+ */
+
 import {
   CourseBasicInfoTab,
   type CourseFormData,

@@ -1,3 +1,8 @@
+/**
+ * @file SettingsAiTab.tsx
+ * @description Component giao diện SettingsAiTab phục vụ khu vực Quản trị Admin
+ */
+
 import { Sparkles } from 'lucide-react'
 import { toast } from '@/store/toast-store'
 

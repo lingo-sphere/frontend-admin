@@ -1,3 +1,8 @@
+/**
+ * @file exam.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ exam
+ */
+
 import { api } from '@/services/api-client'
 
 export interface ToeicExamItem {

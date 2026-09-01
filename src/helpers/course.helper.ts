@@ -1,3 +1,8 @@
+/**
+ * @file course.helper.ts
+ * @description Mã nguồn thành phần course.helper.ts
+ */
+
 export type FilterCategory = 'ALL' | 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
 export type FilterLevel = 'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type FilterStatus = 'ALL' | 'PUBLISHED' | 'DRAFT'

@@ -1,3 +1,8 @@
+/**
+ * @file AdminUserAccountForm.tsx
+ * @description Component giao diện AdminUserAccountForm phục vụ khu vực Quản trị Admin
+ */
+
 import { Mail, User, Lock, Eye, EyeOff } from 'lucide-react'
 
 interface AdminUserAccountFormProps {

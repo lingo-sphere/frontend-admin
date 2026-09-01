@@ -1,3 +1,8 @@
+/**
+ * @file BetterStackMonitoringPage.tsx
+ * @description Trang quản trị BetterStackMonitoringPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { progressService } from '@/services/progress.service'
 import { BetterStackMonitoringTab } from '@/components/progress/BetterStackMonitoringTab'

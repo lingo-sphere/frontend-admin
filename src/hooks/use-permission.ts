@@ -1,3 +1,8 @@
+/**
+ * @file use-permission.ts
+ * @description Custom React hook use-permission trong ứng dụng Admin
+ */
+
 import { useAuthStore } from '@/store/auth-store'
 
 export function usePermission() {

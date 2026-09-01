@@ -1,3 +1,8 @@
+/**
+ * @file settings-data.ts
+ * @description Mã nguồn thành phần settings-data.ts
+ */
+
 export interface SubscriptionPlan {
   id: string
   name_en: string

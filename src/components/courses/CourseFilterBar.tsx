@@ -1,3 +1,8 @@
+/**
+ * @file CourseFilterBar.tsx
+ * @description Component giao diện CourseFilterBar phục vụ khu vực Quản trị Admin
+ */
+
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'

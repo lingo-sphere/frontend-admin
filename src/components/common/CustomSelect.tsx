@@ -1,3 +1,8 @@
+/**
+ * @file CustomSelect.tsx
+ * @description Component giao diện CustomSelect phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useRef, useEffect, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, Check, Search } from 'lucide-react'

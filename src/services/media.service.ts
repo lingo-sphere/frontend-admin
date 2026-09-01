@@ -1,3 +1,8 @@
+/**
+ * @file media.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ media
+ */
+
 import { api } from '@/services/api-client'
 
 export interface StorageQuota {

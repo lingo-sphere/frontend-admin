@@ -1,3 +1,8 @@
+/**
+ * @file TableControls.tsx
+ * @description Component giao diện TableControls phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

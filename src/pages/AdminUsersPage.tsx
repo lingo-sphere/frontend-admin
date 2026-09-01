@@ -1,3 +1,8 @@
+/**
+ * @file AdminUsersPage.tsx
+ * @description Trang quản trị AdminUsersPage trong giao diện Admin
+ */
+
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'

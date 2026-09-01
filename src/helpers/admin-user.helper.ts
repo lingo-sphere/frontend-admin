@@ -1,3 +1,8 @@
+/**
+ * @file admin-user.helper.ts
+ * @description Mã nguồn thành phần admin-user.helper.ts
+ */
+
 export interface AdminUser {
   id: string
   name: string

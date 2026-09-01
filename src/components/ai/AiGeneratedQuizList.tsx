@@ -1,3 +1,8 @@
+/**
+ * @file AiGeneratedQuizList.tsx
+ * @description Component giao diện AiGeneratedQuizList phục vụ khu vực Quản trị Admin
+ */
+
 import { CheckCircle2, Copy, BookOpen } from 'lucide-react'
 import type { GenerateQuizItem } from '@/services/ai.service'
 

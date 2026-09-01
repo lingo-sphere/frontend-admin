@@ -1,3 +1,8 @@
+/**
+ * @file AdminProfileSecurityForm.tsx
+ * @description Component giao diện AdminProfileSecurityForm phục vụ khu vực Quản trị Admin
+ */
+
 import { useState } from 'react'
 import { KeyRound, Eye, EyeOff, Lock } from 'lucide-react'
 import type { PasswordStrengthResult } from '@/helpers/admin-profile.helper'

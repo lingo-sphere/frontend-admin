@@ -1,3 +1,8 @@
+/**
+ * @file api.types.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho ứng dụng Quản trị Admin
+ */
+
 export interface ApiResponse<T = unknown> {
   statusCode: number
   message: string

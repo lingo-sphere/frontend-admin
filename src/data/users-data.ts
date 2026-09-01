@@ -1,3 +1,8 @@
+/**
+ * @file users-data.ts
+ * @description Mã nguồn thành phần users-data.ts
+ */
+
 export interface User {
   id: string
   email: string

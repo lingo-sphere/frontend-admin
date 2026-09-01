@@ -1,3 +1,8 @@
+/**
+ * @file UserProfileHeader.tsx
+ * @description Component giao diện UserProfileHeader phục vụ khu vực Quản trị Admin
+ */
+
 import { Crown, Mail, Calendar } from 'lucide-react'
 
 export interface UserProfileData {

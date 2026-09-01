@@ -1,3 +1,8 @@
+/**
+ * @file PracticeExercisesPage.tsx
+ * @description Trang quản trị PracticeExercisesPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'

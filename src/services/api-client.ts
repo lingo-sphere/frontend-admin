@@ -1,3 +1,8 @@
+/**
+ * @file api-client.ts
+ * @description Service API client gọi backend cho chức năng api-client
+ */
+
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { API_CONFIG } from '@/config/api.config'
 import type { ApiResponse } from '@/types/api.types'

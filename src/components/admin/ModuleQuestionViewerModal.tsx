@@ -1,3 +1,8 @@
+/**
+ * @file ModuleQuestionViewerModal.tsx
+ * @description Component giao diện ModuleQuestionViewerModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useState } from 'react'
 import { CheckCircle2, Trash2, Edit3, Plus, X, Award } from 'lucide-react'
 import type { QuizQuestionItem } from '@/services/ai.service'

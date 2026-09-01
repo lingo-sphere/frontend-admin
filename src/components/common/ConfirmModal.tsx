@@ -1,3 +1,8 @@
+/**
+ * @file ConfirmModal.tsx
+ * @description Component giao diện ConfirmModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useEffect } from 'react'
 import { AlertTriangle, Ban, Trash2 } from 'lucide-react'
 

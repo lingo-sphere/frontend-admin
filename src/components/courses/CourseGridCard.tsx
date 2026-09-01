@@ -1,3 +1,8 @@
+/**
+ * @file CourseGridCard.tsx
+ * @description Component giao diện CourseGridCard phục vụ khu vực Quản trị Admin
+ */
+
 import { BookOpen, Edit2, Trash2 } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'

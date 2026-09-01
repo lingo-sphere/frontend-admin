@@ -1,3 +1,8 @@
+/**
+ * @file PracticeListeningCard.tsx
+ * @description Component giao diện PracticeListeningCard phục vụ khu vực Quản trị Admin
+ */
+
 import { Headphones, Trash2 } from 'lucide-react'
 import type { ListeningExercise } from '@/types/api.types'
 import { Popconfirm } from '@/components/common/Popconfirm'

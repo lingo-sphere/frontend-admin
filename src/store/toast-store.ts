@@ -1,3 +1,8 @@
+/**
+ * @file toast-store.ts
+ * @description Mã nguồn thành phần toast-store.ts
+ */
+
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'
 

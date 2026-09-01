@@ -1,3 +1,8 @@
+/**
+ * @file Topbar.tsx
+ * @description Component giao diện Topbar phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import { Search, Moon, Sun, Bell, Menu, LogOut, User as UserIcon, Shield, ChevronDown, Users } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'

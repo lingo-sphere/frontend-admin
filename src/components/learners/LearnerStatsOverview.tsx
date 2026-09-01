@@ -1,3 +1,8 @@
+/**
+ * @file LearnerStatsOverview.tsx
+ * @description Component giao diện LearnerStatsOverview phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Users, CheckCircle, Crown, Ban } from 'lucide-react'
 import type { LearnerStats } from '@/helpers/learner.helper'

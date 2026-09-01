@@ -1,3 +1,8 @@
+/**
+ * @file PracticeWritingPage.tsx
+ * @description Trang quản trị PracticeWritingPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, PenTool } from 'lucide-react'

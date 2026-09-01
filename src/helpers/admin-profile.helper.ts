@@ -1,3 +1,8 @@
+/**
+ * @file admin-profile.helper.ts
+ * @description Mã nguồn thành phần admin-profile.helper.ts
+ */
+
 export interface AdminProfileData {
   id: string
   name: string

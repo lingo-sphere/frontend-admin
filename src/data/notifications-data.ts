@@ -1,3 +1,8 @@
+/**
+ * @file notifications-data.ts
+ * @description Mã nguồn thành phần notifications-data.ts
+ */
+
 export interface Notification {
   id: string
   recipient_id: string

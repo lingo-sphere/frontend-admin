@@ -1,3 +1,8 @@
+/**
+ * @file DashboardRecentActivity.tsx
+ * @description Component giao diện DashboardRecentActivity phục vụ khu vực Quản trị Admin
+ */
+
 import {
   Target,
   BookOpenCheck,

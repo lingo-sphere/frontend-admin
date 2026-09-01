@@ -1,3 +1,8 @@
+/**
+ * @file PermissionsListTab.tsx
+ * @description Component giao diện PermissionsListTab phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Edit2, Trash2, Search, KeyRound } from 'lucide-react'

@@ -1,3 +1,8 @@
+/**
+ * @file MediaStorageQuotaCards.tsx
+ * @description Component giao diện MediaStorageQuotaCards phục vụ khu vực Quản trị Admin
+ */
+
 import { Database, HardDrive, Radio } from 'lucide-react'
 import type { StorageQuota } from '@/services/media.service'
 import { formatMb, formatGb } from '@/helpers/media.helper'

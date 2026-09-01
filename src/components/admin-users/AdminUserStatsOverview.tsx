@@ -1,3 +1,8 @@
+/**
+ * @file AdminUserStatsOverview.tsx
+ * @description Component giao diện AdminUserStatsOverview phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Shield, GraduationCap, CheckCircle, Lock } from 'lucide-react'
 import type { AdminUserStats } from '@/helpers/admin-user.helper'

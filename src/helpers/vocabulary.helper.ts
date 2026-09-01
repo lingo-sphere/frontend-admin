@@ -1,3 +1,8 @@
+/**
+ * @file vocabulary.helper.ts
+ * @description Mã nguồn thành phần vocabulary.helper.ts
+ */
+
 export type VocabularyTabType = 'words' | 'topics' | 'decks'
 
 export function playAudio(url?: string): void {

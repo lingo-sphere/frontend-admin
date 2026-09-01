@@ -1,3 +1,8 @@
+/**
+ * @file SettingsRolesTab.tsx
+ * @description Component giao diện SettingsRolesTab phục vụ khu vực Quản trị Admin
+ */
+
 import { KeyRound } from 'lucide-react'
 
 interface SettingsRolesTabProps {

@@ -1,3 +1,8 @@
+/**
+ * @file auth-store.ts
+ * @description Mã nguồn thành phần auth-store.ts
+ */
+
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'
 import { authService, type LoginCredentials } from '@/services/auth.service'

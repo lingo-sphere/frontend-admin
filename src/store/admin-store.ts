@@ -1,3 +1,8 @@
+/**
+ * @file admin-store.ts
+ * @description Mã nguồn thành phần admin-store.ts
+ */
+
 import { create } from 'zustand'
 import { navItemToPath, pathToNavItem } from '@/utils/navigation'
 

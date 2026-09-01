@@ -1,3 +1,8 @@
+/**
+ * @file AssignRoleTab.tsx
+ * @description Component giao diện AssignRoleTab phục vụ khu vực Quản trị Admin
+ */
+
 import { Search, UserCheck, CheckCircle, AlertCircle } from 'lucide-react'
 import type { Role, UserProfile } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/CustomSelect'

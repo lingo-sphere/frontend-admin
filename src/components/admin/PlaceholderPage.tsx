@@ -1,3 +1,8 @@
+/**
+ * @file PlaceholderPage.tsx
+ * @description Component giao diện PlaceholderPage phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { FileQuestion } from 'lucide-react'
 

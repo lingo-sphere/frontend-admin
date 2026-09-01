@@ -1,3 +1,8 @@
+/**
+ * @file AdminProfileInfoForm.tsx
+ * @description Component giao diện AdminProfileInfoForm phục vụ khu vực Quản trị Admin
+ */
+
 import { User, Mail, Phone, FileText } from 'lucide-react'
 
 interface AdminProfileInfoFormProps {

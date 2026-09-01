@@ -1,3 +1,8 @@
+/**
+ * @file AdminShell.tsx
+ * @description Component giao diện AdminShell phục vụ khu vực Quản trị Admin
+ */
+
 import { Sheet } from '@/components/ui/sheet'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { Topbar } from '@/components/admin/Topbar'

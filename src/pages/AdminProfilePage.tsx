@@ -1,3 +1,8 @@
+/**
+ * @file AdminProfilePage.tsx
+ * @description Trang quản trị AdminProfilePage trong giao diện Admin
+ */
+
 import { authService } from '@/services/auth.service'
 import { userService } from '@/services/user.service'
 import { useAdminStore } from '@/store/admin-store'

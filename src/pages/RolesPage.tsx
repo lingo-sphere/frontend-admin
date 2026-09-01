@@ -1,3 +1,8 @@
+/**
+ * @file RolesPage.tsx
+ * @description Trang quản trị RolesPage trong giao diện Admin
+ */
+
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Shield } from 'lucide-react'

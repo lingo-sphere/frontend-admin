@@ -1,3 +1,8 @@
+/**
+ * @file CourseCurriculumManager.tsx
+ * @description Component giao diện CourseCurriculumManager phục vụ khu vực Quản trị Admin
+ */
+
 import { useState } from 'react'
 import {
   Video,

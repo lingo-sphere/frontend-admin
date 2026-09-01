@@ -1,3 +1,8 @@
+/**
+ * @file PracticeSpeakingCard.tsx
+ * @description Component giao diện PracticeSpeakingCard phục vụ khu vực Quản trị Admin
+ */
+
 import { Mic, Trash2 } from 'lucide-react'
 import type { SpeakingExercise } from '@/types/api.types'
 import { Popconfirm } from '@/components/common/Popconfirm'

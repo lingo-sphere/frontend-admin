@@ -1,3 +1,8 @@
+/**
+ * @file AdminUserFormPage.tsx
+ * @description Trang quản trị AdminUserFormPage trong giao diện Admin
+ */
+
 import { useState, useEffect } from 'react'
 import { ChevronLeft, Save } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'

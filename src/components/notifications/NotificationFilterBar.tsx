@@ -1,3 +1,8 @@
+/**
+ * @file NotificationFilterBar.tsx
+ * @description Component giao diện NotificationFilterBar phục vụ khu vực Quản trị Admin
+ */
+
 import { useMemo } from 'react'
 import { Search, X } from 'lucide-react'
 import type {

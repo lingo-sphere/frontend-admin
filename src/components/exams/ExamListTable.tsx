@@ -1,3 +1,8 @@
+/**
+ * @file ExamListTable.tsx
+ * @description Component giao diện ExamListTable phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

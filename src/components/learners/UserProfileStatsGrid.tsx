@@ -1,3 +1,8 @@
+/**
+ * @file UserProfileStatsGrid.tsx
+ * @description Component giao diện UserProfileStatsGrid phục vụ khu vực Quản trị Admin
+ */
+
 import { Flame, Star, Target, Clock, Award, BookOpen } from 'lucide-react'
 import type { UserProfileData } from './UserProfileHeader'
 

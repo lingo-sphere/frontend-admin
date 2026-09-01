@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyTopicsTab.tsx
+ * @description Component giao diện VocabularyTopicsTab phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { Folder, Edit2, Plus } from 'lucide-react'
 import type { Topic } from '@/data/vocabulary-data'

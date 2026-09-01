@@ -1,3 +1,8 @@
+/**
+ * @file PermissionsPage.tsx
+ * @description Trang quản trị PermissionsPage trong giao diện Admin
+ */
+
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { KeyRound, UserCheck } from 'lucide-react'

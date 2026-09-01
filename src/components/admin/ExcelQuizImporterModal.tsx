@@ -1,3 +1,8 @@
+/**
+ * @file ExcelQuizImporterModal.tsx
+ * @description Component giao diện ExcelQuizImporterModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useRef } from 'react'
 import { FileSpreadsheet, Download, Upload, X, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react'
 import * as XLSX from 'xlsx'

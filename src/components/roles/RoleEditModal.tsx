@@ -1,3 +1,8 @@
+/**
+ * @file RoleEditModal.tsx
+ * @description Component giao diện RoleEditModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo, useEffect } from 'react'
 import { X, ChevronDown, ChevronRight, Search, ShieldCheck } from 'lucide-react'
 import type { Role, Permission } from '@/types/api.types'

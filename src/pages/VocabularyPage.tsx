@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyPage.tsx
+ * @description Trang quản trị VocabularyPage trong giao diện Admin
+ */
+
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Bookmark, Layers, RotateCcw, FileSpreadsheet, Plus } from 'lucide-react'

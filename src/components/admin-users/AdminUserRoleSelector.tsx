@@ -1,3 +1,8 @@
+/**
+ * @file AdminUserRoleSelector.tsx
+ * @description Component giao diện AdminUserRoleSelector phục vụ khu vực Quản trị Admin
+ */
+
 import { Shield, GraduationCap } from 'lucide-react'
 
 interface AdminUserRoleSelectorProps {

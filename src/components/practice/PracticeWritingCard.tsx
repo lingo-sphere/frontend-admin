@@ -1,3 +1,8 @@
+/**
+ * @file PracticeWritingCard.tsx
+ * @description Component giao diện PracticeWritingCard phục vụ khu vực Quản trị Admin
+ */
+
 import { PenTool, Trash2 } from 'lucide-react'
 import type { WritingExercise } from '@/types/api.types'
 import { Popconfirm } from '@/components/common/Popconfirm'

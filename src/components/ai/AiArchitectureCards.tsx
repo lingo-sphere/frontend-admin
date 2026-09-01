@@ -1,3 +1,8 @@
+/**
+ * @file AiArchitectureCards.tsx
+ * @description Component giao diện AiArchitectureCards phục vụ khu vực Quản trị Admin
+ */
+
 import { Zap, Sparkles } from 'lucide-react'
 
 export function AiArchitectureCards() {

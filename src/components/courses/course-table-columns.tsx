@@ -1,3 +1,8 @@
+/**
+ * @file course-table-columns.tsx
+ * @description Component giao diện course-table-columns phục vụ khu vực Quản trị Admin
+ */
+
 import { BookOpen, Target, Layers, Users, Edit2, Trash2 } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'

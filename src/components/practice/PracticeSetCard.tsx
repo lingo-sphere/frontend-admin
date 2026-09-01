@@ -1,3 +1,8 @@
+/**
+ * @file PracticeSetCard.tsx
+ * @description Component giao diện PracticeSetCard phục vụ khu vực Quản trị Admin
+ */
+
 import { Award, Trash2 } from 'lucide-react'
 import type { PracticeSet } from '@/types/api.types'
 import { Popconfirm } from '@/components/common/Popconfirm'

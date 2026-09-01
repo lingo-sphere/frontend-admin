@@ -1,3 +1,8 @@
+/**
+ * @file LoginPage.tsx
+ * @description Trang quản trị LoginPage trong giao diện Admin
+ */
+
 import { useState } from 'react'
 import {
   Eye,

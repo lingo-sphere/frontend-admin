@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyFormPage.tsx
+ * @description Trang quản trị VocabularyFormPage trong giao diện Admin
+ */
+
 import { useState } from 'react'
 import { ChevronLeft, Save } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'

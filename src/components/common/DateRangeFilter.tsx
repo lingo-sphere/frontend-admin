@@ -1,3 +1,8 @@
+/**
+ * @file DateRangeFilter.tsx
+ * @description Component giao diện DateRangeFilter phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 

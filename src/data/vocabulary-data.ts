@@ -1,3 +1,8 @@
+/**
+ * @file vocabulary-data.ts
+ * @description Mã nguồn thành phần vocabulary-data.ts
+ */
+
 export interface LexicalItem {
   id: string
   word: string

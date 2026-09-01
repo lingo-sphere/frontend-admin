@@ -1,3 +1,8 @@
+/**
+ * @file RolesListTab.tsx
+ * @description Component giao diện RolesListTab phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Edit2, Trash2, Sparkles, Shield, Search } from 'lucide-react'

@@ -1,3 +1,8 @@
+/**
+ * @file R2MediaUploader.tsx
+ * @description Component giao diện R2MediaUploader phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import {
   UploadCloud,

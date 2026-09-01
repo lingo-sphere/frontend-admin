@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyImportHistoryTable.tsx
+ * @description Component giao diện VocabularyImportHistoryTable phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { CheckCircle, Clock } from 'lucide-react'
 

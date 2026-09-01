@@ -1,3 +1,8 @@
+/**
+ * @file BetterStackMonitoringTab.tsx
+ * @description Component giao diện BetterStackMonitoringTab phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

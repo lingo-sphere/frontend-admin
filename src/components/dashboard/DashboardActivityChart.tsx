@@ -1,3 +1,8 @@
+/**
+ * @file DashboardActivityChart.tsx
+ * @description Component giao diện DashboardActivityChart phục vụ khu vực Quản trị Admin
+ */
+
 export interface ChartItem {
   value: number
   label: string

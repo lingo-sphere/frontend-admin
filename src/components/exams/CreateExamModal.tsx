@@ -1,3 +1,8 @@
+/**
+ * @file CreateExamModal.tsx
+ * @description Component giao diện CreateExamModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'

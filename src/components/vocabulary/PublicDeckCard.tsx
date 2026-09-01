@@ -1,3 +1,8 @@
+/**
+ * @file PublicDeckCard.tsx
+ * @description Component giao diện PublicDeckCard phục vụ khu vực Quản trị Admin
+ */
+
 import { BookOpen, Layers3, Users, Trash2 } from 'lucide-react'
 import type { FlashcardDeck } from '@/types/api.types'
 import { Popconfirm } from '@/components/common/Popconfirm'

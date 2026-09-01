@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyMeaningsForm.tsx
+ * @description Component giao diện VocabularyMeaningsForm phục vụ khu vực Quản trị Admin
+ */
+
 import { Plus, Trash2 } from 'lucide-react'
 
 export interface Meaning {

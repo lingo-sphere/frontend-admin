@@ -1,3 +1,8 @@
+/**
+ * @file navigation.ts
+ * @description Tiện ích hỗ trợ xử lý dữ liệu và giao diện Admin
+ */
+
 export function navItemToPath(navItem: string): string {
   if (!navItem || navItem === 'dashboard') return '/dashboard'
   if (navItem === 'users' || navItem === 'users-list') return '/users'

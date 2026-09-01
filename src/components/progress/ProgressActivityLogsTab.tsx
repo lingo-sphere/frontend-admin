@@ -1,3 +1,8 @@
+/**
+ * @file ProgressActivityLogsTab.tsx
+ * @description Component giao diện ProgressActivityLogsTab phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Activity, Search, ChevronRight, Target, BookOpenCheck, Mic, GraduationCap } from 'lucide-react'

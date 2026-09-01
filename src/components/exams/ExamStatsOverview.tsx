@@ -1,3 +1,8 @@
+/**
+ * @file ExamStatsOverview.tsx
+ * @description Component giao diện ExamStatsOverview phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { FileText, CheckCircle, Award, Clock } from 'lucide-react'
 

@@ -1,3 +1,8 @@
+/**
+ * @file courses-data.ts
+ * @description Mã nguồn thành phần courses-data.ts
+ */
+
 export interface Course {
   id: string
   title: string

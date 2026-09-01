@@ -1,3 +1,8 @@
+/**
+ * @file ProgressPage.tsx
+ * @description Trang quản trị ProgressPage trong giao diện Admin
+ */
+
 import { useState, useEffect } from 'react'
 import {
   Users,

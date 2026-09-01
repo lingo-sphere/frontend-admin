@@ -1,3 +1,8 @@
+/**
+ * @file PublicDecksPage.tsx
+ * @description Trang quản trị PublicDecksPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Plus, RotateCcw, Layers3 } from 'lucide-react'

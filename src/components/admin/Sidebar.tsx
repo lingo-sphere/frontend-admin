@@ -1,3 +1,8 @@
+/**
+ * @file Sidebar.tsx
+ * @description Component giao diện Sidebar phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   LayoutDashboard,

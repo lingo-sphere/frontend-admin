@@ -1,3 +1,8 @@
+/**
+ * @file vocabulary-table-columns.tsx
+ * @description Component giao diện vocabulary-table-columns phục vụ khu vực Quản trị Admin
+ */
+
 import { Volume2, Edit2, Trash2 } from 'lucide-react'
 import type { LexicalItem } from '@/data/vocabulary-data'
 import { wordTypeLabels } from '@/data/vocabulary-data'

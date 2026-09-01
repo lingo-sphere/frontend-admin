@@ -1,3 +1,8 @@
+/**
+ * @file statistics-data.ts
+ * @description Mã nguồn thành phần statistics-data.ts
+ */
+
 export interface TimeFilterOption {
   id: string
   labelVi: string

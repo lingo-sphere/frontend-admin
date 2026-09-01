@@ -1,3 +1,8 @@
+/**
+ * @file admin-user-table-columns.tsx
+ * @description Component giao diện admin-user-table-columns phục vụ khu vực Quản trị Admin
+ */
+
 import { Shield, GraduationCap, Edit2, Ban, CheckCircle } from 'lucide-react'
 import type { AdminUser } from '@/helpers/admin-user.helper'
 import type { DataTableColumn } from '@/components/common/DataTable'

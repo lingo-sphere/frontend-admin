@@ -1,3 +1,8 @@
+/**
+ * @file CreatePublicDeckModal.tsx
+ * @description Component giao diện CreatePublicDeckModal phục vụ khu vực Quản trị Admin
+ */
+
 import { X } from 'lucide-react'
 
 interface CreatePublicDeckModalProps {

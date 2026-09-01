@@ -1,3 +1,8 @@
+/**
+ * @file auth.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ auth
+ */
+
 import { api, apiClient } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { AuthUser, LoginResponse } from '@/types/api.types'

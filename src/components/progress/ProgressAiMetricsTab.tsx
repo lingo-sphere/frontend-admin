@@ -1,3 +1,8 @@
+/**
+ * @file ProgressAiMetricsTab.tsx
+ * @description Component giao diện ProgressAiMetricsTab phục vụ khu vực Quản trị Admin
+ */
+
 import { BrainCircuit, Cpu } from 'lucide-react'
 import { aiModelUsageList, aiEvaluationCategories } from '@/data/statistics-data'
 

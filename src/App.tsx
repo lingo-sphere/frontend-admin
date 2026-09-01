@@ -1,3 +1,8 @@
+/**
+ * @file App.tsx
+ * @description Mã nguồn thành phần App.tsx
+ */
+
 import { AdminShell } from '@/components/admin/AdminShell'
 import { PageRouter } from '@/components/admin/PageRouter'
 import { AuthGuard } from '@/components/admin/AuthGuard'

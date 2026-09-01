@@ -1,3 +1,8 @@
+/**
+ * @file SettingsPage.tsx
+ * @description Trang quản trị SettingsPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Settings, Shield, Bot, Crown, RefreshCw } from 'lucide-react'

@@ -1,3 +1,8 @@
+/**
+ * @file PermissionModal.tsx
+ * @description Component giao diện PermissionModal phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, KeyRound, AlertCircle } from 'lucide-react'

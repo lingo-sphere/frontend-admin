@@ -1,3 +1,8 @@
+/**
+ * @file MediaStoragePage.tsx
+ * @description Trang quản trị MediaStoragePage trong giao diện Admin
+ */
+
 import { useState, useEffect } from 'react'
 import { HardDrive } from 'lucide-react'
 import { mediaAdminService, type StorageQuota } from '@/services/media.service'

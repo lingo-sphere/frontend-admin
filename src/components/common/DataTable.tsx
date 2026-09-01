@@ -1,3 +1,8 @@
+/**
+ * @file DataTable.tsx
+ * @description Component giao diện DataTable phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

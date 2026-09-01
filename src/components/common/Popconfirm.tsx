@@ -1,3 +1,8 @@
+/**
+ * @file Popconfirm.tsx
+ * @description Component giao diện Popconfirm phục vụ khu vực Quản trị Admin
+ */
+
 import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 

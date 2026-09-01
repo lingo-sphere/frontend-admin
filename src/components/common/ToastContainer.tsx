@@ -1,3 +1,8 @@
+/**
+ * @file ToastContainer.tsx
+ * @description Component giao diện ToastContainer phục vụ khu vực Quản trị Admin
+ */
+
 import { useToastStore, type ToastType } from '@/store/toast-store'
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react'
 

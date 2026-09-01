@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyBasicInfoForm.tsx
+ * @description Component giao diện VocabularyBasicInfoForm phục vụ khu vực Quản trị Admin
+ */
+
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BookOpen } from 'lucide-react'

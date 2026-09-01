@@ -1,3 +1,8 @@
+/**
+ * @file AiQuizGeneratorForm.tsx
+ * @description Component giao diện AiQuizGeneratorForm phục vụ khu vực Quản trị Admin
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Brain, Sparkles } from 'lucide-react'
 import { CustomSelect } from '@/components/common/CustomSelect'

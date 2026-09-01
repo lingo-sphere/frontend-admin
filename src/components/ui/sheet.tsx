@@ -1,3 +1,8 @@
+/**
+ * @file sheet.tsx
+ * @description Component giao diện sheet phục vụ khu vực Quản trị Admin
+ */
+
 import React, { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'

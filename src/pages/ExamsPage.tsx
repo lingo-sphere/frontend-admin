@@ -1,3 +1,8 @@
+/**
+ * @file ExamsPage.tsx
+ * @description Trang quản trị ExamsPage trong giao diện Admin
+ */
+
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'

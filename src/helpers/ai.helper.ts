@@ -1,3 +1,8 @@
+/**
+ * @file ai.helper.ts
+ * @description Mã nguồn thành phần ai.helper.ts
+ */
+
 import type { GenerateQuizItem } from '@/services/ai.service'
 
 export const DEFAULT_AI_SAMPLE_QUESTIONS: GenerateQuizItem[] = [
