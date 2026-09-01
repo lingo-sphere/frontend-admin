@@ -182,18 +182,22 @@ export const authStore = createStore<AuthState>()((set, get) => ({
 
     try {
       const user = await authService.getMe()
-      const profile = await userService.getMyProfile()
+      let profile: UserProfile | null = null
+      try {
+        profile = await userService.getMyProfile()
+      } catch (profileErr) {
+        console.warn('Profile not found or not yet created, skipping profile load:', profileErr)
+      }
 
       let permissions: PermissionItem[] = user.permissions || []
-      const roleName = user.role || profile.role
+      const roleName = user.role || profile?.role
       if (roleName && roleName.toUpperCase() !== 'ADMIN') {
         try {
           const freshPermissions = await authService.getRolePermissions(roleName)
           if (Array.isArray(freshPermissions)) {
             permissions = freshPermissions
           }
-        } catch {
-        }
+        } catch {}
       }
 
       const updatedUser: AuthUser = { ...user, permissions }
@@ -209,8 +213,11 @@ export const authStore = createStore<AuthState>()((set, get) => ({
         isAuthenticated: true,
       })
     } catch (err) {
-      console.warn('Failed to fetch current user profile (token expired), logging out:', err)
-      await get().logout()
+      console.warn('Failed to fetch current user (token may be expired):', err)
+      const errStr = String(err || '')
+      if (errStr.includes('401') || errStr.includes('Unauthorized') || errStr.includes('Phiên đăng nhập đã hết hạn')) {
+        await get().logout()
+      }
     }
   },
 

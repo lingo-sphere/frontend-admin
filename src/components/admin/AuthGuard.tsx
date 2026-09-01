@@ -16,7 +16,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     initAuth().finally(() => {
       setIsChecking(false)
     })
-  }, [initAuth])
+  }, [])
 
   if (isChecking) {
     return (
