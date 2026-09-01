@@ -60,51 +60,62 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const loadCourseData = async (courseId: string) => {
     setIsLoading(true)
     try {
-      const course = await courseService.getCourseById(courseId)
-      if (course) {
+      const rawRes = (await courseService.getCourseById(courseId)) as unknown as Record<string, unknown>
+      if (rawRes) {
+        const course = (rawRes.course as Record<string, unknown>) || rawRes
+        const rawCurriculum = (rawRes.curriculum || course.modules || []) as Array<Record<string, unknown>>
+
         if (course.created_at) {
-          setCourseCreatedAt(new Date(course.created_at).getTime())
+          setCourseCreatedAt(new Date(course.created_at as string).getTime())
         }
+
+        const mappedModules = rawCurriculum.map((m, mIdx) => {
+          const rawLessons = (m.lessons || []) as Array<Record<string, unknown>>
+          return {
+            id: (m._id || m.id || `mod-${mIdx}`) as string,
+            title: (m.title || '') as string,
+            description: (m.description || '') as string,
+            module_order: typeof m.module_order === 'number' ? m.module_order : typeof m.order_index === 'number' ? m.order_index : mIdx + 1,
+            is_free_preview: Boolean(m.is_free_preview),
+            challenge_test_exam_id: m.challenge_test_exam_id as string | undefined,
+            challenge_passing_score: typeof m.challenge_passing_score === 'number' ? m.challenge_passing_score : 80,
+            challenge_questions: (m.challenge_questions || []) as CourseFormData['final_test_questions'],
+            post_mini_test_exam_id: m.post_mini_test_exam_id as string | undefined,
+            post_mini_passing_score: typeof m.post_mini_passing_score === 'number' ? m.post_mini_passing_score : 60,
+            post_mini_questions: (m.post_mini_questions || []) as CourseFormData['final_test_questions'],
+            passing_score: typeof m.passing_score === 'number' ? m.passing_score : typeof m.post_mini_passing_score === 'number' ? m.post_mini_passing_score : 70,
+            test_questions: (m.test_questions || m.post_mini_questions || m.challenge_questions || []) as CourseFormData['final_test_questions'],
+            created_at_timestamp: m.created_at
+              ? new Date(m.created_at as string).getTime()
+              : Date.now() + mIdx * 1000,
+            lessons: rawLessons.map((l, lIdx) => ({
+              id: (l._id || l.id || `les-${lIdx}`) as string,
+              title: (l.title || '') as string,
+              video_url: (l.video_url || '') as string,
+              duration_minutes: typeof l.duration_minutes === 'number' ? l.duration_minutes : typeof l.duration_seconds === 'number' ? Math.round(l.duration_seconds / 60) : 10,
+              content: (l.content || l.content_html || '') as string,
+              is_preview: Boolean(l.is_preview || l.is_free_preview),
+              lesson_order: typeof l.lesson_order === 'number' ? l.lesson_order : typeof l.order_index === 'number' ? l.order_index : lIdx + 1,
+            })),
+          }
+        })
+
         setFormData({
-          title: course.title || '',
-          slug: course.slug || '',
-          description: course.description || '',
-          category: course.category || 'TOEIC_2_SKILLS',
-          level: course.level || 'BEGINNER',
-          target_score: course.target_score || 500,
-          price: course.price || 0,
-          discount_price: course.discount_price || 0,
-          thumbnail_url: course.thumbnail_url || '',
-          is_published: course.is_published ?? true,
-          final_test_exam_id: course.final_test_exam_id,
-          final_test_passing_score: course.final_test_passing_score || 70,
+          title: (course.title || '') as string,
+          slug: (course.slug || '') as string,
+          description: (course.description || '') as string,
+          category: (course.category || 'TOEIC_2_SKILLS') as CourseFormData['category'],
+          level: (course.level || 'BEGINNER') as CourseFormData['level'],
+          target_score: typeof course.target_score === 'number' ? course.target_score : 500,
+          price: typeof course.price === 'number' ? course.price : 0,
+          discount_price: typeof course.discount_price === 'number' ? course.discount_price : 0,
+          thumbnail_url: (course.thumbnail_url || '') as string,
+          is_published: typeof course.is_published === 'boolean' ? course.is_published : true,
+          pre_test_exam_id: course.pre_test_exam_id as string | undefined,
+          final_test_exam_id: course.final_test_exam_id as string | undefined,
+          final_test_passing_score: typeof course.final_test_passing_score === 'number' ? course.final_test_passing_score : 70,
           final_test_questions: (course.final_test_questions || []) as CourseFormData['final_test_questions'],
-          modules:
-            course.modules && course.modules.length > 0
-              ? course.modules.map((m, mIdx) => ({
-                  id: m._id || `mod-${mIdx}`,
-                  title: m.title || '',
-                  description: m.description || '',
-                  module_order: m.module_order || mIdx + 1,
-                  passing_score: m.passing_score || m.post_mini_passing_score || m.challenge_passing_score || 70,
-                  test_questions: (m.test_questions || m.post_mini_questions || m.challenge_questions || []) as CourseFormData['final_test_questions'],
-                  created_at_timestamp: m.created_at
-                    ? new Date(m.created_at).getTime()
-                    : Date.now() + mIdx * 1000,
-                  lessons:
-                    m.lessons && m.lessons.length > 0
-                      ? m.lessons.map((l, lIdx) => ({
-                          id: l._id || `les-${lIdx}`,
-                          title: l.title || '',
-                          video_url: l.video_url || '',
-                          duration_minutes: l.duration_minutes || 0,
-                          content: l.content || '',
-                          is_preview: l.is_preview || false,
-                          lesson_order: l.lesson_order || lIdx + 1,
-                        }))
-                      : [],
-                }))
-              : [],
+          modules: mappedModules,
         })
       }
     } catch {
