@@ -11,6 +11,7 @@ import { CourseCurriculumManager } from '@/components/courses/CourseCurriculumMa
 import { courseService } from '@/services/course.service'
 import { mediaService } from '@/services/media.service'
 import { useAdminStore } from '@/store/admin-store'
+import { authStore } from '@/store/auth-store'
 import { toast } from '@/store/toast-store'
 import { BookOpen, ChevronLeft, Save, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -25,6 +26,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
+  const currentUser = authStore.getState().user
 
   const currentCourseId =
     editCourseId ||
@@ -40,20 +42,30 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState<CourseFormData>({
-    title: '',
-    slug: '',
-    description: '',
-    category: 'TOEIC_2_SKILLS',
-    level: 'BEGINNER',
-    target_score: 500,
-    price: 0,
-    discount_price: 0,
-    thumbnail_url: '',
-    is_published: true,
-    final_test_passing_score: 70,
-    final_test_questions: [],
-    modules: [],
+  const [formData, setFormData] = useState<CourseFormData>(() => {
+    const user = authStore.getState().user
+    const userPayload = user as unknown as Record<string, unknown>
+    return {
+      title: '',
+      slug: '',
+      description: '',
+      category: 'TOEIC_2_SKILLS',
+      level: 'BEGINNER',
+      target_score: 500,
+      price: 0,
+      discount_price: 0,
+      thumbnail_url: '',
+      is_published: true,
+      author_id: user?.user_id,
+      author_name: (userPayload?.name as string) || (userPayload?.full_name as string) || 'Đội ngũ Giảng viên LingoSphere',
+      author_email: user?.email,
+      author_avatar: (userPayload?.avatar as string) || '',
+      author_title: user?.role === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật',
+      author_bio: '',
+      final_test_passing_score: 70,
+      final_test_questions: [],
+      modules: [],
+    }
   })
 
   useEffect(() => {
@@ -117,6 +129,12 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           discount_price: typeof course.discount_price === 'number' ? course.discount_price : 0,
           thumbnail_url: (course.thumbnail_url || '') as string,
           is_published: typeof course.is_published === 'boolean' ? course.is_published : true,
+          author_id: course.author_id as string | undefined,
+          author_name: (course.author_name || 'Đội ngũ Giảng viên LingoSphere') as string,
+          author_email: course.author_email as string | undefined,
+          author_avatar: (course.author_avatar || '') as string,
+          author_title: (course.author_title || 'Giảng viên chuyên môn') as string,
+          author_bio: (course.author_bio || '') as string,
           pre_test_exam_id: course.pre_test_exam_id as string | undefined,
           final_test_exam_id: course.final_test_exam_id as string | undefined,
           final_test_passing_score: typeof course.final_test_passing_score === 'number' ? course.final_test_passing_score : 70,
@@ -164,6 +182,12 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         discount_price: Number(formData.discount_price),
         thumbnail_url: formData.thumbnail_url,
         is_published: formData.is_published,
+        author_id: formData.author_id || currentUser?.user_id,
+        author_name: formData.author_name || 'Đội ngũ Giảng viên LingoSphere',
+        author_email: formData.author_email || currentUser?.email,
+        author_avatar: formData.author_avatar || '',
+        author_title: formData.author_title || 'Giảng viên chuyên môn',
+        author_bio: formData.author_bio || '',
         pre_test_exam_id: formData.pre_test_exam_id || undefined,
         final_test_exam_id: formData.final_test_exam_id || undefined,
         final_test_passing_score: Number(formData.final_test_passing_score) || 70,

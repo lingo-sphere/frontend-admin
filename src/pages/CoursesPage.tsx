@@ -67,7 +67,7 @@ export function CoursesPage() {
             price: c.price || 0,
             is_published: c.is_published ?? true,
             author_id: c.author_id || '',
-            author_name: 'LingoSphere Instructor',
+            author_name: ((c as unknown as Record<string, unknown>).author_name as string) || 'Đội ngũ Giảng viên LingoSphere',
             created_at: c.created_at || new Date().toISOString(),
             enrollments: c.students_count || 0,
             completed_count: Math.round((c.students_count || 0) * 0.4),

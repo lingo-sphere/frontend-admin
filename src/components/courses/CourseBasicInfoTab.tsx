@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from 'react'
-import { FileSpreadsheet, Eye, Award } from 'lucide-react'
+import { FileSpreadsheet, Eye, Award, UserCheck } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import { CustomSelect, type SelectOption } from '@/components/common/CustomSelect'
@@ -24,6 +24,12 @@ export interface CourseFormData {
   discount_price: number
   thumbnail_url: string
   is_published: boolean
+  author_id?: string
+  author_name?: string
+  author_email?: string
+  author_avatar?: string
+  author_title?: string
+  author_bio?: string
   pre_test_exam_id?: string
   final_test_exam_id?: string
   final_test_passing_score?: number
@@ -263,6 +269,83 @@ export function CourseBasicInfoTab({
                 placeholder={isVi ? 'Nhập nội dung mô tả khóa học...' : 'Course Description'}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 resize-none"
               />
+            </div>
+
+            {/* Thông tin người tạo / Giảng viên phụ trách */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <UserCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <span>{isVi ? 'Thông tin người tạo / Giảng viên phụ trách' : 'Instructor & Creator Information'}</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    {isVi ? 'Họ tên Người tạo / Giảng viên' : 'Instructor Name'}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author_name || ''}
+                    onChange={(e) => onChange({ author_name: e.target.value })}
+                    placeholder="VD: ThS. Nguyễn Văn A"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    {isVi ? 'Chức danh / Học vị' : 'Academic Title'}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author_title || ''}
+                    onChange={(e) => onChange({ author_title: e.target.value })}
+                    placeholder="VD: Senior English Lecturer • TOEIC 990"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    {isVi ? 'Email liên hệ' : 'Contact Email'}
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.author_email || ''}
+                    onChange={(e) => onChange({ author_email: e.target.value })}
+                    placeholder="teacher@lingosphere.edu.vn"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    {isVi ? 'Link ảnh đại diện (Avatar URL)' : 'Avatar URL'}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author_avatar || ''}
+                    onChange={(e) => onChange({ author_avatar: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  {isVi ? 'Tiểu sử / Giới thiệu giảng viên' : 'Instructor Bio'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={formData.author_bio || ''}
+                  onChange={(e) => onChange({ author_bio: e.target.value })}
+                  placeholder="Chuyên gia luyện thi TOEIC hơn 8 năm kinh nghiệm giảng dạy..."
+                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 resize-none"
+                />
+              </div>
             </div>
           </div>
 
