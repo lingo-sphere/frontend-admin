@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   UploadCloud,
   CheckCircle2,
@@ -19,6 +19,7 @@ interface R2MediaUploaderProps {
   type: 'image' | 'video'
   value: string
   onChange: (url: string) => void
+  onDurationChange?: (durationMinutes: number, durationSeconds: number) => void
   folder?: string
   label?: string
   isVi?: boolean
@@ -29,6 +30,7 @@ export function R2MediaUploader({
   type,
   value,
   onChange,
+  onDurationChange,
   folder = 'courses',
   label,
   isVi = true,
@@ -45,9 +47,66 @@ export function R2MediaUploader({
   const isVideo = type === 'video'
   const acceptTypes = isVideo ? 'video/mp4,video/webm,video/quicktime,video/x-matroska' : 'image/png,image/jpeg,image/webp,image/gif'
 
+  const readVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      try {
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.muted = true
+        video.playsInline = true
+        const objUrl = URL.createObjectURL(file)
+
+        let done = false
+        const finish = (dur: number) => {
+          if (!done) {
+            done = true
+            try {
+              URL.revokeObjectURL(objUrl)
+            } catch {}
+            resolve(dur && !isNaN(dur) && isFinite(dur) ? dur : 0)
+          }
+        }
+
+        video.onloadedmetadata = () => finish(video.duration)
+        video.ondurationchange = () => finish(video.duration)
+        video.onloadeddata = () => finish(video.duration)
+        video.onerror = () => finish(0)
+        setTimeout(() => finish(video.duration || 0), 3000)
+
+        video.src = objUrl
+        video.load()
+      } catch {
+        resolve(0)
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (isVideo && value && onDurationChange && !value.includes('youtube.com') && !value.includes('youtu.be')) {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.muted = true
+      let done = false
+      const onDone = () => {
+        if (!done && video.duration && !isNaN(video.duration) && isFinite(video.duration) && video.duration > 0) {
+          done = true
+          const durSec = Math.round(video.duration)
+          const mins = durSec >= 60 ? Math.round(durSec / 60) : Number((durSec / 60).toFixed(2))
+          onDurationChange(mins, durSec)
+        }
+      }
+      video.onloadedmetadata = onDone
+      video.ondurationchange = onDone
+      video.onloadeddata = onDone
+      video.onerror = () => {}
+      setTimeout(onDone, 3000)
+      video.src = value
+      video.load()
+    }
+  }, [value, isVideo])
+
   const handleFileSelect = async (file: File) => {
     if (!file) return
-
 
     const maxSize = isVideo ? 200 * 1024 * 1024 : 10 * 1024 * 1024
     if (file.size > maxSize) {
@@ -59,12 +118,21 @@ export function R2MediaUploader({
       return
     }
 
+    if (isVideo && onDurationChange) {
+      readVideoDuration(file).then((durSec) => {
+        if (durSec > 0) {
+          const roundedSec = Math.round(durSec)
+          const mins = roundedSec >= 60 ? Math.round(roundedSec / 60) : Number((roundedSec / 60).toFixed(2))
+          onDurationChange(mins, roundedSec)
+        }
+      })
+    }
+
     setIsUploading(true)
     setError(null)
     setUploadProgress(10)
 
     try {
-
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => (prev >= 85 ? prev : prev + 15))
       }, 300)
@@ -81,8 +149,6 @@ export function R2MediaUploader({
 
       onChange(uploadedUrl)
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Upload to Cloudflare R2 failed'
-
       const fallbackUrl = URL.createObjectURL(file)
       onChange(fallbackUrl)
       setError(null)
@@ -138,7 +204,21 @@ export function R2MediaUploader({
           <input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              const newUrl = e.target.value
+              onChange(newUrl)
+              if (isVideo && onDurationChange && newUrl && !newUrl.includes('youtube.com') && !newUrl.includes('youtu.be')) {
+                const video = document.createElement('video')
+                video.preload = 'metadata'
+                video.onloadedmetadata = () => {
+                  if (video.duration > 0) {
+                    const mins = Math.max(1, Math.round(video.duration / 60))
+                    onDurationChange(mins, Math.round(video.duration))
+                  }
+                }
+                video.src = newUrl
+              }
+            }}
             placeholder={
               isVideo
                 ? 'https://www.youtube.com/watch?v=... hoặc https://r2.lingosphere.../video.mp4'

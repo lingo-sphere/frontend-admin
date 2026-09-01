@@ -39,6 +39,7 @@ export interface CourseLesson {
   title: string
   video_url: string
   duration_minutes: number
+  duration_seconds?: number
   content: string
   is_preview: boolean
   lesson_order: number
@@ -100,125 +101,167 @@ export function CourseBasicInfoTab({
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">
-          {isVi ? '1. Thông tin cơ bản khóa học' : '1. Basic Course Information'}
-        </h2>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Tên khóa học' : 'Course Title'} <span className="text-rose-500">*</span>
+        <div className="flex items-center justify-between gap-4 mb-5 pb-3 border-b border-slate-200 dark:border-slate-800">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <span>{isVi ? '1. Thông tin cơ bản khóa học' : '1. Basic Course Information'}</span>
+          </h2>
+          <div className="flex items-center gap-2.5">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer" onClick={() => onChange({ is_published: !formData.is_published })}>
+              {isVi ? 'Công khai khóa học' : 'Published'}
             </label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) => {
-                const newTitle = e.target.value
-                onChange({
-                  title: newTitle,
-                  slug: formData.slug || generateSlug(newTitle),
-                })
-              }}
-              placeholder={isVi ? 'VD: Khóa học TOEIC 4 Kỹ Năng 750+ Bứt Phá' : 'Enter course title...'}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
-            />
+            <button
+              type="button"
+              onClick={() => onChange({ is_published: !formData.is_published })}
+              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                formData.is_published ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                  formData.is_published ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
+        </div>
 
-          <div className="sm:col-span-2">
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {isVi ? 'Đường dẫn tĩnh (Slug)' : 'URL Slug'} <span className="text-rose-500">*</span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                {isVi ? 'Tên khóa học' : 'Course Title'} <span className="text-rose-500">*</span>
               </label>
-              {onGenerateSlug && (
-                <button
-                  type="button"
-                  onClick={onGenerateSlug}
-                  className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
-                >
-                  {isVi ? 'Tự động tạo từ tiêu đề' : 'Generate from Title'}
-                </button>
-              )}
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => {
+                  const newTitle = e.target.value
+                  onChange({
+                    title: newTitle,
+                    slug: formData.slug || generateSlug(newTitle),
+                  })
+                }}
+                placeholder={isVi ? 'VD: Khóa học TOEIC 4 Kỹ Năng 750+ Bứt Phá' : 'Enter course title...'}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-medium"
+              />
             </div>
-            <input
-              type="text"
-              required
-              value={formData.slug}
-              onChange={(e) => onChange({ slug: e.target.value })}
-              placeholder="toeic-4-ky-nang-750-but-pha"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
-            />
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {isVi ? 'Đường dẫn tĩnh (Slug)' : 'URL Slug'} <span className="text-rose-500">*</span>
+                </label>
+                {onGenerateSlug && (
+                  <button
+                    type="button"
+                    onClick={onGenerateSlug}
+                    className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
+                  >
+                    {isVi ? 'Tự động tạo từ tiêu đề' : 'Generate from Title'}
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                required
+                value={formData.slug}
+                onChange={(e) => onChange({ slug: e.target.value })}
+                placeholder="toeic-4-ky-nang-750-but-pha"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-mono"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {isVi ? 'Danh mục khóa học' : 'Category'} <span className="text-rose-500">*</span>
+                </label>
+                <CustomSelect
+                  options={categoryOptions}
+                  value={formData.category}
+                  onChange={(val) => onChange({ category: val })}
+                  placeholder={isVi ? 'Chọn danh mục...' : 'Select category...'}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {isVi ? 'Trình độ phù hợp' : 'Level'}
+                </label>
+                <CustomSelect
+                  options={levelOptions}
+                  value={formData.level}
+                  onChange={(val) => onChange({ level: val })}
+                  placeholder={isVi ? 'Chọn trình độ...' : 'Select level...'}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {isVi ? 'Mục tiêu điểm' : 'Target Score'}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={990}
+                  value={formData.target_score}
+                  onChange={(e) =>
+                    onChange({
+                      target_score: Math.max(0, Math.min(990, Number(e.target.value) || 0)),
+                    })
+                  }
+                  placeholder="VD: 750"
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {isVi ? 'Giá gốc (VNĐ)' : 'Price (VND)'}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={formData.price}
+                  onChange={(e) => onChange({ price: Math.max(0, Number(e.target.value) || 0) })}
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {isVi ? 'Giá khuyến mãi (VNĐ)' : 'Discount Price (VND)'}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={formData.discount_price}
+                  onChange={(e) => onChange({ discount_price: Math.max(0, Number(e.target.value) || 0) })}
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                {isVi ? 'Mô tả tóm tắt khóa học' : 'Description'}
+              </label>
+              <textarea
+                rows={3}
+                value={formData.description}
+                onChange={(e) => onChange({ description: e.target.value })}
+                placeholder={isVi ? 'Nhập nội dung mô tả khóa học...' : 'Course Description'}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 resize-none"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Danh mục khóa học' : 'Category'} <span className="text-rose-500">*</span>
-            </label>
-            <CustomSelect
-              options={categoryOptions}
-              value={formData.category}
-              onChange={(val) => onChange({ category: val })}
-              placeholder={isVi ? 'Chọn danh mục...' : 'Select category...'}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Trình độ phù hợp' : 'Level'}
-            </label>
-            <CustomSelect
-              options={levelOptions}
-              value={formData.level}
-              onChange={(val) => onChange({ level: val })}
-              placeholder={isVi ? 'Chọn trình độ...' : 'Select level...'}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Mục tiêu điểm đầu ra' : 'Target Score'}
-            </label>
-            <input
-              type="number"
-              min={0}
-              max={990}
-              value={formData.target_score}
-              onChange={(e) =>
-                onChange({
-                  target_score: Math.max(0, Math.min(990, Number(e.target.value) || 0)),
-                })
-              }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Giá gốc (VNĐ)' : 'Price (VND)'}
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={formData.price}
-              onChange={(e) => onChange({ price: Math.max(0, Number(e.target.value) || 0) })}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Giá khuyến mãi (VNĐ)' : 'Discount Price (VND)'}
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={formData.discount_price}
-              onChange={(e) => onChange({ discount_price: Math.max(0, Number(e.target.value) || 0) })}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <div className="sm:col-span-2">
+          <div className="lg:col-span-5 flex flex-col justify-start">
             <R2MediaUploader
               type="image"
               value={formData.thumbnail_url}
@@ -226,19 +269,6 @@ export function CourseBasicInfoTab({
               folder={courseFolder || (formData.slug ? `courses/${formData.slug}` : 'courses')}
               label={isVi ? 'Ảnh Thumbnail Khóa Học (Cloudflare R2)' : 'Course Thumbnail (Cloudflare R2)'}
               isVi={isVi}
-            />
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Mô tả tóm tắt khóa học' : 'Description'}
-            </label>
-            <textarea
-              rows={3}
-              value={formData.description}
-              onChange={(e) => onChange({ description: e.target.value })}
-              placeholder={isVi ? 'Nhập nội dung mô tả khóa học...' : 'Course Description'}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
             />
           </div>
         </div>

@@ -165,6 +165,41 @@ export function CourseCurriculumManager({
     )
   }
 
+  const updateLessonFields = (
+    moduleId: string,
+    lessonId: string,
+    fields: Partial<CourseLesson>
+  ) => {
+    onChange(
+      modules.map((m) => {
+        if (m.id !== moduleId) return m
+        return {
+          ...m,
+          lessons: m.lessons.map((l) =>
+            l.id === lessonId ? { ...l, ...fields } : l
+          ),
+        }
+      })
+    )
+  }
+
+  const formatDurationDisplay = (seconds?: number, minutes?: number) => {
+    if (typeof seconds === 'number' && seconds > 0) {
+      if (seconds < 60) return `${seconds}s`
+      const m = Math.floor(seconds / 60)
+      const s = seconds % 60
+      return s > 0 ? `${m}p ${s}s` : `${m} phút`
+    }
+    if (typeof minutes === 'number' && minutes > 0) {
+      if (minutes < 1) {
+        const s = Math.round(minutes * 60)
+        return `${s}s`
+      }
+      return `${minutes} phút`
+    }
+    return '0s'
+  }
+
   const handleApplyQuestions = (
     moduleId: string,
     questions: QuizQuestionItem[]
@@ -178,31 +213,20 @@ export function CourseCurriculumManager({
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Video className="w-5 h-5 text-indigo-500" />
-            <span>
-              {isVi
-                ? '3. Chương trình giảng dạy, Bài học & Bài Test Đánh giá'
-                : '3. Curriculum, Lessons & Chapter Assessments'}
-            </span>
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+      <div>
+        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <Video className="w-5 h-5 text-indigo-500" />
+          <span>
             {isVi
-              ? 'Soạn video bài giảng và tạo bài test kiểm tra cuối chương (AI & Excel) để đánh giá và mở khóa chương tiếp theo.'
-              : 'Add lesson videos and generate chapter assessment tests using AI or Excel.'}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={addModule}
-          className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{isVi ? 'Thêm Chương Mới' : 'Add Chapter'}</span>
-        </button>
+              ? '3. Chương trình giảng dạy, Bài học & Bài Test Đánh giá'
+              : '3. Curriculum, Lessons & Chapter Assessments'}
+          </span>
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          {isVi
+            ? 'Soạn video bài giảng và tạo bài test kiểm tra cuối chương từ file Excel để đánh giá và mở khóa chương tiếp theo.'
+            : 'Add lesson videos and upload chapter assessment tests from Excel.'}
+        </p>
       </div>
 
       {modules.length === 0 ? (
@@ -511,25 +535,10 @@ export function CourseCurriculumManager({
                                     </span>
                                   </label>
 
-                                  <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 dark:bg-slate-950 dark:border-slate-800">
-                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      value={les.duration_minutes || ''}
-                                      onChange={(e) =>
-                                        updateLessonField(
-                                          mod.id,
-                                          les.id,
-                                          'duration_minutes',
-                                          Math.max(0, Number(e.target.value) || 0)
-                                        )
-                                      }
-                                      placeholder="0"
-                                      className="w-12 h-6 text-center text-xs font-semibold bg-transparent text-slate-900 outline-none dark:text-slate-100"
-                                    />
-                                    <span className="text-[10px] text-slate-400">
-                                      {isVi ? 'phút' : 'min'}
+                                  <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 dark:bg-slate-950 dark:border-slate-800" title="Thời lượng video (tự động đọc khi tải lên)">
+                                    <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 min-w-[32px] text-center">
+                                      {formatDurationDisplay(les.duration_seconds, les.duration_minutes)}
                                     </span>
                                   </div>
 
@@ -544,12 +553,17 @@ export function CourseCurriculumManager({
                                 </div>
                               </div>
 
-                              {}
                               <R2MediaUploader
                                 type="video"
                                 value={les.video_url}
                                 onChange={(url) =>
                                   updateLessonField(mod.id, les.id, 'video_url', url)
+                                }
+                                onDurationChange={(mins, secs) =>
+                                  updateLessonFields(mod.id, les.id, {
+                                    duration_minutes: mins,
+                                    duration_seconds: secs,
+                                  })
                                 }
                                 folder={chapterFolder}
                                 label={

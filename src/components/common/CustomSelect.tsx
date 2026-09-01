@@ -110,12 +110,12 @@ export function CustomSelect({
 
   const sizeClasses = {
     sm: 'h-8 px-2.5 py-1 text-[11px] rounded-lg gap-1.5',
-    md: 'h-10 px-3.5 py-2 text-xs rounded-xl gap-2',
+    md: 'h-11 px-3.5 py-2.5 text-xs rounded-xl gap-2',
     lg: 'h-12 px-4 py-2.5 text-sm rounded-2xl gap-2.5',
   }
 
   return (
-    <div ref={containerRef} className={`relative inline-block ${className}`}>
+    <div ref={containerRef} className={`relative w-full ${className}`}>
       <button
         id={id}
         type="button"
