@@ -3,7 +3,7 @@
  * @description Component giao diện course-table-columns phục vụ khu vực Quản trị Admin
  */
 
-import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones } from 'lucide-react'
+import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones, GraduationCap } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import type { DataTableColumn } from '@/components/common/DataTable'
@@ -17,6 +17,7 @@ interface GetCourseColumnsOptions {
   onEdit: (courseId: string) => void
   onDelete: (courseId: string) => Promise<void> | void
   onViewSubmissions?: (course: Course) => void
+  onViewStudentScores?: (course: Course) => void
 }
 
 export function getCourseColumns({
@@ -26,6 +27,7 @@ export function getCourseColumns({
   onEdit,
   onDelete,
   onViewSubmissions,
+  onViewStudentScores,
 }: GetCourseColumnsOptions): DataTableColumn<Course>[] {
   return [
     {
@@ -174,6 +176,24 @@ export function getCourseColumns({
       },
     },
     {
+      key: 'enrollments',
+      title: isVi ? 'Học viên' : 'Students',
+      sortable: true,
+      render: (course) => (
+        <div className="whitespace-nowrap py-1">
+          <button
+            onClick={() => onViewStudentScores?.(course)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/40 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 border border-slate-200 hover:border-indigo-300 dark:border-slate-700 dark:hover:border-indigo-700 font-bold text-xs transition-all cursor-pointer shadow-2xs group"
+            title={isVi ? 'Xem bảng điểm & tiến độ học viên của khóa này' : 'View student scores & progress'}
+            type="button"
+          >
+            <Users className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+            <span>{course.enrollments || 0} học viên</span>
+          </button>
+        </div>
+      ),
+    },
+    {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
       render: (course) => (
@@ -201,6 +221,16 @@ export function getCourseColumns({
       align: 'right',
       render: (course) => (
         <div className="flex items-center justify-end gap-1.5 py-1">
+          {onViewStudentScores && (
+            <button
+              onClick={() => onViewStudentScores(course)}
+              className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer shadow-2xs"
+              title={isVi ? 'Xem bảng điểm & tiến độ học viên' : 'View student scores & progress'}
+              type="button"
+            >
+              <GraduationCap className="w-4 h-4" />
+            </button>
+          )}
           {onViewSubmissions && (
             <button
               onClick={() => onViewSubmissions(course)}

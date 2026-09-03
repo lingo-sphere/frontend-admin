@@ -7,14 +7,39 @@ import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { BetterStackMonitoringData, PostHogAnalyticsData } from '@/types/api.types'
 
+export interface StudentModuleProgress {
+  module_id: string
+  order_index?: number
+  status: string
+  challenge_score?: number
+  is_passed_by_challenge?: boolean
+  post_mini_score?: number
+}
+
 export interface StudentProgressItem {
   user_id: string
   full_name?: string
   email?: string
+  avatar_url?: string
+  status?: string
   progress_percentage: number
   completed_lessons: number
   total_lessons: number
-  last_studied_at?: string
+  baseline_score?: number
+  baseline_source?: string
+  final_test_score?: number
+  total_score_growth?: number
+  modules_progress?: StudentModuleProgress[]
+  last_accessed_at?: string
+  created_at?: string
+}
+
+export interface CourseStudentsProgressResponse {
+  course_id: string
+  total_students: number
+  completed_students: number
+  average_progress_percentage: number
+  students: StudentProgressItem[]
 }
 
 export interface SkillSubmissionItem {
@@ -49,8 +74,29 @@ export interface SkillSubmissionItem {
 }
 
 export const progressService = {
-  async getCourseStudentsProgress(courseId: string): Promise<StudentProgressItem[]> {
-    return api.get<StudentProgressItem[]>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
+  async getCourseStudentsProgress(courseId: string): Promise<CourseStudentsProgressResponse> {
+    const res = await api.get<any>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
+    const payload = (res && res.data && (res.data.students || res.data.total_students !== undefined)) ? res.data : res
+
+    if (payload && payload.students && Array.isArray(payload.students)) {
+      return payload as CourseStudentsProgressResponse
+    }
+    if (Array.isArray(res)) {
+      return {
+        course_id: courseId,
+        total_students: res.length,
+        completed_students: 0,
+        average_progress_percentage: 0,
+        students: res,
+      }
+    }
+    return {
+      course_id: courseId,
+      total_students: 0,
+      completed_students: 0,
+      average_progress_percentage: 0,
+      students: [],
+    }
   },
 
   async getGrowthChart(courseId: string): Promise<unknown> {

@@ -99,8 +99,13 @@ export function CourseSubmissionsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-      <div className="flex flex-col w-full max-w-4xl max-h-[90vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/35 dark:bg-slate-950/50 backdrop-blur-[2px] animate-in fade-in duration-200"
+    >
+      <div className="flex flex-col w-full max-w-4xl max-h-[90vh] rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800/90 shadow-2xl overflow-hidden backdrop-blur-md ring-1 ring-slate-900/5">
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
@@ -302,8 +307,13 @@ export function CourseSubmissionsModal({
         </div>
 
         {selectedSubmission && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/80 p-4 animate-in fade-in duration-150">
-            <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedSubmission(null)
+            }}
+            className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-[2px] p-4 animate-in fade-in duration-150"
+          >
+            <div className="w-full max-w-lg rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800/90 shadow-2xl p-6 space-y-4 backdrop-blur-md ring-1 ring-slate-900/5">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Edit3 className="h-4 w-4 text-indigo-600" />

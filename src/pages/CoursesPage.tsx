@@ -21,6 +21,7 @@ import { CourseFilterBar } from '@/components/courses/CourseFilterBar'
 import { CourseGridCard } from '@/components/courses/CourseGridCard'
 import { getCourseColumns } from '@/components/courses/course-table-columns'
 import { CourseSubmissionsModal } from '@/components/courses/CourseSubmissionsModal'
+import { CourseStudentScoresModal } from '@/components/courses/CourseStudentScoresModal'
 import type { FilterCategory, FilterLevel, FilterStatus } from '@/helpers/course.helper'
 
 export function CoursesPage() {
@@ -37,6 +38,7 @@ export function CoursesPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
   const [selectedSubmissionsCourse, setSelectedSubmissionsCourse] = useState<Course | null>(null)
+  const [selectedScoresCourse, setSelectedScoresCourse] = useState<Course | null>(null)
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
@@ -186,6 +188,7 @@ export function CoursesPage() {
       onEdit: handleEditCourse,
       onDelete: handleDeleteCourse,
       onViewSubmissions: (course) => setSelectedSubmissionsCourse(course),
+      onViewStudentScores: (course) => setSelectedScoresCourse(course),
     })
   }, [isVi, can])
 
@@ -275,6 +278,15 @@ export function CoursesPage() {
           onClose={() => setSelectedSubmissionsCourse(null)}
           courseId={selectedSubmissionsCourse.id}
           courseTitle={selectedSubmissionsCourse.title}
+        />
+      )}
+
+      {selectedScoresCourse && (
+        <CourseStudentScoresModal
+          isOpen={Boolean(selectedScoresCourse)}
+          onClose={() => setSelectedScoresCourse(null)}
+          courseId={selectedScoresCourse.id}
+          courseTitle={selectedScoresCourse.title}
         />
       )}
     </div>
