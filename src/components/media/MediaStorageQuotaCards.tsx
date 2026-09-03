@@ -45,7 +45,7 @@ export function MediaStorageQuotaCards({ quota }: MediaStorageQuotaCardsProps) {
           />
         </div>
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-          Tổng dung lượng hạn mức: {totalGb} GB (Cloudflare R2 Bucket)
+          Tổng dung lượng hạn mức: {totalGb} GB (Máy chủ lưu trữ đám mây)
         </p>
       </div>
 
@@ -76,7 +76,7 @@ export function MediaStorageQuotaCards({ quota }: MediaStorageQuotaCardsProps) {
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Trạng Thái CDN R2
+                Trạng Thái Mạng Phân Phối CDN
               </p>
               <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 100% Hoạt động
@@ -86,7 +86,7 @@ export function MediaStorageQuotaCards({ quota }: MediaStorageQuotaCardsProps) {
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
         </div>
         <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800">
-          Miễn phí 100% chi phí Egress Bandwidth nhờ Cloudflare Zero-Egress
+          Tối ưu hóa chi phí băng thông với mạng phân phối nội dung tốc độ cao
         </p>
       </div>
     </div>

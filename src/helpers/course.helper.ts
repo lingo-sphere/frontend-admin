@@ -64,7 +64,7 @@ export function validateCourseFormData(formData: any, isVi: boolean = true): str
   if (formData.title.trim().length > 200) {
     return isVi ? 'Tên khóa học không được vượt quá 200 ký tự' : 'Course title cannot exceed 200 characters'
   }
-  if (!formData.slug || !COURSE_REGEX.SLUG.test(formData.slug)) {
+  if (formData.slug && !COURSE_REGEX.SLUG.test(formData.slug)) {
     return isVi
       ? 'Đường dẫn rút gọn (Slug) không hợp lệ. Chỉ chấp nhận chữ thường, số và dấu gạch ngang (VD: khoa-hoc-toeic-550)'
       : 'Invalid slug format. Use lowercase letters, numbers, and hyphens (e.g. toeic-550-course)'

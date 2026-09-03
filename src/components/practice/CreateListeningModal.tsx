@@ -105,13 +105,13 @@ export function CreateListeningModal({
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Đường dẫn Audio Cloudflare R2 URL
+              Đường dẫn File Audio bài nghe
             </label>
             <input
               type="text"
               value={audioUrl}
               onChange={(e) => onAudioUrlChange(e.target.value)}
-              placeholder="https://r2.../listening_part3_test01.mp3"
+              placeholder="https://.../listening_part3_test01.mp3"
               className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
             />
           </div>

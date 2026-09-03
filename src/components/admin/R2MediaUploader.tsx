@@ -197,7 +197,7 @@ export function R2MediaUploader({
         throw new Error('Máy chủ không trả về đường dẫn file')
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi tải file lên máy chủ Cloudflare R2'
+      const msg = err instanceof Error ? err.message : (isVi ? 'Lỗi tải file lên hệ thống lưu trữ' : 'Upload error')
       setError(msg)
     } finally {
       setIsUploading(false)
@@ -273,12 +273,11 @@ export function R2MediaUploader({
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span className="truncate">{value.split('/').pop() || 'media-file'}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
-                    <span className="inline-flex items-center gap-1 rounded bg-indigo-100 dark:bg-indigo-900/40 px-1.5 py-0.2 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
-                      <HardDrive className="w-2.5 h-2.5" />
-                      Cloudflare R2
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    <span className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="w-2.5 h-2.5" />
+                      {isVi ? 'Đã lưu trữ an toàn' : 'Stored securely'}
                     </span>
-                    <span className="truncate max-w-[220px]">{value}</span>
                   </div>
                 </div>
               </div>
@@ -336,8 +335,8 @@ export function R2MediaUploader({
                   <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
                   <span>
                     {isVi
-                      ? `Đang tải ${isVideo ? 'video' : 'ảnh'} lên Cloudflare R2...`
-                      : `Uploading to Cloudflare R2...`}
+                      ? `Đang tải ${isVideo ? 'video' : 'ảnh'} lên máy chủ...`
+                      : `Uploading ${isVideo ? 'video' : 'image'}...`}
                   </span>
                 </div>
                 <span>{uploadProgress}%</span>
@@ -376,8 +375,8 @@ export function R2MediaUploader({
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {isVideo
                   ? isVi
-                    ? 'Hỗ trợ MP4, WebM, QuickTime (Tối đa 200MB) • Lưu trực tiếp trên Cloudflare R2'
-                    : 'Supports MP4, WebM, MOV (Max 200MB) • Stored on Cloudflare R2'
+                    ? 'Hỗ trợ MP4, WebM, QuickTime (Tối đa 200MB) • Tối ưu hóa bài giảng'
+                    : 'Supports MP4, WebM, MOV (Max 200MB) • Lesson optimized'
                   : isVi
                     ? 'Hỗ trợ PNG, JPG, WebP (Tối đa 10MB) • Tối ưu chuẩn tỉ lệ 16:9'
                     : 'Supports PNG, JPG, WebP (Max 10MB) • 16:9 ratio'}

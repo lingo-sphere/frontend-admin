@@ -89,7 +89,7 @@ export function MediaTtsGenerator({
           <div className="p-4 rounded-2xl bg-sky-50/50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 space-y-2">
             <div className="flex items-center gap-2 text-xs font-semibold text-sky-700 dark:text-sky-300">
               <CheckCircle className="w-4 h-4 text-emerald-500" />
-              <span>Tệp âm thanh đã sẵn sàng trên Cloudflare R2 CDN!</span>
+              <span>Tệp âm thanh đã được tạo và sẵn sàng sử dụng!</span>
             </div>
             <div className="flex items-center gap-3">
               <audio controls className="w-full h-9">
@@ -97,9 +97,6 @@ export function MediaTtsGenerator({
                 Trình duyệt của bạn không hỗ trợ phát audio.
               </audio>
             </div>
-            <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 break-all">
-              URL: {generatedAudioUrl}
-            </p>
           </div>
         )}
       </form>

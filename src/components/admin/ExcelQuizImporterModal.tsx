@@ -161,17 +161,18 @@ export function ExcelQuizImporterModal({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         setAudioUrl(uploadedUrl)
-        if (applyAudioToAll) {
-          setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: uploadedUrl })))
-        }
+        setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: uploadedUrl })))
+        setApplyAudioToAll(true)
         toast.success(`Tải file nghe thành công: ${file.name}`)
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
       }
-    } catch {
-      toast.error('Lỗi khi tải file audio lên Cloudflare R2.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi tải file audio lên máy chủ lưu trữ.'
+      toast.error(msg)
     } finally {
       setIsUploadingAudio(false)
+      if (audioInputRef.current) audioInputRef.current.value = ''
     }
   }
 
@@ -504,6 +505,9 @@ export function ExcelQuizImporterModal({
                 type="file"
                 accept="audio/*,.mp3,.wav,.ogg,.m4a"
                 onChange={handleAudioUpload}
+                onClick={(e) => {
+                  ;(e.target as HTMLInputElement).value = ''
+                }}
                 className="hidden"
               />
 

@@ -51,7 +51,7 @@ export function SettingsSystemTab({
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-100">
-              Cloudflare R2 Object Storage
+              Hệ Thống Lưu Trữ Đám Mây (Cloud Storage)
             </h4>
             <p className="text-xs text-slate-400 mt-0.5">
               Lưu trữ Video bài giảng, Audio phát âm TOEIC và hình ảnh flashcards

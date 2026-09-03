@@ -23,7 +23,7 @@ export function MediaStoragePage() {
         const data = await mediaAdminService.getStorageUsage()
         setQuota(data)
       } catch {
-        toast.error('Không thể tải dung lượng lưu trữ R2')
+        toast.error('Không thể tải thông tin dung lượng lưu trữ')
       }
     }
     fetchUsage()
@@ -49,7 +49,7 @@ export function MediaStoragePage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
           <HardDrive className="w-7 h-7 text-sky-500" />
-          Kho Media & Máy Chủ Cloudflare R2 Storage
+          Kho Media & Máy Chủ Lưu Trữ Đám Mây
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           Quản lý tệp đa phương tiện, phát âm Audio IPA, sinh giọng đọc Text-to-Speech và theo dõi hạn mức lưu trữ Cloud

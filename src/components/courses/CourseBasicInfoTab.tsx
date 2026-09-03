@@ -4,16 +4,15 @@
  */
 
 import { useState, useMemo, useEffect } from 'react'
-import { FileSpreadsheet, Eye, Award, UserCheck, Sparkles } from 'lucide-react'
+import { FileSpreadsheet, Eye, Award, UserCheck, X } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import { CustomSelect, type SelectOption } from '@/components/common/CustomSelect'
 import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModal'
 import { ModuleQuestionViewerModal } from '@/components/admin/ModuleQuestionViewerModal'
 import type { QuizQuestionItem } from '@/services/ai.service'
-import { generateSlug, COURSE_REGEX } from '@/helpers/course.helper'
+import { COURSE_REGEX } from '@/helpers/course.helper'
 import { useAuthStore } from '@/store/auth-store'
-import { toast } from '@/store/toast-store'
 
 export interface CourseFormData {
   title: string
@@ -80,7 +79,6 @@ export interface CourseModule {
 interface CourseBasicInfoTabProps {
   formData: CourseFormData
   onChange: (updated: Partial<CourseFormData>) => void
-  onGenerateSlug?: () => void
   isVi: boolean
   courseFolder?: string
 }
@@ -88,12 +86,12 @@ interface CourseBasicInfoTabProps {
 export function CourseBasicInfoTab({
   formData,
   onChange,
-  onGenerateSlug,
   isVi,
   courseFolder,
 }: CourseBasicInfoTabProps) {
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false)
   const [isViewerModalOpen, setIsViewerModalOpen] = useState(false)
+  const [previewAvatarModal, setPreviewAvatarModal] = useState(false)
 
   const categoryOptions: SelectOption[] = useMemo(() => {
     return Object.entries(categoryLabels).map(([key, label]) => ({
@@ -114,32 +112,6 @@ export function CourseBasicInfoTab({
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
 
-  const handleAutoFillMyInfo = () => {
-    const userPayload = user as unknown as Record<string, unknown>
-    const fullName =
-      profile?.full_name ||
-      (userPayload?.full_name as string) ||
-      (userPayload?.name as string) ||
-      (user?.email ? user.email.split('@')[0] : 'Giảng viên LingoSphere')
-    const email = profile?.email || user?.email || ''
-    const avatar = profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || ''
-    const title =
-      (profile?.role || user?.role) === 'INSTRUCTOR'
-        ? 'Giảng viên chuyên môn'
-        : 'Quản trị viên học thuật'
-    const bio = profile?.bio || 'Giảng viên giàu kinh nghiệm tại LingoSphere.'
-
-    onChange({
-      author_id: profile?.user_id || user?.user_id,
-      author_name: String(fullName),
-      author_email: email,
-      author_avatar: String(avatar),
-      author_title: title,
-      author_bio: bio,
-    })
-    toast.success(isVi ? 'Đã tự động điền thông tin tài khoản của bạn!' : 'Filled your account information!')
-  }
-
   useEffect(() => {
     if (!formData.author_name && (profile || user)) {
       const userPayload = user as unknown as Record<string, unknown>
@@ -155,7 +127,6 @@ export function CourseBasicInfoTab({
           author_email: profile?.email || user?.email || '',
           author_avatar: profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || '',
           author_title: (profile?.role || user?.role) === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật',
-          author_bio: profile?.bio || '',
         })
       }
     }
@@ -202,48 +173,11 @@ export function CourseBasicInfoTab({
                   const newTitle = e.target.value
                   onChange({
                     title: newTitle,
-                    slug: formData.slug || generateSlug(newTitle),
                   })
                 }}
                 placeholder={isVi ? 'VD: Khóa học TOEIC 4 Kỹ Năng 750+ Bứt Phá' : 'Enter course title...'}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-medium"
               />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {isVi ? 'Đường dẫn tĩnh (Slug)' : 'URL Slug'} <span className="text-rose-500">*</span>
-                </label>
-                {onGenerateSlug && (
-                  <button
-                    type="button"
-                    onClick={onGenerateSlug}
-                    className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
-                  >
-                    {isVi ? 'Tự động tạo từ tiêu đề' : 'Generate from Title'}
-                  </button>
-                )}
-              </div>
-              <input
-                type="text"
-                required
-                value={formData.slug}
-                onChange={(e) => onChange({ slug: e.target.value })}
-                placeholder="toeic-4-ky-nang-750-but-pha"
-                className={`w-full rounded-xl border bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:bg-white dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-mono ${
-                  formData.slug && !COURSE_REGEX.SLUG.test(formData.slug)
-                    ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
-                    : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
-                }`}
-              />
-              {formData.slug && !COURSE_REGEX.SLUG.test(formData.slug) && (
-                <p className="text-[11px] text-rose-500 font-medium mt-1">
-                  {isVi
-                    ? '⚠️ Slug không hợp lệ. Chỉ chấp nhận chữ cái thường không dấu, số và dấu gạch ngang (VD: khoa-hoc-toeic-550).'
-                    : '⚠️ Invalid slug format. Only lowercase letters, numbers, and hyphens allowed.'}
-                </p>
-              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -337,122 +271,16 @@ export function CourseBasicInfoTab({
                 {isVi ? 'Mô tả tóm tắt khóa học' : 'Description'}
               </label>
               <textarea
-                rows={3}
+                rows={5}
                 value={formData.description}
                 onChange={(e) => onChange({ description: e.target.value })}
-                placeholder={isVi ? 'Nhập nội dung mô tả khóa học...' : 'Course Description'}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 resize-none"
+                placeholder={isVi ? 'Nhập nội dung mô tả khóa học, mục tiêu đạt được và đối tượng học viên phù hợp...' : 'Course Description'}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 resize-none leading-relaxed"
               />
-            </div>
-
-            {/* Thông tin người tạo / Giảng viên phụ trách */}
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                  <UserCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>{isVi ? 'Thông tin người tạo / Giảng viên phụ trách' : 'Instructor & Creator Information'}</span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleAutoFillMyInfo}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold transition-colors cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>{isVi ? 'Tự động điền thông tin của tôi' : 'Auto-fill with my info'}</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    {isVi ? 'Họ tên Người tạo / Giảng viên' : 'Instructor Name'}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.author_name || ''}
-                    onChange={(e) => onChange({ author_name: e.target.value })}
-                    placeholder="VD: ThS. Nguyễn Văn A"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    {isVi ? 'Chức danh / Học vị' : 'Academic Title'}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.author_title || ''}
-                    onChange={(e) => onChange({ author_title: e.target.value })}
-                    placeholder="VD: Senior English Lecturer • TOEIC 990"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    {isVi ? 'Email liên hệ' : 'Contact Email'}
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.author_email || ''}
-                    onChange={(e) => onChange({ author_email: e.target.value })}
-                    placeholder="teacher@lingosphere.edu.vn"
-                    className={`w-full h-10 rounded-xl border bg-white px-3 text-xs text-slate-900 outline-none transition-all dark:bg-slate-950 dark:text-slate-100 ${
-                      formData.author_email && !COURSE_REGEX.EMAIL.test(formData.author_email.trim())
-                        ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
-                        : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
-                    }`}
-                  />
-                  {formData.author_email && !COURSE_REGEX.EMAIL.test(formData.author_email.trim()) && (
-                    <p className="text-[11px] text-rose-500 font-medium mt-1">
-                      {isVi ? '⚠️ Email không đúng định dạng (VD: giangvien@lingosphere.vn)' : '⚠️ Invalid email format'}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    {isVi ? 'Link ảnh đại diện (Avatar URL)' : 'Avatar URL'}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.author_avatar || ''}
-                    onChange={(e) => onChange({ author_avatar: e.target.value })}
-                    placeholder="https://..."
-                    className={`w-full h-10 rounded-xl border bg-white px-3 text-xs text-slate-900 outline-none transition-all dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 ${
-                      formData.author_avatar && !COURSE_REGEX.URL.test(formData.author_avatar.trim())
-                        ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
-                        : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
-                    }`}
-                  />
-                  {formData.author_avatar && !COURSE_REGEX.URL.test(formData.author_avatar.trim()) && (
-                    <p className="text-[11px] text-rose-500 font-medium mt-1">
-                      {isVi ? '⚠️ Đường dẫn ảnh đại diện phải là URL hợp lệ (https://...)' : '⚠️ Must be a valid URL'}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  {isVi ? 'Tiểu sử / Giới thiệu giảng viên' : 'Instructor Bio'}
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.author_bio || ''}
-                  onChange={(e) => onChange({ author_bio: e.target.value })}
-                  placeholder="Chuyên gia luyện thi TOEIC hơn 8 năm kinh nghiệm giảng dạy..."
-                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 resize-none"
-                />
-              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-5 flex flex-col justify-start">
+          <div className="lg:col-span-5 flex flex-col justify-start space-y-4">
             <R2MediaUploader
               type="image"
               value={formData.thumbnail_url}
@@ -461,6 +289,70 @@ export function CourseBasicInfoTab({
               label={isVi ? 'Ảnh Thumbnail Khóa Học' : 'Course Thumbnail'}
               isVi={isVi}
             />
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <UserCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>{isVi ? 'Thông tin người tạo / Giảng viên phụ trách' : 'Instructor & Creator Information'}</span>
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-200/60 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                  {isVi ? 'Chỉ xem' : 'Read-only'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3.5 pt-1">
+                <div className="shrink-0">
+                  {formData.author_avatar ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewAvatarModal(true)}
+                      className="group relative cursor-pointer rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-transform hover:scale-105"
+                      title={isVi ? 'Bấm vào ảnh để phóng to xem' : 'Click to zoom avatar'}
+                    >
+                      <img
+                        src={formData.author_avatar}
+                        alt={formData.author_name || 'Avatar'}
+                        className="h-16 w-16 rounded-2xl object-cover border border-slate-200 shadow-xs group-hover:opacity-90 transition-all dark:border-slate-800 bg-slate-100 dark:bg-slate-900"
+                      />
+                    </button>
+                  ) : (
+                    <div className="h-16 w-16 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 flex items-center justify-center font-bold text-lg border border-indigo-100 dark:border-indigo-900/40">
+                      {formData.author_name ? formData.author_name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">
+                      {isVi ? 'Họ tên Giảng viên' : 'Instructor Name'}
+                    </span>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {formData.author_name || (isVi ? 'Giảng viên LingoSphere' : 'Instructor')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">
+                      {isVi ? 'Chức danh / Học vị' : 'Academic Title'}
+                    </span>
+                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 truncate">
+                      {formData.author_title || (isVi ? 'Giảng viên chuyên môn' : 'Lecturer')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span className="text-[11px] font-medium text-slate-400">
+                  {isVi ? 'Email liên hệ:' : 'Email:'}
+                </span>
+                <span className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[240px]">
+                  {formData.author_email || 'admin@lingosphere.edu.vn'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -546,6 +438,38 @@ export function CourseBasicInfoTab({
         moduleTitle={formData.title || 'Khóa học'}
         testTitle={`Bài Kiểm Tra Tốt Nghiệp Final Test`}
       />
+
+      {previewAvatarModal && formData.author_avatar && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 cursor-pointer"
+          onClick={() => setPreviewAvatarModal(false)}
+        >
+          <div
+            className="relative max-w-md max-h-[85vh] overflow-hidden rounded-3xl bg-slate-900 shadow-2xl border border-slate-800 p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800">
+              <span className="text-xs font-bold text-slate-200 truncate">
+                {formData.author_name || (isVi ? 'Ảnh đại diện Giảng viên' : 'Instructor Avatar')}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewAvatarModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-2 flex items-center justify-center bg-black/40 rounded-2xl mt-1">
+              <img
+                src={formData.author_avatar}
+                alt={formData.author_name || 'Avatar'}
+                className="max-h-[70vh] max-w-full rounded-2xl object-contain shadow-md"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

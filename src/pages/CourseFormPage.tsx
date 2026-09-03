@@ -201,19 +201,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     }
   }
 
-  const handleGenerateSlug = () => {
-    const slug = formData.title
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[đĐ]/g, 'd')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
-    setFormData((prev) => ({ ...prev, slug }))
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
@@ -361,7 +348,6 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         <CourseBasicInfoTab
           formData={formData}
           onChange={(updated) => setFormData((prev) => ({ ...prev, ...updated }))}
-          onGenerateSlug={handleGenerateSlug}
           isVi={isVi}
           courseFolder={courseFolder}
         />

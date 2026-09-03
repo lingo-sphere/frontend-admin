@@ -105,17 +105,23 @@ export function ModuleQuestionViewerModal({
       const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
-        setItems((prev) => {
-          const updated = [...prev]
-          updated[targetQuestionIdx] = { ...updated[targetQuestionIdx], media_url: uploadedUrl }
-          return updated
-        })
-        toast.success(`Đã tải file nghe cho câu ${targetQuestionIdx + 1}: ${file.name}`)
+        if (targetQuestionIdx === -1) {
+          setItems((prev) => prev.map((q) => ({ ...q, media_url: uploadedUrl })))
+          toast.success(`Đã cập nhật file nghe cho toàn bộ ${items.length} câu hỏi: ${file.name}`)
+        } else {
+          setItems((prev) => {
+            const updated = [...prev]
+            updated[targetQuestionIdx] = { ...updated[targetQuestionIdx], media_url: uploadedUrl }
+            return updated
+          })
+          toast.success(`Đã tải file nghe cho câu ${targetQuestionIdx + 1}: ${file.name}`)
+        }
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
       }
-    } catch {
-      toast.error('Lỗi khi tải file audio lên Cloudflare R2.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi tải file audio lên máy chủ lưu trữ.'
+      toast.error(msg)
     } finally {
       setUploadingAudioIdx(null)
       setTargetQuestionIdx(null)
@@ -170,6 +176,42 @@ export function ModuleQuestionViewerModal({
               Thêm câu hỏi
             </button>
           </div>
+
+          {items.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+              <div className="flex items-center gap-2.5">
+                <Volume2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                    File nghe toàn bộ bài test
+                  </p>
+                  <p className="text-[11px] text-indigo-800/70 dark:text-indigo-300/70">
+                    {items.filter((i) => i.media_url).length}/{items.length} câu hỏi đã có file nghe
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTargetQuestionIdx(-1)
+                    questionAudioInputRef.current?.click()
+                  }}
+                  disabled={uploadingAudioIdx !== null}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                  title="Tải và áp dụng file nghe chung cho tất cả câu hỏi trong bài test"
+                >
+                  {uploadingAudioIdx === -1 ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5" />
+                  )}
+                  <span>Đổi file nghe cho toàn bộ câu</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {items.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 py-12 text-center space-y-2 bg-slate-50/50 dark:bg-slate-950/40">
@@ -319,16 +361,54 @@ export function ModuleQuestionViewerModal({
                           <Volume2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                           <audio controls src={q.media_url} className="h-8 w-full max-w-sm" />
                         </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetQuestionIdx(qIdx)
+                              questionAudioInputRef.current?.click()
+                            }}
+                            disabled={uploadingAudioIdx === qIdx}
+                            className="flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-semibold px-2 py-1 rounded-lg hover:bg-indigo-100/60 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
+                            title="Đổi file nghe cho câu này"
+                          >
+                            {uploadingAudioIdx === qIdx ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Upload className="h-3 w-3" />
+                            )}
+                            <span>Đổi audio</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuestionAudio(qIdx)}
+                            className="text-[11px] text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                            title="Gỡ file nghe khỏi câu này"
+                          >
+                            Gỡ audio
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400 pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Volume2 className="h-3 w-3 opacity-50" />
+                          <span>(Không có file nghe)</span>
+                        </span>
                         <button
                           type="button"
-                          onClick={() => handleRemoveQuestionAudio(qIdx)}
-                          className="text-[11px] text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
-                          title="Gỡ file nghe khỏi câu này"
+                          onClick={() => {
+                            setTargetQuestionIdx(qIdx)
+                            questionAudioInputRef.current?.click()
+                          }}
+                          disabled={uploadingAudioIdx === qIdx}
+                          className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
                         >
-                          Gỡ audio
+                          <Upload className="h-3 w-3" />
+                          <span>+ Thêm file nghe cho câu này</span>
                         </button>
                       </div>
-                    ) : null}
+                    )}
 
                     {}
                     {isEditing ? (
@@ -393,6 +473,9 @@ export function ModuleQuestionViewerModal({
         type="file"
         accept="audio/*,.mp3,.wav,.ogg,.m4a"
         onChange={handleUploadQuestionAudio}
+        onClick={(e) => {
+          ;(e.target as HTMLInputElement).value = ''
+        }}
         className="hidden"
       />
     </div>

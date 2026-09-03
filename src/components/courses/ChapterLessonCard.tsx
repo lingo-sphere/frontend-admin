@@ -89,11 +89,7 @@ export function ChapterLessonCard({
           })
         }
         folder={chapterFolder}
-        label={
-          isVi
-            ? `Video Bài Giảng (Lưu tại: ${chapterFolder})`
-            : `Lesson Video (Saved to: ${chapterFolder})`
-        }
+        label={isVi ? 'Video Bài Giảng' : 'Lesson Video'}
         isVi={isVi}
       />
 
