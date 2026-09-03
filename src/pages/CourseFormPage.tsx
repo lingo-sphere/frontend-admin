@@ -16,6 +16,7 @@ import { toast } from '@/store/toast-store'
 import { BookOpen, ChevronLeft, Save, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { validateCourseFormData } from '@/helpers/course.helper'
 
 interface CourseFormPageProps {
   editCourseId?: string
@@ -215,15 +216,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim()) {
-      toast.error('Vui lòng nhập tên khóa học')
-      return
-    }
 
-    const price = Number(formData.price || 0)
-    const discountPrice = Number(formData.discount_price || 0)
-    if (discountPrice > 0 && discountPrice >= price) {
-      toast.error('Giá khuyến mãi phải thấp hơn giá gốc của khóa học')
+    const validationError = validateCourseFormData(formData, isVi)
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 

@@ -644,6 +644,7 @@ export function CourseCurriculumManager({
       )}
 
       <ExcelQuizImporterModal
+        key={excelModalState.moduleId || 'excel-modal'}
         isOpen={excelModalState.isOpen}
         onClose={() => setExcelModalState((prev) => ({ ...prev, isOpen: false }))}
         onApplyQuestions={(q: QuizQuestionItem[]) =>
@@ -653,6 +654,7 @@ export function CourseCurriculumManager({
       />
 
       <ModuleQuestionViewerModal
+        key={viewerModalState.moduleId || 'viewer-modal'}
         isOpen={viewerModalState.isOpen}
         onClose={() => setViewerModalState((prev) => ({ ...prev, isOpen: false }))}
         questions={viewerModalState.questions}

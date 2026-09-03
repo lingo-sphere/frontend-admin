@@ -11,7 +11,7 @@ import { CustomSelect, type SelectOption } from '@/components/common/CustomSelec
 import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModal'
 import { ModuleQuestionViewerModal } from '@/components/admin/ModuleQuestionViewerModal'
 import type { QuizQuestionItem } from '@/services/ai.service'
-import { generateSlug } from '@/helpers/course.helper'
+import { generateSlug, COURSE_REGEX } from '@/helpers/course.helper'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from '@/store/toast-store'
 
@@ -231,8 +231,19 @@ export function CourseBasicInfoTab({
                 value={formData.slug}
                 onChange={(e) => onChange({ slug: e.target.value })}
                 placeholder="toeic-4-ky-nang-750-but-pha"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-mono"
+                className={`w-full rounded-xl border bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:bg-white dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-mono ${
+                  formData.slug && !COURSE_REGEX.SLUG.test(formData.slug)
+                    ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
+                    : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
+                }`}
               />
+              {formData.slug && !COURSE_REGEX.SLUG.test(formData.slug) && (
+                <p className="text-[11px] text-rose-500 font-medium mt-1">
+                  {isVi
+                    ? '⚠️ Slug không hợp lệ. Chỉ chấp nhận chữ cái thường không dấu, số và dấu gạch ngang (VD: khoa-hoc-toeic-550).'
+                    : '⚠️ Invalid slug format. Only lowercase letters, numbers, and hyphens allowed.'}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -390,8 +401,17 @@ export function CourseBasicInfoTab({
                     value={formData.author_email || ''}
                     onChange={(e) => onChange({ author_email: e.target.value })}
                     placeholder="teacher@lingosphere.edu.vn"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                    className={`w-full h-10 rounded-xl border bg-white px-3 text-xs text-slate-900 outline-none transition-all dark:bg-slate-950 dark:text-slate-100 ${
+                      formData.author_email && !COURSE_REGEX.EMAIL.test(formData.author_email.trim())
+                        ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
+                        : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
+                    }`}
                   />
+                  {formData.author_email && !COURSE_REGEX.EMAIL.test(formData.author_email.trim()) && (
+                    <p className="text-[11px] text-rose-500 font-medium mt-1">
+                      {isVi ? '⚠️ Email không đúng định dạng (VD: giangvien@lingosphere.vn)' : '⚠️ Invalid email format'}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -403,8 +423,17 @@ export function CourseBasicInfoTab({
                     value={formData.author_avatar || ''}
                     onChange={(e) => onChange({ author_avatar: e.target.value })}
                     placeholder="https://..."
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                    className={`w-full h-10 rounded-xl border bg-white px-3 text-xs text-slate-900 outline-none transition-all dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 ${
+                      formData.author_avatar && !COURSE_REGEX.URL.test(formData.author_avatar.trim())
+                        ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
+                        : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
+                    }`}
                   />
+                  {formData.author_avatar && !COURSE_REGEX.URL.test(formData.author_avatar.trim()) && (
+                    <p className="text-[11px] text-rose-500 font-medium mt-1">
+                      {isVi ? '⚠️ Đường dẫn ảnh đại diện phải là URL hợp lệ (https://...)' : '⚠️ Must be a valid URL'}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -496,6 +525,7 @@ export function CourseBasicInfoTab({
       </div>
 
       <ExcelQuizImporterModal
+        key="final-test-excel-modal"
         isOpen={isExcelModalOpen}
         onClose={() => setIsExcelModalOpen(false)}
         onApplyQuestions={(q) => onChange({ final_test_questions: q })}
@@ -503,6 +533,7 @@ export function CourseBasicInfoTab({
       />
 
       <ModuleQuestionViewerModal
+        key="final-test-viewer-modal"
         isOpen={isViewerModalOpen}
         onClose={() => setIsViewerModalOpen(false)}
         questions={formData.final_test_questions || []}

@@ -3,9 +3,11 @@
  * @description Component giao diện ModuleQuestionViewerModal phục vụ khu vực Quản trị Admin
  */
 
-import { useState } from 'react'
-import { CheckCircle2, Trash2, Edit3, Plus, X, Award } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { CheckCircle2, Trash2, Edit3, Plus, X, Award, Volume2, Upload, Loader2 } from 'lucide-react'
 import type { QuizQuestionItem } from '@/services/ai.service'
+import { mediaAdminService } from '@/services/media.service'
+import { toast } from '@/store/toast-store'
 
 interface ModuleQuestionViewerModalProps {
   isOpen: boolean
@@ -24,10 +26,28 @@ export function ModuleQuestionViewerModal({
   moduleTitle,
   testTitle,
 }: ModuleQuestionViewerModalProps) {
-  const [items, setItems] = useState<QuizQuestionItem[]>(questions)
+  const [items, setItems] = useState<QuizQuestionItem[]>(questions || [])
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [uploadingAudioIdx, setUploadingAudioIdx] = useState<number | null>(null)
+  const questionAudioInputRef = useRef<HTMLInputElement>(null)
+  const [targetQuestionIdx, setTargetQuestionIdx] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setItems(questions || [])
+      setEditingIndex(null)
+    }
+  }, [isOpen, questions])
 
   if (!isOpen) return null
+
+  const handleRemoveQuestionAudio = (qIdx: number) => {
+    setItems((prev) => {
+      const updated = [...prev]
+      updated[qIdx] = { ...updated[qIdx], media_url: undefined }
+      return updated
+    })
+  }
 
   const handleOptionChange = (qIdx: number, optIdx: number, val: string) => {
     setItems((prev) => {
@@ -66,8 +86,46 @@ export function ModuleQuestionViewerModal({
     setEditingIndex(items.length)
   }
 
+  const handleUploadQuestionAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || targetQuestionIdx === null) return
+
+    if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
+      toast.error('Chỉ chấp nhận file âm thanh (.mp3, .wav, .m4a, .ogg)')
+      return
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Dung lượng file âm thanh không được vượt quá 50MB')
+      return
+    }
+
+    setUploadingAudioIdx(targetQuestionIdx)
+    try {
+      const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
+      const uploadedUrl = res.file_url || res.url || res.public_url
+      if (uploadedUrl) {
+        setItems((prev) => {
+          const updated = [...prev]
+          updated[targetQuestionIdx] = { ...updated[targetQuestionIdx], media_url: uploadedUrl }
+          return updated
+        })
+        toast.success(`Đã tải file nghe cho câu ${targetQuestionIdx + 1}: ${file.name}`)
+      } else {
+        toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
+      }
+    } catch {
+      toast.error('Lỗi khi tải file audio lên Cloudflare R2.')
+    } finally {
+      setUploadingAudioIdx(null)
+      setTargetQuestionIdx(null)
+      if (questionAudioInputRef.current) questionAudioInputRef.current.value = ''
+    }
+  }
+
   const handleSave = () => {
     onSaveQuestions(items)
+    toast.success(`Đã lưu thành công ${items.length} câu hỏi!`)
     onClose()
   }
 
@@ -219,6 +277,59 @@ export function ModuleQuestionViewerModal({
                       })}
                     </div>
 
+                    {isEditing ? (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                          Link file nghe Audio (URL):
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={q.media_url || ''}
+                            onChange={(e) => {
+                              const updated = [...items]
+                              updated[qIdx].media_url = e.target.value.trim() || undefined
+                              setItems(updated)
+                            }}
+                            placeholder="https://... hoặc tải file âm thanh lên (để trống nếu là câu Đọc)"
+                            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetQuestionIdx(qIdx)
+                              questionAudioInputRef.current?.click()
+                            }}
+                            disabled={uploadingAudioIdx === qIdx}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300 transition-colors shrink-0 cursor-pointer disabled:opacity-50"
+                            title="Tải file audio từ máy"
+                          >
+                            {uploadingAudioIdx === qIdx ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="h-3.5 w-3.5" />
+                            )}
+                            <span>Upload file</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : q.media_url ? (
+                      <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Volume2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                          <audio controls src={q.media_url} className="h-8 w-full max-w-sm" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveQuestionAudio(qIdx)}
+                          className="text-[11px] text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                          title="Gỡ file nghe khỏi câu này"
+                        >
+                          Gỡ audio
+                        </button>
+                      </div>
+                    ) : null}
+
                     {}
                     {isEditing ? (
                       <div className="space-y-1">
@@ -276,6 +387,14 @@ export function ModuleQuestionViewerModal({
           </div>
         </div>
       </div>
+
+      <input
+        ref={questionAudioInputRef}
+        type="file"
+        accept="audio/*,.mp3,.wav,.ogg,.m4a"
+        onChange={handleUploadQuestionAudio}
+        className="hidden"
+      />
     </div>
   )
 }

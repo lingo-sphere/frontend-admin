@@ -3,7 +3,7 @@
  * @description Modal quản trị import câu hỏi trắc nghiệm từ Excel kèm hỗ trợ upload file nghe Audio (.mp3, .wav) cho đề thi Listening
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   FileSpreadsheet,
   Download,
@@ -14,6 +14,7 @@ import {
   Trash2,
   Music,
   Volume2,
+  VolumeX,
   Loader2,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
@@ -44,7 +45,22 @@ export function ExcelQuizImporterModal({
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioFileName, setAudioFileName] = useState<string | null>(null)
   const [isUploadingAudio, setIsUploadingAudio] = useState(false)
+  const [applyAudioToAll, setApplyAudioToAll] = useState(false)
   const audioInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setParsedQuestions([])
+      setError(null)
+      setFileName(null)
+      setAudioUrl(null)
+      setAudioFileName(null)
+      setIsUploadingAudio(false)
+      setApplyAudioToAll(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (audioInputRef.current) audioInputRef.current.value = ''
+    }
+  }, [isOpen, moduleTitle])
 
   if (!isOpen) return null
 
@@ -106,6 +122,16 @@ export function ExcelQuizImporterModal({
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
+      toast.error('File âm thanh không đúng định dạng. Vui lòng chọn .mp3, .wav, .m4a hoặc .ogg')
+      return
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Dung lượng file âm thanh không được vượt quá 50MB')
+      return
+    }
+
     setIsUploadingAudio(true)
     setAudioFileName(file.name)
     try {
@@ -113,6 +139,9 @@ export function ExcelQuizImporterModal({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         setAudioUrl(uploadedUrl)
+        if (applyAudioToAll) {
+          setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: uploadedUrl })))
+        }
         toast.success(`Tải file nghe thành công: ${file.name}`)
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
@@ -128,6 +157,18 @@ export function ExcelQuizImporterModal({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (!/\.(xlsx|xls)$/i.test(file.name)) {
+      setError('File tải lên không hợp lệ. Vui lòng chỉ chọn file Excel (.xlsx, .xls).')
+      toast.error('Chỉ chấp nhận file Excel (.xlsx, .xls)')
+      return
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      setError('Dung lượng file Excel không được vượt quá 15MB.')
+      toast.error('Dung lượng file vượt quá 15MB')
+      return
+    }
 
     setFileName(file.name)
     setError(null)
@@ -183,7 +224,7 @@ export function ExcelQuizImporterModal({
               options: [optA, optB, optC || 'N/A', optD || 'N/A'],
               correct_answer: ['A', 'B', 'C', 'D'].includes(correctAnswerRaw) ? correctAnswerRaw : 'A',
               explanation,
-              media_url: rowMediaUrl || audioUrl || undefined,
+              media_url: rowMediaUrl || (applyAudioToAll && audioUrl ? audioUrl : undefined),
             })
           }
         })
@@ -206,7 +247,7 @@ export function ExcelQuizImporterModal({
 
     const finalQuestions = parsedQuestions.map((q) => ({
       ...q,
-      media_url: q.media_url || audioUrl || undefined,
+      media_url: q.media_url ? q.media_url : (applyAudioToAll && audioUrl ? audioUrl : undefined),
     }))
 
     onApplyQuestions(finalQuestions)
@@ -338,21 +379,47 @@ export function ExcelQuizImporterModal({
             </div>
 
             {audioUrl && (
-              <div className="pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60 flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <audio controls src={audioUrl} className="w-full h-8" />
+              <div className="pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <audio controls src={audioUrl} className="w-full h-8" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAudioUrl(null)
+                      setAudioFileName(null)
+                      setApplyAudioToAll(false)
+                      setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: undefined })))
+                    }}
+                    className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
+                    title="Xóa file audio này"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAudioUrl(null)
-                    setAudioFileName(null)
-                  }}
-                  className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
-                  title="Xóa file audio này"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-indigo-950 dark:text-indigo-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={applyAudioToAll}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setApplyAudioToAll(checked)
+                        if (checked && audioUrl) {
+                          setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: audioUrl })))
+                          toast.info('Đã gắn file nghe này cho toàn bộ câu hỏi trong bài test')
+                        } else if (!checked) {
+                          setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: undefined })))
+                          toast.info('Đã bỏ gắn file nghe hàng loạt. Bạn có thể chọn gắn file nghe cho từng câu bên dưới.')
+                        }
+                      }}
+                      className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                    />
+                    <span>Gắn file nghe này cho tất cả câu hỏi trong bài test</span>
+                  </label>
+                </div>
               </div>
             )}
           </div>
@@ -376,7 +443,7 @@ export function ExcelQuizImporterModal({
               <div className="space-y-3">
                 {parsedQuestions.map((q, qIdx) => {
                   const letters = ['A', 'B', 'C', 'D']
-                  const currentMedia = q.media_url || audioUrl
+                  const questionAudio = q.media_url || (applyAudioToAll ? audioUrl : undefined)
 
                   return (
                     <div
@@ -388,13 +455,49 @@ export function ExcelQuizImporterModal({
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600/10 text-xs font-bold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                             {qIdx + 1}
                           </span>
-                          <div className="flex-1 space-y-1">
+                          <div className="flex-1 space-y-2">
                             <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
                               {q.question_text}
                             </p>
-                            {currentMedia && (
-                              <div className="pt-1">
-                                <audio controls src={currentMedia} className="h-7 w-full max-w-sm" />
+
+                            {questionAudio ? (
+                              <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <Volume2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                  <audio controls src={questionAudio} className="h-7 w-full max-w-sm" />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setParsedQuestions((prev) =>
+                                      prev.map((item, idx) => idx === qIdx ? { ...item, media_url: undefined } : item)
+                                    )
+                                  }}
+                                  className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
+                                  title="Xóa audio khỏi câu này"
+                                >
+                                  Gỡ audio
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+                                <div className="flex items-center gap-1.5">
+                                  <VolumeX className="h-3.5 w-3.5" />
+                                  <span>Câu Đọc / Ngữ pháp (Không có file nghe)</span>
+                                </div>
+                                {audioUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setParsedQuestions((prev) =>
+                                        prev.map((item, idx) => idx === qIdx ? { ...item, media_url: audioUrl } : item)
+                                      )
+                                    }}
+                                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+                                  >
+                                    + Gắn file nghe vào câu này
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -402,7 +505,7 @@ export function ExcelQuizImporterModal({
                         <button
                           type="button"
                           onClick={() => setParsedQuestions((prev) => prev.filter((_, i) => i !== qIdx))}
-                          className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                          className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors shrink-0"
                           title="Xóa câu này"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
