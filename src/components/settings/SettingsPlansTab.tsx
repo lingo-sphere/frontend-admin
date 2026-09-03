@@ -36,6 +36,10 @@ export function SettingsPlansTab({
     }
   }
 
+  const paidPlans = plans
+    .filter((p) => p.slug !== 'free' && p.tier > 0)
+    .sort((a, b) => a.tier - b.tier)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -43,22 +47,19 @@ export function SettingsPlansTab({
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <span>{isVietnamese ? 'Quản lý gói dịch vụ' : 'Subscription Plans'}</span>
             <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[11px] font-mono font-bold">
-              {plans.length} {isVietnamese ? 'gói' : 'plans'}
+              {paidPlans.length} {isVietnamese ? 'gói VIP' : 'VIP plans'}
             </span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {isVietnamese
-              ? 'Cấu hình và chỉnh sửa giá của các gói dịch vụ hệ thống'
-              : 'Configure and edit prices of system subscription packages'}
+              ? 'Cấu hình và chỉnh sửa giá của 4 gói dịch vụ tính phí hệ thống'
+              : 'Configure and edit prices of 4 paid system subscription packages'}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {plans
-          .slice()
-          .sort((a, b) => a.tier - b.tier)
-          .map((plan) => {
+        {paidPlans.map((plan) => {
             const planId = plan._id ? plan._id : plan.id ? plan.id : plan.slug
             const displayName = plan.name_vi || plan.name || plan.name_en || plan.slug
             const durationText =
