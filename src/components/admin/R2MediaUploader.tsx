@@ -20,6 +20,20 @@ import {
   X,
 } from 'lucide-react'
 import { mediaService } from '@/services/media.service'
+import { API_CONFIG } from '@/config/api.config'
+
+const resolveStreamUrl = (url: string) => {
+  if (!url) return ''
+  if (url.includes('pub-') || url.includes('r2.cloudflarestorage.com') || url.includes('.r2.dev')) {
+    try {
+      const parsed = new URL(url)
+      return `${API_CONFIG.BASE_URL}/media/stream${parsed.pathname}`
+    } catch {
+      return url
+    }
+  }
+  return url
+}
 
 interface R2MediaUploaderProps {
   type: 'image' | 'video'
@@ -90,6 +104,7 @@ export function R2MediaUploader({
 
   useEffect(() => {
     if (isVideo && value && onDurationChange) {
+      const streamUrl = resolveStreamUrl(value)
       const video = document.createElement('video')
       video.preload = 'metadata'
       video.muted = true
@@ -107,7 +122,7 @@ export function R2MediaUploader({
       video.onloadeddata = onDone
       video.onerror = () => {}
       setTimeout(onDone, 3000)
-      video.src = value
+      video.src = streamUrl
       video.load()
     }
   }, [value, isVideo])
@@ -116,7 +131,9 @@ export function R2MediaUploader({
     const video = previewVideoRef.current
     if (!video || !showPreviewModal || !isVideo || !value) return
 
-    if (value.includes('.m3u8')) {
+    const streamUrl = resolveStreamUrl(value)
+
+    if (streamUrl.includes('.m3u8')) {
       if (Hls.isSupported()) {
         if (hlsInstanceRef.current) {
           hlsInstanceRef.current.destroy()
@@ -126,18 +143,18 @@ export function R2MediaUploader({
           autoStartLoad: true,
         })
         hlsInstanceRef.current = hls
-        hls.loadSource(value)
+        hls.loadSource(streamUrl)
         hls.attachMedia(video)
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           hls.currentLevel = -1
           video.play().catch(() => {})
         })
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = value
+        video.src = streamUrl
         video.play().catch(() => {})
       }
     } else {
-      video.src = value
+      video.src = streamUrl
       video.play().catch(() => {})
     }
 
@@ -259,7 +276,7 @@ export function R2MediaUploader({
                 {}
                 {!isVideo && (
                   <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-black/5 dark:border-slate-800 relative">
-                    <img src={value} alt="Preview" className="h-full w-full object-cover group-hover:opacity-90 transition-opacity" />
+                    <img src={resolveStreamUrl(value)} alt="Preview" className="h-full w-full object-cover group-hover:opacity-90 transition-opacity" />
                   </div>
                 )}
                 {isVideo && (
@@ -421,7 +438,7 @@ export function R2MediaUploader({
               {isVideo ? (
                 <video
                   ref={previewVideoRef}
-                  src={value.includes('.m3u8') ? undefined : value}
+                  src={resolveStreamUrl(value).includes('.m3u8') ? undefined : resolveStreamUrl(value)}
                   controls
                   autoPlay
                   playsInline
@@ -429,7 +446,7 @@ export function R2MediaUploader({
                 />
               ) : (
                 <img
-                  src={value}
+                  src={resolveStreamUrl(value)}
                   alt="Preview"
                   className="w-full max-h-[500px] object-contain rounded-lg"
                 />
