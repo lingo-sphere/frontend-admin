@@ -1,6 +1,6 @@
 /**
  * @file progress.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ progress
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ progress và quản lý bài nộp kỹ năng Speaking/Writing của học viên cho giáo viên chấm/sửa điểm
  */
 
 import { api } from '@/services/api-client'
@@ -17,6 +17,37 @@ export interface StudentProgressItem {
   last_studied_at?: string
 }
 
+export interface SkillSubmissionItem {
+  _id: string
+  user_id: string
+  user_name: string
+  user_email?: string
+  course_id: string
+  module_id?: string
+  test_type: string
+  skill: 'SPEAKING' | 'WRITING' | 'LISTENING' | 'READING'
+  audio_url?: string
+  essay_text?: string
+  whisper_transcript?: string
+  ai_score: number
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
+  }
+  teacher_score?: number
+  teacher_feedback?: string
+  teacher_id?: string
+  teacher_name?: string
+  is_teacher_reviewed: boolean
+  final_score: number
+  status: 'AI_GRADED' | 'TEACHER_REVIEWED'
+  created_at?: string
+}
+
 export const progressService = {
   async getCourseStudentsProgress(courseId: string): Promise<StudentProgressItem[]> {
     return api.get<StudentProgressItem[]>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
@@ -28,6 +59,18 @@ export const progressService = {
 
   async getMyProgress(): Promise<unknown[]> {
     return api.get<unknown[]>(API_CONFIG.ENDPOINTS.PROGRESS.MY_COURSES)
+  },
+
+  async getCourseSubmissions(courseId: string, moduleId?: string): Promise<SkillSubmissionItem[]> {
+    const qs = moduleId ? `?moduleId=${moduleId}` : ''
+    return api.get<SkillSubmissionItem[]>(`/progress/teacher/courses/${courseId}/submissions${qs}`)
+  },
+
+  async reviewSubmission(
+    submissionId: string,
+    data: { teacher_score: number; teacher_feedback?: string }
+  ): Promise<SkillSubmissionItem> {
+    return api.post<SkillSubmissionItem>(`/progress/teacher/submissions/${submissionId}/review`, data)
   },
 
   async getBetterStackMonitoring(params?: {

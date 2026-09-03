@@ -11,7 +11,7 @@ import { CourseCurriculumManager } from '@/components/courses/CourseCurriculumMa
 import { courseService } from '@/services/course.service'
 import { mediaService } from '@/services/media.service'
 import { useAdminStore } from '@/store/admin-store'
-import { authStore } from '@/store/auth-store'
+import { authStore, useAuthStore } from '@/store/auth-store'
 import { toast } from '@/store/toast-store'
 import { BookOpen, ChevronLeft, Save, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -26,7 +26,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const activeNavItem = useAdminStore((state) => state.activeNavItem)
-  const currentUser = authStore.getState().user
+  const currentUser = useAuthStore((state) => state.user)
+  const currentProfile = useAuthStore((state) => state.profile)
+  const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
 
   const currentCourseId =
     editCourseId ||
@@ -43,8 +45,20 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<CourseFormData>(() => {
+    const profile = authStore.getState().profile
     const user = authStore.getState().user
     const userPayload = user as unknown as Record<string, unknown>
+    const resolvedName =
+      profile?.full_name ||
+      (userPayload?.full_name as string) ||
+      (userPayload?.name as string) ||
+      (user?.email ? user.email.split('@')[0] : '')
+    const resolvedEmail = profile?.email || user?.email || ''
+    const resolvedAvatar = profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || ''
+    const resolvedRole = profile?.role || user?.role
+    const resolvedTitle = resolvedRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
+    const resolvedBio = profile?.bio || ''
+
     return {
       title: '',
       slug: '',
@@ -56,17 +70,54 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       discount_price: 0,
       thumbnail_url: '',
       is_published: true,
-      author_id: user?.user_id,
-      author_name: (userPayload?.name as string) || (userPayload?.full_name as string) || 'Đội ngũ Giảng viên LingoSphere',
-      author_email: user?.email,
-      author_avatar: (userPayload?.avatar as string) || '',
-      author_title: user?.role === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật',
-      author_bio: '',
+      author_id: profile?.user_id || user?.user_id,
+      author_name: resolvedName,
+      author_email: resolvedEmail,
+      author_avatar: resolvedAvatar,
+      author_title: resolvedTitle,
+      author_bio: resolvedBio,
       final_test_passing_score: 70,
       final_test_questions: [],
       modules: [],
     }
   })
+
+  useEffect(() => {
+    if (!currentProfile) {
+      fetchCurrentUser()
+    }
+  }, [currentProfile, fetchCurrentUser])
+
+  useEffect(() => {
+    if (!isEditMode && (currentProfile || currentUser)) {
+      setFormData((prev) => {
+        if (!prev.author_name || prev.author_name === 'Đội ngũ Giảng viên LingoSphere') {
+          const userPayload = currentUser as unknown as Record<string, unknown>
+          const resolvedName =
+            currentProfile?.full_name ||
+            (userPayload?.full_name as string) ||
+            (userPayload?.name as string) ||
+            (currentUser?.email ? currentUser.email.split('@')[0] : prev.author_name)
+          const resolvedEmail = currentProfile?.email || currentUser?.email || prev.author_email
+          const resolvedAvatar = currentProfile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || prev.author_avatar
+          const resolvedRole = currentProfile?.role || currentUser?.role
+          const resolvedTitle = resolvedRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
+          const resolvedBio = currentProfile?.bio || prev.author_bio || ''
+
+          return {
+            ...prev,
+            author_id: currentProfile?.user_id || currentUser?.user_id || prev.author_id,
+            author_name: resolvedName,
+            author_email: resolvedEmail,
+            author_avatar: resolvedAvatar,
+            author_title: resolvedTitle,
+            author_bio: resolvedBio,
+          }
+        }
+        return prev
+      })
+    }
+  }, [isEditMode, currentProfile, currentUser])
 
   useEffect(() => {
     if (isEditMode && currentCourseId) {
@@ -166,6 +217,13 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     e.preventDefault()
     if (!formData.title.trim()) {
       toast.error('Vui lòng nhập tên khóa học')
+      return
+    }
+
+    const price = Number(formData.price || 0)
+    const discountPrice = Number(formData.discount_price || 0)
+    if (discountPrice > 0 && discountPrice >= price) {
+      toast.error('Giá khuyến mãi phải thấp hơn giá gốc của khóa học')
       return
     }
 

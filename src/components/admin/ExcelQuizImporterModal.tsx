@@ -1,12 +1,25 @@
 /**
  * @file ExcelQuizImporterModal.tsx
- * @description Component giao diện ExcelQuizImporterModal phục vụ khu vực Quản trị Admin
+ * @description Modal quản trị import câu hỏi trắc nghiệm từ Excel kèm hỗ trợ upload file nghe Audio (.mp3, .wav) cho đề thi Listening
  */
 
 import { useState, useRef } from 'react'
-import { FileSpreadsheet, Download, Upload, X, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react'
+import {
+  FileSpreadsheet,
+  Download,
+  Upload,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Trash2,
+  Music,
+  Volume2,
+  Loader2,
+} from 'lucide-react'
 import * as XLSX from 'xlsx'
 import type { QuizQuestionItem } from '@/services/ai.service'
+import { mediaAdminService } from '@/services/media.service'
+import { toast } from '@/store/toast-store'
 
 interface ExcelQuizImporterModalProps {
   isOpen: boolean
@@ -28,19 +41,25 @@ export function ExcelQuizImporterModal({
   const [fileName, setFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [audioFileName, setAudioFileName] = useState<string | null>(null)
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false)
+  const audioInputRef = useRef<HTMLInputElement>(null)
+
   if (!isOpen) return null
 
   const handleDownloadTemplate = () => {
     const templateData = [
       {
         'STT': 1,
-        'Câu hỏi': 'The CEO announced that the quarterly profits had increased by 15% due to higher _______ sales.',
-        'Lựa chọn A': 'overseas',
-        'Lựa chọn B': 'oversea',
-        'Lựa chọn C': 'overseing',
-        'Lựa chọn D': 'overseen',
-        'Đáp án đúng': 'A',
-        'Giải thích': 'Overseas là tính từ chỉ thị trường nước ngoài. Dịch: Giám đốc điều hành thông báo lợi nhuận quý đã tăng 15% nhờ doanh số bán hàng ở nước ngoài cao hơn.',
+        'Câu hỏi': 'Where is the conversation most likely taking place?',
+        'Lựa chọn A': 'At a train station',
+        'Lựa chọn B': 'In an airport terminal',
+        'Lựa chọn C': 'Inside a hotel lobby',
+        'Lựa chọn D': 'At a grocery store',
+        'Đáp án đúng': 'B',
+        'Giải thích': 'Người phụ nữ nhắc đến chuyến bay số 402 và cửa khởi hành, cho thấy địa điểm là sân bay.',
+        'File Nghe (URL)': '',
       },
       {
         'STT': 2,
@@ -51,6 +70,7 @@ export function ExcelQuizImporterModal({
         'Lựa chọn D': 'organization',
         'Đáp án đúng': 'B',
         'Giải thích': 'Sau giới từ for cần một danh động từ (V-ing), chọn organizing.',
+        'File Nghe (URL)': '',
       },
       {
         'STT': 3,
@@ -61,6 +81,7 @@ export function ExcelQuizImporterModal({
         'Lựa chọn D': 'at',
         'Đáp án đúng': 'A',
         'Giải thích': 'By dùng để chỉ hạn chót (trước hoặc muộn nhất vào thời điểm nào).',
+        'File Nghe (URL)': '',
       },
     ]
 
@@ -74,10 +95,34 @@ export function ExcelQuizImporterModal({
       { wch: 20 },
       { wch: 12 },
       { wch: 50 },
+      { wch: 30 },
     ]
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'QuizTemplate')
     XLSX.writeFile(wb, 'LingoSphere_Quiz_Template.xlsx')
+  }
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingAudio(true)
+    setAudioFileName(file.name)
+    try {
+      const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
+      const uploadedUrl = res.file_url || res.url || res.public_url
+      if (uploadedUrl) {
+        setAudioUrl(uploadedUrl)
+        toast.success(`Tải file nghe thành công: ${file.name}`)
+      } else {
+        toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Lỗi khi tải file audio lên Cloudflare R2.')
+    } finally {
+      setIsUploadingAudio(false)
+    }
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,12 +168,22 @@ export function ExcelQuizImporterModal({
             row['Giải thích'] || row['Explanation'] || row['explanation'] || ''
           ).trim()
 
+          const rowMediaUrl = String(
+            row['File Nghe (URL)'] ||
+            row['File Nghe'] ||
+            row['Audio'] ||
+            row['media_url'] ||
+            row['audio_url'] ||
+            ''
+          ).trim()
+
           if (questionText && optA && optB) {
             validQuestions.push({
               question_text: questionText,
               options: [optA, optB, optC || 'N/A', optD || 'N/A'],
               correct_answer: ['A', 'B', 'C', 'D'].includes(correctAnswerRaw) ? correctAnswerRaw : 'A',
               explanation,
+              media_url: rowMediaUrl || audioUrl || undefined,
             })
           }
         })
@@ -138,120 +193,177 @@ export function ExcelQuizImporterModal({
         } else {
           setParsedQuestions(validQuestions)
         }
-      } catch (err: unknown) {
+      } catch (err) {
         const msg = err instanceof Error ? err.message : 'Lỗi đọc file Excel'
         setError(msg)
       }
     }
-
     reader.readAsBinaryString(file)
   }
 
   const handleApply = () => {
     if (parsedQuestions.length === 0) return
-    onApplyQuestions(parsedQuestions)
+
+    const finalQuestions = parsedQuestions.map((q) => ({
+      ...q,
+      media_url: q.media_url || audioUrl || undefined,
+    }))
+
+    onApplyQuestions(finalQuestions)
+    toast.success(`Đã áp dụng thành công ${finalQuestions.length} câu hỏi vào bài test!`)
     onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop">
-      <div className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-800 dark:bg-slate-900 animate-modal-content">
-        {}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 dark:bg-slate-950/70 p-5 dark:border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+      <div className="flex flex-col w-full max-w-3xl max-h-[90vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 ring-1 ring-emerald-500/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
               <FileSpreadsheet className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 Import Bài Test từ File Excel (.xlsx)
               </h2>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                Nhập hàng loạt câu hỏi cho bài kiểm tra của{' '}
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {moduleTitle}
-                </span>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Chương: <span className="font-semibold text-slate-700 dark:text-slate-300">{moduleTitle}</span>
+                {testType && ` • ${testType}`}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {}
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 flex flex-col justify-between space-y-3 dark:border-slate-800 dark:bg-slate-950">
-              <div>
-                <span className="inline-block rounded-md bg-indigo-600/10 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mb-2">
-                  BƯỚC 1
-                </span>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Tải File Mẫu Excel Chuẩn
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                  File mẫu đã được thiết lập sẵn các cột: Câu hỏi, Lựa chọn A, B, C, D, Đáp án đúng & Lời giải thích.
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-dashed border-emerald-300 bg-emerald-50/50 p-4.5 dark:border-emerald-800 dark:bg-emerald-950/20 flex flex-col justify-between space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 font-bold text-xs text-emerald-900 dark:text-emerald-200">
+                  <Download className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Bước 1: Tải File Mẫu Excel Chuẩn</span>
+                </div>
+                <p className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">
+                  File mẫu gồm các cột chuẩn: Câu hỏi, 4 Lựa chọn A/B/C/D, Đáp án đúng, Giải thích và File Nghe.
                 </p>
               </div>
-
               <button
                 type="button"
                 onClick={handleDownloadTemplate}
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-emerald-700 shadow-xs border border-emerald-200 hover:bg-emerald-100/60 dark:bg-slate-900 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-slate-800 transition-all cursor-pointer"
               >
-                <Download className="h-4 w-4 text-emerald-500" />
-                <span>Tải File Mẫu (.xlsx)</span>
+                <Download className="h-3.5 w-3.5" />
+                <span>Tải Mẫu Excel (.xlsx)</span>
               </button>
             </div>
 
-            {}
-            <div className="rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-50/60 p-4 flex flex-col justify-between space-y-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
-              <div>
-                <span className="inline-block rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-2">
-                  BƯỚC 2
-                </span>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Tải Lên File Excel Đã Soạn
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                  Hệ thống tự động đọc và hiển thị danh sách câu hỏi để bạn kiểm tra trước khi lưu.
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-4.5 dark:border-slate-700 dark:bg-slate-900/40 flex flex-col justify-between space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 font-bold text-xs text-slate-900 dark:text-slate-100">
+                  <Upload className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                  <span>Bước 2: Tải Lên File Excel Đã Soạn</span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Hỗ trợ định dạng .xlsx, .xls từ Microsoft Excel, Google Sheets.
                 </p>
               </div>
 
-              <div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept=".xlsx, .xls, .csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 transition-all cursor-pointer"
-                >
-                  <Upload className="h-4 w-4" />
-                  <span>{fileName ? `Đổi file (${fileName})` : 'Chọn file Excel từ máy tính'}</span>
-                </button>
-              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                <span className="truncate">{fileName ? `Đổi file (${fileName})` : 'Chọn file Excel từ máy tính'}</span>
+              </button>
             </div>
           </div>
 
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
+                  <Music className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                    File Nghe Audio (.mp3, .wav) cho Phần Listening
+                  </h4>
+                  <p className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80">
+                    Tải lên file âm thanh bài nghe chung cho cả bài test (hoặc ghi rõ link trong file Excel).
+                  </p>
+                </div>
+              </div>
+
+              <input
+                ref={audioInputRef}
+                type="file"
+                accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                onChange={handleAudioUpload}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                disabled={isUploadingAudio}
+                onClick={() => audioInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isUploadingAudio ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Đang upload...</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="h-3.5 w-3.5" />
+                    <span>{audioFileName ? `Đổi audio (${audioFileName})` : 'Upload File Nghe'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {audioUrl && (
+              <div className="pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60 flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <audio controls src={audioUrl} className="w-full h-8" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAudioUrl(null)
+                    setAudioFileName(null)
+                  }}
+                  className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
+                  title="Xóa file audio này"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-xs font-medium text-rose-600 dark:text-rose-400">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-rose-50 p-3.5 text-xs text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {}
           {parsedQuestions.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -264,6 +376,8 @@ export function ExcelQuizImporterModal({
               <div className="space-y-3">
                 {parsedQuestions.map((q, qIdx) => {
                   const letters = ['A', 'B', 'C', 'D']
+                  const currentMedia = q.media_url || audioUrl
+
                   return (
                     <div
                       key={qIdx}
@@ -274,7 +388,16 @@ export function ExcelQuizImporterModal({
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600/10 text-xs font-bold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                             {qIdx + 1}
                           </span>
-                          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">{q.question_text}</p>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                              {q.question_text}
+                            </p>
+                            {currentMedia && (
+                              <div className="pt-1">
+                                <audio controls src={currentMedia} className="h-7 w-full max-w-sm" />
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <button
                           type="button"
@@ -327,11 +450,10 @@ export function ExcelQuizImporterModal({
           )}
         </div>
 
-        {}
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
             {parsedQuestions.length > 0
-              ? `Sẵn sàng nạp ${parsedQuestions.length} câu hỏi vào chương.`
+              ? `Sẵn sàng nạp ${parsedQuestions.length} câu hỏi vào chương.${audioUrl ? ' (Kèm file Audio nghe)' : ''}`
               : 'Tải file Excel lên để tiếp tục.'}
           </p>
           <div className="flex items-center gap-3">

@@ -3,7 +3,7 @@
  * @description Component giao diện CourseGridCard phục vụ khu vực Quản trị Admin
  */
 
-import { BookOpen, Edit2, Trash2 } from 'lucide-react'
+import { BookOpen, Edit2, Trash2, Headphones } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { Popconfirm } from '@/components/common/Popconfirm'
@@ -16,6 +16,7 @@ interface CourseGridCardProps {
   canDelete: boolean
   onEdit: (courseId: string) => void
   onDelete: (courseId: string) => Promise<void> | void
+  onViewSubmissions?: (course: Course) => void
 }
 
 export function CourseGridCard({
@@ -25,6 +26,7 @@ export function CourseGridCard({
   canDelete,
   onEdit,
   onDelete,
+  onViewSubmissions,
 }: CourseGridCardProps) {
   return (
     <div className="rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 overflow-hidden hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col group h-full">
@@ -158,6 +160,16 @@ export function CourseGridCard({
           </div>
 
           <div className="flex items-center gap-1.5">
+            {onViewSubmissions && (
+              <button
+                onClick={() => onViewSubmissions(course)}
+                className="p-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer shadow-2xs"
+                title="Xem bài nộp Speaking & Writing"
+                type="button"
+              >
+                <Headphones className="w-4 h-4" />
+              </button>
+            )}
             {canEdit && (
               <button
                 onClick={() => onEdit(course.id)}

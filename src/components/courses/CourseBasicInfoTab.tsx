@@ -3,8 +3,8 @@
  * @description Component giao diện CourseBasicInfoTab phục vụ khu vực Quản trị Admin
  */
 
-import { useState, useMemo } from 'react'
-import { FileSpreadsheet, Eye, Award, UserCheck } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { FileSpreadsheet, Eye, Award, UserCheck, Sparkles } from 'lucide-react'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import { CustomSelect, type SelectOption } from '@/components/common/CustomSelect'
@@ -12,6 +12,8 @@ import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModa
 import { ModuleQuestionViewerModal } from '@/components/admin/ModuleQuestionViewerModal'
 import type { QuizQuestionItem } from '@/services/ai.service'
 import { generateSlug } from '@/helpers/course.helper'
+import { useAuthStore } from '@/store/auth-store'
+import { toast } from '@/store/toast-store'
 
 export interface CourseFormData {
   title: string
@@ -108,6 +110,56 @@ export function CourseBasicInfoTab({
   }, [isVi])
 
   const finalQuestionsCount = formData.final_test_questions?.length || 0
+
+  const user = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile)
+
+  const handleAutoFillMyInfo = () => {
+    const userPayload = user as unknown as Record<string, unknown>
+    const fullName =
+      profile?.full_name ||
+      (userPayload?.full_name as string) ||
+      (userPayload?.name as string) ||
+      (user?.email ? user.email.split('@')[0] : 'Giảng viên LingoSphere')
+    const email = profile?.email || user?.email || ''
+    const avatar = profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || ''
+    const title =
+      (profile?.role || user?.role) === 'INSTRUCTOR'
+        ? 'Giảng viên chuyên môn'
+        : 'Quản trị viên học thuật'
+    const bio = profile?.bio || 'Giảng viên giàu kinh nghiệm tại LingoSphere.'
+
+    onChange({
+      author_id: profile?.user_id || user?.user_id,
+      author_name: String(fullName),
+      author_email: email,
+      author_avatar: String(avatar),
+      author_title: title,
+      author_bio: bio,
+    })
+    toast.success(isVi ? 'Đã tự động điền thông tin tài khoản của bạn!' : 'Filled your account information!')
+  }
+
+  useEffect(() => {
+    if (!formData.author_name && (profile || user)) {
+      const userPayload = user as unknown as Record<string, unknown>
+      const fullName =
+        profile?.full_name ||
+        (userPayload?.full_name as string) ||
+        (userPayload?.name as string) ||
+        (user?.email ? user.email.split('@')[0] : '')
+      if (fullName) {
+        onChange({
+          author_id: profile?.user_id || user?.user_id,
+          author_name: String(fullName),
+          author_email: profile?.email || user?.email || '',
+          author_avatar: profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || '',
+          author_title: (profile?.role || user?.role) === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật',
+          author_bio: profile?.bio || '',
+        })
+      }
+    }
+  }, [profile, user, formData.author_name, onChange])
 
   return (
     <div className="space-y-6">
@@ -253,8 +305,19 @@ export function CourseBasicInfoTab({
                   min={0}
                   value={formData.discount_price}
                   onChange={(e) => onChange({ discount_price: Math.max(0, Number(e.target.value) || 0) })}
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
+                  className={`w-full h-11 rounded-xl border bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:bg-white dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold ${
+                    formData.discount_price > 0 && formData.discount_price >= formData.price
+                      ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'
+                      : 'border-slate-200 focus:border-indigo-500 dark:border-slate-800'
+                  }`}
                 />
+                {formData.discount_price > 0 && formData.discount_price >= formData.price && (
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
+                    {isVi
+                      ? '⚠️ Giá khuyến mãi phải thấp hơn giá gốc của khóa học.'
+                      : '⚠️ Discount price must be lower than original price.'}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -273,9 +336,20 @@ export function CourseBasicInfoTab({
 
             {/* Thông tin người tạo / Giảng viên phụ trách */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                <UserCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                <span>{isVi ? 'Thông tin người tạo / Giảng viên phụ trách' : 'Instructor & Creator Information'}</span>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <UserCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>{isVi ? 'Thông tin người tạo / Giảng viên phụ trách' : 'Instructor & Creator Information'}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAutoFillMyInfo}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold transition-colors cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>{isVi ? 'Tự động điền thông tin của tôi' : 'Auto-fill with my info'}</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

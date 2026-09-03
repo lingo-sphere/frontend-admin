@@ -20,6 +20,7 @@ import { CourseStatsOverview } from '@/components/courses/CourseStatsOverview'
 import { CourseFilterBar } from '@/components/courses/CourseFilterBar'
 import { CourseGridCard } from '@/components/courses/CourseGridCard'
 import { getCourseColumns } from '@/components/courses/course-table-columns'
+import { CourseSubmissionsModal } from '@/components/courses/CourseSubmissionsModal'
 import type { FilterCategory, FilterLevel, FilterStatus } from '@/helpers/course.helper'
 
 export function CoursesPage() {
@@ -35,6 +36,7 @@ export function CoursesPage() {
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [selectedSubmissionsCourse, setSelectedSubmissionsCourse] = useState<Course | null>(null)
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
@@ -183,6 +185,7 @@ export function CoursesPage() {
       canDelete: can('DELETE', '/courses/:id'),
       onEdit: handleEditCourse,
       onDelete: handleDeleteCourse,
+      onViewSubmissions: (course) => setSelectedSubmissionsCourse(course),
     })
   }, [isVi, can])
 
@@ -211,6 +214,7 @@ export function CoursesPage() {
             canDelete={can('DELETE', '/courses/:id')}
             onEdit={handleEditCourse}
             onDelete={handleDeleteCourse}
+            onViewSubmissions={(c) => setSelectedSubmissionsCourse(c)}
           />
         )}
         sortKey={sortKey}
@@ -264,6 +268,15 @@ export function CoursesPage() {
           },
         }}
       />
+
+      {selectedSubmissionsCourse && (
+        <CourseSubmissionsModal
+          isOpen={Boolean(selectedSubmissionsCourse)}
+          onClose={() => setSelectedSubmissionsCourse(null)}
+          courseId={selectedSubmissionsCourse.id}
+          courseTitle={selectedSubmissionsCourse.title}
+        />
+      )}
     </div>
   )
 }

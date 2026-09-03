@@ -3,7 +3,7 @@
  * @description Component giao diện course-table-columns phục vụ khu vực Quản trị Admin
  */
 
-import { BookOpen, Target, Layers, Users, Edit2, Trash2 } from 'lucide-react'
+import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import type { DataTableColumn } from '@/components/common/DataTable'
@@ -16,6 +16,7 @@ interface GetCourseColumnsOptions {
   canDelete: boolean
   onEdit: (courseId: string) => void
   onDelete: (courseId: string) => Promise<void> | void
+  onViewSubmissions?: (course: Course) => void
 }
 
 export function getCourseColumns({
@@ -24,6 +25,7 @@ export function getCourseColumns({
   canDelete,
   onEdit,
   onDelete,
+  onViewSubmissions,
 }: GetCourseColumnsOptions): DataTableColumn<Course>[] {
   return [
     {
@@ -199,6 +201,16 @@ export function getCourseColumns({
       align: 'right',
       render: (course) => (
         <div className="flex items-center justify-end gap-1.5 py-1">
+          {onViewSubmissions && (
+            <button
+              onClick={() => onViewSubmissions(course)}
+              className="p-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer shadow-2xs"
+              title={isVi ? 'Xem bài nộp Speaking & Writing' : 'View submissions'}
+              type="button"
+            >
+              <Headphones className="w-4 h-4" />
+            </button>
+          )}
           {canEdit && (
             <button
               onClick={() => onEdit(course.id)}
