@@ -271,6 +271,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
             content: l.content || '',
             content_html: l.content || '',
             is_preview: Boolean(l.is_preview),
+            is_free_preview: Boolean(l.is_preview),
             lesson_order: lIdx + 1,
           })),
         })),
