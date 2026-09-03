@@ -458,7 +458,7 @@ export function CourseBasicInfoTab({
               value={formData.thumbnail_url}
               onChange={(url) => onChange({ thumbnail_url: url })}
               folder={courseFolder || (formData.slug ? `courses/${formData.slug}` : 'courses')}
-              label={isVi ? 'Ảnh Thumbnail Khóa Học (Cloudflare R2)' : 'Course Thumbnail (Cloudflare R2)'}
+              label={isVi ? 'Ảnh Thumbnail Khóa Học' : 'Course Thumbnail'}
               isVi={isVi}
             />
           </div>

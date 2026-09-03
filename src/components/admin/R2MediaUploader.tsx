@@ -46,7 +46,6 @@ export function R2MediaUploader({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [manualInputMode, setManualInputMode] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const previewVideoRef = useRef<HTMLVideoElement | null>(null)
   const hlsInstanceRef = useRef<Hls | null>(null)
@@ -90,7 +89,7 @@ export function R2MediaUploader({
   }
 
   useEffect(() => {
-    if (isVideo && value && onDurationChange && !value.includes('youtube.com') && !value.includes('youtu.be')) {
+    if (isVideo && value && onDurationChange) {
       const video = document.createElement('video')
       video.preload = 'metadata'
       video.muted = true
@@ -231,75 +230,9 @@ export function R2MediaUploader({
             <span>{label}</span>
           </label>
         )}
-
-        <button
-          type="button"
-          onClick={() => setManualInputMode(!manualInputMode)}
-          className="text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400 cursor-pointer ml-auto"
-        >
-          {manualInputMode
-            ? isVi
-              ? 'Tải file lên Cloudflare R2'
-              : 'Upload to R2'
-            : isVi
-              ? 'Nhập link URL thủ công / YouTube'
-              : 'Enter Direct URL / YouTube'}
-        </button>
       </div>
 
-      {manualInputMode ? (
-
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => {
-              const newUrl = e.target.value
-              onChange(newUrl)
-              if (isVideo && onDurationChange && newUrl && !newUrl.includes('youtube.com') && !newUrl.includes('youtu.be')) {
-                const video = document.createElement('video')
-                video.preload = 'metadata'
-                video.onloadedmetadata = () => {
-                  if (video.duration > 0) {
-                    const mins = Math.max(1, Math.round(video.duration / 60))
-                    onDurationChange(mins, Math.round(video.duration))
-                  }
-                }
-                video.src = newUrl
-              }
-            }}
-            placeholder={
-              isVideo
-                ? 'https://www.youtube.com/watch?v=... hoặc https://r2.lingosphere.../video.mp4'
-                : 'https://r2.lingosphere.edu.vn/.../thumbnail.jpg'
-            }
-            className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-mono text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100"
-          />
-          {value && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowPreviewModal(true)}
-                className="px-3 h-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:border-indigo-800 text-xs font-semibold transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
-                title="Xem trước video/ảnh"
-              >
-                <Play className="w-3.5 h-3.5" />
-                <span>Xem</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleRemove}
-                className="px-3 h-9 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-900/20 text-xs font-semibold transition-colors shrink-0 cursor-pointer"
-                title="Xóa URL"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </>
-          )}
-        </div>
-      ) : (
-
-        <div>
+      <div>
           <input
             ref={fileInputRef}
             type="file"
@@ -459,9 +392,7 @@ export function R2MediaUploader({
             </div>
           )}
         </div>
-      )}
 
-      {}
       {showPreviewModal && value && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -489,23 +420,14 @@ export function R2MediaUploader({
 
             <div className="p-3 bg-black flex items-center justify-center min-h-[300px]">
               {isVideo ? (
-                value.includes('youtube.com') || value.includes('youtu.be') ? (
-                  <iframe
-                    src={value.includes('embed') ? value : `https://www.youtube.com/embed/${value.match(/(?:youtu\.be\/|v\/|watch\?v=)([\w-]{11})/)?.[1] || ''}?autoplay=1`}
-                    className="w-full h-[400px] rounded-lg border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <video
-                    ref={previewVideoRef}
-                    src={value.includes('.m3u8') ? undefined : value}
-                    controls
-                    autoPlay
-                    playsInline
-                    className="w-full max-h-[500px] rounded-lg object-contain bg-black"
-                  />
-                )
+                <video
+                  ref={previewVideoRef}
+                  src={value.includes('.m3u8') ? undefined : value}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full max-h-[500px] rounded-lg object-contain bg-black"
+                />
               ) : (
                 <img
                   src={value}
