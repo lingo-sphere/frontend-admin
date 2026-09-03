@@ -65,6 +65,7 @@ export function CoursesPage() {
               (c.modules || []).reduce((acc: number, m: ApiCourseModule) => acc + (m.lessons?.length || 0), 0) ||
               0,
             price: c.price || 0,
+            discount_price: typeof c.discount_price === 'number' ? c.discount_price : undefined,
             is_published: c.is_published ?? true,
             author_id: c.author_id || '',
             author_name: ((c as unknown as Record<string, unknown>).author_name as string) || 'Đội ngũ Giảng viên LingoSphere',
@@ -137,8 +138,9 @@ export function CoursesPage() {
         return sortOrder === 'asc' ? diff : -diff
       }
       if (sortKey === 'price') {
-        const priceA = a.price || 0
-        const priceB = b.price || 0
+        const getEffectivePrice = (item: Course) => (item.discount_price && item.discount_price > 0 ? item.discount_price : item.price || 0)
+        const priceA = getEffectivePrice(a)
+        const priceB = getEffectivePrice(b)
         return sortOrder === 'asc' ? priceA - priceB : priceB - priceA
       }
       return 0

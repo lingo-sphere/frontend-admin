@@ -103,9 +103,59 @@ export function CourseGridCard({
         </div>
 
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
-            {course.price ? `${course.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}
-          </span>
+          <div>
+            {(() => {
+              const rawPrice = Number(course.price ?? 0)
+              const rawDiscount = Number(course.discount_price ?? 0)
+
+              let effectivePrice = rawPrice
+              let originalPrice = 0
+              let hasDiscount = false
+
+              if (rawDiscount > 0 && rawPrice > 0 && rawDiscount !== rawPrice) {
+                effectivePrice = Math.min(rawPrice, rawDiscount)
+                originalPrice = Math.max(rawPrice, rawDiscount)
+                hasDiscount = true
+              } else if (rawDiscount > 0 && rawPrice === 0) {
+                effectivePrice = rawDiscount
+              } else if (rawPrice > 0 && rawDiscount === 0) {
+                effectivePrice = rawPrice
+              }
+
+              const discountPercent = hasDiscount && originalPrice > 0
+                ? Math.round((1 - effectivePrice / originalPrice) * 100)
+                : 0
+
+              const formatVnd = (val: number) => `${val.toLocaleString('vi-VN')} đ`
+
+              if (effectivePrice > 0) {
+                return (
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
+                        {formatVnd(effectivePrice)}
+                      </span>
+                      {hasDiscount && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
+                          -{discountPercent}%
+                        </span>
+                      )}
+                    </div>
+                    {hasDiscount && originalPrice > 0 && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through font-medium pl-1 mt-0.5">
+                        {formatVnd(originalPrice)}
+                      </span>
+                    )}
+                  </div>
+                )
+              }
+              return (
+                <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                  Miễn phí
+                </span>
+              )
+            })()}
+          </div>
 
           <div className="flex items-center gap-1.5">
             {canEdit && (
