@@ -64,4 +64,8 @@ export const userService = {
   async createSubscriptionPlan(plan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
     return api.post<SubscriptionPlan>(API_CONFIG.ENDPOINTS.USERS.SUBSCRIPTION_PLANS, plan)
   },
+
+  async updateSubscriptionPlan(id: string, plan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    return api.put<SubscriptionPlan>(API_CONFIG.ENDPOINTS.USERS.SUBSCRIPTION_PLAN_BY_ID(id), plan)
+  },
 }

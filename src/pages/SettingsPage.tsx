@@ -62,14 +62,39 @@ export function SettingsPage() {
     loadSettingsData()
   }, [loadSettingsData])
 
-  const handleTogglePlanActive = (planId: string) => {
+  const handleTogglePlanActive = async (planId: string) => {
+    const targetPlan = plans.find((p) => (p._id || p.id || p.slug) === planId)
+    if (!targetPlan) return
+    const newStatus = !targetPlan.is_active
     setPlans((prev) =>
       prev.map((p) => {
-        const id = p._id || p.id
-        return id === planId ? { ...p, is_active: !p.is_active } : p
+        const id = p._id || p.id || p.slug
+        return id === planId ? { ...p, is_active: newStatus } : p
       })
     )
-    toast.success('Đã cập nhật trạng thái gói dịch vụ!')
+    try {
+      await userService.updateSubscriptionPlan(planId, { is_active: newStatus })
+      toast.success('Đã cập nhật trạng thái gói dịch vụ!')
+    } catch {
+      toast.error('Không thể cập nhật trạng thái gói')
+    }
+  }
+
+  const handleUpdatePlan = async (updatedPlan: SubscriptionPlan) => {
+    const planId = updatedPlan._id || updatedPlan.id || updatedPlan.slug
+    try {
+      const res = await userService.updateSubscriptionPlan(planId, updatedPlan)
+      setPlans((prev) =>
+        prev.map((p) => {
+          const id = p._id || p.id || p.slug
+          return id === planId ? { ...p, ...res, price: updatedPlan.price } : p
+        })
+      )
+      toast.success(isVietnamese ? 'Cập nhật giá và gói dịch vụ thành công!' : 'Plan updated successfully!')
+    } catch (err: any) {
+      toast.error(err?.message || (isVietnamese ? 'Không thể cập nhật gói dịch vụ' : 'Failed to update plan'))
+      throw err
+    }
   }
 
   const handleSeedRBAC = async () => {
@@ -88,16 +113,15 @@ export function SettingsPage() {
   }
 
   const handleSaveSystemSettings = () => {
-    toast.success('Đã lưu cấu hình hệ thống thành công!')
+    toast.success('Đã lưu cấu hình hệ thống!')
   }
 
   return (
     <div className="space-y-6">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-100 tracking-tight">
-            {isVietnamese ? 'Cài Đặt Hệ Thống & Cấu Hình' : 'System Settings'}
+          <h1 className="text-xl font-extrabold text-slate-100 tracking-tight">
+            {isVietnamese ? 'Cấu hình hệ thống & Dịch vụ' : 'System Settings & Services'}
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             {isVietnamese
@@ -108,14 +132,14 @@ export function SettingsPage() {
 
         <button
           onClick={loadSettingsData}
-          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer w-fit"
+          disabled={isLoading}
+          className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-all cursor-pointer w-fit"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-400' : ''}`} />
-          <span>{isVietnamese ? 'Đồng bộ cấu hình' : 'Sync Settings'}</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>{isVietnamese ? 'Làm mới' : 'Refresh'}</span>
         </button>
       </div>
 
-      {}
       <div className="flex flex-wrap items-center gap-2 p-1 rounded-2xl bg-slate-900/80 border border-slate-800 w-fit">
         {tabs.map((tab) => {
           const Icon = tab.icon
@@ -136,12 +160,12 @@ export function SettingsPage() {
         })}
       </div>
 
-      {}
       {activeTab === 'plans' && (
         <SettingsPlansTab
           plans={plans}
           isVietnamese={isVietnamese}
           onTogglePlanActive={handleTogglePlanActive}
+          onUpdatePlan={handleUpdatePlan}
         />
       )}
 

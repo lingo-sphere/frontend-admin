@@ -39,6 +39,7 @@ export const API_CONFIG = {
       XP_LOGS: '/users/gamification/xp-logs',
       ACHIEVEMENTS: '/users/achievements',
       SUBSCRIPTION_PLANS: '/users/subscriptions/plans',
+      SUBSCRIPTION_PLAN_BY_ID: (id: string) => `/users/subscriptions/plans/${id}`,
       MY_SUBSCRIPTION: '/users/subscriptions/my',
       SUBSCRIPTION_HISTORY: '/users/subscriptions/history',
     },

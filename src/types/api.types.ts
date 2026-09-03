@@ -455,12 +455,18 @@ export interface StorageUsageReport {
 export interface SubscriptionPlan {
   _id?: string
   id?: string
-  name: string
+  name?: string
+  name_vi?: string
+  name_en?: string
   slug: string
+  plan_type?: 'FREE' | 'PREMIUM'
   tier: number
   price: number
+  original_price?: number
+  discount?: string
   currency: string
   duration_days: number
+  billing_cycle?: string
   features: string[]
   is_active: boolean
   is_popular?: boolean
