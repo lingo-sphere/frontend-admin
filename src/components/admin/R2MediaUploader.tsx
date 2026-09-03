@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
+import Hls from 'hls.js'
 import {
   UploadCloud,
   CheckCircle2,
@@ -47,6 +48,8 @@ export function R2MediaUploader({
   const [isDragging, setIsDragging] = useState(false)
   const [manualInputMode, setManualInputMode] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null)
+  const hlsInstanceRef = useRef<Hls | null>(null)
 
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const isVideo = type === 'video'
@@ -110,6 +113,43 @@ export function R2MediaUploader({
     }
   }, [value, isVideo])
 
+  useEffect(() => {
+    const video = previewVideoRef.current
+    if (!video || !showPreviewModal || !isVideo || !value) return
+
+    if (value.includes('.m3u8')) {
+      if (Hls.isSupported()) {
+        if (hlsInstanceRef.current) {
+          hlsInstanceRef.current.destroy()
+        }
+        const hls = new Hls({
+          capLevelToPlayerSize: false,
+          autoStartLoad: true,
+        })
+        hlsInstanceRef.current = hls
+        hls.loadSource(value)
+        hls.attachMedia(video)
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          hls.currentLevel = -1
+          video.play().catch(() => {})
+        })
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = value
+        video.play().catch(() => {})
+      }
+    } else {
+      video.src = value
+      video.play().catch(() => {})
+    }
+
+    return () => {
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy()
+        hlsInstanceRef.current = null
+      }
+    }
+  }, [showPreviewModal, isVideo, value])
+
   const handleFileSelect = async (file: File) => {
     if (!file) return
 
@@ -149,16 +189,20 @@ export function R2MediaUploader({
       const uploadedUrl =
         response?.file_url ||
         response?.url ||
-        response?.public_url ||
-        `https://r2.lingosphere.edu.vn/${folder}/${Date.now()}-${file.name}`
+        response?.public_url
 
-      onChange(uploadedUrl)
+      if (uploadedUrl) {
+        onChange(uploadedUrl)
+        setError(null)
+      } else {
+        throw new Error('Máy chủ không trả về đường dẫn file')
+      }
     } catch (err: unknown) {
-      const fallbackUrl = URL.createObjectURL(file)
-      onChange(fallbackUrl)
-      setError(null)
+      const msg = err instanceof Error ? err.message : 'Lỗi tải file lên máy chủ Cloudflare R2'
+      setError(msg)
     } finally {
       setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -261,6 +305,9 @@ export function R2MediaUploader({
             type="file"
             accept={acceptTypes}
             className="hidden"
+            onClick={(e) => {
+              ;(e.target as HTMLInputElement).value = ''
+            }}
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
                 handleFileSelect(e.target.files[0])
@@ -317,7 +364,10 @@ export function R2MediaUploader({
 
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                    fileInputRef.current?.click()
+                  }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                   title="Thay thế file khác"
                 >
@@ -448,7 +498,8 @@ export function R2MediaUploader({
                   />
                 ) : (
                   <video
-                    src={value}
+                    ref={previewVideoRef}
+                    src={value.includes('.m3u8') ? undefined : value}
                     controls
                     autoPlay
                     playsInline

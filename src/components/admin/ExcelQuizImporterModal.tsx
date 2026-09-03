@@ -1,6 +1,6 @@
 /**
  * @file ExcelQuizImporterModal.tsx
- * @description Modal quản trị import câu hỏi trắc nghiệm từ Excel kèm hỗ trợ upload file nghe Audio (.mp3, .wav) cho đề thi Listening
+ * @description Modal quản trị import câu hỏi trắc nghiệm từ Excel kèm kiểm tra tính hợp lệ của các cột và hỗ trợ file nghe Audio
  */
 
 import { useState, useRef, useEffect } from 'react'
@@ -16,6 +16,8 @@ import {
   Volume2,
   VolumeX,
   Loader2,
+  PlusCircle,
+  RefreshCcw,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import type { QuizQuestionItem } from '@/services/ai.service'
@@ -25,9 +27,26 @@ import { toast } from '@/store/toast-store'
 interface ExcelQuizImporterModalProps {
   isOpen: boolean
   onClose: () => void
-  onApplyQuestions: (questions: QuizQuestionItem[]) => void
+  onApplyQuestions: (questions: QuizQuestionItem[], mode?: 'append' | 'replace') => void
   moduleTitle: string
   testType?: string
+  existingQuestionsCount?: number
+}
+
+interface ColumnValidationResult {
+  isValid: boolean
+  missingColumns: string[]
+  foundHeaders: string[]
+  totalRows: number
+}
+
+function normalizeKey(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
 }
 
 export function ExcelQuizImporterModal({
@@ -36,9 +55,11 @@ export function ExcelQuizImporterModal({
   onApplyQuestions,
   moduleTitle,
   testType,
+  existingQuestionsCount = 0,
 }: ExcelQuizImporterModalProps) {
   const [parsedQuestions, setParsedQuestions] = useState<QuizQuestionItem[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [validationResult, setValidationResult] = useState<ColumnValidationResult | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -52,6 +73,7 @@ export function ExcelQuizImporterModal({
     if (isOpen) {
       setParsedQuestions([])
       setError(null)
+      setValidationResult(null)
       setFileName(null)
       setAudioUrl(null)
       setAudioFileName(null)
@@ -105,11 +127,11 @@ export function ExcelQuizImporterModal({
     ws['!cols'] = [
       { wch: 6 },
       { wch: 50 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 12 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 14 },
       { wch: 50 },
       { wch: 30 },
     ]
@@ -146,8 +168,7 @@ export function ExcelQuizImporterModal({
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
       }
-    } catch (err) {
-      console.error(err)
+    } catch {
       toast.error('Lỗi khi tải file audio lên Cloudflare R2.')
     } finally {
       setIsUploadingAudio(false)
@@ -172,6 +193,7 @@ export function ExcelQuizImporterModal({
 
     setFileName(file.name)
     setError(null)
+    setValidationResult(null)
 
     const reader = new FileReader()
     reader.onload = (evt) => {
@@ -180,43 +202,77 @@ export function ExcelQuizImporterModal({
         const wb = XLSX.read(bstr, { type: 'binary' })
         const wsName = wb.SheetNames[0]
         const ws = wb.Sheets[wsName]
-        const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws)
 
-        if (!data || data.length === 0) {
-          setError('File Excel rỗng hoặc không đúng định dạng.')
+        const rawRows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1 })
+        if (!rawRows || rawRows.length < 2) {
+          setError('File Excel không có dữ liệu câu hỏi hoặc chỉ có dòng tiêu đề.')
           return
         }
 
+        const rawHeaders = (rawRows[0] || []).map((h) => String(h || '').trim())
+        const cleanHeaderMap: Record<string, string> = {}
+
+        rawHeaders.forEach((origHeader) => {
+          const norm = normalizeKey(origHeader)
+          if (norm) cleanHeaderMap[norm] = origHeader
+        })
+
+        const findHeader = (candidates: string[]): string | null => {
+          for (const cand of candidates) {
+            const normCand = normalizeKey(cand)
+            if (cleanHeaderMap[normCand]) {
+              return cleanHeaderMap[normCand]
+            }
+          }
+          return null
+        }
+
+        const questionCol = findHeader(['Câu hỏi', 'cau hoi', 'question', 'question_text', 'nội dung', 'noi dung'])
+        const optACol = findHeader(['Lựa chọn A', 'lua chon a', 'đáp án a', 'dap an a', 'option a', 'opt a', 'a'])
+        const optBCol = findHeader(['Lựa chọn B', 'lua chon b', 'đáp án b', 'dap an b', 'option b', 'opt b', 'b'])
+        const optCCol = findHeader(['Lựa chọn C', 'lua chon c', 'đáp án c', 'dap an c', 'option c', 'opt c', 'c'])
+        const optDCol = findHeader(['Lựa chọn D', 'lua chon d', 'đáp án d', 'dap an d', 'option d', 'opt d', 'd'])
+        const answerCol = findHeader(['Đáp án đúng', 'dap an dung', 'đáp án', 'dap an', 'correct', 'correct answer', 'correct_answer', 'key', 'kết quả', 'ket qua'])
+        const explanationCol = findHeader(['Giải thích', 'giai thich', 'explanation', 'ghi chú', 'ghi chu', 'lý do', 'ly do'])
+        const audioCol = findHeader(['File Nghe (URL)', 'File Nghe', 'file nghe', 'audio', 'audio_url', 'media_url', 'nghe', 'sound'])
+
+        const missingCols: string[] = []
+        if (!questionCol) missingCols.push('Câu hỏi')
+        if (!optACol) missingCols.push('Lựa chọn A')
+        if (!optBCol) missingCols.push('Lựa chọn B')
+        if (!optCCol) missingCols.push('Lựa chọn C')
+        if (!optDCol) missingCols.push('Lựa chọn D')
+        if (!answerCol) missingCols.push('Đáp án đúng')
+
+        if (missingCols.length > 0) {
+          setValidationResult({
+            isValid: false,
+            missingColumns: missingCols,
+            foundHeaders: rawHeaders.filter(Boolean),
+            totalRows: rawRows.length - 1,
+          })
+          setError(`File Excel thiếu ${missingCols.length} cột bắt buộc: ${missingCols.join(', ')}. Vui lòng kiểm tra lại cấu trúc theo file mẫu.`)
+          setParsedQuestions([])
+          return
+        }
+
+        const dataObjects = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws)
         const validQuestions: QuizQuestionItem[] = []
 
-        data.forEach((row) => {
-          const questionText = String(
-            row['Câu hỏi'] || row['Question'] || row['question_text'] || ''
-          ).trim()
+        dataObjects.forEach((row) => {
+          const questionText = String(questionCol ? row[questionCol] || '' : '').trim()
+          const optA = String(optACol ? row[optACol] || '' : '').trim()
+          const optB = String(optBCol ? row[optBCol] || '' : '').trim()
+          const optC = String(optCCol ? row[optCCol] || '' : '').trim()
+          const optD = String(optDCol ? row[optDCol] || '' : '').trim()
 
-          const optA = String(row['Lựa chọn A'] || row['Option A'] || row['A'] || '').trim()
-          const optB = String(row['Lựa chọn B'] || row['Option B'] || row['B'] || '').trim()
-          const optC = String(row['Lựa chọn C'] || row['Option C'] || row['C'] || '').trim()
-          const optD = String(row['Lựa chọn D'] || row['Option D'] || row['D'] || '').trim()
-
-          const correctAnswerRaw = String(
-            row['Đáp án đúng'] || row['Correct Answer'] || row['correct_answer'] || 'A'
-          )
+          const correctAnswerRaw = String(answerCol ? row[answerCol] || '' : 'A')
             .trim()
             .toUpperCase()
+            .replace(/[^ABCD]/g, '')
 
-          const explanation = String(
-            row['Giải thích'] || row['Explanation'] || row['explanation'] || ''
-          ).trim()
-
-          const rowMediaUrl = String(
-            row['File Nghe (URL)'] ||
-            row['File Nghe'] ||
-            row['Audio'] ||
-            row['media_url'] ||
-            row['audio_url'] ||
-            ''
-          ).trim()
+          const explanation = String(explanationCol ? row[explanationCol] || '' : '').trim()
+          const rowMediaUrl = String(audioCol ? row[audioCol] || '' : '').trim()
 
           if (questionText && optA && optB) {
             validQuestions.push({
@@ -230,9 +286,23 @@ export function ExcelQuizImporterModal({
         })
 
         if (validQuestions.length === 0) {
-          setError('Không tìm thấy câu hỏi hợp lệ trong file Excel. Vui lòng kiểm tra lại các cột theo file mẫu.')
+          setError('Không trích xuất được câu hỏi hợp lệ nào từ file. Đảm bảo các hàng đều có nội dung câu hỏi và các phương án lựa chọn.')
+          setValidationResult({
+            isValid: false,
+            missingColumns: [],
+            foundHeaders: rawHeaders.filter(Boolean),
+            totalRows: dataObjects.length,
+          })
+          setParsedQuestions([])
         } else {
+          setValidationResult({
+            isValid: true,
+            missingColumns: [],
+            foundHeaders: rawHeaders.filter(Boolean),
+            totalRows: dataObjects.length,
+          })
           setParsedQuestions(validQuestions)
+          toast.success(`Nhận diện thành công ${validQuestions.length} câu hỏi hợp lệ!`)
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Lỗi đọc file Excel'
@@ -242,7 +312,7 @@ export function ExcelQuizImporterModal({
     reader.readAsBinaryString(file)
   }
 
-  const handleApply = () => {
+  const handleApply = (mode: 'append' | 'replace') => {
     if (parsedQuestions.length === 0) return
 
     const finalQuestions = parsedQuestions.map((q) => ({
@@ -250,8 +320,12 @@ export function ExcelQuizImporterModal({
       media_url: q.media_url ? q.media_url : (applyAudioToAll && audioUrl ? audioUrl : undefined),
     }))
 
-    onApplyQuestions(finalQuestions)
-    toast.success(`Đã áp dụng thành công ${finalQuestions.length} câu hỏi vào bài test!`)
+    onApplyQuestions(finalQuestions, mode)
+    toast.success(
+      mode === 'append'
+        ? `Đã thêm thành công ${finalQuestions.length} câu hỏi vào danh sách!`
+        : `Đã cập nhật bài test với ${finalQuestions.length} câu hỏi mới!`
+    )
     onClose()
   }
 
@@ -270,6 +344,7 @@ export function ExcelQuizImporterModal({
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Chương: <span className="font-semibold text-slate-700 dark:text-slate-300">{moduleTitle}</span>
                 {testType && ` • ${testType}`}
+                {existingQuestionsCount > 0 && ` • Đang có ${existingQuestionsCount} câu hiện tại`}
               </p>
             </div>
           </div>
@@ -291,7 +366,7 @@ export function ExcelQuizImporterModal({
                   <span>Bước 1: Tải File Mẫu Excel Chuẩn</span>
                 </div>
                 <p className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">
-                  File mẫu gồm các cột chuẩn: Câu hỏi, 4 Lựa chọn A/B/C/D, Đáp án đúng, Giải thích và File Nghe.
+                  File mẫu gồm 8 cột quy chuẩn: STT, Câu hỏi, 4 Lựa chọn A/B/C/D, Đáp án đúng, Giải thích và File Nghe.
                 </p>
               </div>
               <button
@@ -300,7 +375,7 @@ export function ExcelQuizImporterModal({
                 className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-emerald-700 shadow-xs border border-emerald-200 hover:bg-emerald-100/60 dark:bg-slate-900 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-slate-800 transition-all cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5" />
-                <span>Tải Mẫu Excel (.xlsx)</span>
+                <span>Tải Mẫu Excel Chuẩn (.xlsx)</span>
               </button>
             </div>
 
@@ -308,10 +383,10 @@ export function ExcelQuizImporterModal({
               <div className="space-y-1">
                 <div className="flex items-center gap-2 font-bold text-xs text-slate-900 dark:text-slate-100">
                   <Upload className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                  <span>Bước 2: Tải Lên File Excel Đã Soạn</span>
+                  <span>Bước 2: Tải Lên File Excel Cần Kiểm Tra</span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Hỗ trợ định dạng .xlsx, .xls từ Microsoft Excel, Google Sheets.
+                  Hệ thống tự động quét và kiểm tra các tiêu đề cột theo quy chuẩn bài test.
                 </p>
               </div>
 
@@ -319,13 +394,19 @@ export function ExcelQuizImporterModal({
                 ref={fileInputRef}
                 type="file"
                 accept=".xlsx, .xls"
+                onClick={(e) => {
+                  ;(e.target as HTMLInputElement).value = ''
+                }}
                 onChange={handleFileUpload}
                 className="hidden"
               />
 
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (fileInputRef.current) fileInputRef.current.value = ''
+                  fileInputRef.current?.click()
+                }}
                 className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
               >
                 <Upload className="h-3.5 w-3.5" />
@@ -333,6 +414,74 @@ export function ExcelQuizImporterModal({
               </button>
             </div>
           </div>
+
+          {validationResult && (
+            <div
+              className={`p-4 rounded-2xl border ${
+                validationResult.isValid
+                  ? 'bg-emerald-50/70 border-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-800'
+                  : 'bg-rose-50/70 border-rose-300 dark:bg-rose-950/30 dark:border-rose-800'
+              } space-y-2.5`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-xs">
+                  {validationResult.isValid ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-900 dark:text-emerald-200">
+                        Kiểm tra cấu trúc cột: HỢP LỆ THEO QUY ĐỊNH
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                      <span className="text-rose-900 dark:text-rose-200">
+                        Kiểm tra cấu trúc cột: KHÔNG ĐÚNG QUY ĐỊNH
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <span
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    validationResult.isValid
+                      ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200'
+                      : 'bg-rose-200 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200'
+                  }`}
+                >
+                  {validationResult.isValid ? `${parsedQuestions.length} câu hợp lệ` : 'Cần sửa lại file'}
+                </span>
+              </div>
+
+              {!validationResult.isValid && validationResult.missingColumns.length > 0 && (
+                <div className="space-y-1 text-xs text-rose-800 dark:text-rose-300">
+                  <p className="font-semibold">
+                    Các cột bắt buộc bị thiếu trong file của bạn ({validationResult.missingColumns.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {validationResult.missingColumns.map((col) => (
+                      <span
+                        key={col}
+                        className="px-2 py-0.5 bg-rose-200/80 text-rose-900 dark:bg-rose-900/60 dark:text-rose-200 rounded-md font-bold text-[11px]"
+                      >
+                        ❌ {col}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-rose-600 dark:text-rose-400 pt-1">
+                    👉 Vui lòng mở file Excel và đặt đúng tên các cột: <strong>Câu hỏi</strong>, <strong>Lựa chọn A</strong>, <strong>Lựa chọn B</strong>, <strong>Lựa chọn C</strong>, <strong>Lựa chọn D</strong>, <strong>Đáp án đúng</strong> (hoặc tải file mẫu chuẩn ở Bước 1).
+                  </p>
+                </div>
+              )}
+
+              {validationResult.foundHeaders.length > 0 && (
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                  <span className="font-medium">Các cột nhận diện trong file: </span>
+                  <span className="italic">{validationResult.foundHeaders.join(', ')}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -436,7 +585,7 @@ export function ExcelQuizImporterModal({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Đã đọc thành công {parsedQuestions.length} câu hỏi từ file Excel:
+                  Danh sách {parsedQuestions.length} câu hỏi hợp lệ:
                 </h3>
               </div>
 
@@ -559,7 +708,7 @@ export function ExcelQuizImporterModal({
               ? `Sẵn sàng nạp ${parsedQuestions.length} câu hỏi vào chương.${audioUrl ? ' (Kèm file Audio nghe)' : ''}`
               : 'Tải file Excel lên để tiếp tục.'}
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
@@ -567,15 +716,40 @@ export function ExcelQuizImporterModal({
             >
               Hủy bỏ
             </button>
-            <button
-              type="button"
-              onClick={handleApply}
-              disabled={parsedQuestions.length === 0}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>Áp dụng vào bài Test</span>
-            </button>
+
+            {existingQuestionsCount > 0 && parsedQuestions.length > 0 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleApply('append')}
+                  className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-500 transition-all cursor-pointer"
+                  title="Thêm nối tiếp vào danh sách câu hỏi đang có"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Thêm vào danh sách (+{parsedQuestions.length} câu)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleApply('replace')}
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 transition-all cursor-pointer"
+                  title="Ghi đè và thay thế toàn bộ câu hỏi cũ"
+                >
+                  <RefreshCcw className="h-3.5 w-3.5" />
+                  <span>Ghi đè ({parsedQuestions.length} câu)</span>
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleApply('replace')}
+                disabled={parsedQuestions.length === 0}
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Thêm {parsedQuestions.length} câu hỏi vào bài Test</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

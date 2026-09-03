@@ -528,8 +528,13 @@ export function CourseBasicInfoTab({
         key="final-test-excel-modal"
         isOpen={isExcelModalOpen}
         onClose={() => setIsExcelModalOpen(false)}
-        onApplyQuestions={(q) => onChange({ final_test_questions: q })}
+        onApplyQuestions={(q, mode = 'append') => {
+          const existing = formData.final_test_questions || []
+          const combined = mode === 'append' ? [...existing, ...q] : q
+          onChange({ final_test_questions: combined })
+        }}
         moduleTitle={`Final Test Khóa Học: ${formData.title || 'Khóa học'}`}
+        existingQuestionsCount={formData.final_test_questions?.length || 0}
       />
 
       <ModuleQuestionViewerModal

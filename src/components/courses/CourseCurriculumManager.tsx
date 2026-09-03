@@ -207,12 +207,17 @@ export function CourseCurriculumManager({
 
   const handleApplyQuestions = (
     moduleId: string,
-    questions: QuizQuestionItem[]
+    questions: QuizQuestionItem[],
+    mode: 'append' | 'replace' = 'append'
   ) => {
+    const targetModule = modules.find((m) => m.id === moduleId)
+    const existing = targetModule?.test_questions || []
+    const updated = mode === 'append' ? [...existing, ...questions] : questions
+
     updateModule(moduleId, {
-      test_questions: questions,
-      challenge_questions: questions,
-      post_mini_questions: questions,
+      test_questions: updated,
+      challenge_questions: updated,
+      post_mini_questions: updated,
     })
   }
 
@@ -647,10 +652,13 @@ export function CourseCurriculumManager({
         key={excelModalState.moduleId || 'excel-modal'}
         isOpen={excelModalState.isOpen}
         onClose={() => setExcelModalState((prev) => ({ ...prev, isOpen: false }))}
-        onApplyQuestions={(q: QuizQuestionItem[]) =>
-          handleApplyQuestions(excelModalState.moduleId, q)
+        onApplyQuestions={(q: QuizQuestionItem[], mode?: 'append' | 'replace') =>
+          handleApplyQuestions(excelModalState.moduleId, q, mode)
         }
         moduleTitle={excelModalState.moduleTitle}
+        existingQuestionsCount={
+          modules.find((m) => m.id === excelModalState.moduleId)?.test_questions?.length || 0
+        }
       />
 
       <ModuleQuestionViewerModal
