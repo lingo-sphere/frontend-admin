@@ -1,10 +1,10 @@
 /**
  * @file EditSubscriptionPlanModal.tsx
- * @description Modal chỉnh sửa thông tin, giá bán và quyền lợi của gói dịch vụ thành viên
+ * @description Modal chỉnh sửa thông tin và giá bán gói dịch vụ thành viên, tự động tính ưu đãi và tối ưu giao diện
  */
 
 import { useState, useEffect } from 'react'
-import { X, Crown, Plus, Trash2, CheckCircle2, AlertCircle, Save } from 'lucide-react'
+import { X, Crown, AlertCircle, Save, Tag } from 'lucide-react'
 import type { SubscriptionPlan } from '@/types/api.types'
 
 interface EditSubscriptionPlanModalProps {
@@ -26,12 +26,9 @@ export function EditSubscriptionPlanModal({
   const [nameEn, setNameEn] = useState('')
   const [price, setPrice] = useState<number>(0)
   const [originalPrice, setOriginalPrice] = useState<number>(0)
-  const [discount, setDiscount] = useState('')
   const [durationDays, setDurationDays] = useState<number>(30)
   const [isPopular, setIsPopular] = useState(false)
   const [isActive, setIsActive] = useState(true)
-  const [features, setFeatures] = useState<string[]>([])
-  const [newFeatureText, setNewFeatureText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -41,26 +38,19 @@ export function EditSubscriptionPlanModal({
       setNameEn(plan.name_en || '')
       setPrice(plan.price || 0)
       setOriginalPrice(plan.original_price || 0)
-      setDiscount(plan.discount || '')
       setDurationDays(plan.duration_days || 30)
       setIsPopular(Boolean(plan.is_popular))
       setIsActive(plan.is_active !== undefined ? plan.is_active : true)
-      setFeatures(Array.isArray(plan.features) ? [...plan.features] : [])
       setErrorMsg(null)
     }
   }, [plan])
 
   if (!isOpen || !plan) return null
 
-  const handleAddFeature = () => {
-    if (!newFeatureText.trim()) return
-    setFeatures((prev) => [...prev, newFeatureText.trim()])
-    setNewFeatureText('')
-  }
-
-  const handleRemoveFeature = (index: number) => {
-    setFeatures((prev) => prev.filter((_, idx) => idx !== index))
-  }
+  const calculatedDiscount =
+    originalPrice > price && originalPrice > 0
+      ? `-${Math.round(((originalPrice - price) / originalPrice) * 100)}%`
+      : ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,11 +70,11 @@ export function EditSubscriptionPlanModal({
         name_en: nameEn,
         price: Number(price),
         original_price: Number(originalPrice),
-        discount: discount.trim(),
+        discount: calculatedDiscount,
         duration_days: Number(durationDays),
         is_popular: isPopular,
         is_active: isActive,
-        features: features,
+        features: plan.features || [],
       }
       await onSave(updatedData)
       onClose()
@@ -96,18 +86,18 @@ export function EditSubscriptionPlanModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/80 bg-slate-900/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/50">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
               <Crown className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 {isVietnamese ? 'Chỉnh sửa gói dịch vụ' : 'Edit Subscription Plan'}
               </h2>
-              <p className="text-xs text-slate-400 font-mono">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                 {plan.slug} • TIER {plan.tier}
               </p>
             </div>
@@ -115,23 +105,23 @@ export function EditSubscriptionPlanModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2.5 text-xs text-rose-300">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 flex items-center gap-2.5 text-xs text-rose-600 dark:text-rose-300">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVietnamese ? 'Tên gói (Tiếng Việt) *' : 'Plan Name (VI) *'}
               </label>
               <input
@@ -139,20 +129,20 @@ export function EditSubscriptionPlanModal({
                 value={nameVi}
                 onChange={(e) => setNameVi(e.target.value)}
                 required
-                className="w-full h-10 px-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="VD: Gói VIP 1 Năm"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVietnamese ? 'Tên gói (Tiếng Anh)' : 'Plan Name (EN)'}
               </label>
               <input
                 type="text"
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
-                className="w-full h-10 px-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="e.g. VIP 1 Year"
               />
             </div>
@@ -160,7 +150,7 @@ export function EditSubscriptionPlanModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                 <span>{isVietnamese ? 'Giá bán (VNĐ) *' : 'Selling Price (VND) *'}</span>
               </label>
               <div className="relative">
@@ -171,19 +161,19 @@ export function EditSubscriptionPlanModal({
                   value={price}
                   onChange={(e) => setPrice(Number(e.target.value))}
                   required
-                  className="w-full h-10 px-3.5 pr-10 rounded-xl bg-slate-800/80 border border-indigo-500/40 text-xs font-bold text-amber-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full h-10 px-3.5 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-indigo-300 dark:border-indigo-500/40 text-xs font-bold text-amber-600 dark:text-amber-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">
                   đ
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                 {new Intl.NumberFormat('vi-VN').format(price)} VNĐ
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVietnamese ? 'Giá gốc niêm yết (VNĐ)' : 'Original Price (VND)'}
               </label>
               <div className="relative">
@@ -193,34 +183,45 @@ export function EditSubscriptionPlanModal({
                   step="1000"
                   value={originalPrice}
                   onChange={(e) => setOriginalPrice(Number(e.target.value))}
-                  className="w-full h-10 px-3.5 pr-10 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full h-10 px-3.5 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 dark:text-slate-500">
                   đ
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 font-mono">
-                {originalPrice > 0 ? `${new Intl.NumberFormat('vi-VN').format(originalPrice)} VNĐ` : 'Không có'}
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                {originalPrice > 0 ? `${new Intl.NumberFormat('vi-VN').format(originalPrice)} VNĐ` : 'Không giảm giá'}
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
-                {isVietnamese ? 'Ưu đãi hiển thị' : 'Discount Badge'}
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>{isVietnamese ? 'Ưu đãi hiển thị' : 'Discount'}</span>
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-normal">
+                  {isVietnamese ? 'Tự tính' : 'Auto'}
+                </span>
               </label>
-              <input
-                type="text"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-                className="w-full h-10 px-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="VD: -47%"
-              />
+              <div className="h-10 px-3.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                {calculatedDiscount ? (
+                  <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
+                    {calculatedDiscount}
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                    {isVietnamese ? 'Không có' : 'None'}
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                {calculatedDiscount ? `Tiết kiệm ${calculatedDiscount.replace('-', '')}` : 'Giá bán = Giá gốc'}
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVietnamese ? 'Thời hạn sử dụng (Số ngày)' : 'Duration (Days)'}
               </label>
               <input
@@ -228,7 +229,7 @@ export function EditSubscriptionPlanModal({
                 min="1"
                 value={durationDays}
                 onChange={(e) => setDurationDays(Number(e.target.value))}
-                className="w-full h-10 px-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
               <span className="text-[10px] text-slate-500">
                 {durationDays >= 36500 ? 'Vĩnh viễn (Trọn đời)' : `${durationDays} ngày`}
@@ -241,9 +242,9 @@ export function EditSubscriptionPlanModal({
                   type="checkbox"
                   checked={isPopular}
                   onChange={(e) => setIsPopular(e.target.checked)}
-                  className="h-4 w-4 rounded-md border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span className="text-xs font-medium text-slate-300">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   {isVietnamese ? 'Gói phổ biến (Popular)' : 'Popular Plan'}
                 </span>
               </label>
@@ -253,73 +254,21 @@ export function EditSubscriptionPlanModal({
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="h-4 w-4 rounded-md border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span className="text-xs font-medium text-slate-300">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   {isVietnamese ? 'Kích hoạt bán' : 'Active'}
                 </span>
               </label>
             </div>
           </div>
 
-          <div className="space-y-2.5 pt-2 border-t border-slate-800">
-            <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
-              <span>{isVietnamese ? 'Danh sách quyền lợi & tính năng' : 'Plan Features'}</span>
-              <span className="text-[10px] text-slate-500">{features.length} quyền lợi</span>
-            </label>
-
-            <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-              {features.map((feat, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-200"
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                    <span className="truncate">{feat}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFeature(idx)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="text"
-                value={newFeatureText}
-                onChange={(e) => setNewFeatureText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleAddFeature()
-                  }
-                }}
-                placeholder={isVietnamese ? 'Thêm quyền lợi mới (ấn Enter)...' : 'Add new benefit...'}
-                className="flex-1 h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleAddFeature}
-                className="h-9 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{isVietnamese ? 'Thêm' : 'Add'}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="h-10 px-4 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
+              className="h-10 px-4 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
             >
               {isVietnamese ? 'Hủy' : 'Cancel'}
             </button>
