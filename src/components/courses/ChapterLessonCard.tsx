@@ -1,17 +1,35 @@
 /**
  * @file ChapterLessonCard.tsx
- * @description Component hiển thị và chỉnh sửa một bài học video trong chương học
+ * @description Component hiển thị và chỉnh sửa bài học video phân cấp rõ ràng theo chương học
  */
 
-import { Clock, FileText, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Clock,
+  FileText,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Video,
+  CheckCircle2,
+  AlertCircle,
+  ArrowUp,
+  ArrowDown,
+  Sparkles,
+} from 'lucide-react'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import type { CourseLesson } from './CourseBasicInfoTab'
 
 interface ChapterLessonCardProps {
   lesson: CourseLesson
   lessonIndex: number
+  chapterIndex: number
   chapterFolder: string
   isVi: boolean
+  isFirst?: boolean
+  isLast?: boolean
+  onMoveUp?: () => void
+  onMoveDown?: () => void
   onUpdateField: (field: keyof CourseLesson, value: string | number | boolean) => void
   onUpdateFields: (fields: Partial<CourseLesson>) => void
   onRemove: () => void
@@ -21,99 +39,153 @@ interface ChapterLessonCardProps {
 export function ChapterLessonCard({
   lesson,
   lessonIndex,
+  chapterIndex,
   chapterFolder,
   isVi,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
   onUpdateField,
   onUpdateFields,
   onRemove,
   formatDurationDisplay,
 }: ChapterLessonCardProps) {
+  const [isExpanded, setIsExpanded] = useState<boolean>(!lesson.video_url)
+
+  const hasVideo = Boolean(lesson.video_url && lesson.video_url.trim().length > 0)
+  const durationLabel = formatDurationDisplay(lesson.duration_seconds, lesson.duration_minutes)
+
   return (
-    <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3 transition-all dark:bg-slate-900 dark:border-slate-800">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-100 dark:bg-indigo-600/20 dark:text-indigo-400 dark:border-indigo-500/20">
-            {lessonIndex + 1}
-          </span>
-          <input
-            type="text"
-            value={lesson.title}
-            onChange={(e) => onUpdateField('title', e.target.value)}
-            placeholder={isVi ? 'Tên bài học video...' : 'Lesson video title...'}
-            className="w-full h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
-          />
+    <div className="relative rounded-xl border border-slate-200/90 bg-white transition-all shadow-xs hover:shadow-sm dark:border-slate-800 dark:bg-slate-900/90 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 sm:px-4 bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-200/70 dark:border-slate-800">
+        <div className="flex items-center gap-2.5 flex-1 min-w-[220px]">
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 font-extrabold text-[11px] border border-indigo-200 dark:border-indigo-800 tracking-tight">
+              {isVi ? 'Bài' : 'Lesson'} {chapterIndex + 1}.{lessonIndex + 1}
+            </span>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <input
+              type="text"
+              value={lesson.title}
+              onChange={(e) => onUpdateField('title', e.target.value)}
+              placeholder={isVi ? 'Nhập tên bài học video...' : 'Enter lesson title...'}
+              className="w-full h-8 px-2.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 dark:bg-slate-950 dark:border-slate-700 dark:text-slate-100"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+        <div className="flex items-center gap-2">
+          {hasVideo ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 text-[11px] font-semibold border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>{durationLabel !== '0s' ? durationLabel : isVi ? 'Đã có video' : 'Video ready'}</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 text-[11px] font-semibold border border-amber-200 dark:border-amber-800/60 shrink-0">
+              <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <span>{isVi ? 'Chưa gắn video' : 'No video'}</span>
+            </span>
+          )}
+
+          <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none transition-colors">
             <input
               type="checkbox"
               checked={lesson.is_preview}
               onChange={(e) => onUpdateField('is_preview', e.target.checked)}
-              className="w-4 h-4 accent-indigo-600 rounded"
+              className="w-3.5 h-3.5 accent-indigo-600 rounded"
             />
-            <span className="text-[11px] font-medium text-teal-600 dark:text-teal-400">
-              {isVi ? 'Học thử miễn phí' : 'Free Preview'}
+            <span className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 flex items-center gap-0.5">
+              <Sparkles className="w-3 h-3" />
+              <span>{isVi ? 'Học thử' : 'Preview'}</span>
             </span>
           </label>
 
-          <div
-            className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 dark:bg-slate-950 dark:border-slate-800"
-            title={isVi ? 'Thời lượng video (tự động đọc khi tải lên)' : 'Video duration'}
+          {(onMoveUp || onMoveDown) && (
+            <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5">
+              <button
+                type="button"
+                onClick={onMoveUp}
+                disabled={isFirst}
+                className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed dark:hover:text-slate-200 transition-colors"
+                title={isVi ? 'Đưa bài lên trên' : 'Move up'}
+              >
+                <ArrowUp className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={onMoveDown}
+                disabled={isLast}
+                className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed dark:hover:text-slate-200 transition-colors"
+                title={isVi ? 'Đưa bài xuống dưới' : 'Move down'}
+              >
+                <ArrowDown className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/60 text-xs font-semibold transition-colors cursor-pointer"
           >
-            <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 min-w-[32px] text-center">
-              {formatDurationDisplay(lesson.duration_seconds, lesson.duration_minutes)}
-            </span>
-          </div>
+            <Video className="w-3 h-3" />
+            <span className="hidden sm:inline">{isExpanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Chi tiết' : 'Details')}</span>
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
 
           <button
             type="button"
             onClick={onRemove}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
             title={isVi ? 'Xóa bài học này' : 'Remove lesson'}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      <R2MediaUploader
-        type="video"
-        value={lesson.video_url}
-        onChange={(url) => onUpdateField('video_url', url)}
-        onDurationChange={(mins, secs) =>
-          onUpdateFields({
-            duration_minutes: mins,
-            duration_seconds: secs,
-          })
-        }
-        folder={chapterFolder}
-        label={isVi ? 'Video Bài Giảng' : 'Lesson Video'}
-        isVi={isVi}
-      />
+      {isExpanded && (
+        <div className="p-3.5 sm:p-4 space-y-3.5 bg-white dark:bg-slate-900">
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <R2MediaUploader
+              type="video"
+              value={lesson.video_url}
+              onChange={(url) => onUpdateField('video_url', url)}
+              onDurationChange={(mins, secs) =>
+                onUpdateFields({
+                  duration_minutes: mins,
+                  duration_seconds: secs,
+                })
+              }
+              folder={chapterFolder}
+              label={isVi ? `File Video Bài Học ${chapterIndex + 1}.${lessonIndex + 1}` : `Lesson Video File ${chapterIndex + 1}.${lessonIndex + 1}`}
+              isVi={isVi}
+            />
+          </div>
 
-      <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-          <FileText className="w-3.5 h-3.5 text-slate-400" />
-          <span>
-            {isVi
-              ? 'Nội dung tóm tắt / Ghi chú bài giảng'
-              : 'Lesson Summary Notes'}
-          </span>
-        </label>
-        <textarea
-          rows={2}
-          value={lesson.content}
-          onChange={(e) => onUpdateField('content', e.target.value)}
-          placeholder={
-            isVi
-              ? 'Ghi chú kiến thức trọng tâm...'
-              : 'Add key takeaways...'
-          }
-          className="w-full rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
-        />
-      </div>
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{isVi ? 'Ghi chú & Tóm tắt kiến thức bài học' : 'Lesson Summary & Key Notes'}</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal">
+                {isVi ? '(Tùy chọn - hiển thị cho học viên ôn tập)' : '(Optional)'}
+              </span>
+            </label>
+            <textarea
+              rows={2}
+              value={lesson.content}
+              onChange={(e) => onUpdateField('content', e.target.value)}
+              placeholder={isVi ? 'Ghi chú các điểm ngữ pháp, mẹo giải đề, từ vựng trọng tâm trong video này...' : 'Key grammar rules, tips, vocabulary in this lesson...'}
+              className="w-full rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100 dark:focus:bg-slate-900"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

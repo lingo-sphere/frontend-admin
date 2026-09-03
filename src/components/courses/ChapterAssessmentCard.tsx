@@ -1,16 +1,28 @@
 /**
  * @file ChapterAssessmentCard.tsx
- * @description Component quản lý bài kiểm tra đánh giá của từng chương học
+ * @description Component quản lý bài kiểm tra đánh giá cột mốc kết thúc từng chương học
  */
 
 import { useState, useRef } from 'react'
-import { Award, FileSpreadsheet, Eye, Volume2, Upload, Trash2, Loader2 } from 'lucide-react'
+import {
+  Award,
+  FileSpreadsheet,
+  Eye,
+  Volume2,
+  Upload,
+  Trash2,
+  Loader2,
+  CheckCircle2,
+  HelpCircle,
+  Sparkles,
+} from 'lucide-react'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast-store'
 import type { CourseModule } from './CourseBasicInfoTab'
 
 interface ChapterAssessmentCardProps {
   module: CourseModule
+  chapterIndex?: number
   isVi: boolean
   onUpdateModule: (updated: Partial<CourseModule>) => void
   onOpenExcelModal: () => void
@@ -19,6 +31,7 @@ interface ChapterAssessmentCardProps {
 
 export function ChapterAssessmentCard({
   module,
+  chapterIndex = 0,
   isVi,
   onUpdateModule,
   onOpenExcelModal,
@@ -102,137 +115,161 @@ export function ChapterAssessmentCard({
   }
 
   return (
-    <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 sm:p-5 space-y-3.5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600/15 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 ring-1 ring-indigo-500/30">
-            <Award className="h-4 w-4" />
-          </span>
+    <div className="rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/40 p-4 sm:p-5 dark:border-indigo-500/30 dark:from-indigo-950/40 dark:via-slate-900 dark:to-purple-950/20 shadow-xs space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-200/60 dark:border-indigo-900/60">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-sm ring-4 ring-indigo-500/20 shrink-0">
+            <Award className="h-5 w-5" />
+          </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide flex items-center gap-2">
-              {isVi ? 'Bài Kiểm Tra Đánh Giá Chương' : 'Chapter Assessment Test'}
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-black tracking-wider uppercase">
+                {isVi ? `Bài Test Chương ${chapterIndex + 1}` : `Chapter ${chapterIndex + 1} Test`}
+              </span>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                {isVi ? 'Đánh Giá Tiến Độ & Mở Khóa' : 'Assessment & Unlock Exam'}
+              </h3>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               {isVi
-                ? 'Học viên làm đạt ngưỡng điểm để hoàn thành và mở khóa chương tiếp theo'
-                : 'Students pass this test to complete and unlock the next chapter'}
+                ? 'Học viên cần đạt ngưỡng điểm để hoàn thành chương này và được mở khóa chương tiếp theo'
+                : 'Students must meet passing score to complete this chapter and unlock the next'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 self-start sm:self-auto bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-            {isVi ? 'Ngưỡng đạt:' : 'Passing Score:'}
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+            {isVi ? 'Điểm đạt tối thiểu:' : 'Passing score:'}
           </span>
-          <input
-            type="number"
-            min={10}
-            max={100}
-            value={passingScore}
-            onChange={(e) => {
-              const val = Math.max(10, Math.min(100, Number(e.target.value) || 70))
-              onUpdateModule({
-                passing_score: val,
-                challenge_passing_score: val,
-                post_mini_passing_score: val,
-              })
-            }}
-            className="w-12 h-7 text-center rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-indigo-600 dark:bg-slate-950 dark:border-slate-700 dark:text-indigo-400 focus:outline-none focus:border-indigo-500"
-          />
-          <span className="text-[11px] font-bold text-slate-500">%</span>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={10}
+              max={100}
+              value={passingScore}
+              onChange={(e) => {
+                const val = Math.max(10, Math.min(100, Number(e.target.value) || 70))
+                onUpdateModule({
+                  passing_score: val,
+                  challenge_passing_score: val,
+                  post_mini_passing_score: val,
+                })
+              }}
+              className="w-12 h-7 text-center rounded-lg border border-indigo-200 bg-indigo-50/50 text-xs font-black text-indigo-700 dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">%</span>
+          </div>
         </div>
       </div>
 
-      {commonAudioUrl ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
-          <div className="flex items-center gap-2.5 flex-1 min-w-[240px]">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600/15 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 shrink-0">
-              <Volume2 className="h-4 w-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200 truncate">
-                {isVi ? 'File nghe của bài test chương' : 'Chapter Test Audio'}
-              </p>
-              <audio controls src={commonAudioUrl} className="h-7 w-full max-w-md mt-1" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => audioInputRef.current?.click()}
-              disabled={isUploadingAudio}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-              title={isVi ? 'Đổi file nghe mới cho bài test này' : 'Change audio file'}
-            >
-              {isUploadingAudio ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Upload className="h-3.5 w-3.5" />
-              )}
-              <span>{isVi ? 'Đổi file nghe' : 'Change audio'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleRemoveAudio}
-              className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-              title={isVi ? 'Gỡ file nghe khỏi bài test' : 'Remove audio'}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      ) : questionCount > 0 ? (
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <Volume2 className="h-3.5 w-3.5" />
-            <span>{isVi ? 'Bài test chưa có file nghe âm thanh' : 'No audio attached to this test'}</span>
-          </span>
-          <button
-            type="button"
-            onClick={() => audioInputRef.current?.click()}
-            disabled={isUploadingAudio}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {isUploadingAudio ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>{isVi ? 'Ngân hàng câu hỏi trắc nghiệm' : 'Question Bank'}</span>
+            </span>
+            {questionCount > 0 ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span>{questionCount} {isVi ? 'câu hỏi' : 'questions'}</span>
+              </span>
             ) : (
-              <Upload className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
+                <HelpCircle className="w-3 h-3 text-amber-600" />
+                <span>{isVi ? 'Chưa có câu hỏi' : 'Empty'}</span>
+              </span>
             )}
-            <span>{isVi ? '+ Thêm file nghe' : '+ Add audio'}</span>
-          </button>
-        </div>
-      ) : null}
+          </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-indigo-500/15 bg-white/70 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-            {questionCount > 0
-              ? `✅ Đã có ${questionCount} câu hỏi trắc nghiệm`
-              : '⚠️ Chưa có câu hỏi nào trong bài test này'}
-          </span>
-        </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            {isVi
+              ? 'Tải file Excel mẫu câu hỏi trắc nghiệm để nhập tự động hàng loạt câu hỏi cho chương.'
+              : 'Upload Excel file to bulk import multiple choice questions for this chapter.'}
+          </p>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onOpenExcelModal}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
-          >
-            <FileSpreadsheet className="h-3.5 w-3.5" />
-            <span>Upload File Excel (.xlsx)</span>
-          </button>
-
-          {questionCount > 0 && (
+          <div className="flex items-center gap-2 pt-1">
             <button
               type="button"
-              onClick={onOpenViewerModal}
-              className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3.5 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/40 transition-all cursor-pointer shadow-xs"
+              onClick={onOpenExcelModal}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
-              <Eye className="h-3.5 w-3.5 text-indigo-500" />
-              <span>Xem/Sửa câu hỏi</span>
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Upload File Excel' : 'Import Excel'}</span>
             </button>
+
+            {questionCount > 0 && (
+              <button
+                type="button"
+                onClick={onOpenViewerModal}
+                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                <Eye className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{isVi ? 'Xem & Sửa' : 'View/Edit'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <Volume2 className="w-4 h-4 text-indigo-600" />
+              <span>{isVi ? 'File âm thanh đề thi (Audio)' : 'Listening Audio'}</span>
+            </span>
+            {commonAudioUrl ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 text-[11px] font-extrabold border border-indigo-300/80 dark:border-indigo-700">
+                <Sparkles className="w-3 h-3 text-indigo-600" />
+                <span>{isVi ? 'Đã có file nghe' : 'Audio attached'}</span>
+              </span>
+            ) : (
+              <span className="text-[11px] text-slate-400">
+                {isVi ? '(Tùy chọn cho phần Nghe)' : '(Optional for Listening)'}
+              </span>
+            )}
+          </div>
+
+          {commonAudioUrl ? (
+            <div className="space-y-2">
+              <audio controls src={commonAudioUrl} className="h-7 w-full" />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => audioInputRef.current?.click()}
+                  disabled={isUploadingAudio}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isUploadingAudio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                  <span>{isVi ? 'Đổi file audio' : 'Replace audio'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveAudio}
+                  className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                  title={isVi ? 'Gỡ file nghe' : 'Remove audio'}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col justify-end space-y-2">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {isVi
+                  ? 'Gắn file âm thanh nếu bài test chương có câu hỏi nghe hiểu (Listening).'
+                  : 'Attach audio if this chapter test includes listening questions.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => audioInputRef.current?.click()}
+                disabled={isUploadingAudio}
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 hover:bg-indigo-100/70 dark:border-indigo-800 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isUploadingAudio ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                <span>{isVi ? '+ Tải Lên File Audio (.mp3, .wav)' : '+ Upload Audio File'}</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

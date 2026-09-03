@@ -1,14 +1,19 @@
 /**
  * @file CourseChapterCard.tsx
- * @description Component quản lý và hiển thị toàn bộ nội dung của một chương học (thông tin, bài test, danh sách bài học video)
+ * @description Component quản lý và hiển thị toàn bộ nội dung của một chương học theo cấu trúc cây timeline phân cấp rõ ràng
  */
 
 import {
   ChevronDown,
-  ChevronRight,
+  ChevronUp,
   Plus,
   Trash2,
   Film,
+  Award,
+  ArrowUp,
+  ArrowDown,
+  BookOpen,
+  Layers,
 } from 'lucide-react'
 import { ChapterLessonCard } from './ChapterLessonCard'
 import { ChapterAssessmentCard } from './ChapterAssessmentCard'
@@ -17,6 +22,7 @@ import type { CourseModule, CourseLesson } from './CourseBasicInfoTab'
 interface CourseChapterCardProps {
   module: CourseModule
   moduleIndex: number
+  totalModules?: number
   isExpanded: boolean
   courseFolder?: string
   isVi: boolean
@@ -25,6 +31,10 @@ interface CourseChapterCardProps {
   onUpdateModule: (updated: Partial<CourseModule>) => void
   onAddLesson: () => void
   onRemoveLesson: (lessonId: string) => void
+  onMoveLessonUp?: (lessonIndex: number) => void
+  onMoveLessonDown?: (lessonIndex: number) => void
+  onMoveModuleUp?: () => void
+  onMoveModuleDown?: () => void
   onUpdateLessonField: (
     lessonId: string,
     field: keyof CourseLesson,
@@ -39,6 +49,7 @@ interface CourseChapterCardProps {
 export function CourseChapterCard({
   module,
   moduleIndex,
+  totalModules = 1,
   isExpanded,
   courseFolder,
   isVi,
@@ -47,6 +58,10 @@ export function CourseChapterCard({
   onUpdateModule,
   onAddLesson,
   onRemoveLesson,
+  onMoveLessonUp,
+  onMoveLessonDown,
+  onMoveModuleUp,
+  onMoveModuleDown,
   onUpdateLessonField,
   onUpdateLessonFields,
   onOpenExcelModal,
@@ -76,49 +91,120 @@ export function CourseChapterCard({
     ? `${courseFolder}/${modOrder}-${modTimestamp}`
     : `courses/modules/${modOrder}-${modTimestamp}`
 
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden dark:border-slate-800 dark:bg-slate-950/40">
-      <div className="p-4 flex items-center justify-between gap-3 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className="flex items-center gap-2.5 text-left flex-1 font-bold text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-        >
-          {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-indigo-500" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          )}
-          <span className="text-sm">
-            {isVi ? 'Chương' : 'Chapter'} {moduleIndex + 1}:{' '}
-            {module.title || (isVi ? 'Chưa đặt tên chương' : 'Untitled Chapter')}
-          </span>
-          <span className="text-[11px] font-normal text-slate-400 ml-2">
-            ({module.lessons.length} {isVi ? 'bài' : 'lessons'} · {modDuration} {isVi ? 'phút' : 'min'})
-          </span>
+  const hasLessons = module.lessons.length > 0
+  const isFirstChapter = moduleIndex === 0
+  const isLastChapter = moduleIndex === totalModules - 1
 
-          {questionCount > 0 && (
-            <span className="hidden sm:inline-flex items-center gap-1 rounded-md bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-              🎯 Bài Test ({questionCount} câu · {passingScore}%)
+  return (
+    <div className={`rounded-2xl border-2 transition-all overflow-hidden ${
+      isExpanded
+        ? 'border-indigo-500/80 bg-white shadow-md shadow-indigo-500/5 dark:border-indigo-500/60 dark:bg-slate-900 border-l-[8px] border-l-indigo-600 dark:border-l-indigo-500'
+        : 'border-slate-200 bg-white hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900/80 border-l-[8px] border-l-slate-300 dark:border-l-slate-700'
+    }`}>
+      <div className={`p-3.5 sm:p-4.5 flex flex-wrap items-center justify-between gap-3 transition-colors ${
+        isExpanded
+          ? 'bg-gradient-to-r from-indigo-50/80 via-slate-50/50 to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 border-b border-indigo-100 dark:border-indigo-950'
+          : 'bg-white hover:bg-slate-50/70 dark:bg-slate-900 dark:hover:bg-slate-850'
+      }`}>
+        <div
+          onClick={onToggleExpand}
+          className="flex items-center gap-3 flex-1 min-w-[260px] cursor-pointer select-none"
+        >
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-xl bg-indigo-600 text-white font-black text-xs uppercase tracking-wider shadow-xs shrink-0 flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Chương' : 'Chapter'} {moduleIndex + 1}</span>
             </span>
-          )}
-        </button>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                {module.title || (
+                  <span className="italic text-slate-400 font-normal">
+                    {isVi ? '(Chưa đặt tiêu đề chương học)' : '(Untitled chapter)'}
+                  </span>
+                )}
+              </h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                <Film className="w-3 h-3 text-indigo-500" />
+                <span>{module.lessons.length} {isVi ? 'bài học video' : 'lessons'}</span>
+                <span>·</span>
+                <span>{modDuration} {isVi ? 'phút' : 'min'}</span>
+              </span>
+
+              {questionCount > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <Award className="w-3 h-3 text-emerald-600" />
+                  <span>{isVi ? 'Bài test' : 'Test'}: {questionCount} {isVi ? 'câu' : 'qs'} ({passingScore}%)</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  <span>{isVi ? 'Chưa có bài test' : 'No test'}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="flex items-center gap-2">
+          {(onMoveModuleUp || onMoveModuleDown) && (
+            <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={onMoveModuleUp}
+                disabled={isFirstChapter}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 disabled:opacity-25 disabled:cursor-not-allowed dark:hover:text-indigo-400 transition-colors"
+                title={isVi ? 'Chuyển chương lên trước' : 'Move chapter up'}
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={onMoveModuleDown}
+                disabled={isLastChapter}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 disabled:opacity-25 disabled:cursor-not-allowed dark:hover:text-indigo-400 transition-colors"
+                title={isVi ? 'Chuyển chương xuống sau' : 'Move chapter down'}
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={onAddLesson}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 dark:bg-teal-500/10 dark:text-teal-400 text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{isVi ? 'Thêm Video' : 'Add Video'}</span>
+            <span className="hidden sm:inline">{isVi ? 'Thêm Video' : 'Add Video'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            {isExpanded ? (
+              <>
+                <span className="hidden sm:inline">{isVi ? 'Thu gọn' : 'Collapse'}</span>
+                <ChevronUp className="w-4 h-4 text-slate-500" />
+              </>
+            ) : (
+              <>
+                <span className="hidden sm:inline">{isVi ? 'Mở rộng' : 'Expand'}</span>
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              </>
+            )}
           </button>
 
           <button
             type="button"
             onClick={onRemoveModule}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
-            title={isVi ? 'Xóa chương này' : 'Remove chapter'}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            title={isVi ? `Xóa Chương ${moduleIndex + 1}` : 'Delete chapter'}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -126,94 +212,136 @@ export function CourseChapterCard({
       </div>
 
       {isExpanded && (
-        <div className="p-4 sm:p-5 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                {isVi ? 'Tên chương' : 'Chapter Title'}
-              </label>
-              <input
-                type="text"
-                value={module.title}
-                onChange={(e) => onUpdateModule({ title: e.target.value })}
-                placeholder={isVi ? 'VD: Tổng quan phương pháp nghe Part 1' : 'e.g. Overview of Part 1'}
-                className="w-full h-9 px-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100"
-              />
+        <div className="p-4 sm:p-6 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <BookOpen className="w-4 h-4 text-indigo-600" />
+              <h4 className="text-xs font-extrabold uppercase tracking-wide text-slate-800 dark:text-slate-200">
+                {isVi ? `Thông Tin Cơ Bản Chương ${moduleIndex + 1}` : `Chapter ${moduleIndex + 1} Basic Information`}
+              </h4>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                {isVi ? 'Mô tả tóm tắt chương' : 'Description'}
-              </label>
-              <input
-                type="text"
-                value={module.description}
-                onChange={(e) => onUpdateModule({ description: e.target.value })}
-                placeholder={isVi ? 'VD: Nắm vững cấu trúc và từ vựng cốt lõi...' : 'Key concepts and structures...'}
-                className="w-full h-9 px-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {isVi ? 'Tiêu đề chương học' : 'Chapter Title'} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={module.title}
+                  onChange={(e) => onUpdateModule({ title: e.target.value })}
+                  placeholder={isVi ? 'VD: Phương pháp xử lý bẫy Part 1 & Từ vựng...' : 'e.g. Part 1 Traps and Core Vocabulary...'}
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {isVi ? 'Mô tả ngắn về chương' : 'Chapter Description'}
+                </label>
+                <input
+                  type="text"
+                  value={module.description}
+                  onChange={(e) => onUpdateModule({ description: e.target.value })}
+                  placeholder={isVi ? 'VD: Nắm vững 300 từ vựng miêu tả tranh và cách nghe động từ...' : 'Summary of topics covered...'}
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-slate-100"
+                />
+              </div>
             </div>
           </div>
 
-          <ChapterAssessmentCard
-            module={module}
-            isVi={isVi}
-            onUpdateModule={onUpdateModule}
-            onOpenExcelModal={onOpenExcelModal}
-            onOpenViewerModal={onOpenViewerModal}
-          />
+          <div className="relative pl-5 sm:pl-7 border-l-2 border-indigo-200 dark:border-indigo-900 ml-2 sm:ml-3 space-y-6">
+            <div className="relative space-y-3">
+              <div className="absolute -left-[29px] sm:-left-[37px] top-0 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs ring-4 ring-indigo-100 dark:ring-indigo-950">
+                <Film className="w-3 h-3" />
+              </div>
 
-          <div className="space-y-3">
-            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Film className="w-4 h-4 text-teal-500" />
-              <span>
-                {isVi
-                  ? 'Danh sách Video bài giảng trong chương:'
-                  : 'Video Lessons in this Chapter:'}
-              </span>
-            </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>
+                      {isVi
+                        ? `Danh sách bài học video trong Chương ${moduleIndex + 1}`
+                        : `Video Lessons in Chapter ${moduleIndex + 1}`}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-[11px] font-bold">
+                      {module.lessons.length}
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {isVi
+                      ? `Các bài học được đánh số ${moduleIndex + 1}.1, ${moduleIndex + 1}.2, ${moduleIndex + 1}.3... theo đúng thứ tự học viên sẽ học`
+                      : `Lessons are numbered ${moduleIndex + 1}.1, ${moduleIndex + 1}.2... in learning order`}
+                  </p>
+                </div>
 
-            {module.lessons.length === 0 ? (
-              <div className="text-center py-6 border border-dashed border-slate-300 rounded-xl space-y-2 dark:border-slate-800">
-                <p className="text-xs text-slate-500">
-                  {isVi
-                    ? 'Chương này chưa có video bài học nào'
-                    : 'No video lessons in this chapter yet'}
-                </p>
                 <button
                   type="button"
                   onClick={onAddLesson}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-semibold hover:bg-indigo-100 dark:bg-indigo-600/20 dark:text-indigo-300 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                 >
-                  + {isVi ? 'Thêm Video Đầu Tiên' : 'Add First Video'}
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isVi ? 'Thêm Bài Học Video' : 'Add Lesson Video'}</span>
                 </button>
               </div>
-            ) : (
-              module.lessons.map((lesson, lessonIndex) => (
-                <ChapterLessonCard
-                  key={lesson.id}
-                  lesson={lesson}
-                  lessonIndex={lessonIndex}
-                  chapterFolder={chapterFolder}
-                  isVi={isVi}
-                  onUpdateField={(field, val) => onUpdateLessonField(lesson.id, field, val)}
-                  onUpdateFields={(fields) => onUpdateLessonFields(lesson.id, fields)}
-                  onRemove={() => onRemoveLesson(lesson.id)}
-                  formatDurationDisplay={formatDurationDisplay}
-                />
-              ))
-            )}
 
-            {module.lessons.length > 0 && (
-              <button
-                type="button"
-                onClick={onAddLesson}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-teal-400/60 dark:border-teal-600/40 bg-teal-50/40 hover:bg-teal-50 dark:bg-teal-950/20 dark:hover:bg-teal-900/30 text-teal-700 dark:text-teal-400 text-xs font-bold transition-all cursor-pointer shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{isVi ? 'Thêm Video Bài Học Mới' : 'Add New Video Lesson'}</span>
-              </button>
-            )}
+              {!hasLessons ? (
+                <div className="text-center py-8 border-2 border-dashed border-slate-300 rounded-2xl bg-white/70 dark:border-slate-800 dark:bg-slate-900/50 space-y-2">
+                  <Film className="w-8 h-8 text-slate-400 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {isVi
+                      ? `Chương ${moduleIndex + 1} chưa có bài học video nào`
+                      : `No video lessons in Chapter ${moduleIndex + 1} yet`}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onAddLesson}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isVi ? `Tạo Bài Học ${moduleIndex + 1}.1 Đầu Tiên` : 'Create First Lesson'}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {module.lessons.map((lesson, lessonIndex) => (
+                    <ChapterLessonCard
+                      key={lesson.id}
+                      lesson={lesson}
+                      lessonIndex={lessonIndex}
+                      chapterIndex={moduleIndex}
+                      chapterFolder={chapterFolder}
+                      isVi={isVi}
+                      isFirst={lessonIndex === 0}
+                      isLast={lessonIndex === module.lessons.length - 1}
+                      onMoveUp={onMoveLessonUp ? () => onMoveLessonUp(lessonIndex) : undefined}
+                      onMoveDown={onMoveLessonDown ? () => onMoveLessonDown(lessonIndex) : undefined}
+                      onUpdateField={(field, val) => onUpdateLessonField(lesson.id, field, val)}
+                      onUpdateFields={(fields) => onUpdateLessonFields(lesson.id, fields)}
+                      onRemove={() => onRemoveLesson(lesson.id)}
+                      formatDurationDisplay={formatDurationDisplay}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative pt-2">
+              <div className="absolute -left-[29px] sm:-left-[37px] top-6 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs ring-4 ring-emerald-100 dark:ring-emerald-950">
+                <Award className="w-3.5 h-3.5" />
+              </div>
+
+              <div className="space-y-2">
+                <ChapterAssessmentCard
+                  module={module}
+                  chapterIndex={moduleIndex}
+                  isVi={isVi}
+                  onUpdateModule={onUpdateModule}
+                  onOpenExcelModal={onOpenExcelModal}
+                  onOpenViewerModal={onOpenViewerModal}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
