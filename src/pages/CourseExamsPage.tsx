@@ -1008,10 +1008,9 @@ export function CourseExamsPage() {
                       onChange={(e) => setFormType(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
                     >
-                      <option value="PRE_TEST">Pre-test (Đầu vào khóa)</option>
-                      <option value="POST_MINI_TEST">Post-mini Test (Chương)</option>
-                      <option value="CHALLENGE_TEST">Challenge (Thử thách)</option>
-                      <option value="FULL_TEST">Final Test (Tốt nghiệp)</option>
+                      <option value="CHALLENGE_TEST">Bài Test Thử Thách Chương (Yêu cầu 80% để qua chương)</option>
+                      <option value="FULL_TEST">Bài Thi Cuối Khóa Học (Exit Test tốt nghiệp)</option>
+                      <option value="POST_MINI_TEST">Bài Kiểm Tra Đánh Giá Cột Mốc</option>
                     </select>
                   </div>
 
