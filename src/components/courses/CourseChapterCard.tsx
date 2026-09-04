@@ -173,14 +173,16 @@ export function CourseChapterCard({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onAddLesson}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isVi ? 'Thêm Video' : 'Add Video'}</span>
-          </button>
+          {!isExpanded && (
+            <button
+              type="button"
+              onClick={onAddLesson}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isVi ? 'Thêm Video' : 'Add Video'}</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -274,15 +276,6 @@ export function CourseChapterCard({
                       : `Lessons are numbered ${moduleIndex + 1}.1, ${moduleIndex + 1}.2... in learning order`}
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={onAddLesson}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isVi ? 'Thêm Bài Học Video' : 'Add Lesson Video'}</span>
-                </button>
               </div>
 
               {!hasLessons ? (
@@ -322,6 +315,24 @@ export function CourseChapterCard({
                       formatDurationDisplay={formatDurationDisplay}
                     />
                   ))}
+
+                  {/* Nút thêm video của chương đặt ở DƯỚI các video của chương */}
+                  <div className="pt-1.5">
+                    <button
+                      type="button"
+                      onClick={onAddLesson}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-teal-300 dark:border-teal-800/80 bg-teal-50/50 hover:bg-teal-50 dark:bg-teal-950/20 dark:hover:bg-teal-950/40 text-teal-700 dark:text-teal-300 text-xs font-extrabold transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                    >
+                      <span className="w-5 h-5 rounded-lg bg-teal-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                        <Plus className="w-3.5 h-3.5" />
+                      </span>
+                      <span>
+                        {isVi
+                          ? `Thêm Bài Học Video ${moduleIndex + 1}.${module.lessons.length + 1}`
+                          : `Add Video Lesson ${moduleIndex + 1}.${module.lessons.length + 1}`}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
