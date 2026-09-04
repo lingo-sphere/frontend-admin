@@ -329,7 +329,11 @@ export function R2MediaUploader({
                   <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
                   <span>
                     {uploadProgress >= 99
-                      ? isVi
+                      ? isVideo
+                        ? isVi
+                          ? 'Đang hoàn tất tải lên & khởi tạo luồng HLS...'
+                          : 'Finalizing upload & initiating HLS stream...'
+                        : isVi
                         ? 'Đang xử lý & lưu trữ file...'
                         : 'Processing & finalizing...'
                       : isVi
