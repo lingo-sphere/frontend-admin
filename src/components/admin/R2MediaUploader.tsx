@@ -18,6 +18,7 @@ import {
   RefreshCw,
   HardDrive,
   X,
+  Eye,
 } from 'lucide-react'
 import { mediaService } from '@/services/media.service'
 import { API_CONFIG } from '@/config/api.config'
@@ -271,9 +272,8 @@ export function R2MediaUploader({
               <div
                 onClick={() => setShowPreviewModal(true)}
                 className="flex items-center gap-3 overflow-hidden cursor-pointer group flex-1"
-                title="Bấm để xem trước video/ảnh đã tải lên"
+                title={isVi ? (isVideo ? 'Bấm để xem trước video đã tải lên' : 'Bấm để xem ảnh phóng to') : (isVideo ? 'Click to preview video' : 'Click to preview image')}
               >
-                {}
                 {!isVideo && (
                   <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-black/5 dark:border-slate-800 relative">
                     <img src={resolveStreamUrl(value)} alt="Preview" className="h-full w-full object-cover group-hover:opacity-90 transition-opacity" />
@@ -299,16 +299,24 @@ export function R2MediaUploader({
                 </div>
               </div>
 
-              {}
               <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowPreviewModal(true)}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 transition-colors cursor-pointer"
-                  title="Xem trước video/ảnh"
+                  title={isVideo ? (isVi ? 'Phát video xem trước' : 'Play video preview') : (isVi ? 'Xem ảnh phóng to' : 'View image preview')}
                 >
-                  <Play className="w-3 h-3 fill-indigo-700 dark:fill-indigo-300" />
-                  <span>{isVi ? 'Phát video' : 'Play'}</span>
+                  {isVideo ? (
+                    <>
+                      <Play className="w-3 h-3 fill-indigo-700 dark:fill-indigo-300" />
+                      <span>{isVi ? 'Phát video' : 'Play'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-300" />
+                      <span>{isVi ? 'Xem' : 'View'}</span>
+                    </>
+                  )}
                 </button>
 
                 <button
