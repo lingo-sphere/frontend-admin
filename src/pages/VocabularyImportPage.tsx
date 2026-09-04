@@ -5,8 +5,10 @@
 
 import { useState } from 'react'
 import { ChevronLeft, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { useAdminStore } from '@/store/admin-store'
 import { toast } from '@/store/toast-store'
+import { vocabularyService } from '@/services/vocabulary.service'
 import { VocabularyImportDropzone } from '@/components/vocabulary/VocabularyImportDropzone'
 import {
   VocabularyImportHistoryTable,
@@ -16,9 +18,35 @@ import {
 export function VocabularyImportPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('CSV')
+  const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('EXCEL')
   const [isImporting, setIsImporting] = useState(false)
   const [history, setHistory] = useState<ImportBatch[]>([])
+
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        'Từ vựng': 'resilient',
+        'Từ loại': 'ADJECTIVE',
+        'Trình độ': 'B2',
+        'Định nghĩa (EN)': 'Able to withstand or recover quickly from difficult conditions.',
+        'Định nghĩa (VI)': 'Kiên cường, có khả năng phục hồi nhanh chóng.',
+        'Ví dụ': 'The local economy is remarkably resilient.',
+      },
+      {
+        'Từ vựng': 'collaborate',
+        'Từ loại': 'VERB',
+        'Trình độ': 'B1',
+        'Định nghĩa (EN)': 'Work jointly on an activity or project.',
+        'Định nghĩa (VI)': 'Hợp tác, cùng làm việc.',
+        'Ví dụ': 'We have collaborated on several projects.',
+      },
+    ]
+
+    const ws = XLSX.utils.json_to_sheet(templateData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'VocabTemplate')
+    XLSX.writeFile(wb, 'LingoSphere_Vocabulary_Template.xlsx')
+  }
 
   const handleStartImport = async () => {
     if (!selectedFile) {
@@ -28,23 +56,69 @@ export function VocabularyImportPage() {
 
     setIsImporting(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      const buffer = await selectedFile.arrayBuffer()
+      const wb = XLSX.read(buffer, { type: 'array' })
+      const sheetName = wb.SheetNames[0]
+      const ws = wb.Sheets[sheetName]
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws)
+
+      if (!rows || rows.length === 0) {
+        toast.error('File dữ liệu không có dòng từ vựng nào hợp lệ')
+        return
+      }
+
+      let successCount = 0
+      let failedCount = 0
+
+      for (const row of rows) {
+        const wordText = String(row['Từ vựng'] || row['word'] || row['Word'] || '').trim()
+        const definition = String(row['Định nghĩa (EN)'] || row['definition'] || row['Definition'] || '').trim()
+        const definitionVi = String(row['Định nghĩa (VI)'] || row['definition_vi'] || row['Nghĩa tiếng Việt'] || '').trim()
+        const pos = String(row['Từ loại'] || row['part_of_speech'] || row['pos'] || 'NOUN').trim()
+        const cefr = String(row['Trình độ'] || row['cefr_level'] || row['level'] || 'B1').trim()
+        const example = String(row['Ví dụ'] || row['example'] || row['Example'] || '').trim()
+
+        if (wordText) {
+          try {
+            await vocabularyService.createLexicalItem({
+              word: wordText,
+              word_type: pos || 'NOUN',
+              cefr_level: cefr || 'B1',
+              meanings: [
+                {
+                  meaning_order: 1,
+                  part_of_speech: pos || 'NOUN',
+                  definition_en: definition,
+                  definition_vi: definitionVi,
+                  examples: example ? [example] : [],
+                  is_primary: true,
+                },
+              ],
+            })
+            successCount++
+          } catch {
+            failedCount++
+          }
+        }
+      }
+
       const newBatch: ImportBatch = {
         id: `imp-${Date.now()}`,
         name: selectedFile.name,
         source_type: importType,
-        total_items: 120,
-        items_success: 120,
-        items_failed: 0,
+        total_items: rows.length,
+        items_success: successCount,
+        items_failed: failedCount,
         items_duplicate: 0,
-        status: 'COMPLETED',
+        status: failedCount === rows.length ? 'FAILED' : 'COMPLETED',
         created_at: 'Vừa xong',
       }
-      setHistory([newBatch, ...history])
+      setHistory((prev) => [newBatch, ...prev])
       setSelectedFile(null)
-      toast.success('Đã nhập thành công 120 từ vựng vào kho dữ liệu!')
-    } catch {
-      toast.error('Có lỗi xảy ra khi nhập tệp từ vựng')
+      toast.success(`Đã nạp thành công ${successCount}/${rows.length} từ vựng vào hệ thống!`)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi nhập tệp từ vựng'
+      toast.error(msg)
     } finally {
       setIsImporting(false)
     }
@@ -72,7 +146,7 @@ export function VocabularyImportPage() {
         </div>
 
         <button
-          onClick={() => toast.info('Đang tải file Excel mẫu...')}
+          onClick={handleDownloadTemplate}
           className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
         >
           <Download className="w-4 h-4" />

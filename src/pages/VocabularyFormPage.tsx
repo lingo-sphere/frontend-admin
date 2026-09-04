@@ -8,10 +8,8 @@ import { ChevronLeft, Save } from 'lucide-react'
 import { useAdminStore } from '@/store/admin-store'
 import { toast } from '@/store/toast-store'
 import { VocabularyBasicInfoForm } from '@/components/vocabulary/VocabularyBasicInfoForm'
-import {
-  VocabularyMeaningsForm,
-  type Meaning,
-} from '@/components/vocabulary/VocabularyMeaningsForm'
+import { VocabularyMeaningsForm, type Meaning } from '@/components/vocabulary/VocabularyMeaningsForm'
+import { vocabularyService } from '@/services/vocabulary.service'
 
 export function VocabularyFormPage({
   editWordId,
@@ -100,15 +98,34 @@ export function VocabularyFormPage({
 
     setIsSubmitting(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      const formattedMeanings = meanings.map((m, idx) => ({
+        meaning_order: idx + 1,
+        part_of_speech: m.part_of_speech || wordType,
+        definition_en: m.definition_en,
+        definition_vi: m.definition_vi || m.short_meaning_vi || '',
+        short_meaning_vi: m.short_meaning_vi,
+        examples: m.examples.filter(Boolean),
+        is_primary: idx === 0,
+      }))
+
+      await vocabularyService.createLexicalItem({
+        word: word.trim(),
+        word_type: wordType,
+        cefr_level: cefrLevel,
+        pronunciation_us: pronunciationUs || undefined,
+        pronunciation_uk: pronunciationUk || undefined,
+        audio_url_us: audioUrlUs || undefined,
+        meanings: formattedMeanings,
+      })
       toast.success(
         isEditing
           ? 'Cập nhật từ vựng thành công!'
           : 'Thêm từ vựng mới vào từ điển thành công!'
       )
       setActiveNavItem('vocabulary')
-    } catch {
-      toast.error('Có lỗi xảy ra khi lưu từ vựng')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu từ vựng'
+      toast.error(msg)
     } finally {
       setIsSubmitting(false)
     }
