@@ -17,6 +17,7 @@ import { BookOpen, ChevronLeft, Save, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { validateCourseFormData } from '@/helpers/course.helper'
+import { VideoPreviewModal } from '@/components/common/VideoPreviewModal'
 
 interface CourseFormPageProps {
   editCourseId?: string
@@ -380,33 +381,12 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       </form>
 
       {videoPreviewUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150">
-          <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 p-4">
-              <span className="text-xs font-semibold text-slate-200">
-                {isVi ? 'Xem thử video bài giảng' : 'Lesson Video Preview'}
-              </span>
-              <button
-                onClick={() => setVideoPreviewUrl(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="aspect-video w-full bg-black">
-              {videoPreviewUrl.includes('youtube.com') || videoPreviewUrl.includes('youtu.be') ? (
-                <iframe
-                  src={videoPreviewUrl.replace('watch?v=', 'embed/')}
-                  title="Video preview"
-                  className="h-full w-full"
-                  allowFullScreen
-                />
-              ) : (
-                <video src={videoPreviewUrl} controls className="h-full w-full" autoPlay />
-              )}
-            </div>
-          </div>
-        </div>
+        <VideoPreviewModal
+          isOpen={!!videoPreviewUrl}
+          onClose={() => setVideoPreviewUrl(null)}
+          videoUrl={videoPreviewUrl}
+          isVi={isVi}
+        />
       )}
     </div>
   )

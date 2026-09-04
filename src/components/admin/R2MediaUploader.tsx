@@ -4,7 +4,6 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
-import Hls from 'hls.js'
 import {
   UploadCloud,
   CheckCircle2,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react'
 import { mediaService } from '@/services/media.service'
 import { API_CONFIG } from '@/config/api.config'
+import { VideoPreviewModal } from '@/components/common/VideoPreviewModal'
 
 const resolveStreamUrl = (url: string) => {
   if (!url) return ''
@@ -63,8 +63,6 @@ export function R2MediaUploader({
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const previewVideoRef = useRef<HTMLVideoElement | null>(null)
-  const hlsInstanceRef = useRef<Hls | null>(null)
 
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const isVideo = type === 'video'
@@ -128,45 +126,6 @@ export function R2MediaUploader({
       video.load()
     }
   }, [value, isVideo])
-
-  useEffect(() => {
-    const video = previewVideoRef.current
-    if (!video || !showPreviewModal || !isVideo || !value) return
-
-    const streamUrl = resolveStreamUrl(value)
-
-    if (streamUrl.includes('.m3u8')) {
-      if (Hls.isSupported()) {
-        if (hlsInstanceRef.current) {
-          hlsInstanceRef.current.destroy()
-        }
-        const hls = new Hls({
-          capLevelToPlayerSize: false,
-          autoStartLoad: true,
-        })
-        hlsInstanceRef.current = hls
-        hls.loadSource(streamUrl)
-        hls.attachMedia(video)
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          hls.currentLevel = -1
-          video.play().catch(() => {})
-        })
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = streamUrl
-        video.play().catch(() => {})
-      }
-    } else {
-      video.src = streamUrl
-      video.play().catch(() => {})
-    }
-
-    return () => {
-      if (hlsInstanceRef.current) {
-        hlsInstanceRef.current.destroy()
-        hlsInstanceRef.current = null
-      }
-    }
-  }, [showPreviewModal, isVideo, value])
 
   const handleFileSelect = async (file: File) => {
     if (!file) return
@@ -433,20 +392,30 @@ export function R2MediaUploader({
           )}
         </div>
 
-      {showPreviewModal && value && (
+      {showPreviewModal && value && isVideo && (
+        <VideoPreviewModal
+          isOpen={showPreviewModal}
+          onClose={() => setShowPreviewModal(false)}
+          videoUrl={value}
+          title={label || (isVi ? 'Xem trước video bài giảng' : 'Lesson Video Preview')}
+          isVi={isVi}
+        />
+      )}
+
+      {showPreviewModal && value && !isVideo && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
           onClick={() => setShowPreviewModal(false)}
         >
           <div
-            className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-slate-900 shadow-2xl border border-slate-800"
+            className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-slate-950/95 border border-slate-700/60 shadow-2xl shadow-black/80"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-3.5 border-b border-slate-800 bg-slate-950">
               <div className="flex items-center gap-2">
-                {isVideo ? <Film className="w-4 h-4 text-indigo-400" /> : <ImageIcon className="w-4 h-4 text-indigo-400" />}
+                <ImageIcon className="w-4 h-4 text-indigo-400" />
                 <span className="text-xs font-bold text-slate-200 truncate max-w-md">
-                  {value.split('/').pop() || (isVideo ? 'Xem trước Video' : 'Xem trước Ảnh')}
+                  {label || (isVi ? 'Xem trước ảnh' : 'Image Preview')}
                 </span>
               </div>
               <button
@@ -457,24 +426,12 @@ export function R2MediaUploader({
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            <div className="p-3 bg-black flex items-center justify-center min-h-[300px]">
-              {isVideo ? (
-                <video
-                  ref={previewVideoRef}
-                  src={resolveStreamUrl(value).includes('.m3u8') ? undefined : resolveStreamUrl(value)}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="w-full max-h-[500px] rounded-lg object-contain bg-black"
-                />
-              ) : (
-                <img
-                  src={resolveStreamUrl(value)}
-                  alt="Preview"
-                  className="w-full max-h-[500px] object-contain rounded-lg"
-                />
-              )}
+            <div className="p-4 bg-black/60 flex items-center justify-center min-h-[300px]">
+              <img
+                src={resolveStreamUrl(value)}
+                alt="Preview"
+                className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl"
+              />
             </div>
           </div>
         </div>
