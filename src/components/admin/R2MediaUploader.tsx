@@ -419,7 +419,7 @@ export function R2MediaUploader({
 
       {showPreviewModal && value && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150"
           onClick={() => setShowPreviewModal(false)}
         >
           <div

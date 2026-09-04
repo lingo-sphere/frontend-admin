@@ -380,7 +380,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       </form>
 
       {videoPreviewUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150">
           <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 p-4">
               <span className="text-xs font-semibold text-slate-200">
