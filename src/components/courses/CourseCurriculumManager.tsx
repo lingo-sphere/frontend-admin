@@ -291,16 +291,26 @@ export function CourseCurriculumManager({
   const handleApplyQuestions = (
     moduleId: string,
     questions: QuizQuestionItem[],
-    mode: 'append' | 'replace' = 'append'
+    mode: 'append' | 'replace' = 'append',
+    audioUrl?: string
   ) => {
     const targetModule = modules.find((m) => m.id === moduleId)
     const existing = targetModule?.test_questions || []
     const updated = mode === 'append' ? [...existing, ...questions] : questions
 
+    const audioUpdates = audioUrl
+      ? {
+          test_audio_url: audioUrl,
+          challenge_audio_url: audioUrl,
+          audio_url: audioUrl,
+        }
+      : {}
+
     updateModule(moduleId, {
       test_questions: updated,
       challenge_questions: updated,
       post_mini_questions: updated,
+      ...audioUpdates,
     })
   }
 
@@ -516,12 +526,18 @@ export function CourseCurriculumManager({
         key={excelModalState.moduleId || 'excel-modal'}
         isOpen={excelModalState.isOpen}
         onClose={() => setExcelModalState((prev) => ({ ...prev, isOpen: false }))}
-        onApplyQuestions={(q: QuizQuestionItem[], mode?: 'append' | 'replace') =>
-          handleApplyQuestions(excelModalState.moduleId, q, mode)
+        onApplyQuestions={(q: QuizQuestionItem[], mode?: 'append' | 'replace', audioUrl?: string) =>
+          handleApplyQuestions(excelModalState.moduleId, q, mode, audioUrl)
         }
         moduleTitle={excelModalState.moduleTitle}
         existingQuestionsCount={
           modules.find((m) => m.id === excelModalState.moduleId)?.test_questions?.length || 0
+        }
+        initialAudioUrl={
+          modules.find((m) => m.id === excelModalState.moduleId)?.test_audio_url ||
+          modules.find((m) => m.id === excelModalState.moduleId)?.challenge_audio_url ||
+          modules.find((m) => m.id === excelModalState.moduleId)?.audio_url ||
+          ''
         }
       />
 

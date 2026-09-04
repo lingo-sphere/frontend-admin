@@ -35,6 +35,7 @@ export interface CourseFormData {
   final_test_exam_id?: string
   final_test_passing_score?: number
   final_test_questions?: QuizQuestionItem[]
+  final_test_audio_url?: string
   modules: CourseModule[]
 }
 
@@ -73,6 +74,9 @@ export interface CourseModule {
   post_mini_test_exam_id?: string
   post_mini_passing_score?: number
   post_mini_questions?: QuizQuestionItem[]
+  test_audio_url?: string
+  challenge_audio_url?: string
+  audio_url?: string
   lessons: CourseLesson[]
 }
 
@@ -420,11 +424,15 @@ export function CourseBasicInfoTab({
         key="final-test-excel-modal"
         isOpen={isExcelModalOpen}
         onClose={() => setIsExcelModalOpen(false)}
-        onApplyQuestions={(q, mode = 'append') => {
+        onApplyQuestions={(q, mode = 'append', audioUrl?: string) => {
           const existing = formData.final_test_questions || []
           const combined = mode === 'append' ? [...existing, ...q] : q
-          onChange({ final_test_questions: combined })
+          onChange({
+            final_test_questions: combined,
+            ...(audioUrl !== undefined ? { final_test_audio_url: audioUrl } : {}),
+          })
         }}
+        initialAudioUrl={formData.final_test_audio_url}
         moduleTitle={`Final Test Khóa Học: ${formData.title || 'Khóa học'}`}
         existingQuestionsCount={formData.final_test_questions?.length || 0}
       />

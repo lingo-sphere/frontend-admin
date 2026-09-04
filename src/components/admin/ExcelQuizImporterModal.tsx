@@ -14,7 +14,6 @@ import {
   Trash2,
   Music,
   Volume2,
-  VolumeX,
   Loader2,
   PlusCircle,
   RefreshCcw,
@@ -27,10 +26,15 @@ import { toast } from '@/store/toast-store'
 interface ExcelQuizImporterModalProps {
   isOpen: boolean
   onClose: () => void
-  onApplyQuestions: (questions: QuizQuestionItem[], mode?: 'append' | 'replace') => void
+  onApplyQuestions: (
+    questions: QuizQuestionItem[],
+    mode?: 'append' | 'replace',
+    audioUrl?: string
+  ) => void
   moduleTitle: string
   testType?: string
   existingQuestionsCount?: number
+  initialAudioUrl?: string
 }
 
 interface ColumnValidationResult {
@@ -56,6 +60,7 @@ export function ExcelQuizImporterModal({
   moduleTitle,
   testType,
   existingQuestionsCount = 0,
+  initialAudioUrl,
 }: ExcelQuizImporterModalProps) {
   const [parsedQuestions, setParsedQuestions] = useState<QuizQuestionItem[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -63,10 +68,9 @@ export function ExcelQuizImporterModal({
   const [fileName, setFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(initialAudioUrl || null)
   const [audioFileName, setAudioFileName] = useState<string | null>(null)
   const [isUploadingAudio, setIsUploadingAudio] = useState(false)
-  const [applyAudioToAll, setApplyAudioToAll] = useState(false)
   const audioInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -75,14 +79,13 @@ export function ExcelQuizImporterModal({
       setError(null)
       setValidationResult(null)
       setFileName(null)
-      setAudioUrl(null)
+      setAudioUrl(initialAudioUrl || null)
       setAudioFileName(null)
       setIsUploadingAudio(false)
-      setApplyAudioToAll(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
       if (audioInputRef.current) audioInputRef.current.value = ''
     }
-  }, [isOpen, moduleTitle])
+  }, [isOpen, moduleTitle, initialAudioUrl])
 
   if (!isOpen) return null
 
@@ -161,9 +164,7 @@ export function ExcelQuizImporterModal({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         setAudioUrl(uploadedUrl)
-        setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: uploadedUrl })))
-        setApplyAudioToAll(true)
-        toast.success(`Tải file nghe thành công: ${file.name}`)
+        toast.success(`Tải file nghe cho bộ đề thành công: ${file.name}`)
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
       }
@@ -281,7 +282,7 @@ export function ExcelQuizImporterModal({
               options: [optA, optB, optC || 'N/A', optD || 'N/A'],
               correct_answer: ['A', 'B', 'C', 'D'].includes(correctAnswerRaw) ? correctAnswerRaw : 'A',
               explanation,
-              media_url: rowMediaUrl || (applyAudioToAll && audioUrl ? audioUrl : undefined),
+              media_url: rowMediaUrl || undefined,
             })
           }
         })
@@ -316,16 +317,11 @@ export function ExcelQuizImporterModal({
   const handleApply = (mode: 'append' | 'replace') => {
     if (parsedQuestions.length === 0) return
 
-    const finalQuestions = parsedQuestions.map((q) => ({
-      ...q,
-      media_url: q.media_url ? q.media_url : (applyAudioToAll && audioUrl ? audioUrl : undefined),
-    }))
-
-    onApplyQuestions(finalQuestions, mode)
+    onApplyQuestions(parsedQuestions, mode, audioUrl || undefined)
     toast.success(
       mode === 'append'
-        ? `Đã thêm thành công ${finalQuestions.length} câu hỏi vào danh sách!`
-        : `Đã cập nhật bài test với ${finalQuestions.length} câu hỏi mới!`
+        ? `Đã thêm thành công ${parsedQuestions.length} câu hỏi vào danh sách!`
+        : `Đã cập nhật bài test với ${parsedQuestions.length} câu hỏi mới!`
     )
     onClose()
   }
@@ -492,10 +488,10 @@ export function ExcelQuizImporterModal({
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
-                    File Nghe Audio (.mp3, .wav) cho Phần Listening
+                    File Nghe Audio (.mp3, .wav) cho Bộ Đề Này
                   </h4>
                   <p className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80">
-                    Tải lên file âm thanh bài nghe chung cho cả bài test (hoặc ghi rõ link trong file Excel).
+                    File âm thanh bài nghe được gắn trực tiếp vào toàn bộ đề này (phát chung cho bài test).
                   </p>
                 </div>
               </div>
@@ -525,14 +521,14 @@ export function ExcelQuizImporterModal({
                 ) : (
                   <>
                     <Volume2 className="h-3.5 w-3.5" />
-                    <span>{audioFileName ? `Đổi audio (${audioFileName})` : 'Upload File Nghe'}</span>
+                    <span>{audioFileName || audioUrl ? (audioFileName ? `Đổi audio (${audioFileName})` : 'Đổi file audio') : 'Upload File Nghe'}</span>
                   </>
                 )}
               </button>
             </div>
 
             {audioUrl && (
-              <div className="pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60 space-y-2">
+              <div className="pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60 space-y-1.5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <audio controls src={audioUrl} className="w-full h-8" />
@@ -542,37 +538,16 @@ export function ExcelQuizImporterModal({
                     onClick={() => {
                       setAudioUrl(null)
                       setAudioFileName(null)
-                      setApplyAudioToAll(false)
-                      setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: undefined })))
                     }}
-                    className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
-                    title="Xóa file audio này"
+                    className="p-1.5 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                    title="Xóa file audio khỏi bộ đề"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-indigo-950 dark:text-indigo-200 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={applyAudioToAll}
-                      onChange={(e) => {
-                        const checked = e.target.checked
-                        setApplyAudioToAll(checked)
-                        if (checked && audioUrl) {
-                          setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: audioUrl })))
-                          toast.info('Đã gắn file nghe này cho toàn bộ câu hỏi trong bài test')
-                        } else if (!checked) {
-                          setParsedQuestions((prev) => prev.map((q) => ({ ...q, media_url: undefined })))
-                          toast.info('Đã bỏ gắn file nghe hàng loạt. Bạn có thể chọn gắn file nghe cho từng câu bên dưới.')
-                        }
-                      }}
-                      className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
-                    />
-                    <span>Gắn file nghe này cho tất cả câu hỏi trong bài test</span>
-                  </label>
-                </div>
+                <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+                  ✓ File nghe được gắn vào toàn bộ đề này (không gắn lặp lại từng câu hỏi).
+                </p>
               </div>
             )}
           </div>
@@ -596,7 +571,6 @@ export function ExcelQuizImporterModal({
               <div className="space-y-3">
                 {parsedQuestions.map((q, qIdx) => {
                   const letters = ['A', 'B', 'C', 'D']
-                  const questionAudio = q.media_url || (applyAudioToAll ? audioUrl : undefined)
 
                   return (
                     <div
@@ -608,49 +582,13 @@ export function ExcelQuizImporterModal({
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600/10 text-xs font-bold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                             {qIdx + 1}
                           </span>
-                          <div className="flex-1 space-y-2">
+                          <div className="flex-1 space-y-1.5">
                             <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
                               {q.question_text}
                             </p>
-
-                            {questionAudio ? (
-                              <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <Volume2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                                  <audio controls src={questionAudio} className="h-7 w-full max-w-sm" />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setParsedQuestions((prev) =>
-                                      prev.map((item, idx) => idx === qIdx ? { ...item, media_url: undefined } : item)
-                                    )
-                                  }}
-                                  className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
-                                  title="Xóa audio khỏi câu này"
-                                >
-                                  Gỡ audio
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
-                                <div className="flex items-center gap-1.5">
-                                  <VolumeX className="h-3.5 w-3.5" />
-                                  <span>Câu Đọc / Ngữ pháp (Không có file nghe)</span>
-                                </div>
-                                {audioUrl && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setParsedQuestions((prev) =>
-                                        prev.map((item, idx) => idx === qIdx ? { ...item, media_url: audioUrl } : item)
-                                      )
-                                    }}
-                                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
-                                  >
-                                    + Gắn file nghe vào câu này
-                                  </button>
-                                )}
+                            {q.media_url && !q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) && (
+                              <div className="mt-1 max-w-xs rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800">
+                                <img src={q.media_url} alt={`Câu ${qIdx + 1}`} className="w-full h-auto max-h-40 object-cover" />
                               </div>
                             )}
                           </div>

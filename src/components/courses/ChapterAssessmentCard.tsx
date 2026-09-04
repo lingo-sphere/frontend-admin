@@ -52,7 +52,11 @@ export function ChapterAssessmentCard({
     module.challenge_passing_score ??
     70
 
-  const commonAudioUrl = questionsList.find((q) => q.media_url)?.media_url
+  const commonAudioUrl =
+    module.test_audio_url ||
+    module.challenge_audio_url ||
+    module.audio_url ||
+    questionsList.find((q) => q.media_url)?.media_url
 
   const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -73,19 +77,22 @@ export function ChapterAssessmentCard({
       const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
-        const updated = questionsList.map((q) => ({
+        const cleanedQuestions = questionsList.map((q) => ({
           ...q,
-          media_url: uploadedUrl,
+          media_url: undefined,
         }))
         onUpdateModule({
-          test_questions: updated,
-          challenge_questions: updated,
-          post_mini_questions: updated,
+          test_audio_url: uploadedUrl,
+          challenge_audio_url: uploadedUrl,
+          audio_url: uploadedUrl,
+          test_questions: cleanedQuestions,
+          challenge_questions: cleanedQuestions,
+          post_mini_questions: cleanedQuestions,
         })
         toast.success(
           isVi
-            ? `Đã cập nhật file nghe cho chương: ${file.name}`
-            : `Updated test audio: ${file.name}`
+            ? `Đã cập nhật file nghe cho bộ đề chương: ${file.name}`
+            : `Updated chapter test audio: ${file.name}`
         )
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
@@ -105,12 +112,15 @@ export function ChapterAssessmentCard({
       media_url: undefined,
     }))
     onUpdateModule({
+      test_audio_url: '',
+      challenge_audio_url: '',
+      audio_url: '',
       test_questions: updated,
       challenge_questions: updated,
       post_mini_questions: updated,
     })
     toast.success(
-      isVi ? 'Đã gỡ file nghe khỏi bài test chương' : 'Removed audio from chapter test'
+      isVi ? 'Đã gỡ file nghe khỏi bộ đề thi chương' : 'Removed audio from chapter test'
     )
   }
 
