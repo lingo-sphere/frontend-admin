@@ -171,6 +171,9 @@ export interface CourseModule {
   post_mini_test_exam_id?: string
   post_mini_passing_score?: number
   post_mini_questions?: QuizQuestionItem[]
+  test_audio_url?: string
+  challenge_audio_url?: string
+  audio_url?: string
   lessons?: Lesson[]
   created_at?: string
   updated_at?: string
@@ -194,6 +197,7 @@ export interface Course {
   final_test_exam_id?: string
   final_test_passing_score?: number
   final_test_questions?: QuizQuestionItem[]
+  final_test_audio_url?: string
   rating?: number
   students_count?: number
   total_modules?: number

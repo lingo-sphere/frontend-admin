@@ -3,8 +3,23 @@
  * @description Component giao diện CourseBasicInfoTab phục vụ khu vực Quản trị Admin
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { FileSpreadsheet, Eye, Award, UserCheck, X } from 'lucide-react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import {
+  FileSpreadsheet,
+  Eye,
+  Award,
+  UserCheck,
+  X,
+  Volume2,
+  Upload,
+  Trash2,
+  Loader2,
+  CheckCircle2,
+  Sparkles,
+  HelpCircle,
+} from 'lucide-react'
+import { mediaAdminService } from '@/services/media.service'
+import { toast } from '@/store/toast-store'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
 import { R2MediaUploader } from '@/components/admin/R2MediaUploader'
 import { CustomSelect, type SelectOption } from '@/components/common/CustomSelect'
@@ -96,6 +111,56 @@ export function CourseBasicInfoTab({
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false)
   const [isViewerModalOpen, setIsViewerModalOpen] = useState(false)
   const [previewAvatarModal, setPreviewAvatarModal] = useState(false)
+  const [isUploadingFinalAudio, setIsUploadingFinalAudio] = useState(false)
+  const finalAudioInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFinalAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
+      toast.error('Chỉ chấp nhận file âm thanh (.mp3, .wav, .m4a, .ogg)')
+      return
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Dung lượng file âm thanh không được vượt quá 50MB')
+      return
+    }
+
+    setIsUploadingFinalAudio(true)
+    try {
+      const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
+      const uploadedUrl = res.file_url || res.url || res.public_url
+      if (uploadedUrl) {
+        onChange({
+          ...formData,
+          final_test_audio_url: uploadedUrl,
+        })
+        toast.success(
+          isVi
+            ? `Đã cập nhật file nghe cho bài thi Final Test: ${file.name}`
+            : `Updated final test audio: ${file.name}`
+        )
+      } else {
+        toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi tải file audio lên máy chủ lưu trữ.'
+      toast.error(msg)
+    } finally {
+      setIsUploadingFinalAudio(false)
+      if (finalAudioInputRef.current) finalAudioInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveFinalAudio = () => {
+    onChange({
+      ...formData,
+      final_test_audio_url: '',
+    })
+    toast.success(isVi ? 'Đã gỡ file nghe khỏi bài thi Final Test' : 'Removed audio from final test')
+  }
 
   const categoryOptions: SelectOption[] = useMemo(() => {
     return Object.entries(categoryLabels).map(([key, label]) => ({
@@ -380,28 +445,41 @@ export function CourseBasicInfoTab({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Cột 1: Ngân hàng câu hỏi trắc nghiệm */}
+          <div className="rounded-xl border border-slate-200/80 bg-white/90 p-4 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-3">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {finalQuestionsCount > 0
-                  ? `✅ Đã có ${finalQuestionsCount} câu hỏi trong đề thi Final Test`
-                  : '⚠️ Chưa nạp câu hỏi cho bài thi Final Test'}
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span>{isVi ? 'Ngân hàng câu hỏi Final Test' : 'Question Bank'}</span>
+                </span>
+                {finalQuestionsCount > 0 ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>{finalQuestionsCount} {isVi ? 'câu hỏi' : 'questions'}</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
+                    <HelpCircle className="w-3 h-3 text-amber-600" />
+                    <span>{isVi ? 'Chưa có câu hỏi' : 'Empty'}</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {isVi
-                  ? 'Đề thi Final Test dùng để đo lường mức độ tiến bộ vượt bậc so với Baseline ban đầu.'
-                  : 'Final test measures student score growth compared to their baseline.'}
+                  ? 'Tải file Excel để nạp tự động hàng loạt câu hỏi cho đề thi tốt nghiệp cuối khóa.'
+                  : 'Upload Excel file to bulk import graduation test questions.'}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setIsExcelModalOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
               >
-                <FileSpreadsheet className="h-4 w-4" />
+                <FileSpreadsheet className="w-3.5 h-3.5" />
                 <span>Upload File Excel (.xlsx)</span>
               </button>
 
@@ -409,16 +487,91 @@ export function CourseBasicInfoTab({
                 <button
                   type="button"
                   onClick={() => setIsViewerModalOpen(true)}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-xs"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-bold transition-all shadow-xs cursor-pointer"
                 >
-                  <Eye className="h-4 w-4 text-indigo-500" />
-                  <span>Xem/Sửa câu hỏi</span>
+                  <Eye className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>{isVi ? 'Xem & Sửa' : 'View/Edit'}</span>
                 </button>
+              )}
+            </div>
+          </div>
+
+          {/* Cột 2: File âm thanh đề thi Final Test */}
+          <div className="rounded-xl border border-slate-200/80 bg-white/90 p-4 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Volume2 className="w-4 h-4 text-indigo-600" />
+                  <span>{isVi ? 'File âm thanh đề thi (Audio)' : 'Listening Audio'}</span>
+                </span>
+                {formData.final_test_audio_url ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 text-[11px] font-extrabold border border-indigo-300/80 dark:border-indigo-700">
+                    <Sparkles className="w-3 h-3 text-indigo-600" />
+                    <span>{isVi ? 'Đã có file nghe' : 'Audio attached'}</span>
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-slate-400">
+                    {isVi ? '(Tùy chọn cho phần Nghe)' : '(Optional for Listening)'}
+                  </span>
+                )}
+              </div>
+
+              {formData.final_test_audio_url ? (
+                <div className="space-y-2">
+                  <audio controls src={formData.final_test_audio_url} className="h-7 w-full" />
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => finalAudioInputRef.current?.click()}
+                      disabled={isUploadingFinalAudio}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {isUploadingFinalAudio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isVi ? 'Đổi file audio' : 'Replace audio'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveFinalAudio}
+                      className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                      title={isVi ? 'Gỡ file nghe' : 'Remove audio'}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {isVi
+                      ? 'Gắn file âm thanh nếu đề thi tốt nghiệp có phần Nghe hiểu (Listening).'
+                      : 'Attach audio if this final exam includes listening questions.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => finalAudioInputRef.current?.click()}
+                    disabled={isUploadingFinalAudio}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 hover:bg-indigo-100/70 dark:border-indigo-800 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isUploadingFinalAudio ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    <span>{isVi ? '+ Tải Lên File Audio (.mp3, .wav)' : '+ Upload Audio File'}</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      <input
+        ref={finalAudioInputRef}
+        type="file"
+        accept="audio/*,.mp3,.wav,.ogg,.m4a"
+        onChange={handleFinalAudioUpload}
+        onClick={(e) => {
+          ;(e.target as HTMLInputElement).value = ''
+        }}
+        className="hidden"
+      />
 
       <ExcelQuizImporterModal
         key="final-test-excel-modal"

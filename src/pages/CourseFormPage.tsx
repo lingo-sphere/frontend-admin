@@ -80,6 +80,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       author_bio: resolvedBio,
       final_test_passing_score: 70,
       final_test_questions: [],
+      final_test_audio_url: '',
       modules: [],
     }
   })
@@ -155,6 +156,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
             post_mini_questions: (m.post_mini_questions || []) as CourseFormData['final_test_questions'],
             passing_score: typeof m.passing_score === 'number' ? m.passing_score : typeof m.post_mini_passing_score === 'number' ? m.post_mini_passing_score : 70,
             test_questions: (m.test_questions || m.post_mini_questions || m.challenge_questions || []) as CourseFormData['final_test_questions'],
+            test_audio_url: (m.test_audio_url || m.challenge_audio_url || m.audio_url || '') as string,
+            challenge_audio_url: (m.challenge_audio_url || m.test_audio_url || m.audio_url || '') as string,
+            audio_url: (m.audio_url || m.test_audio_url || m.challenge_audio_url || '') as string,
             created_at_timestamp: m.created_at
               ? new Date(m.created_at as string).getTime()
               : Date.now() + mIdx * 1000,
@@ -192,6 +196,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           final_test_exam_id: course.final_test_exam_id as string | undefined,
           final_test_passing_score: typeof course.final_test_passing_score === 'number' ? course.final_test_passing_score : 70,
           final_test_questions: (course.final_test_questions || []) as CourseFormData['final_test_questions'],
+          final_test_audio_url: (course.final_test_audio_url || '') as string,
           modules: mappedModules,
         })
       }
@@ -234,6 +239,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         final_test_exam_id: formData.final_test_exam_id || undefined,
         final_test_passing_score: Number(formData.final_test_passing_score) || 70,
         final_test_questions: formData.final_test_questions || [],
+        final_test_audio_url: formData.final_test_audio_url || '',
         modules: formData.modules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
           course_id: currentCourseId || '',
@@ -242,12 +248,15 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           module_order: mIdx + 1,
           passing_score: Number(m.passing_score) || Number(m.post_mini_passing_score) || Number(m.challenge_passing_score) || 70,
           test_questions: m.test_questions || m.post_mini_questions || m.challenge_questions || [],
+          test_audio_url: m.test_audio_url || m.challenge_audio_url || m.audio_url || '',
           challenge_test_exam_id: m.challenge_test_exam_id,
           challenge_passing_score: Number(m.passing_score) || Number(m.challenge_passing_score) || 70,
           challenge_questions: m.test_questions || m.challenge_questions || [],
+          challenge_audio_url: m.challenge_audio_url || m.test_audio_url || m.audio_url || '',
           post_mini_test_exam_id: m.post_mini_test_exam_id,
           post_mini_passing_score: Number(m.passing_score) || Number(m.post_mini_passing_score) || 70,
           post_mini_questions: m.test_questions || m.post_mini_questions || [],
+          audio_url: m.audio_url || m.test_audio_url || m.challenge_audio_url || '',
           lessons: m.lessons.map((l, lIdx) => ({
             _id: l.id || `les-${lIdx}`,
             module_id: m.id || `mod-${mIdx}`,
@@ -267,7 +276,20 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
 
       const allMediaUrls: string[] = []
       if (formData.thumbnail_url) allMediaUrls.push(formData.thumbnail_url)
+      if (formData.final_test_audio_url) allMediaUrls.push(formData.final_test_audio_url)
+      if (Array.isArray(formData.final_test_questions)) {
+        formData.final_test_questions.forEach((q) => {
+          if (q.media_url) allMediaUrls.push(q.media_url)
+        })
+      }
       formData.modules.forEach((mod) => {
+        if (mod.test_audio_url) allMediaUrls.push(mod.test_audio_url)
+        if (mod.challenge_audio_url) allMediaUrls.push(mod.challenge_audio_url)
+        if (mod.audio_url) allMediaUrls.push(mod.audio_url)
+        const qList = mod.test_questions || mod.post_mini_questions || mod.challenge_questions || []
+        qList.forEach((q) => {
+          if (q.media_url) allMediaUrls.push(q.media_url)
+        })
         mod.lessons.forEach((les) => {
           if (les.video_url) allMediaUrls.push(les.video_url)
         })
