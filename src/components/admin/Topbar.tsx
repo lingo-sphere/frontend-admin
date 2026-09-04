@@ -184,7 +184,7 @@ export function Topbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 w-full h-17 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 sm:px-7 flex items-center justify-between gap-4 transition-colors">
+      <header className="sticky top-0 z-40 shrink-0 w-full h-17 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 sm:px-7 flex items-center justify-between gap-4 transition-colors shadow-xs">
 
         <div className="flex items-center gap-3.5 flex-1 max-w-lg">
           <button

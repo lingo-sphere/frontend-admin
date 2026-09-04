@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Check,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { Popconfirm } from '@/components/common/Popconfirm'
@@ -74,6 +75,7 @@ export function CourseExamsPage() {
   const [formPassingScore, setFormPassingScore] = useState<number>(70)
   const [formDescription, setFormDescription] = useState<string>('')
   const [formIsPublished, setFormIsPublished] = useState<boolean>(true)
+  const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>('2SKILLS')
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
   const buildExamsFromCourse = useCallback((c: CourseItem): ToeicExamItem[] => {
@@ -243,6 +245,46 @@ export function CourseExamsPage() {
         })
       }
 
+      if (!isTeacher) {
+        const systemPlacementTests: ToeicExamItem[] = [
+          {
+            id: 'exam_placement_2skills_lr',
+            title: 'Bài Test Đầu Vào Toàn Hệ Thống - TOEIC 2 Kỹ Năng (Listening & Reading)',
+            type: 'DIAGNOSTIC_TEST',
+            is_system_placement: true,
+            skills_enabled: 'LR',
+            placement_type: '2SKILLS',
+            duration_minutes: 60,
+            total_questions: 100,
+            passing_score: 500,
+            total_attempts: 1420,
+            avg_score: 615,
+            is_published: true,
+            created_at: '2026-08-15',
+          },
+          {
+            id: 'exam_placement_4skills_full',
+            title: 'Bài Test Đầu Vào Toàn Hệ Thống - TOEIC 4 Kỹ Năng (LR + Speaking & Writing)',
+            type: 'DIAGNOSTIC_TEST',
+            is_system_placement: true,
+            skills_enabled: 'ALL',
+            placement_type: '4SKILLS',
+            duration_minutes: 90,
+            total_questions: 120,
+            passing_score: 650,
+            total_attempts: 890,
+            avg_score: 685,
+            is_published: true,
+            created_at: '2026-08-18',
+          },
+        ]
+        systemPlacementTests.forEach((p) => {
+          if (!combinedExams.some((x) => (x.id || x._id) === p.id)) {
+            combinedExams.unshift(p)
+          }
+        })
+      }
+
       setExams(combinedExams)
     } catch {
       toast.error('Không thể tải danh sách bài thi và khóa học.')
@@ -335,12 +377,13 @@ export function CourseExamsPage() {
 
   const handleOpenCreateModal = () => {
     setEditingExam(null)
-    setFormCourseId(selectedCourseId !== 'ALL' ? selectedCourseId : courses[0]?.id || '')
+    setFormCourseId(!isTeacher ? 'GLOBAL_SYSTEM_PLACEMENT' : (selectedCourseId !== 'ALL' ? selectedCourseId : courses[0]?.id || ''))
     setFormTitle('')
-    setFormType('POST_MINI_TEST')
-    setFormDuration(30)
-    setFormQuestions(30)
-    setFormPassingScore(70)
+    setFormType(!isTeacher ? 'DIAGNOSTIC_TEST' : 'POST_MINI_TEST')
+    setFormPlacementSkills('2SKILLS')
+    setFormDuration(60)
+    setFormQuestions(100)
+    setFormPassingScore(500)
     setFormDescription('')
     setFormIsPublished(true)
     setShowModal(true)
@@ -348,9 +391,11 @@ export function CourseExamsPage() {
 
   const handleOpenEditModal = (exam: ToeicExamItem) => {
     setEditingExam(exam)
-    setFormCourseId(exam.course_id || courses[0]?.id || '')
+    const isGlobal = exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id
+    setFormCourseId(isGlobal ? 'GLOBAL_SYSTEM_PLACEMENT' : exam.course_id || courses[0]?.id || '')
     setFormTitle(exam.title)
     setFormType(exam.type || 'POST_MINI_TEST')
+    setFormPlacementSkills((exam.placement_type as '2SKILLS' | '4SKILLS') || (exam.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS'))
     setFormDuration(exam.duration_minutes || 30)
     setFormQuestions(exam.total_questions || 30)
     setFormPassingScore(exam.passing_score || 70)
@@ -394,15 +439,19 @@ export function CourseExamsPage() {
       return
     }
 
+    const isSystemPlacement = formCourseId === 'GLOBAL_SYSTEM_PLACEMENT'
     const matchedCourse = courses.find((c) => c.id === formCourseId)
 
     setIsSaving(true)
     try {
       const payload: CreateExamDto = {
         title: formTitle.trim(),
-        course_id: formCourseId,
-        course_title: matchedCourse?.title || 'Khóa học',
-        type: formType,
+        course_id: isSystemPlacement ? undefined : formCourseId,
+        course_title: isSystemPlacement ? 'Toàn Hệ Thống' : (matchedCourse?.title || 'Khóa học'),
+        type: isSystemPlacement ? 'DIAGNOSTIC_TEST' : formType,
+        is_system_placement: isSystemPlacement,
+        skills_enabled: isSystemPlacement ? (formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR') : 'LR',
+        placement_type: isSystemPlacement ? formPlacementSkills : undefined,
         duration_minutes: Number(formDuration) || 30,
         total_questions: Number(formQuestions) || 30,
         passing_score: Number(formPassingScore) || 70,
@@ -433,6 +482,9 @@ export function CourseExamsPage() {
           course_id: payload.course_id,
           course_title: payload.course_title,
           type: payload.type,
+          is_system_placement: payload.is_system_placement,
+          skills_enabled: payload.skills_enabled,
+          placement_type: payload.placement_type,
           duration_minutes: payload.duration_minutes,
           total_questions: payload.total_questions,
           passing_score: payload.passing_score,
@@ -442,7 +494,7 @@ export function CourseExamsPage() {
           created_at: new Date().toISOString(),
         }
         setExams((prev) => [newExam, ...prev])
-        toast.success('Đã tạo bài thi mới thành công!')
+        toast.success(isSystemPlacement ? 'Đã tạo bài thi đầu vào hệ thống thành công!' : 'Đã tạo bài thi mới thành công!')
       }
       setShowModal(false)
     } catch {
@@ -452,7 +504,16 @@ export function CourseExamsPage() {
     }
   }
 
-  const getTypeBadge = (type?: string) => {
+  const getTypeBadge = (type?: string, exam?: ToeicExamItem) => {
+    if (exam?.is_system_placement || type === 'DIAGNOSTIC_TEST') {
+      const is4Skills = exam?.placement_type === '4SKILLS' || exam?.skills_enabled === 'ALL'
+      return {
+        label: is4Skills ? 'Đầu vào Hệ thống (4 Kỹ năng)' : 'Đầu vào Hệ thống (2 Kỹ năng)',
+        color: is4Skills
+          ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800'
+          : 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800',
+      }
+    }
     switch (type) {
       case 'PRE_TEST':
         return {
@@ -512,7 +573,12 @@ export function CourseExamsPage() {
         title: isVi ? 'Khóa Học Áp Dụng' : 'Applied Course',
         sortable: true,
         render: (exam) =>
-          exam.course_title ? (
+          exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || (!exam.course_id && !exam.course_title) ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
+              <Sparkles className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+              <span>Toàn Hệ Thống ({exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS' ? '4 Kỹ năng' : '2 Kỹ năng'})</span>
+            </span>
+          ) : exam.course_title ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 whitespace-nowrap">
               <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
               <span className="truncate max-w-[180px]">{exam.course_title}</span>
@@ -525,7 +591,7 @@ export function CourseExamsPage() {
         key: 'type',
         title: isVi ? 'Loại Bài Thi' : 'Exam Type',
         render: (exam) => {
-          const badge = getTypeBadge(exam.type)
+          const badge = getTypeBadge(exam.type, exam)
           return (
             <span
               className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[11px] font-bold border whitespace-nowrap ${badge.color}`}
@@ -981,9 +1047,29 @@ export function CourseExamsPage() {
                 </label>
                 <select
                   value={formCourseId}
-                  onChange={(e) => setFormCourseId(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setFormCourseId(val)
+                    if (val === 'GLOBAL_SYSTEM_PLACEMENT') {
+                      setFormType('DIAGNOSTIC_TEST')
+                      setFormPlacementSkills('2SKILLS')
+                      setFormDuration(60)
+                      setFormQuestions(100)
+                      setFormPassingScore(500)
+                    } else if (formType === 'DIAGNOSTIC_TEST') {
+                      setFormType('POST_MINI_TEST')
+                      setFormDuration(30)
+                      setFormQuestions(30)
+                      setFormPassingScore(70)
+                    }
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
                 >
+                  {!isTeacher && (
+                    <option value="GLOBAL_SYSTEM_PLACEMENT" className="font-bold text-violet-600 dark:text-violet-400">
+                      🌐 [TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)
+                    </option>
+                  )}
                   {courses.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.title}
@@ -1000,42 +1086,95 @@ export function CourseExamsPage() {
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Ví dụ: Post-mini Test: Kiểm tra cột mốc Chương 1..."
+                  placeholder={formCourseId === 'GLOBAL_SYSTEM_PLACEMENT' ? 'Ví dụ: Bài Test Đầu Vào Hệ Thống - TOEIC 2 Kỹ Năng (LR Baseline)...' : 'Ví dụ: Post-mini Test: Kiểm tra cột mốc Chương 1...'}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Loại bài kiểm tra:
-                  </label>
-                  <select
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-                  >
-                    <option value="PRE_TEST">Pre-test (Đầu vào)</option>
-                    <option value="POST_MINI_TEST">Post-mini Test (Chương)</option>
-                    <option value="CHALLENGE_TEST">Challenge (Thử thách)</option>
-                    <option value="FULL_TEST">Final Test (Tốt nghiệp)</option>
-                  </select>
+              {formCourseId === 'GLOBAL_SYSTEM_PLACEMENT' ? (
+                <div className="p-3.5 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/80 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-violet-800 dark:text-violet-300">
+                    <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                    <span>Bài Thi Đầu Vào Phân Loại Trình Độ Hệ Thống</span>
+                  </div>
+                  <p className="text-[11px] text-violet-600 dark:text-violet-400 leading-relaxed">
+                    Chỉ Quản trị viên (Admin) mới có quyền tạo và chỉnh sửa bài thi đầu vào này. Kết quả của bài thi sẽ tự động được đồng bộ vào Hồ sơ học viên và dùng để kích hoạt bộ gợi ý khóa học phù hợp.
+                  </p>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                      Chọn cấu hình kỹ năng đánh giá:
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormPlacementSkills('2SKILLS')
+                          setFormDuration(60)
+                          setFormQuestions(100)
+                          setFormPassingScore(500)
+                        }}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          formPlacementSkills === '2SKILLS'
+                            ? 'bg-white dark:bg-slate-900 border-violet-500 ring-2 ring-violet-500/20 text-violet-900 dark:text-violet-200 shadow-sm'
+                            : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-violet-300'
+                        }`}
+                      >
+                        <div className="text-xs font-bold">🎧 📖 2 Kỹ Năng</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">Listening & Reading (10 - 990)</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormPlacementSkills('4SKILLS')
+                          setFormDuration(90)
+                          setFormQuestions(120)
+                          setFormPassingScore(650)
+                        }}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          formPlacementSkills === '4SKILLS'
+                            ? 'bg-white dark:bg-slate-900 border-teal-500 ring-2 ring-teal-500/20 text-teal-900 dark:text-teal-200 shadow-sm'
+                            : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-teal-300'
+                        }`}
+                      >
+                        <div className="text-xs font-bold">🎧 📖 🗣️ ✍️ 4 Kỹ Năng</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">LR + Speaking & Writing</div>
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Loại bài kiểm tra:
+                    </label>
+                    <select
+                      value={formType}
+                      onChange={(e) => setFormType(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                    >
+                      <option value="PRE_TEST">Pre-test (Đầu vào khóa)</option>
+                      <option value="POST_MINI_TEST">Post-mini Test (Chương)</option>
+                      <option value="CHALLENGE_TEST">Challenge (Thử thách)</option>
+                      <option value="FULL_TEST">Final Test (Tốt nghiệp)</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Thời lượng (phút):
-                  </label>
-                  <input
-                    type="number"
-                    min={5}
-                    max={180}
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Thời lượng (phút):
+                    </label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={180}
+                      value={formDuration}
+                      onChange={(e) => setFormDuration(Number(e.target.value))}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

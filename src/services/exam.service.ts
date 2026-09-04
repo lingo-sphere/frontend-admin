@@ -14,13 +14,16 @@ export interface ToeicExamItem {
   module_id?: string
   module_title?: string
   author_id?: string
-  type?: 'FULL_TEST' | 'MINI_TEST' | 'PRE_TEST' | 'POST_MINI_TEST' | 'CHALLENGE_TEST' | string
+  type?: 'FULL_TEST' | 'MINI_TEST' | 'PRE_TEST' | 'POST_MINI_TEST' | 'CHALLENGE_TEST' | 'DIAGNOSTIC_TEST' | string
   duration_minutes?: number
   total_questions?: number
   passing_score?: number
   total_attempts?: number
   avg_score?: number
   is_published?: boolean
+  is_system_placement?: boolean
+  skills_enabled?: 'LR' | 'ALL' | 'SW' | string
+  placement_type?: '2SKILLS' | '4SKILLS' | string
   created_at?: string
 }
 
@@ -37,6 +40,9 @@ export interface CreateExamDto {
   passing_score?: number
   description?: string
   is_published?: boolean
+  is_system_placement?: boolean
+  skills_enabled?: 'LR' | 'ALL' | 'SW' | string
+  placement_type?: '2SKILLS' | '4SKILLS' | string
 }
 
 export const examAdminService = {
