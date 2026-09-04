@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { mediaService } from '@/services/media.service'
 import { API_CONFIG } from '@/config/api.config'
-import { VideoPreviewModal } from '@/components/common/VideoPreviewModal'
+import { VideoPreviewModal, videoDimensionsCache } from '@/components/common/VideoPreviewModal'
 
 const resolveStreamUrl = (url: string) => {
   if (!url) return ''
@@ -110,6 +110,11 @@ export function R2MediaUploader({
       video.muted = true
       let done = false
       const onDone = () => {
+        if (video.videoWidth && video.videoHeight) {
+          const dims = { width: video.videoWidth, height: video.videoHeight }
+          videoDimensionsCache.set(value, dims)
+          videoDimensionsCache.set(streamUrl, dims)
+        }
         if (!done && video.duration && !isNaN(video.duration) && isFinite(video.duration) && video.duration > 0) {
           done = true
           const durSec = Math.round(video.duration)
