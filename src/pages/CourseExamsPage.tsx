@@ -78,96 +78,6 @@ export function CourseExamsPage() {
   const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>('2SKILLS')
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
-  const buildExamsFromCourse = useCallback((c: CourseItem): ToeicExamItem[] => {
-    const courseExams: ToeicExamItem[] = []
-    const students = c.students_count || 10
-
-    courseExams.push({
-      id: `pre_test_${c.id}`,
-      title: `Pre-test: Đánh giá năng lực đầu vào - ${c.title}`,
-      course_id: c.id,
-      course_title: c.title,
-      author_id: c.author_id,
-      type: 'PRE_TEST',
-      duration_minutes: 45,
-      total_questions: 50,
-      passing_score: 50,
-      total_attempts: Math.round(students * 1.8),
-      avg_score: 540,
-      is_published: true,
-      created_at: new Date().toISOString(),
-    })
-
-    const modules = c.modules && c.modules.length > 0
-      ? c.modules
-      : [
-          { _id: `mod_${c.id}_1`, course_id: c.id, title: 'Chương 1: Business Fundamentals & Listening', module_order: 1 },
-          { _id: `mod_${c.id}_2`, course_id: c.id, title: 'Chương 2: Grammar & Sentence Structure', module_order: 2 },
-          { _id: `mod_${c.id}_3`, course_id: c.id, title: 'Chương 3: Reading Comprehension & Strategy', module_order: 3 },
-        ]
-
-    modules.forEach((m, idx) => {
-      const qCount = m.post_mini_questions?.length || m.test_questions?.length || 30
-      const pass = m.post_mini_passing_score || m.passing_score || 70
-
-      courseExams.push({
-        id: `post_mini_${c.id}_${m._id || idx}`,
-        title: `Post-mini Test: Kiểm tra cột mốc ${m.title || `Chương ${idx + 1}`}`,
-        course_id: c.id,
-        course_title: c.title,
-        module_id: m._id,
-        module_title: m.title,
-        author_id: c.author_id,
-        type: 'POST_MINI_TEST',
-        duration_minutes: 30,
-        total_questions: qCount,
-        passing_score: pass,
-        total_attempts: Math.round(students * 1.4),
-        avg_score: 800 - idx * 20,
-        is_published: true,
-        created_at: new Date().toISOString(),
-      })
-
-      if (idx === 1 || m.challenge_questions?.length) {
-        courseExams.push({
-          id: `challenge_${c.id}_${m._id || idx}`,
-          title: `Challenge Test: Thử thách vượt cấp mở khóa ${m.title || `Chương ${idx + 1}`}`,
-          course_id: c.id,
-          course_title: c.title,
-          module_id: m._id,
-          module_title: m.title,
-          author_id: c.author_id,
-          type: 'CHALLENGE_TEST',
-          duration_minutes: 25,
-          total_questions: 25,
-          passing_score: m.challenge_passing_score || 80,
-          total_attempts: Math.round(students * 0.9),
-          avg_score: 835,
-          is_published: true,
-          created_at: new Date().toISOString(),
-        })
-      }
-    })
-
-    courseExams.push({
-      id: `final_test_${c.id}`,
-      title: `Final Test: Bài thi tốt nghiệp hoàn thành khóa học - ${c.title}`,
-      course_id: c.id,
-      course_title: c.title,
-      author_id: c.author_id,
-      type: 'FULL_TEST',
-      duration_minutes: 120,
-      total_questions: 200,
-      passing_score: 750,
-      total_attempts: Math.round(students * 0.7),
-      avg_score: 765,
-      is_published: true,
-      created_at: new Date().toISOString(),
-    })
-
-    return courseExams
-  }, [])
-
   const loadData = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -217,81 +127,26 @@ export function CourseExamsPage() {
       setCourses(allowedCourses)
 
       const allowedCourseIds = new Set(allowedCourses.map((c) => c.id))
-      const combinedExams: ToeicExamItem[] = []
-
-      allowedCourses.forEach((c) => {
-        const generated = buildExamsFromCourse(c)
-        combinedExams.push(...generated)
-      })
-
       const apiExams = await examAdminService.getExams().catch(() => [])
+      let finalExams: ToeicExamItem[] = []
+
       if (Array.isArray(apiExams) && apiExams.length > 0) {
-        apiExams.forEach((e) => {
-          if (isTeacher) {
-            if (e.course_id && allowedCourseIds.has(e.course_id)) {
-              if (!combinedExams.some((x) => (x.id || x._id) === (e.id || e._id))) {
-                combinedExams.push(e)
-              }
-            } else if (e.author_id === currentUserId) {
-              if (!combinedExams.some((x) => (x.id || x._id) === (e.id || e._id))) {
-                combinedExams.push(e)
-              }
-            }
-          } else {
-            if (!combinedExams.some((x) => (x.id || x._id) === (e.id || e._id))) {
-              combinedExams.push(e)
-            }
-          }
-        })
+        if (isTeacher) {
+          finalExams = apiExams.filter(
+            (e) => (e.course_id && allowedCourseIds.has(e.course_id)) || e.author_id === currentUserId,
+          )
+        } else {
+          finalExams = apiExams
+        }
       }
 
-      if (!isTeacher) {
-        const systemPlacementTests: ToeicExamItem[] = [
-          {
-            id: 'exam_placement_2skills_lr',
-            title: 'Bài Test Đầu Vào Toàn Hệ Thống - TOEIC 2 Kỹ Năng (Listening & Reading)',
-            type: 'DIAGNOSTIC_TEST',
-            is_system_placement: true,
-            skills_enabled: 'LR',
-            placement_type: '2SKILLS',
-            duration_minutes: 60,
-            total_questions: 100,
-            passing_score: 500,
-            total_attempts: 1420,
-            avg_score: 615,
-            is_published: true,
-            created_at: '2026-08-15',
-          },
-          {
-            id: 'exam_placement_4skills_full',
-            title: 'Bài Test Đầu Vào Toàn Hệ Thống - TOEIC 4 Kỹ Năng (LR + Speaking & Writing)',
-            type: 'DIAGNOSTIC_TEST',
-            is_system_placement: true,
-            skills_enabled: 'ALL',
-            placement_type: '4SKILLS',
-            duration_minutes: 90,
-            total_questions: 120,
-            passing_score: 650,
-            total_attempts: 890,
-            avg_score: 685,
-            is_published: true,
-            created_at: '2026-08-18',
-          },
-        ]
-        systemPlacementTests.forEach((p) => {
-          if (!combinedExams.some((x) => (x.id || x._id) === p.id)) {
-            combinedExams.unshift(p)
-          }
-        })
-      }
-
-      setExams(combinedExams)
+      setExams(finalExams)
     } catch {
       toast.error('Không thể tải danh sách bài thi và khóa học.')
     } finally {
       setIsLoading(false)
     }
-  }, [isTeacher, currentUserId, buildExamsFromCourse])
+  }, [isTeacher, currentUserId])
 
   useEffect(() => {
     loadData()

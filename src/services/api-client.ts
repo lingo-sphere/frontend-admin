@@ -57,16 +57,30 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
     if (error.response?.status === 401 && originalRequest) {
-      const rawMsg = error.response.data?.message
+      const rawMsg = error.response.data?.message || error.response.data?.error
       const errorMsg = Array.isArray(rawMsg) ? rawMsg.join(', ') : (rawMsg || '')
       const isKickout = errorMsg.includes('thiết bị khác') || errorMsg.includes('đăng nhập trên một thiết bị')
+
+      const isAuthEndpoint =
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.LOGIN) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REGISTER) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN) ||
+        originalRequest.url?.includes('/auth/login') ||
+        originalRequest.url?.includes('/auth/register') ||
+        originalRequest.url?.includes('/auth/refresh')
 
       if (isKickout) {
         console.warn('🚨 [api-client] 401 Kickout detected on URL:', originalRequest.url, 'message:', errorMsg)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
         }
-        return Promise.reject(error)
+        return Promise.reject(new Error(errorMsg || 'Phiên đăng nhập đã bị đăng xuất từ thiết bị khác'))
+      }
+
+      if (isAuthEndpoint) {
+        return Promise.reject(new Error(errorMsg || 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'))
       }
 
       if (!originalRequest._retry) {
@@ -146,6 +160,12 @@ apiClient.interceptors.response.use(
       cleanMessage = 'Hệ thống đang bận hoặc xảy ra sự cố khi xử lý dữ liệu. Vui lòng thử lại sau.'
     } else if (cleanMessage.includes('<!DOCTYPE') || cleanMessage.includes('<html')) {
       cleanMessage = 'Dịch vụ tạm thời không phản hồi. Vui lòng thử lại sau ít phút.'
+    } else if (cleanMessage.includes('Request failed with status code 401')) {
+      cleanMessage = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'
+    } else if (cleanMessage.includes('Request failed with status code 403')) {
+      cleanMessage = 'Bạn không có quyền thực hiện thao tác này.'
+    } else if (cleanMessage.includes('Request failed with status code 404')) {
+      cleanMessage = 'Không tìm thấy dữ liệu yêu cầu.'
     }
 
     return Promise.reject(new Error(cleanMessage))

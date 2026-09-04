@@ -11,14 +11,13 @@ import { toast } from '@/store/toast-store'
 import type { SpeakingExercise } from '@/types/api.types'
 import { PracticeSpeakingCard } from '@/components/practice/PracticeSpeakingCard'
 import { CreateSpeakingModal } from '@/components/practice/CreateSpeakingModal'
-import { INITIAL_SPEAKING_EXERCISES } from '@/helpers/practice.helper'
 import { Pagination } from '@/components/common/Pagination'
 
 export function PracticeSpeakingPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [exercises, setExercises] = useState<SpeakingExercise[]>(INITIAL_SPEAKING_EXERCISES)
+  const [exercises, setExercises] = useState<SpeakingExercise[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -34,11 +33,9 @@ export function PracticeSpeakingPage() {
     setIsLoading(true)
     try {
       const data = await practiceService.getAllSpeakingExercises()
-      if (data && data.length > 0) {
-        setExercises(data)
-      }
+      setExercises(Array.isArray(data) ? data : [])
     } catch {
-
+      setExercises([])
     } finally {
       setIsLoading(false)
     }

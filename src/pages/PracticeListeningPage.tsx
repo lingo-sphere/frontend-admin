@@ -11,7 +11,6 @@ import { toast } from '@/store/toast-store'
 import type { ListeningExercise } from '@/types/api.types'
 import { PracticeListeningCard } from '@/components/practice/PracticeListeningCard'
 import { CreateListeningModal } from '@/components/practice/CreateListeningModal'
-import { INITIAL_LISTENING_EXERCISES } from '@/helpers/practice.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
 import { Pagination } from '@/components/common/Pagination'
 
@@ -19,7 +18,7 @@ export function PracticeListeningPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [exercises, setExercises] = useState<ListeningExercise[]>(INITIAL_LISTENING_EXERCISES)
+  const [exercises, setExercises] = useState<ListeningExercise[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('ALL')
@@ -36,11 +35,9 @@ export function PracticeListeningPage() {
     setIsLoading(true)
     try {
       const data = await practiceService.getAllListeningExercises()
-      if (data && data.length > 0) {
-        setExercises(data)
-      }
+      setExercises(Array.isArray(data) ? data : [])
     } catch {
-
+      setExercises([])
     } finally {
       setIsLoading(false)
     }

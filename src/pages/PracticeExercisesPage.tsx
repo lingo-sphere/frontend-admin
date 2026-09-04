@@ -11,7 +11,6 @@ import { toast } from '@/store/toast-store'
 import type { PracticeSet } from '@/types/api.types'
 import { PracticeSetCard } from '@/components/practice/PracticeSetCard'
 import { CreatePracticeSetModal } from '@/components/practice/CreatePracticeSetModal'
-import { INITIAL_PRACTICE_SETS } from '@/helpers/practice.helper'
 import { CustomSelect } from '@/components/common/CustomSelect'
 import { Pagination } from '@/components/common/Pagination'
 
@@ -19,7 +18,7 @@ export function PracticeExercisesPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [practiceSets, setPracticeSets] = useState<PracticeSet[]>(INITIAL_PRACTICE_SETS)
+  const [practiceSets, setPracticeSets] = useState<PracticeSet[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
@@ -38,11 +37,9 @@ export function PracticeExercisesPage() {
     setIsLoading(true)
     try {
       const data = await practiceService.getAllPracticeSets()
-      if (data && data.length > 0) {
-        setPracticeSets(data)
-      }
+      setPracticeSets(Array.isArray(data) ? data : [])
     } catch {
-
+      setPracticeSets([])
     } finally {
       setIsLoading(false)
     }

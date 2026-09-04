@@ -11,14 +11,13 @@ import { toast } from '@/store/toast-store'
 import type { WritingExercise } from '@/types/api.types'
 import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard'
 import { CreateWritingModal } from '@/components/practice/CreateWritingModal'
-import { INITIAL_WRITING_EXERCISES } from '@/helpers/practice.helper'
 import { Pagination } from '@/components/common/Pagination'
 
 export function PracticeWritingPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [exercises, setExercises] = useState<WritingExercise[]>(INITIAL_WRITING_EXERCISES)
+  const [exercises, setExercises] = useState<WritingExercise[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -35,11 +34,9 @@ export function PracticeWritingPage() {
     setIsLoading(true)
     try {
       const data = await practiceService.getAllWritingExercises()
-      if (data && data.length > 0) {
-        setExercises(data)
-      }
+      setExercises(Array.isArray(data) ? data : [])
     } catch {
-
+      setExercises([])
     } finally {
       setIsLoading(false)
     }

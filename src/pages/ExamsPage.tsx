@@ -13,58 +13,11 @@ import { ExamStatsOverview } from '@/components/exams/ExamStatsOverview'
 import { ExamListTable } from '@/components/exams/ExamListTable'
 import { CreateExamModal } from '@/components/exams/CreateExamModal'
 
-const INITIAL_EXAMS: ToeicExamItem[] = [
-  {
-    id: 'exam_toeic_full_01',
-    title: 'ETS TOEIC 2024 - Test 01 (Full 200 Questions)',
-    type: 'FULL_TEST',
-    duration_minutes: 120,
-    total_questions: 200,
-    total_attempts: 1248,
-    avg_score: 745,
-    is_published: true,
-    created_at: '2026-08-20',
-  },
-  {
-    id: 'exam_toeic_mini_01',
-    title: 'TOEIC Mini-Test 50 Questions (Khảo sát nhanh)',
-    type: 'MINI_TEST',
-    duration_minutes: 45,
-    total_questions: 50,
-    total_attempts: 3410,
-    avg_score: 680,
-    is_published: true,
-    created_at: '2026-08-22',
-  },
-  {
-    id: 'exam_toeic_pre_01',
-    title: 'Pre-test Đánh Giá Năng Lực Toàn Khóa (Baseline)',
-    type: 'PRE_TEST',
-    duration_minutes: 60,
-    total_questions: 60,
-    total_attempts: 850,
-    avg_score: 550,
-    is_published: true,
-    created_at: '2026-08-24',
-  },
-  {
-    id: 'exam_toeic_post_mini_ch1',
-    title: 'Post-mini Test Chương 1 - Business & Office',
-    type: 'POST_MINI_TEST',
-    duration_minutes: 30,
-    total_questions: 30,
-    total_attempts: 2100,
-    avg_score: 820,
-    is_published: true,
-    created_at: '2026-08-25',
-  },
-]
-
 export function ExamsPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [exams, setExams] = useState<ToeicExamItem[]>(INITIAL_EXAMS)
+  const [exams, setExams] = useState<ToeicExamItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedType, setSelectedType] = useState<string>('ALL')
@@ -74,11 +27,9 @@ export function ExamsPage() {
     setIsLoading(true)
     try {
       const data = await examAdminService.getExams()
-      if (data && data.length > 0) {
-        setExams(data)
-      }
+      setExams(Array.isArray(data) ? data : [])
     } catch {
-
+      setExams([])
     } finally {
       setIsLoading(false)
     }

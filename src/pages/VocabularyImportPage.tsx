@@ -13,37 +13,12 @@ import {
   type ImportBatch,
 } from '@/components/vocabulary/VocabularyImportHistoryTable'
 
-const INITIAL_IMPORT_HISTORY: ImportBatch[] = [
-  {
-    id: 'imp-001',
-    name: 'Business Vocabulary Batch 1',
-    source_type: 'CSV',
-    total_items: 500,
-    items_success: 485,
-    items_failed: 10,
-    items_duplicate: 5,
-    status: 'COMPLETED',
-    created_at: '22/08/2026',
-  },
-  {
-    id: 'imp-002',
-    name: 'TOEIC Essential 600 Words',
-    source_type: 'EXCEL',
-    total_items: 600,
-    items_success: 600,
-    items_failed: 0,
-    items_duplicate: 0,
-    status: 'COMPLETED',
-    created_at: '19/08/2026',
-  },
-]
-
 export function VocabularyImportPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('CSV')
   const [isImporting, setIsImporting] = useState(false)
-  const [history, setHistory] = useState<ImportBatch[]>(INITIAL_IMPORT_HISTORY)
+  const [history, setHistory] = useState<ImportBatch[]>([])
 
   const handleStartImport = async () => {
     if (!selectedFile) {
