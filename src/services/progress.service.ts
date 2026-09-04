@@ -9,11 +9,14 @@ import type { BetterStackMonitoringData, PostHogAnalyticsData } from '@/types/ap
 
 export interface StudentModuleProgress {
   module_id: string
+  title?: string
   order_index?: number
   status: string
   challenge_score?: number
+  challenge_taken?: boolean
   is_passed_by_challenge?: boolean
   post_mini_score?: number
+  best_score?: number
 }
 
 export interface StudentProgressItem {

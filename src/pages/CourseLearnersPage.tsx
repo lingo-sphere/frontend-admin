@@ -564,22 +564,27 @@ export function CourseLearnersPage() {
         title: isVi ? 'Kiểm Tra Chương' : 'Module Tests',
         align: 'center',
         render: (st) => (
-          <div className="flex items-center justify-center gap-1.5 flex-wrap max-w-[180px] mx-auto">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap max-w-[200px] mx-auto">
             {st.modules_progress && st.modules_progress.length > 0 ? (
               st.modules_progress.map((m, idx) => {
-                const score = m.post_mini_score ?? m.challenge_score
-                const passed = m.status === 'COMPLETED' || (score !== undefined && score >= 70)
+                const challenge = typeof m.challenge_score === 'number' ? m.challenge_score : -1
+                const postMini = typeof m.post_mini_score === 'number' ? m.post_mini_score : -1
+                const maxScore = Math.max(challenge, postMini)
+                const score = maxScore >= 0 ? maxScore : m.best_score
+                const passed = m.status === 'COMPLETED' || m.is_passed_by_challenge || (score !== undefined && score >= 70)
+                const modOrder = m.order_index || idx + 1
+                const modName = m.title || `Chương ${modOrder}`
                 return (
                   <span
                     key={m.module_id || idx}
-                    title={`Chương ${idx + 1}: ${score !== undefined ? score + ' điểm' : m.status}`}
+                    title={`${modName}: ${score !== undefined ? score + ' điểm' : m.status}`}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${
                       passed
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    C{idx + 1}: {score !== undefined ? score : '-'}
+                    C{modOrder}: {score !== undefined ? score : '-'}
                   </span>
                 )
               })
@@ -1429,13 +1434,13 @@ export function CourseLearnersPage() {
                 <div>
                   <span className="text-[11px] text-slate-400 block font-semibold">Hoàn thành</span>
                   <span className="text-base font-black text-indigo-600 dark:text-indigo-400">
-                    {selectedStudentDetail.progress_percentage || 0}%
+                    {Math.min(100, Math.max(0, selectedStudentDetail.progress_percentage || 0))}%
                   </span>
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-400 block font-semibold">Bài học</span>
                   <span className="text-base font-black text-slate-800 dark:text-slate-200">
-                    {selectedStudentDetail.completed_lessons} / {selectedStudentDetail.total_lessons || 1}
+                    {selectedStudentDetail.completed_lessons} / {selectedStudentDetail.total_lessons || selectedStudentDetail.completed_lessons || 1}
                   </span>
                 </div>
                 <div>
@@ -1452,35 +1457,58 @@ export function CourseLearnersPage() {
                 </h4>
                 {selectedStudentDetail.modules_progress && selectedStudentDetail.modules_progress.length > 0 ? (
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                    {selectedStudentDetail.modules_progress.map((m, idx) => (
-                      <div
-                        key={m.module_id || idx}
-                        className="p-3 bg-white dark:bg-slate-900 flex items-center justify-between text-xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 font-bold flex items-center justify-center text-[10px] text-slate-600 dark:text-slate-300">
-                            {idx + 1}
-                          </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            Chương {idx + 1}
-                          </span>
+                    {selectedStudentDetail.modules_progress.map((m, idx) => {
+                      const modOrder = m.order_index || idx + 1
+                      const challengeScore = typeof m.challenge_score === 'number' ? m.challenge_score : -1
+                      const postMiniScore = typeof m.post_mini_score === 'number' ? m.post_mini_score : -1
+                      const hasChallenge = m.challenge_taken || m.is_passed_by_challenge || challengeScore > 0
+                      const hasPostMini = postMiniScore > 0 || (typeof m.post_mini_score === 'number' && m.post_mini_score >= 0 && !hasChallenge)
+                      const isPassed = m.status === 'COMPLETED' || m.is_passed_by_challenge || (challengeScore >= 70) || (postMiniScore >= 70)
+
+                      return (
+                        <div
+                          key={m.module_id || idx}
+                          className="p-3 bg-white dark:bg-slate-900 flex items-center justify-between text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 font-bold flex items-center justify-center text-[10px] text-slate-600 dark:text-slate-300">
+                              {modOrder}
+                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {m.title || `Chương ${modOrder}`}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                              {hasChallenge ? (
+                                <span className="text-slate-500">
+                                  Thử thách: <strong className="text-emerald-600">{challengeScore >= 0 ? `${challengeScore}đ` : '-'}</strong>
+                                </span>
+                              ) : null}
+                              {hasPostMini ? (
+                                <span className="text-slate-500">
+                                  Post-mini: <strong className="text-indigo-600">{postMiniScore >= 0 ? `${postMiniScore}đ` : '-'}</strong>
+                                </span>
+                              ) : null}
+                              {!hasChallenge && !hasPostMini ? (
+                                <span className="text-slate-400 italic">Chưa làm test</span>
+                              ) : null}
+                            </div>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                isPassed
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800'
+                                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                              }`}
+                            >
+                              {isPassed ? 'Đã hoàn thành' : (m.status === 'LOCKED' ? 'Đang khóa' : 'Đang học')}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-slate-500">
-                            Post-mini Test: <strong className="text-indigo-600">{m.post_mini_score ?? '-'}</strong>
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              m.status === 'COMPLETED'
-                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                : 'bg-slate-100 text-slate-500'
-                            }`}
-                          >
-                            {m.status === 'COMPLETED' ? 'Đã hoàn thành' : 'Đang học'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <p className="text-xs text-slate-400 italic py-4 text-center">
