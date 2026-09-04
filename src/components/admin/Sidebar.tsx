@@ -82,7 +82,16 @@ const navGroups: NavGroup[] = [
     id: "learning",
     label: "LEARNING",
     items: [
-      { id: "courses", icon: Library, label: "Khóa học" },
+      {
+        id: "courses",
+        icon: Library,
+        label: "Khóa học",
+        children: [
+          { id: "courses-list", label: "Quản lý khóa học" },
+          { id: "course-learners", label: "Quản lý học viên" },
+          { id: "course-exams", label: "Quản lý bài thi" },
+        ],
+      },
       { id: "vocabulary", icon: BookOpen, label: "Từ vựng" },
       {
         id: "practice",
@@ -156,7 +165,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const [expandedItem, setExpandedItem] = useState<string | null>(() => {
     for (const group of navGroups) {
       for (const item of group.items) {
-        if (item.children && item.children.some((c) => c.id === activeNavItem)) {
+        if (item.children && (item.id === activeNavItem || item.children.some((c) => c.id === activeNavItem))) {
           return item.id;
         }
       }
@@ -176,7 +185,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   useEffect(() => {
     for (const group of navGroups) {
       for (const item of group.items) {
-        if (item.children && item.children.some((c) => c.id === activeNavItem)) {
+        if (item.children && (item.id === activeNavItem || item.children.some((c) => c.id === activeNavItem))) {
           setExpandedItem(item.id);
           return;
         }
@@ -207,6 +216,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       case 'permissions':
         return hasPermission('GET', '/permissions') || hasModulePermission('PERMISSIONS');
       case 'courses':
+      case 'courses-list':
+      case 'course-learners':
+      case 'course-exams':
         return hasPermission('GET', '/courses') || hasModulePermission('COURSES');
       case 'vocabulary':
       case 'public-decks':

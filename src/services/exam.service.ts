@@ -9,9 +9,15 @@ export interface ToeicExamItem {
   id?: string
   _id?: string
   title: string
+  course_id?: string
+  course_title?: string
+  module_id?: string
+  module_title?: string
+  author_id?: string
   type?: 'FULL_TEST' | 'MINI_TEST' | 'PRE_TEST' | 'POST_MINI_TEST' | 'CHALLENGE_TEST' | string
   duration_minutes?: number
   total_questions?: number
+  passing_score?: number
   total_attempts?: number
   avg_score?: number
   is_published?: boolean
@@ -20,8 +26,15 @@ export interface ToeicExamItem {
 
 export interface CreateExamDto {
   title: string
+  course_id?: string
+  course_title?: string
+  module_id?: string
+  module_title?: string
+  author_id?: string
   type: string
   duration_minutes: number
+  total_questions?: number
+  passing_score?: number
   description?: string
   is_published?: boolean
 }

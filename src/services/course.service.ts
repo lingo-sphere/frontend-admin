@@ -20,6 +20,10 @@ export const courseService = {
     return api.get<PaginatedResult<Course>>(API_CONFIG.ENDPOINTS.COURSES.LIST, params as Record<string, unknown>)
   },
 
+  async getTeacherCourses(): Promise<Course[]> {
+    return api.get<Course[]>(API_CONFIG.ENDPOINTS.COURSES.TEACHER_COURSES)
+  },
+
   async getCourseById(id: string): Promise<Course> {
     return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.BY_ID(id))
   },

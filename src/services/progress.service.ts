@@ -22,6 +22,8 @@ export interface StudentProgressItem {
   email?: string
   avatar_url?: string
   status?: string
+  course_id?: string
+  course_title?: string
   progress_percentage: number
   completed_lessons: number
   total_lessons: number
@@ -48,6 +50,7 @@ export interface SkillSubmissionItem {
   user_name: string
   user_email?: string
   course_id: string
+  course_title?: string
   module_id?: string
   test_type: string
   skill: 'SPEAKING' | 'WRITING' | 'LISTENING' | 'READING'

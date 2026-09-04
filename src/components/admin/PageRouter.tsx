@@ -9,6 +9,8 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { LearnersPage } from '@/pages/LearnersPage'
 import { AdminUsersPage } from '@/pages/AdminUsersPage'
 import { CoursesPage } from '@/pages/CoursesPage'
+import { CourseLearnersPage } from '@/pages/CourseLearnersPage'
+import { CourseExamsPage } from '@/pages/CourseExamsPage'
 import { VocabularyPage } from '@/pages/VocabularyPage'
 import { PracticeExercisesPage } from '@/pages/PracticeExercisesPage'
 import { PracticeListeningPage } from '@/pages/PracticeListeningPage'
@@ -42,6 +44,9 @@ const pageMap: Record<string, React.ComponentType> = {
   permissions: PermissionsPage,
   'admin-user-create': AdminUserFormPage,
   courses: CoursesPage,
+  'courses-list': CoursesPage,
+  'course-learners': CourseLearnersPage,
+  'course-exams': CourseExamsPage,
   'course-create': CourseFormPage,
   vocabulary: VocabularyPage,
   'vocab-create': VocabularyFormPage,
@@ -81,7 +86,14 @@ export function PageRouter() {
 
 
   if (!isAdmin) {
-    if (activeNavItem === 'courses' || activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
+    if (
+      activeNavItem === 'courses' ||
+      activeNavItem === 'courses-list' ||
+      activeNavItem === 'course-learners' ||
+      activeNavItem === 'course-exams' ||
+      activeNavItem.startsWith('course-edit:') ||
+      activeNavItem.startsWith('course-form:')
+    ) {
       if (!hasPermission('GET', '/courses') && !hasModulePermission('COURSES')) {
         return <DashboardPage />
       }
