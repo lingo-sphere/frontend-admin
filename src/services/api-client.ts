@@ -198,7 +198,12 @@ export const api = {
     return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
   },
 
-  async upload<T>(url: string, file: File, additionalData?: Record<string, string>): Promise<T> {
+  async upload<T>(
+    url: string,
+    file: File,
+    additionalData?: Record<string, string>,
+    onProgress?: (percent: number, loaded: number, total: number) => void
+  ): Promise<T> {
     const formData = new FormData()
     formData.append('file', file)
     if (additionalData) {
@@ -206,7 +211,16 @@ export const api = {
     }
     const res = await apiClient.post<ApiResponse<T> | T>(url, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        const loaded = progressEvent.loaded
+        const total = progressEvent.total || file.size
+        if (total > 0) {
+          const percent = Math.min(99, Math.round((loaded * 100) / total))
+          onProgress?.(percent, loaded, total)
+        }
+      },
     })
+    onProgress?.(100, file.size, file.size)
     return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
   },
 }

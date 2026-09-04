@@ -35,8 +35,17 @@ export const mediaAdminService = {
     }
   },
 
-  async uploadFile(file: File, folder = 'courses'): Promise<{ file_url: string; url?: string; public_url?: string }> {
-    return await api.upload<{ file_url: string; url?: string; public_url?: string }>('/media/upload', file, { folder })
+  async uploadFile(
+    file: File,
+    folder = 'courses',
+    onProgress?: (percent: number, loaded: number, total: number) => void
+  ): Promise<{ file_url: string; url?: string; public_url?: string }> {
+    return await api.upload<{ file_url: string; url?: string; public_url?: string }>(
+      '/media/upload',
+      file,
+      { folder },
+      onProgress
+    )
   },
 
   async confirmMedia(fileUrls: string[], contentId?: string): Promise<{ modifiedCount?: number }> {

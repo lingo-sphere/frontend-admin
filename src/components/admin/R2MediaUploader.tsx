@@ -59,6 +59,7 @@ export function R2MediaUploader({
 }: R2MediaUploaderProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadBytes, setUploadBytes] = useState<{ loaded: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -192,16 +193,20 @@ export function R2MediaUploader({
 
     setIsUploading(true)
     setError(null)
-    setUploadProgress(10)
+    setUploadProgress(0)
+    setUploadBytes({ loaded: 0, total: file.size })
 
     try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => (prev >= 85 ? prev : prev + 15))
-      }, 300)
-
-      const response = await mediaService.uploadFile(file, folder)
-      clearInterval(progressInterval)
+      const response = await mediaService.uploadFile(
+        file,
+        folder,
+        (percent, loaded, total) => {
+          setUploadProgress(percent)
+          setUploadBytes({ loaded, total })
+        }
+      )
       setUploadProgress(100)
+      setUploadBytes({ loaded: file.size, total: file.size })
 
       const uploadedUrl =
         response?.file_url ||
@@ -359,16 +364,27 @@ export function R2MediaUploader({
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
                   <span>
-                    {isVi
+                    {uploadProgress >= 99
+                      ? isVi
+                        ? 'Đang xử lý & lưu trữ file...'
+                        : 'Processing & finalizing...'
+                      : isVi
                       ? `Đang tải ${isVideo ? 'video' : 'ảnh'} lên máy chủ...`
                       : `Uploading ${isVideo ? 'video' : 'image'}...`}
                   </span>
                 </div>
-                <span>{uploadProgress}%</span>
+                <div className="flex items-center gap-2">
+                  {uploadBytes && uploadBytes.total > 0 && (
+                    <span className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium">
+                      {(uploadBytes.loaded / (1024 * 1024)).toFixed(1)} / {(uploadBytes.total / (1024 * 1024)).toFixed(1)} MB
+                    </span>
+                  )}
+                  <span className="font-bold">{uploadProgress}%</span>
+                </div>
               </div>
               <div className="h-1.5 w-full rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden">
                 <div
-                  className="h-full bg-indigo-600 rounded-full transition-all duration-300"
+                  className="h-full bg-indigo-600 rounded-full transition-all duration-150"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
