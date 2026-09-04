@@ -311,57 +311,201 @@ export function CourseSubmissionsModal({
             onClick={(e) => {
               if (e.target === e.currentTarget) setSelectedSubmission(null)
             }}
-            className="fixed inset-0 z-60 flex items-center justify-center bg-black/25 dark:bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150"
+            className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 dark:bg-black/45 backdrop-blur-[2px] p-4 animate-in fade-in duration-150"
           >
-            <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl p-6 space-y-4 ring-1 ring-black/5 dark:ring-white/10 animate-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Edit3 className="h-4 w-4 text-indigo-600" />
-                  <span>Duyệt & Chỉnh Sửa Điểm Bài Nộp</span>
-                </h3>
+            <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl p-6 space-y-5 ring-1 ring-black/5 dark:ring-white/10 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                    <Edit3 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      {selectedSubmission.skill === 'SPEAKING'
+                        ? 'Chấm Điểm & Đánh Giá Bài Nói (Speaking)'
+                        : 'Chấm Điểm & Đánh Giá Bài Luận (Writing)'}
+                    </h3>
+                    <div className="text-xs text-slate-400">
+                      Học viên: <strong className="text-slate-700 dark:text-slate-200">{selectedSubmission.user_name}</strong>
+                    </div>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => setSelectedSubmission(null)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                <div><strong>Học viên:</strong> {selectedSubmission.user_name}</div>
-                <div><strong>Kỹ năng:</strong> {selectedSubmission.skill}</div>
-                <div><strong>Điểm AI chấm sơ bộ:</strong> {selectedSubmission.ai_score}/100</div>
+              {/* 1. Student Submission Content */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  {selectedSubmission.skill === 'SPEAKING' ? (
+                    <>
+                      <Volume2 className="w-4 h-4 text-indigo-500" />
+                      <span>1. Nội dung bài nói của học viên</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 text-emerald-500" />
+                      <span>1. Nội dung bài viết của học viên</span>
+                    </>
+                  )}
+                </span>
+
+                {selectedSubmission.skill === 'SPEAKING' && (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
+                    {selectedSubmission.audio_url ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <span>🎧 Bản ghi âm bài nói:</span>
+                        </div>
+                        <audio controls className="w-full h-9 rounded-lg" src={selectedSubmission.audio_url} />
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Không tìm thấy tệp ghi âm.</p>
+                    )}
+
+                    {selectedSubmission.whisper_transcript ? (
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 space-y-1.5">
+                        <div className="font-bold text-indigo-600 dark:text-indigo-400 text-xs flex items-center gap-1.5">
+                          <Bot className="w-4 h-4" />
+                          <span>Bản bóc tách Whisper STT:</span>
+                        </div>
+                        <p className="text-slate-800 dark:text-slate-200 italic font-mono text-xs leading-relaxed">
+                          &ldquo;{selectedSubmission.whisper_transcript}&rdquo;
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Chưa có bản bóc tách Whisper.</p>
+                    )}
+                  </div>
+                )}
+
+                {selectedSubmission.skill === 'WRITING' && (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
+                      <span>✍️ Toàn văn bài luận:</span>
+                      <span className="text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {selectedSubmission.essay_text?.trim().split(/\s+/).filter(Boolean).length || 0} từ
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                      {selectedSubmission.essay_text || 'Chưa có nội dung bài viết.'}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Điểm của Giáo viên (Thang điểm 0 - 100):
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={editScore}
-                  onChange={(e) => setEditScore(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 py-2 text-sm font-bold text-indigo-600 dark:text-indigo-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                />
+              {/* 2. AI Grading & Feedback Breakdown */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <span>2. Kết quả phân tích & Chấm điểm từ AI</span>
+                </span>
+
+                <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/70 dark:border-purple-900/40 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-purple-900 dark:text-purple-200">
+                        Điểm AI đề xuất:
+                      </span>
+                      <span className="text-base font-black text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-3 py-1 rounded-xl">
+                        {selectedSubmission.ai_score}/100
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditScore(selectedSubmission.ai_score)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 cursor-pointer shadow-2xs"
+                    >
+                      Áp dụng điểm AI ({selectedSubmission.ai_score})
+                    </button>
+                  </div>
+
+                  {selectedSubmission.ai_feedback?.detailed_comment && (
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/30 text-xs space-y-1">
+                      <span className="font-bold text-purple-900 dark:text-purple-200 block">
+                        💬 Nhận xét chi tiết của AI:
+                      </span>
+                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {selectedSubmission.ai_feedback.detailed_comment}
+                      </p>
+                    </div>
+                  )}
+
+                  {Array.isArray(selectedSubmission.ai_feedback?.improvement_tips) &&
+                    selectedSubmission.ai_feedback.improvement_tips.length > 0 && (
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/30 text-xs space-y-1">
+                        <span className="font-bold text-purple-900 dark:text-purple-200 block">
+                          💡 Gợi ý cải thiện:
+                        </span>
+                        <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300">
+                          {selectedSubmission.ai_feedback.improvement_tips.map((tip, tIdx) => (
+                            <li key={tIdx}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Lời nhận xét / Lời phê của Giáo viên:
-                </label>
-                <textarea
-                  rows={3}
-                  value={editFeedback}
-                  onChange={(e) => setEditFeedback(e.target.value)}
-                  placeholder="Ghi nhận xét của bạn để gửi cho học viên..."
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                />
+              {/* 3. Teacher Calibration & Review */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Edit3 className="w-4 h-4 text-indigo-500" />
+                  <span>3. Giáo viên Duyệt & Hiệu chỉnh điểm số</span>
+                </span>
+
+                <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/40 space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Điểm chính thức của Giáo Viên (Thang 0 - 100):
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={editScore}
+                        onChange={(e) => setEditScore(Math.min(100, Math.max(0, Number(e.target.value))))}
+                        className="w-24 px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-xl text-base font-black text-indigo-600 dark:text-indigo-400 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-2xs"
+                      />
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[+5, +10, -5, -10].map((delta) => (
+                          <button
+                            key={delta}
+                            type="button"
+                            onClick={() => setEditScore((prev) => Math.min(100, Math.max(0, prev + delta)))}
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs transition-colors"
+                          >
+                            {delta > 0 ? `+${delta}` : delta}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Lời phê & Nhận xét của Giáo Viên gửi cho học viên:
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={editFeedback}
+                      onChange={(e) => setEditFeedback(e.target.value)}
+                      placeholder="Nhập nhận xét chi tiết: khen ngợi điểm mạnh, chỉ rõ lỗi ngữ pháp/phát âm cụ thể và hướng dẫn bài tập rèn luyện thêm..."
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none leading-relaxed shadow-2xs"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              {/* Modal Actions */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => handleSaveReview(selectedSubmission.ai_score)}

@@ -81,6 +81,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       final_test_passing_score: 70,
       final_test_questions: [],
       final_test_audio_url: '',
+      final_test_speaking_prompt: '',
+      final_test_speaking_file_url: '',
+      final_test_writing_prompt: '',
+      final_test_writing_file_url: '',
       modules: [],
     }
   })
@@ -159,6 +163,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
             test_audio_url: (m.test_audio_url || m.challenge_audio_url || m.audio_url || '') as string,
             challenge_audio_url: (m.challenge_audio_url || m.test_audio_url || m.audio_url || '') as string,
             audio_url: (m.audio_url || m.test_audio_url || m.challenge_audio_url || '') as string,
+            speaking_prompt: (m.speaking_prompt || '') as string,
+            speaking_file_url: (m.speaking_file_url || '') as string,
+            writing_prompt: (m.writing_prompt || '') as string,
+            writing_file_url: (m.writing_file_url || '') as string,
             created_at_timestamp: m.created_at
               ? new Date(m.created_at as string).getTime()
               : Date.now() + mIdx * 1000,
@@ -197,6 +205,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           final_test_passing_score: typeof course.final_test_passing_score === 'number' ? course.final_test_passing_score : 70,
           final_test_questions: (course.final_test_questions || []) as CourseFormData['final_test_questions'],
           final_test_audio_url: (course.final_test_audio_url || '') as string,
+          final_test_speaking_prompt: (course.final_test_speaking_prompt || '') as string,
+          final_test_speaking_file_url: (course.final_test_speaking_file_url || '') as string,
+          final_test_writing_prompt: (course.final_test_writing_prompt || '') as string,
+          final_test_writing_file_url: (course.final_test_writing_file_url || '') as string,
           modules: mappedModules,
         })
       }
@@ -240,6 +252,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         final_test_passing_score: Number(formData.final_test_passing_score) || 70,
         final_test_questions: formData.final_test_questions || [],
         final_test_audio_url: formData.final_test_audio_url || '',
+        final_test_speaking_prompt: formData.final_test_speaking_prompt || '',
+        final_test_speaking_file_url: formData.final_test_speaking_file_url || '',
+        final_test_writing_prompt: formData.final_test_writing_prompt || '',
+        final_test_writing_file_url: formData.final_test_writing_file_url || '',
         modules: formData.modules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
           course_id: currentCourseId || '',
@@ -257,6 +273,10 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           post_mini_passing_score: Number(m.passing_score) || Number(m.post_mini_passing_score) || 70,
           post_mini_questions: m.test_questions || m.post_mini_questions || [],
           audio_url: m.audio_url || m.test_audio_url || m.challenge_audio_url || '',
+          speaking_prompt: m.speaking_prompt || '',
+          speaking_file_url: m.speaking_file_url || '',
+          writing_prompt: m.writing_prompt || '',
+          writing_file_url: m.writing_file_url || '',
           lessons: m.lessons.map((l, lIdx) => ({
             _id: l.id || `les-${lIdx}`,
             module_id: m.id || `mod-${mIdx}`,
@@ -277,6 +297,8 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       const allMediaUrls: string[] = []
       if (formData.thumbnail_url) allMediaUrls.push(formData.thumbnail_url)
       if (formData.final_test_audio_url) allMediaUrls.push(formData.final_test_audio_url)
+      if (formData.final_test_speaking_file_url) allMediaUrls.push(formData.final_test_speaking_file_url)
+      if (formData.final_test_writing_file_url) allMediaUrls.push(formData.final_test_writing_file_url)
       if (Array.isArray(formData.final_test_questions)) {
         formData.final_test_questions.forEach((q) => {
           if (q.media_url) allMediaUrls.push(q.media_url)
@@ -380,6 +402,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           onChange={(modules) => setFormData((prev) => ({ ...prev, modules }))}
           onPreviewVideo={(url) => setVideoPreviewUrl(url)}
           isVi={isVi}
+          is4Skills={formData.category === 'TOEIC_4_SKILLS'}
           courseFolder={courseFolder}
         />
 

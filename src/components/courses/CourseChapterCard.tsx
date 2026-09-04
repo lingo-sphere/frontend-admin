@@ -26,6 +26,7 @@ interface CourseChapterCardProps {
   isExpanded: boolean
   courseFolder?: string
   isVi: boolean
+  is4Skills?: boolean
   onToggleExpand: () => void
   onRemoveModule: () => void
   onUpdateModule: (updated: Partial<CourseModule>) => void
@@ -53,6 +54,7 @@ export function CourseChapterCard({
   isExpanded,
   courseFolder,
   isVi,
+  is4Skills = false,
   onToggleExpand,
   onRemoveModule,
   onUpdateModule,
@@ -347,6 +349,7 @@ export function CourseChapterCard({
                   module={module}
                   chapterIndex={moduleIndex}
                   isVi={isVi}
+                  is4Skills={is4Skills}
                   onUpdateModule={onUpdateModule}
                   onOpenExcelModal={onOpenExcelModal}
                   onOpenViewerModal={onOpenViewerModal}

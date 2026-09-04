@@ -30,6 +30,7 @@ interface CourseCurriculumManagerProps {
   onChange: (modules: CourseModule[]) => void
   onPreviewVideo: (url: string) => void
   isVi: boolean
+  is4Skills?: boolean
   courseFolder?: string
 }
 
@@ -38,6 +39,7 @@ export function CourseCurriculumManager({
   onChange,
   onPreviewVideo: _onPreviewVideo,
   isVi,
+  is4Skills = false,
   courseFolder,
 }: CourseCurriculumManagerProps) {
   const [expandedModules, setExpandedModules] = useState<string[]>(
@@ -467,6 +469,7 @@ export function CourseCurriculumManager({
               isExpanded={expandedModules.includes(mod.id)}
               courseFolder={courseFolder}
               isVi={isVi}
+              is4Skills={is4Skills}
               onToggleExpand={() => toggleModuleExpand(mod.id)}
               onRemoveModule={() => removeModule(mod.id)}
               onUpdateModule={(updated) => updateModule(mod.id, updated)}
