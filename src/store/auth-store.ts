@@ -60,7 +60,7 @@ export const authStore = createStore<AuthState>()((set, get) => ({
   profile: null,
   token: getStoredToken(),
   permissions: getStoredUser()?.permissions || [],
-  isAuthenticated: Boolean(getStoredToken()),
+  isAuthenticated: false,
   isLoading: false,
   error: null,
 
@@ -213,11 +213,8 @@ export const authStore = createStore<AuthState>()((set, get) => ({
         isAuthenticated: true,
       })
     } catch (err) {
-      console.warn('Failed to fetch current user (token may be expired):', err)
-      const errStr = String(err || '')
-      if (errStr.includes('401') || errStr.includes('Unauthorized') || errStr.includes('Phiên đăng nhập đã hết hạn')) {
-        await get().logout()
-      }
+      console.warn('Backend authentication failed or unavailable. Logging out admin:', err)
+      await get().logout()
     }
   },
 
@@ -230,10 +227,10 @@ export const authStore = createStore<AuthState>()((set, get) => ({
   initAuth: async () => {
     const token = getStoredToken()
     if (token) {
-      set({ isAuthenticated: true, token })
+      set({ token })
       await get().fetchCurrentUser()
     } else {
-      set({ isAuthenticated: false, token: null, user: null, permissions: [] })
+      await get().logout()
     }
   },
 }))
