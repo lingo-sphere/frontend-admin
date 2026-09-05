@@ -190,6 +190,7 @@ export interface CourseModule {
 
 export interface Course {
   _id: string
+  id?: string
   title: string
   slug?: string
   description: string
@@ -201,6 +202,10 @@ export interface Course {
   thumbnail_url?: string
   author_id?: string
   author_name?: string
+  author_email?: string
+  author_avatar?: string
+  author_title?: string
+  author_bio?: string
   approval_status: CourseApprovalStatus | string
   is_published?: boolean
   pre_test_exam_id?: string
@@ -208,12 +213,18 @@ export interface Course {
   final_test_passing_score?: number
   final_test_questions?: QuizQuestionItem[]
   final_test_audio_url?: string
+  final_test_speaking_prompt?: string
+  final_test_speaking_file_url?: string
+  final_test_writing_prompt?: string
+  final_test_writing_file_url?: string
   rating?: number
   students_count?: number
   total_modules?: number
   total_lessons?: number
   skills?: string[]
   modules?: CourseModule[]
+  curriculum?: CourseModule[]
+  course?: Course
   created_at?: string
   updated_at?: string
 }

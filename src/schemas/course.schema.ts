@@ -63,10 +63,10 @@ export const CourseModuleSchema = z.object({
   updated_at: z.string().optional(),
 })
 
-export const CourseSchema = z.object({
-  _id: z.string(),
+export const CourseBaseSchema = z.object({
+  _id: z.string().default(''),
   id: z.string().optional(),
-  title: z.string(),
+  title: z.string().default(''),
   slug: z.string().optional(),
   description: z.string().default(''),
   category: z.string().default('TOEIC'),
@@ -77,6 +77,10 @@ export const CourseSchema = z.object({
   thumbnail_url: z.string().optional(),
   author_id: z.string().optional(),
   author_name: z.string().optional(),
+  author_email: z.string().optional(),
+  author_avatar: z.string().optional(),
+  author_title: z.string().optional(),
+  author_bio: z.string().optional(),
   approval_status: z.string().default('DRAFT'),
   is_published: z.boolean().default(false).optional(),
   pre_test_exam_id: z.string().optional(),
@@ -84,15 +88,40 @@ export const CourseSchema = z.object({
   final_test_passing_score: z.number().optional(),
   final_test_questions: z.array(QuizQuestionItemSchema).optional(),
   final_test_audio_url: z.string().optional(),
+  final_test_speaking_prompt: z.string().optional(),
+  final_test_speaking_file_url: z.string().optional(),
+  final_test_writing_prompt: z.string().optional(),
+  final_test_writing_file_url: z.string().optional(),
   rating: z.number().optional(),
   students_count: z.number().optional(),
   total_modules: z.number().optional(),
   total_lessons: z.number().optional(),
   skills: z.array(z.string()).optional(),
   modules: z.array(CourseModuleSchema).optional(),
+  curriculum: z.array(CourseModuleSchema).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 })
+
+export const CourseDetailResponseSchema = z.object({
+  course: CourseBaseSchema,
+  curriculum: z.array(CourseModuleSchema).optional(),
+  modules: z.array(CourseModuleSchema).optional(),
+  total_modules: z.number().optional(),
+  total_lessons: z.number().optional(),
+}).transform((val) => ({
+  ...val.course,
+  course: val.course,
+  curriculum: val.curriculum || val.course.modules || [],
+  modules: val.curriculum || val.course.modules || [],
+  total_modules: val.total_modules ?? val.course.total_modules ?? (val.curriculum || []).length,
+  total_lessons: val.total_lessons ?? val.course.total_lessons,
+}))
+
+export const CourseSchema = z.union([
+  CourseDetailResponseSchema,
+  CourseBaseSchema,
+])
 
 export const CourseListSchema = z.array(CourseSchema)
 
@@ -110,7 +139,7 @@ export const LearningRoadmapStageSchema = z.object({
   checkpoint_exam_id: z.string().optional(),
   passing_score: z.number().optional(),
   is_optional: z.boolean().optional(),
-  course: CourseSchema.nullable().optional(),
+  course: CourseBaseSchema.nullable().optional(),
 })
 
 export const LearningRoadmapSchema = z.object({
@@ -137,6 +166,6 @@ export const RoadmapListSchema = z.array(LearningRoadmapSchema)
 export type QuizQuestionItem = z.infer<typeof QuizQuestionItemSchema>
 export type Lesson = z.infer<typeof LessonSchema>
 export type CourseModule = z.infer<typeof CourseModuleSchema>
-export type Course = z.infer<typeof CourseSchema>
+export type Course = z.infer<typeof CourseBaseSchema>
 export type PaginatedCourses = z.infer<typeof PaginatedCoursesSchema>
 export type LearningRoadmap = z.infer<typeof LearningRoadmapSchema>
