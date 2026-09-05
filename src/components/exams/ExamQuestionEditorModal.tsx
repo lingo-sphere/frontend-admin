@@ -8,27 +8,20 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   X,
-  Plus,
   Trash2,
   Copy,
-  FileSpreadsheet,
   Volume2,
   Image as ImageIcon,
   Save,
   Search,
   BookOpen,
-  HelpCircle,
-  Loader2,
-  Mic,
-  PenTool,
   Archive,
+  Loader2,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { examAdminService } from '@/services/exam.service'
 import { mediaAdminService } from '@/services/media.service'
-import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModal'
 import { ZipExamPackageImporterModal } from '@/components/exams/ZipExamPackageImporterModal'
-import type { QuizQuestionItem } from '@/services/ai.service'
 import { toast } from '@/store/toast-store'
 import { Popconfirm } from '@/components/common/Popconfirm'
 
@@ -82,14 +75,11 @@ export function ExamQuestionEditorModal({
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
 
-  const [isExcelModalOpen, setIsExcelModalOpen] = useState<boolean>(false)
   const [isZipModalOpen, setIsZipModalOpen] = useState<boolean>(false)
   const [isSaving, setIsSaving] = useState<boolean>(false)
-  const [uploadingGlobalAudio, setUploadingGlobalAudio] = useState<boolean>(false)
   const [uploadingQuestionAudioIdx, setUploadingQuestionAudioIdx] = useState<number | null>(null)
   const [uploadingQuestionImageIdx, setUploadingQuestionImageIdx] = useState<number | null>(null)
 
-  const globalAudioInputRef = useRef<HTMLInputElement>(null)
   const questionAudioInputRef = useRef<HTMLInputElement>(null)
   const questionImageInputRef = useRef<HTMLInputElement>(null)
   const activeQuestionIdxRef = useRef<number | null>(null)
@@ -147,30 +137,7 @@ export function ExamQuestionEditorModal({
     return matchesFilter && matchesSearch
   })
 
-  // Handlers for Question Editing
-  const handleAddQuestion = (partNum: number | string = 5) => {
-    const isSpeaking = partNum === 'speaking'
-    const isWriting = partNum === 'writing'
-    const newQuestion: ExamQuestionItem = {
-      id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      part_number: partNum,
-      question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
-      question_text: isSpeaking
-        ? 'Describe the picture in detail using as much vocabulary as possible.'
-        : isWriting
-        ? 'Write an email responding to the customer request (at least 100 words).'
-        : '',
-      options: isSpeaking || isWriting ? [] : ['', '', '', ''],
-      correct_answer: 'A',
-      explanation: '',
-      prep_time_seconds: isSpeaking ? 45 : undefined,
-      response_time_seconds: isSpeaking ? 60 : undefined,
-      min_words: isWriting ? 100 : undefined,
-    }
 
-    setQuestions((prev) => [...prev, newQuestion])
-    toast.success(isVi ? 'Đã thêm 1 câu hỏi mới!' : 'Added 1 new question!')
-  }
 
   const handleDuplicateQuestion = (index: number) => {
     const target = questions[index]
@@ -213,33 +180,7 @@ export function ExamQuestionEditorModal({
     })
   }
 
-  // Upload Audio for Whole Exam
-  const handleUploadGlobalAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
 
-    if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
-      toast.error(isVi ? 'Vui lòng chọn file âm thanh (.mp3, .wav, .m4a)' : 'Please select an audio file (.mp3, .wav)')
-      return
-    }
-
-    setUploadingGlobalAudio(true)
-    try {
-      const res = await mediaAdminService.uploadFile(file, 'exam-audio')
-      const uploadedUrl = res.file_url || res.url || res.public_url
-      if (uploadedUrl) {
-        setGlobalAudioUrl(uploadedUrl)
-        toast.success(isVi ? `Đã tải file nghe đề thi: ${file.name}` : `Uploaded exam audio: ${file.name}`)
-      } else {
-        toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
-      }
-    } catch {
-      toast.error('Lỗi khi tải file nghe lên hệ thống.')
-    } finally {
-      setUploadingGlobalAudio(false)
-      if (globalAudioInputRef.current) globalAudioInputRef.current.value = ''
-    }
-  }
 
   // Upload Audio for Specific Question
   const handleUploadQuestionAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,37 +228,7 @@ export function ExamQuestionEditorModal({
     }
   }
 
-  // Handle Apply Questions from Excel Modal
-  const handleApplyExcelQuestions = (
-    imported: QuizQuestionItem[],
-    mode: 'append' | 'replace' = 'replace',
-    importedAudioUrl?: string
-  ) => {
-    const formatted: ExamQuestionItem[] = imported.map((item, idx) => ({
-      id: `q_excel_${Date.now()}_${idx}`,
-      part_number: 5,
-      question_type: 'MULTIPLE_CHOICE',
-      question_text: item.question_text || '',
-      options: item.options && item.options.length >= 4 ? item.options : [item.options?.[0] || '', item.options?.[1] || '', item.options?.[2] || '', item.options?.[3] || ''],
-      correct_answer: (item.correct_answer || 'A').toUpperCase(),
-      explanation: item.explanation || '',
-      media_url: item.media_url || importedAudioUrl || '',
-    }))
 
-    if (mode === 'replace') {
-      setQuestions(formatted)
-      toast.success(isVi ? `Đã thay thế toàn bộ bằng ${formatted.length} câu hỏi từ Excel!` : `Replaced with ${formatted.length} questions from Excel!`)
-    } else {
-      setQuestions((prev) => [...prev, ...formatted])
-      toast.success(isVi ? `Đã thêm nối tiếp ${formatted.length} câu hỏi từ Excel!` : `Appended ${formatted.length} questions from Excel!`)
-    }
-
-    if (importedAudioUrl && !globalAudioUrl) {
-      setGlobalAudioUrl(importedAudioUrl)
-    }
-
-    setIsExcelModalOpen(false)
-  }
 
   // Handle Apply Questions from ZIP Package Modal
   const handleApplyZipQuestions = (
@@ -382,14 +293,7 @@ export function ExamQuestionEditorModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="flex flex-col w-full max-w-5xl max-h-[94vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
-        {/* Hidden File Inputs */}
-        <input
-          ref={globalAudioInputRef}
-          type="file"
-          accept="audio/*"
-          className="hidden"
-          onChange={handleUploadGlobalAudio}
-        />
+
         <input
           ref={questionAudioInputRef}
           type="file"
@@ -480,79 +384,17 @@ export function ExamQuestionEditorModal({
             </select>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {/* ZIP Package Import Button */}
+          {/* Action Buttons - Chỉ duy nhất Import Gói ZIP */}
+          <div className="flex items-center gap-2 justify-end">
             <button
               type="button"
               onClick={() => setIsZipModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-xs font-bold text-purple-700 dark:text-purple-300 transition-colors cursor-pointer shadow-2xs"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-xs hover:shadow-purple-500/20 transition-all cursor-pointer"
               title={isVi ? 'Import toàn bộ đề thi (câu hỏi, audio và ảnh) từ 1 file ZIP duy nhất' : 'Import exam package via ZIP (Excel + Audios + Images)'}
             >
-              <Archive className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              <span>{isVi ? 'Import Gói ZIP (Media + Excel)' : 'Import ZIP'}</span>
+              <Archive className="w-4 h-4" />
+              <span>{isVi ? 'Import Gói ZIP (Excel + Media)' : 'Import ZIP Package'}</span>
             </button>
-
-            {/* Import Excel Button */}
-            <button
-              type="button"
-              onClick={() => setIsExcelModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{isVi ? 'Import từ Excel' : 'Import Excel'}</span>
-            </button>
-
-            {/* Global Audio Button */}
-            <button
-              type="button"
-              disabled={uploadingGlobalAudio}
-              onClick={() => globalAudioInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
-              title="Gắn file âm thanh dùng chung cho toàn bộ bài thi"
-            >
-              {uploadingGlobalAudio ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
-              ) : (
-                <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
-              )}
-              <span>{globalAudioUrl ? 'Đổi Audio Đề' : 'Gắn Audio Đề'}</span>
-            </button>
-
-            {/* Add Question Dropdown/Buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => handleAddQuestion(5)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{isVi ? 'Thêm câu hỏi' : 'Add Question'}</span>
-              </button>
-
-              {is4Skills && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleAddQuestion('speaking')}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all cursor-pointer"
-                    title="Thêm câu hỏi Nói (Speaking)"
-                  >
-                    <Mic className="w-3.5 h-3.5" />
-                    <span>+ Nói</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAddQuestion('writing')}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer"
-                    title="Thêm câu hỏi Viết (Writing)"
-                  >
-                    <PenTool className="w-3.5 h-3.5" />
-                    <span>+ Viết</span>
-                  </button>
-                </>
-              )}
-            </div>
           </div>
         </div>
 
@@ -579,8 +421,8 @@ export function ExamQuestionEditorModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
           {questions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                <HelpCircle className="w-7 h-7" />
+              <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Archive className="w-7 h-7" />
               </div>
               <div className="max-w-md space-y-1">
                 <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
@@ -588,34 +430,18 @@ export function ExamQuestionEditorModal({
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isVi
-                    ? 'Bạn có thể soạn từng câu hỏi thủ công hoặc import nhanh toàn bộ danh sách câu hỏi từ file Excel.'
-                    : 'Add questions manually or quickly import questions in bulk from an Excel file.'}
+                    ? 'Vui lòng import gói đề thi trọn gói (.zip) chứa file Excel câu hỏi cùng toàn bộ file âm thanh và hình ảnh đính kèm.'
+                    : 'Please import an exam package (.zip) containing the question Excel spreadsheet along with all audio and image assets.'}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <div className="flex items-center justify-center pt-2">
                 <button
                   type="button"
                   onClick={() => setIsZipModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
                 >
                   <Archive className="w-4 h-4" />
                   <span>{isVi ? 'Import Gói ZIP (Excel + Audio + Ảnh)' : 'Import ZIP Package'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsExcelModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition-all cursor-pointer shadow-xs"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>{isVi ? 'Import từ Excel (.xlsx)' : 'Import from Excel'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAddQuestion(5)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>{isVi ? 'Thêm câu hỏi thủ công' : 'Add Question'}</span>
                 </button>
               </div>
             </div>
@@ -936,15 +762,7 @@ export function ExamQuestionEditorModal({
         </div>
       </div>
 
-      {/* Excel Importer Modal */}
-      <ExcelQuizImporterModal
-        isOpen={isExcelModalOpen}
-        onClose={() => setIsExcelModalOpen(false)}
-        onApplyQuestions={handleApplyExcelQuestions}
-        moduleTitle={exam.title || 'Đề thi'}
-        existingQuestionsCount={questions.length}
-        initialAudioUrl={globalAudioUrl}
-      />
+
 
       {/* ZIP Exam Package Importer Modal */}
       <ZipExamPackageImporterModal

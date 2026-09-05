@@ -4,32 +4,28 @@
  * bằng 1 file ZIP duy nhất. Tự động giải nén, upload media hàng loạt, map dữ liệu và cho phép nghe/xem trước.
  */
 
-import { useState, useRef, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import {
-  Archive,
-  Download,
-  Upload,
-  X,
-  CheckCircle2,
-  AlertCircle,
-  Volume2,
-  Image as ImageIcon,
-  Loader2,
-  FileSpreadsheet,
-  Layers,
-  ArrowRight,
-  Eye,
-  Check,
-  RefreshCw,
-  FolderArchive,
-  Info,
-} from 'lucide-react'
-import JSZip from 'jszip'
-import * as XLSX from 'xlsx'
-import { mediaAdminService } from '@/services/media.service'
 import type { ExamQuestionItem } from '@/components/exams/ExamQuestionEditorModal'
+import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast-store'
+import JSZip from 'jszip'
+import {
+  AlertCircle,
+  Archive,
+  Check,
+  CheckCircle2,
+  Download,
+  FileSpreadsheet,
+  FolderArchive,
+  Image as ImageIcon,
+  Info,
+  Loader2,
+  RefreshCw,
+  Volume2,
+  X
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import * as XLSX from 'xlsx'
 
 interface ZipExamPackageImporterModalProps {
   isOpen: boolean
