@@ -1,7 +1,6 @@
 /**
- * @file ExamQuestionEditorModal.tsx
- * @description Modal chuyên sâu cho Quản trị viên (Admin) biên soạn và quản lý ngân hàng câu hỏi của đề thi (hỗ trợ nhập thủ công, upload Audio/Ảnh từng câu hoặc toàn bài, import hàng loạt từ Excel).
- * Tuyệt đối không có tính năng AI sinh câu hỏi theo yêu cầu của hệ thống.
+ * @file exam.question.editor.modal.tsx
+ * @description Modal biên soạn và quản lý ngân hàng câu hỏi đề thi (hỗ trợ nhập thủ công, audio/hình ảnh, import gói ZIP)
  */
 
 import { useState, useEffect, useRef } from 'react'
@@ -9,9 +8,7 @@ import { useTranslation } from 'react-i18next'
 import {
   X,
   Trash2,
-  Copy,
   Volume2,
-  Image as ImageIcon,
   Save,
   Search,
   BookOpen,
@@ -21,14 +18,14 @@ import {
   Mic,
   PenTool,
   Download,
-  FolderArchive,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { examAdminService } from '@/services/exam.service'
 import { mediaAdminService } from '@/services/media.service'
 import { parseAndUploadZipExam, downloadSampleZip } from '@/components/exams/zip.exam.helper'
 import { toast } from '@/store/toast-store'
-import { Popconfirm } from '@/components/common/popconfirm'
+import { ExamQuestionCard } from '@/components/exams/exam.question.card'
+import { ExamZipDropzone } from '@/components/exams/exam.zip.dropzone'
 
 export interface ExamQuestionItem {
   id?: string
@@ -41,7 +38,6 @@ export interface ExamQuestionItem {
   explanation?: string
   media_url?: string
   image_url?: string
-  // For Speaking / Writing prompts
   prep_time_seconds?: number
   response_time_seconds?: number
   min_words?: number
@@ -53,18 +49,6 @@ interface ExamQuestionEditorModalProps {
   exam: ToeicExamItem | null
   onExamUpdated: (updatedExam: ToeicExamItem) => void
 }
-
-const PART_OPTIONS = [
-  { value: 1, label: 'Part 1: Mô tả hình ảnh (Photographs)' },
-  { value: 2, label: 'Part 2: Hỏi & Đáp (Question - Response)' },
-  { value: 3, label: 'Part 3: Đoạn hội thoại (Conversations)' },
-  { value: 4, label: 'Part 4: Bài nói ngắn (Short Talks)' },
-  { value: 5, label: 'Part 5: Hoàn thành câu (Incomplete Sentences)' },
-  { value: 6, label: 'Part 6: Hoàn thành đoạn văn (Text Completion)' },
-  { value: 7, label: 'Part 7: Đọc hiểu văn bản (Reading Comprehension)' },
-  { value: 'speaking', label: 'Speaking: Bài thi Nói TOEIC (11 câu hỏi)' },
-  { value: 'writing', label: 'Writing: Bài thi Viết TOEIC (8 câu hỏi)' },
-]
 
 export function ExamQuestionEditorModal({
   isOpen,
@@ -96,7 +80,6 @@ export function ExamQuestionEditorModal({
   const questionImageInputRef = useRef<HTMLInputElement>(null)
   const activeQuestionIdxRef = useRef<number | null>(null)
 
-  // Initialize or reset questions whenever exam changes
   useEffect(() => {
     if (isOpen && exam) {
       const existingQs: ExamQuestionItem[] = Array.isArray(exam.questions)
@@ -135,7 +118,6 @@ export function ExamQuestionEditorModal({
     !exam.course_id
   )
 
-  // Filter questions for rendering
   const filteredQuestions = questions.filter((q, index) => {
     const matchesFilter =
       partFilter === 'ALL' ||
@@ -154,7 +136,6 @@ export function ExamQuestionEditorModal({
     return matchesFilter && matchesSearch
   })
 
-  // Handlers for Question Editing (dành cho các bài kiểm tra khóa học thêm thủ công)
   const handleAddQuestion = (partNum: number | string = 5) => {
     const isSpeaking = partNum === 'speaking'
     const isWriting = partNum === 'writing'
@@ -179,7 +160,6 @@ export function ExamQuestionEditorModal({
     toast.success(isVi ? 'Đã thêm 1 câu hỏi mới!' : 'Added 1 new question!')
   }
 
-  // Upload Audio for Whole Exam
   const handleUploadGlobalAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -248,9 +228,6 @@ export function ExamQuestionEditorModal({
     })
   }
 
-
-
-  // Upload Audio for Specific Question
   const handleUploadQuestionAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     const qIdx = activeQuestionIdxRef.current
@@ -273,7 +250,6 @@ export function ExamQuestionEditorModal({
     }
   }
 
-  // Upload Image for Specific Question
   const handleUploadQuestionImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     const qIdx = activeQuestionIdxRef.current
@@ -296,9 +272,6 @@ export function ExamQuestionEditorModal({
     }
   }
 
-
-
-  // Handle direct ZIP file selection and processing
   const handleZipFileSelected = async (file: File) => {
     if (!file) return
     setIsProcessingZip(true)
@@ -346,7 +319,6 @@ export function ExamQuestionEditorModal({
     if (file) handleZipFileSelected(file)
   }
 
-  // Save All Questions
   const handleSaveQuestions = async () => {
     const examId = exam.id || exam._id
     if (!examId) {
@@ -368,7 +340,6 @@ export function ExamQuestionEditorModal({
       toast.success(isVi ? `Đã lưu thành công bộ ${questions.length} câu hỏi vào đề thi!` : `Saved ${questions.length} questions to exam!`)
       onClose()
     } catch {
-      // Local fallback in case network hiccup
       const mergedExam: ToeicExamItem = {
         ...exam,
         questions,
@@ -383,12 +354,9 @@ export function ExamQuestionEditorModal({
     }
   }
 
-  const letters = ['A', 'B', 'C', 'D']
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="flex flex-col w-full max-w-5xl max-h-[94vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
-
         <input
           ref={zipFileInputRef}
           type="file"
@@ -418,7 +386,6 @@ export function ExamQuestionEditorModal({
           onChange={handleUploadQuestionImage}
         />
 
-        {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/50 dark:border-indigo-800/50">
@@ -466,9 +433,7 @@ export function ExamQuestionEditorModal({
           </button>
         </div>
 
-        {/* Action Toolbar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900">
-          {/* Search & Filter */}
           <div className="flex items-center gap-2 flex-1 max-w-md">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -502,10 +467,8 @@ export function ExamQuestionEditorModal({
             </select>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-2 justify-end flex-wrap">
             {isSystemPlacement ? (
-              /* Chỉ duy nhất bài test đầu vào hệ thống mới cho import Gói ZIP - Mở file picker trực tiếp */
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -538,7 +501,6 @@ export function ExamQuestionEditorModal({
                 </button>
               </div>
             ) : (
-              /* Các bài thi khóa học (Challenge, Final...) không cho import ZIP, cho thêm câu hỏi và gắn audio */
               <>
                 <button
                   type="button"
@@ -591,7 +553,6 @@ export function ExamQuestionEditorModal({
           </div>
         </div>
 
-        {/* Global Audio Player Preview (if set) */}
         {globalAudioUrl && (
           <div className="flex items-center justify-between gap-3 px-6 py-2 bg-indigo-50/50 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/40 text-xs">
             <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
@@ -610,83 +571,27 @@ export function ExamQuestionEditorModal({
           </div>
         )}
 
-        {/* Main Questions List Container */}
         <div 
           className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {questions.length === 0 ? (
-            isProcessingZip ? (
-              <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 space-y-4 animate-pulse">
-                <div className="w-16 h-16 rounded-3xl bg-purple-600/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-                <div className="max-w-md space-y-1">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {zipProcessStatus || (isVi ? 'Đang giải nén và nạp câu hỏi từ file ZIP...' : 'Processing ZIP package...')}
-                  </h4>
-                  {zipProgress && (
-                    <p className="text-xs font-bold text-purple-600 dark:text-purple-400">
-                      {zipProgress.current} / {zipProgress.total} file
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {isVi
-                      ? 'Hệ thống đang tự động trích xuất bảng Excel và tải lên file âm thanh, hình ảnh. Vui lòng chờ...'
-                      : 'Unpacking spreadsheet and uploading media assets...'}
-                  </p>
-                </div>
-              </div>
-            ) : isSystemPlacement ? (
-              <div
+            isSystemPlacement || isProcessingZip ? (
+              <ExamZipDropzone
+                isVi={isVi}
+                isProcessingZip={isProcessingZip}
+                zipProcessStatus={zipProcessStatus}
+                zipProgress={zipProgress}
+                isDragOverZip={isDragOverZip}
                 onDragOver={(e) => {
                   e.preventDefault()
                   setIsDragOverZip(true)
                 }}
                 onDragLeave={() => setIsDragOverZip(false)}
                 onDrop={handleDropZip}
-                className={`flex flex-col items-center justify-center py-14 px-6 text-center rounded-3xl border-2 border-dashed transition-all bg-white dark:bg-slate-900 space-y-4 ${
-                  isDragOverZip
-                    ? 'border-purple-500 bg-purple-50/40 dark:bg-purple-950/30 scale-[1.01]'
-                    : 'border-slate-200 dark:border-slate-800'
-                }`}
-              >
-                <div className="w-16 h-16 rounded-3xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs">
-                  <FolderArchive className="w-8 h-8" />
-                </div>
-
-                <div className="max-w-md space-y-1.5">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {isVi ? 'Kéo thả hoặc chọn file ZIP đề thi' : 'Drag & drop or select Exam ZIP file'}
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {isVi
-                      ? 'Gói ZIP gồm file questions.xlsx cùng các file âm thanh (.mp3) và ảnh (.jpg/.png). Nhấn nút bên dưới để chọn file và nạp ngay vào đề thi.'
-                      : 'ZIP archive contains questions.xlsx spreadsheet and audio/image media files.'}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    disabled={isProcessingZip}
-                    onClick={() => zipFileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
-                  >
-                    <Archive className="w-4 h-4" />
-                    <span>{isVi ? 'Chọn file ZIP từ máy tính' : 'Choose ZIP File'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => downloadSampleZip(isVi)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
-                  >
-                    <Download className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    <span>{isVi ? 'Tải Gói ZIP Mẫu Chuẩn' : 'Download Sample ZIP'}</span>
-                  </button>
-                </div>
-              </div>
+                onOpenZipPicker={() => zipFileInputRef.current?.click()}
+                onDownloadSampleZip={() => downloadSampleZip(isVi)}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
@@ -718,280 +623,33 @@ export function ExamQuestionEditorModal({
             filteredQuestions.map((q, filteredIdx) => {
               const actualIdx = questions.findIndex((item) => item.id === q.id)
               const qIndex = actualIdx !== -1 ? actualIdx : filteredIdx
-              const isSpeaking = q.question_type === 'SPEAKING' || q.part_number === 'speaking'
-              const isWriting = q.question_type === 'WRITING' || q.part_number === 'writing'
 
               return (
-                <div
+                <ExamQuestionCard
                   key={q.id || qIndex}
-                  className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4 transition-all hover:border-indigo-300 dark:hover:border-indigo-800"
-                >
-                  {/* Card Top: Question Number, Part Selector & Actions */}
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="w-7 h-7 rounded-xl bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-                        {qIndex + 1}
-                      </span>
-
-                      {/* Part Selector */}
-                      <select
-                        value={q.part_number || (isSpeaking ? 'speaking' : isWriting ? 'writing' : 5)}
-                        onChange={(e) => {
-                          const val = e.target.value
-                          const isSp = val === 'speaking'
-                          const isWr = val === 'writing'
-                          handleUpdateQuestion(qIndex, {
-                            part_number: isSp || isWr ? val : Number(val),
-                            question_type: isSp ? 'SPEAKING' : isWr ? 'WRITING' : 'MULTIPLE_CHOICE',
-                            options: isSp || isWr ? [] : q.options.length ? q.options : ['', '', '', ''],
-                          })
-                        }}
-                        className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-                      >
-                        {PART_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Card Actions: Duplicate & Delete */}
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleDuplicateQuestion(qIndex)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
-                        title={isVi ? 'Nhân bản câu này' : 'Duplicate question'}
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-
-                      <Popconfirm
-                        title={isVi ? 'Xóa câu hỏi này?' : 'Delete this question?'}
-                        onConfirm={() => handleDeleteQuestion(qIndex)}
-                      >
-                        <button
-                          type="button"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
-                          title={isVi ? 'Xóa câu hỏi' : 'Delete question'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </Popconfirm>
-                    </div>
-                  </div>
-
-                  {/* Question Text / Prompt */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      {isSpeaking
-                        ? 'Đề bài / Yêu cầu phần thi Nói (Prompt):'
-                        : isWriting
-                        ? 'Đề bài / Yêu cầu phần thi Viết (Prompt):'
-                        : 'Nội dung câu hỏi:'}
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={q.question_text}
-                      onChange={(e) => handleUpdateQuestion(qIndex, { question_text: e.target.value })}
-                      placeholder={
-                        isSpeaking
-                          ? 'Ví dụ: Describe what you see in the photo in as much detail as possible...'
-                          : isWriting
-                          ? 'Ví dụ: You received an email from your manager. Write a response addressing two points...'
-                          : 'Nhập câu hỏi (ví dụ: Mr. Henderson requested that the quarterly report _____ by Friday.)...'
-                      }
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                  </div>
-
-                  {/* Media Section: Audio & Image */}
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                    {/* Audio Upload */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={uploadingQuestionAudioIdx === qIndex}
-                        onClick={() => {
-                          activeQuestionIdxRef.current = qIndex
-                          questionAudioInputRef.current?.click()
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
-                      >
-                        {uploadingQuestionAudioIdx === qIndex ? (
-                          <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
-                        ) : (
-                          <Volume2 className="w-3 h-3 text-indigo-500" />
-                        )}
-                        <span>{q.media_url ? 'Đổi Audio câu' : 'Thêm Audio câu'}</span>
-                      </button>
-                      {q.media_url && (
-                        <div className="flex items-center gap-1">
-                          <audio controls src={q.media_url} className="h-6 max-w-[180px]" />
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQuestion(qIndex, { media_url: undefined })}
-                            className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                            title="Xóa audio"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Image Upload */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={uploadingQuestionImageIdx === qIndex}
-                        onClick={() => {
-                          activeQuestionIdxRef.current = qIndex
-                          questionImageInputRef.current?.click()
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
-                      >
-                        {uploadingQuestionImageIdx === qIndex ? (
-                          <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
-                        ) : (
-                          <ImageIcon className="w-3 h-3 text-amber-500" />
-                        )}
-                        <span>{q.image_url ? 'Đổi ảnh câu' : 'Thêm Ảnh câu'}</span>
-                      </button>
-                      {q.image_url && (
-                        <div className="flex items-center gap-1">
-                          <img
-                            src={q.image_url}
-                            alt="minh hoa"
-                            className="h-7 w-12 object-cover rounded-md border border-slate-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQuestion(qIndex, { image_url: undefined })}
-                            className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                            title="Xóa ảnh"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Options (Multiple Choice) OR Speaking/Writing Configuration */}
-                  {!isSpeaking && !isWriting ? (
-                    <div className="space-y-2 pt-1">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {isVi ? 'Các lựa chọn đáp án (Chọn nút tròn ở đáp án ĐÚNG):' : 'Options (Mark the correct answer):'}
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {letters.map((letter, optIdx) => {
-                          const isCorrect = (q.correct_answer || 'A').toUpperCase() === letter
-                          return (
-                            <div
-                              key={letter}
-                              className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${
-                                isCorrect
-                                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-700 ring-1 ring-emerald-400/30'
-                                  : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateQuestion(qIndex, { correct_answer: letter })}
-                                className={`w-6 h-6 rounded-full font-black text-xs flex items-center justify-center shrink-0 cursor-pointer transition-all ${
-                                  isCorrect
-                                    ? 'bg-emerald-600 text-white shadow-xs'
-                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300'
-                                }`}
-                                title={`Đặt ${letter} làm đáp án đúng`}
-                              >
-                                {letter}
-                              </button>
-                              <input
-                                type="text"
-                                value={q.options[optIdx] || ''}
-                                onChange={(e) => handleOptionChange(qIndex, optIdx, e.target.value)}
-                                placeholder={`Lựa chọn ${letter}...`}
-                                className="flex-1 bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                              />
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    /* Speaking / Writing Configuration */
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                      {isSpeaking && (
-                        <>
-                          <div>
-                            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                              Thời gian chuẩn bị (giây):
-                            </label>
-                            <input
-                              type="number"
-                              min={10}
-                              max={120}
-                              value={q.prep_time_seconds || 45}
-                              onChange={(e) => handleUpdateQuestion(qIndex, { prep_time_seconds: Number(e.target.value) })}
-                              className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                              Thời gian trả lời / nói (giây):
-                            </label>
-                            <input
-                              type="number"
-                              min={15}
-                              max={180}
-                              value={q.response_time_seconds || 60}
-                              onChange={(e) => handleUpdateQuestion(qIndex, { response_time_seconds: Number(e.target.value) })}
-                              className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
-                            />
-                          </div>
-                        </>
-                      )}
-                      {isWriting && (
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                            Số từ tối thiểu (words):
-                          </label>
-                          <input
-                            type="number"
-                            min={30}
-                            max={600}
-                            value={q.min_words || 100}
-                            onChange={(e) => handleUpdateQuestion(qIndex, { min_words: Number(e.target.value) })}
-                            className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Explanation Section */}
-                  <div className="space-y-1 pt-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {isVi ? 'Lời giải thích chi tiết đáp án:' : 'Answer explanation / key notes:'}
-                    </label>
-                    <input
-                      type="text"
-                      value={q.explanation || ''}
-                      onChange={(e) => handleUpdateQuestion(qIndex, { explanation: e.target.value })}
-                      placeholder={isVi ? 'Giải thích vì sao chọn đáp án này, ngữ pháp / từ vựng áp dụng...' : 'Explain why this answer is correct...'}
-                      className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                  </div>
-                </div>
+                  question={q}
+                  index={qIndex}
+                  isVi={isVi}
+                  isUploadingAudio={uploadingQuestionAudioIdx === qIndex}
+                  isUploadingImage={uploadingQuestionImageIdx === qIndex}
+                  onUpdate={(updates) => handleUpdateQuestion(qIndex, updates)}
+                  onOptionChange={(optIdx, val) => handleOptionChange(qIndex, optIdx, val)}
+                  onDuplicate={() => handleDuplicateQuestion(qIndex)}
+                  onDelete={() => handleDeleteQuestion(qIndex)}
+                  onRequestUploadAudio={() => {
+                    activeQuestionIdxRef.current = qIndex
+                    questionAudioInputRef.current?.click()
+                  }}
+                  onRequestUploadImage={() => {
+                    activeQuestionIdxRef.current = qIndex
+                    questionImageInputRef.current?.click()
+                  }}
+                />
               )
             })
           )}
         </div>
 
-        {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             {isVi ? 'Tổng số câu hỏi:' : 'Total Questions:'}{' '}
