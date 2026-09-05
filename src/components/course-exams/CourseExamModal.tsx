@@ -96,45 +96,31 @@ export function CourseExamModal({
       setFormDescription(editingExam.description || '')
       setFormIsPublished(editingExam.is_published ?? true)
     } else {
-      // Mặc định chọn khóa học (nếu đang xem bộ lọc khóa học nào thì chọn khóa đó,
-      // hoặc chọn khóa đầu tiên; CHỈ chọn Toàn hệ thống nếu đang filter GLOBAL_SYSTEM hoặc không có khóa nào)
-      const defaultCourse =
-        selectedCourseId === 'GLOBAL_SYSTEM'
-          ? 'GLOBAL_SYSTEM_PLACEMENT'
-          : selectedCourseId !== 'ALL' && selectedCourseId !== 'GLOBAL_SYSTEM'
-          ? selectedCourseId
-          : courses[0]?.id || 'GLOBAL_SYSTEM_PLACEMENT'
-
-      setFormCourseId(defaultCourse)
+      // Khi ấn tạo bài thi: luôn tạo cho Toàn Hệ Thống (bài thi khóa học được tạo tại giao diện quản lý khóa học)
+      setFormCourseId('GLOBAL_SYSTEM_PLACEMENT')
       setFormTitle('')
+      setFormType('DIAGNOSTIC_TEST')
+      setFormDuration(60)
+      setFormQuestions(100)
+      setFormPassingScore(500)
+      setFormDescription('')
 
-      if (defaultCourse === 'GLOBAL_SYSTEM_PLACEMENT') {
-        setFormType('DIAGNOSTIC_TEST')
-        setFormDuration(60)
-        setFormQuestions(100)
-        setFormPassingScore(500)
-        // Nếu 2 kỹ năng đã có bài public mà 4 kỹ năng chưa có, ưu tiên 4 kỹ năng
-        if (published2SkillsExam && !published4SkillsExam) {
-          setFormPlacementSkills('4SKILLS')
-          setFormIsPublished(true)
-        } else if (published2SkillsExam && published4SkillsExam) {
-          setFormPlacementSkills('2SKILLS')
-          setFormIsPublished(false) // Bắt buộc private nếu cả 2 đều đã có bài public
-        } else {
-          setFormPlacementSkills('2SKILLS')
-          setFormIsPublished(true)
-        }
-      } else {
-        setFormType('CHALLENGE_TEST')
+      // Nếu 2 kỹ năng đã có bài public mà 4 kỹ năng chưa có, ưu tiên chọn 4 kỹ năng
+      if (published2SkillsExam && !published4SkillsExam) {
+        setFormPlacementSkills('4SKILLS')
+        setFormDuration(90)
+        setFormQuestions(120)
+        setFormPassingScore(650)
+        setFormIsPublished(true)
+      } else if (published2SkillsExam && published4SkillsExam) {
         setFormPlacementSkills('2SKILLS')
-        setFormDuration(30)
-        setFormQuestions(30)
-        setFormPassingScore(70)
+        setFormIsPublished(false) // Bắt buộc private nếu cả 2 đều đã có bài public
+      } else {
+        setFormPlacementSkills('2SKILLS')
         setFormIsPublished(true)
       }
-      setFormDescription('')
     }
-  }, [isOpen, editingExam, courses, selectedCourseId, published2SkillsExam, published4SkillsExam])
+  }, [isOpen, editingExam, published2SkillsExam, published4SkillsExam])
 
   // Khi người dùng chuyển kỹ năng, nếu cấu hình đó đã có bài public thì tự động tắt xuất bản
   const handlePlacementSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
@@ -227,8 +213,8 @@ export function CourseExamModal({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
     >
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl ring-1 ring-black/5 dark:ring-white/10 p-6 space-y-4 animate-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl ring-1 ring-black/5 dark:ring-white/10 p-6 space-y-4 animate-in zoom-in-95 duration-150 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <FileCheck2 className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
             <span>
@@ -237,8 +223,8 @@ export function CourseExamModal({
                   ? 'Chỉnh Sửa Bài Thi'
                   : 'Edit Exam'
                 : isVi
-                ? 'Tạo Bài Thi Đánh Giá Mới'
-                : 'Create New Exam'}
+                ? 'Tạo Bài Thi Đánh Giá Mới (Toàn Hệ Thống)'
+                : 'Create New System Placement Exam'}
             </span>
           </h3>
           <button
@@ -250,28 +236,46 @@ export function CourseExamModal({
           </button>
         </div>
 
-        <div className="space-y-3.5 max-h-[75vh] overflow-y-auto pr-1">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {isVi ? 'Khóa học áp dụng:' : 'Applied Course:'}
-            </label>
-            <select
-              value={formCourseId}
-              onChange={(e) => handleFormCourseChange(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-            >
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-              {!isTeacher && (
-                <option value="GLOBAL_SYSTEM_PLACEMENT" className="font-bold text-violet-600 dark:text-violet-400">
-                  🌐 [TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)
-                </option>
-              )}
-            </select>
-          </div>
+        <div className="space-y-4 overflow-y-auto pr-1 flex-1">
+          {/* Phạm vi bài thi */}
+          {!editingExam || formCourseId === 'GLOBAL_SYSTEM_PLACEMENT' ? (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {isVi ? 'Phạm vi áp dụng bài thi:' : 'Applied Scope:'}
+              </label>
+              <div className="flex items-center justify-between px-3.5 py-2.5 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/80 rounded-2xl text-xs font-bold text-violet-800 dark:text-violet-300">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-violet-600 animate-pulse"></span>
+                  <span>🌐 [TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)</span>
+                </div>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 shrink-0">
+                  {isVi ? 'Đề thi tổng hợp' : 'System Wide'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
+                {isVi
+                  ? '* Lưu ý: Bài kiểm tra riêng theo từng khóa học (Challenge, Final Test) được tạo trực tiếp tại giao diện Quản lý khóa học.'
+                  : '* Note: Course-specific exams (Challenge, Final Test) are created in the Course Management interface.'}
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {isVi ? 'Khóa học áp dụng:' : 'Applied Course:'}
+              </label>
+              <select
+                value={formCourseId}
+                onChange={(e) => handleFormCourseChange(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+              >
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -290,12 +294,12 @@ export function CourseExamModal({
                   ? 'Ví dụ: Challenge Test: Kiểm tra cột mốc Chương 1...'
                   : 'e.g. Challenge Test: Chapter 1 Milestone...'
               }
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium"
             />
           </div>
 
           {isSystemPlacement ? (
-            <div className="p-3.5 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/80 space-y-3">
+            <div className="p-4 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/80 space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-violet-800 dark:text-violet-300">
                 <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                 <span>
@@ -335,11 +339,11 @@ export function CourseExamModal({
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                   {isVi ? 'Chọn cấu hình kỹ năng đánh giá:' : 'Evaluation Skills:'}
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => handlePlacementSkillsChange('2SKILLS')}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       formPlacementSkills === '2SKILLS'
                         ? 'bg-white dark:bg-slate-900 border-violet-500 ring-2 ring-violet-500/20 text-violet-900 dark:text-violet-200 shadow-sm'
                         : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-violet-300'
@@ -348,18 +352,18 @@ export function CourseExamModal({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold">🎧 📖 2 Kỹ Năng</span>
                       {published2SkillsExam && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                        <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
                           {isVi ? 'Đã có Public' : 'Public Active'}
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Listening & Reading (10 - 990)</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Listening & Reading (10 - 990)</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handlePlacementSkillsChange('4SKILLS')}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       formPlacementSkills === '4SKILLS'
                         ? 'bg-white dark:bg-slate-900 border-teal-500 ring-2 ring-teal-500/20 text-teal-900 dark:text-teal-200 shadow-sm'
                         : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-teal-300'
@@ -368,12 +372,12 @@ export function CourseExamModal({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold">🎧 📖 🗣️ ✍️ 4 Kỹ Năng</span>
                       {published4SkillsExam && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                        <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
                           {isVi ? 'Đã có Public' : 'Public Active'}
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">LR + Speaking & Writing</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">LR + Speaking & Writing</div>
                   </button>
                 </div>
               </div>
@@ -414,7 +418,21 @@ export function CourseExamModal({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {isVi ? 'Thời lượng (phút):' : 'Duration (mins):'}
+              </label>
+              <input
+                type="number"
+                min={5}
+                max={180}
+                value={formDuration}
+                onChange={(e) => setFormDuration(Number(e.target.value))}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {isVi ? 'Số câu hỏi dự kiến:' : 'Expected Questions:'}
@@ -425,7 +443,7 @@ export function CourseExamModal({
                 max={200}
                 value={formQuestions}
                 onChange={(e) => setFormQuestions(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
               />
             </div>
 
@@ -439,7 +457,7 @@ export function CourseExamModal({
                 max={isSystemPlacement ? 990 : 100}
                 value={formPassingScore}
                 onChange={(e) => setFormPassingScore(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
               />
             </div>
           </div>
@@ -449,7 +467,7 @@ export function CourseExamModal({
               {isVi ? 'Mô tả / Hướng dẫn học viên:' : 'Description / Instructions:'}
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               placeholder={isVi ? 'Ghi chú hướng dẫn bài thi...' : 'Exam notes or instructions...'}
