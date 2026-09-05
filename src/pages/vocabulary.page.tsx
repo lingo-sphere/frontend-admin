@@ -67,14 +67,14 @@ export function VocabularyPage() {
       if (topicsRes.status === 'fulfilled' && topicsRes.value) {
         const mappedTopics: Topic[] = topicsRes.value.map((t: ApiTopic) => ({
           id: t._id,
-          name_vi: t.name_vi || t.name,
-          name_en: t.name,
+          name_vi: t.name_vi,
+          name_en: t.name_en || t.name,
           slug: t.slug,
           description: t.description || '',
           icon: t.icon_url,
           is_featured: t.is_featured,
           status: t.status,
-          lexical_count: t.words_count || 0,
+          lexical_count: t.lexical_count ?? t.words_count ?? 0,
           created_at: t.created_at || new Date().toISOString(),
         }))
         setTopics(mappedTopics)

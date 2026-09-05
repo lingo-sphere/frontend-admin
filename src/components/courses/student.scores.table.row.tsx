@@ -18,8 +18,6 @@ export function StudentScoresTableRow({
 }: StudentScoresTableRowProps) {
   const displayName: string = String(
     userProfile?.full_name ||
-      (userProfile as any)?.fullName ||
-      (userProfile as any)?.name ||
       student.full_name ||
       `Học viên #${student.user_id.slice(-6)}`
   )
@@ -27,7 +25,7 @@ export function StudentScoresTableRow({
     userProfile?.email || student.email || 'Học viên đã đăng ký'
   )
   const avatarUrl: string | undefined =
-    userProfile?.avatar_url || (userProfile as any)?.avatar || student.avatar_url
+    userProfile?.avatar_url || student.avatar_url
   const initials = displayName
     .split(' ')
     .map((n: string) => n[0])

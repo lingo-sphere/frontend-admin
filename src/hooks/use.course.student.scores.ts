@@ -31,18 +31,14 @@ export function useCourseStudentScores(courseId: string, isOpen: boolean) {
       setData(progressRes)
 
       if (usersRes) {
-        const uList = Array.isArray(usersRes)
+        const uList: UserProfile[] = Array.isArray(usersRes)
           ? usersRes
-          : Array.isArray((usersRes as any).result)
-          ? (usersRes as any).result
-          : Array.isArray((usersRes as any).data)
-          ? (usersRes as any).data
+          : Array.isArray(usersRes.result)
+          ? usersRes.result
           : []
         const map = new Map<string, UserProfile>()
-        uList.forEach((u: any) => {
-          if (u.user_id) map.set(String(u.user_id), u)
-          if (u._id) map.set(String(u._id), u)
-          if (u.id) map.set(String(u.id), u)
+        uList.forEach((u: UserProfile) => {
+          if (u.user_id) map.set(u.user_id, u)
         })
         setUsersMap(map)
       }
@@ -98,7 +94,7 @@ export function useCourseStudentScores(courseId: string, isOpen: boolean) {
     const term = searchTerm.toLowerCase()
     return data.students.filter((st) => {
       const u = usersMap.get(st.user_id) || usersMap.get(String(st.user_id))
-      const name = (u?.full_name || (u as any)?.fullName || st.full_name || '').toLowerCase()
+      const name = (u?.full_name || st.full_name || '').toLowerCase()
       const email = (u?.email || st.email || '').toLowerCase()
       return name.includes(term) || email.includes(term) || st.user_id.toLowerCase().includes(term)
     })

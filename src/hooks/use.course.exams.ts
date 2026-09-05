@@ -10,6 +10,7 @@ import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
 import type { CourseSelectItem } from '@/components/course-exams/course.exam.header.actions'
+import type { Course } from '@/types/api.types'
 
 export function useCourseExams() {
   const { i18n } = useTranslation()
@@ -19,7 +20,7 @@ export function useCourseExams() {
   const profile = useAuthStore((state) => state.profile)
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isTeacher = currentRole === 'TEACHER' || currentRole === 'INSTRUCTOR' || currentRole === 'GIANG_VIEN'
-  const currentUserId = user?.user_id || profile?.user_id || (user as unknown as { _id?: string; id?: string })?._id || ''
+  const currentUserId = user?.user_id || profile?.user_id || ''
 
   const [courses, setCourses] = useState<CourseSelectItem[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
@@ -52,14 +53,14 @@ export function useCourseExams() {
     try {
       if (updated.course_id && String(examId).startsWith('course_final_')) {
         await courseService.updateCourse(updated.course_id, {
-          final_test_questions: updated.questions as any,
+          final_test_questions: updated.questions,
           ...(updated.audio_url ? { final_test_audio_url: updated.audio_url } : {}),
         })
       } else if (updated.module_id) {
         const modId = updated.module_id
         await courseService.updateModule(modId, {
-          challenge_questions: updated.questions as any,
-          post_mini_questions: updated.questions as any,
+          challenge_questions: updated.questions,
+          post_mini_questions: updated.questions,
           ...(updated.audio_url
             ? {
                 challenge_audio_url: updated.audio_url,
@@ -77,15 +78,15 @@ export function useCourseExams() {
     setIsLoading(true)
     try {
       let allowedCourses: CourseSelectItem[] = []
-      let rawCourses: any[] = []
+      let rawCourses: Course[] = []
 
       if (isTeacher) {
         try {
           const teacherRes = await courseService.getTeacherCourses()
           if (Array.isArray(teacherRes) && teacherRes.length > 0) {
             rawCourses = teacherRes
-            allowedCourses = teacherRes.map((c: any) => ({
-              id: c._id || c.id || '',
+            allowedCourses = teacherRes.map((c) => ({
+              id: c._id || '',
               title: c.title || '',
               author_id: c.author_id || currentUserId,
               students_count: c.students_count || 0,
@@ -97,11 +98,11 @@ export function useCourseExams() {
 
         if (allowedCourses.length === 0) {
           const allRes = await courseService.getAllCourses({ pageSize: 100 })
-          rawCourses = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || (allRes as any)?.data || [])
-          const myCourses = rawCourses.filter((c: any) => c.author_id === currentUserId)
+          rawCourses = allRes.result || []
+          const myCourses = rawCourses.filter((c) => c.author_id === currentUserId)
           const targetList = myCourses.length > 0 ? myCourses : rawCourses
-          allowedCourses = targetList.map((c: any) => ({
-            id: c._id || c.id || '',
+          allowedCourses = targetList.map((c) => ({
+            id: c._id || '',
             title: c.title || '',
             author_id: c.author_id || '',
             students_count: c.students_count || 0,
@@ -109,9 +110,9 @@ export function useCourseExams() {
         }
       } else {
         const allRes = await courseService.getAllCourses({ pageSize: 100 })
-        rawCourses = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || (allRes as any)?.data || [])
-        allowedCourses = rawCourses.map((c: any) => ({
-          id: c._id || c.id || '',
+        rawCourses = allRes.result || []
+        allowedCourses = rawCourses.map((c) => ({
+          id: c._id || '',
           title: c.title || '',
           author_id: c.author_id || '',
           students_count: c.students_count || 0,
@@ -126,7 +127,7 @@ export function useCourseExams() {
 
       await Promise.all(
         allowedCourses.map(async (c) => {
-          const rawCourse = rawCourses.find((rc: any) => (rc._id || rc.id) === c.id) || c
+          const rawCourse = rawCourses.find((rc) => rc._id === c.id) || (c as unknown as Course)
 
           if (
             rawCourse.final_test_questions &&
@@ -151,8 +152,7 @@ export function useCourseExams() {
           }
 
           try {
-            const modsRes = await courseService.getModules(c.id)
-            const modulesList: any[] = Array.isArray(modsRes) ? modsRes : ((modsRes as any)?.data || [])
+            const modulesList = await courseService.getModules(c.id)
             for (const mod of modulesList) {
               const qList =
                 mod.challenge_questions && Array.isArray(mod.challenge_questions) && mod.challenge_questions.length > 0
@@ -198,7 +198,7 @@ export function useCourseExams() {
             ...e,
             id: eid,
             _id: eid,
-            type: e.type || (e as any).exam_type || (e.is_system_placement ? 'DIAGNOSTIC_TEST' : 'CHALLENGE_TEST'),
+            type: e.type || (e.is_system_placement ? 'DIAGNOSTIC_TEST' : 'CHALLENGE_TEST'),
             course_title: e.is_system_placement || !e.course_id ? 'Toàn Hệ Thống' : (e.course_title || 'Khóa học'),
           })
         }
@@ -370,8 +370,9 @@ export function useCourseExams() {
           ? (isVi ? 'Đã xuất bản bài thi!' : 'Exam published!')
           : (isVi ? 'Đã chuyển bài thi về bản nháp / Private!' : 'Exam set to private draft!')
       )
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể cập nhật trạng thái xuất bản bài thi.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể cập nhật trạng thái xuất bản bài thi.'
+      toast.error(msg)
     }
   }
 
@@ -419,8 +420,9 @@ export function useCourseExams() {
             : 'Created exam shell! Opening question bank editor...'
         )
       }
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể lưu bài thi. Vui lòng thử lại.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu bài thi. Vui lòng thử lại.'
+      toast.error(msg)
     }
   }
 

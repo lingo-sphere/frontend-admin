@@ -159,6 +159,7 @@ export interface Lesson {
 
 export interface CourseModule {
   _id: string
+  id?: string
   course_id: string
   title: string
   module_order: number
@@ -167,9 +168,11 @@ export interface CourseModule {
   test_questions?: QuizQuestionItem[]
   challenge_test_exam_id?: string
   challenge_passing_score?: number
+  challenge_duration_minutes?: number
   challenge_questions?: QuizQuestionItem[]
   post_mini_test_exam_id?: string
   post_mini_passing_score?: number
+  post_mini_duration_minutes?: number
   post_mini_questions?: QuizQuestionItem[]
   test_audio_url?: string
   challenge_audio_url?: string
@@ -191,6 +194,7 @@ export interface Course {
   discount_price?: number
   thumbnail_url?: string
   author_id?: string
+  author_name?: string
   approval_status: CourseApprovalStatus | string
   is_published?: boolean
   pre_test_exam_id?: string
@@ -295,12 +299,14 @@ export interface Word {
 
 export interface Topic {
   _id: string
-  name: string
+  name_en?: string
   name_vi?: string
+  name?: string
   slug: string
   description?: string
   icon_url?: string
   words_count?: number
+  lexical_count?: number
   is_featured?: boolean
   status?: string
   created_at?: string

@@ -44,20 +44,17 @@ export function AdminUsersPage() {
       const items: UserProfile[] = []
       const seenIds = new Set<string>()
 
-      const extractList = (val: any): UserProfile[] => {
+      const extractList = (val: unknown): UserProfile[] => {
         if (!val) return []
-        if (Array.isArray(val)) return val
-        if (Array.isArray(val.result)) return val.result
-        if (Array.isArray(val.data)) return val.data
-        if (Array.isArray(val.items)) return val.items
-        return []
+        if (Array.isArray(val)) return val as UserProfile[]
+        const paginated = val as { result?: UserProfile[] }
+        return Array.isArray(paginated.result) ? paginated.result : []
       }
 
       if (adminRes.status === 'fulfilled' && adminRes.value) {
         extractList(adminRes.value).forEach((u) => {
-          const uid = u.user_id || u._id
-          if (uid && !seenIds.has(uid)) {
-            seenIds.add(uid)
+          if (u.user_id && !seenIds.has(u.user_id)) {
+            seenIds.add(u.user_id)
             items.push(u)
           }
         })
@@ -65,9 +62,8 @@ export function AdminUsersPage() {
 
       if (teacherRes.status === 'fulfilled' && teacherRes.value) {
         extractList(teacherRes.value).forEach((u) => {
-          const uid = u.user_id || u._id
-          if (uid && !seenIds.has(uid)) {
-            seenIds.add(uid)
+          if (u.user_id && !seenIds.has(u.user_id)) {
+            seenIds.add(u.user_id)
             items.push(u)
           }
         })
@@ -77,7 +73,7 @@ export function AdminUsersPage() {
         extractList(allRes.value).forEach((u) => {
           const roleUpper = (u.role || '').toUpperCase()
           if (roleUpper === 'ADMIN' || roleUpper === 'INSTRUCTOR') {
-            const uid = u.user_id || u._id
+            const uid = u.user_id
             if (uid && !seenIds.has(uid)) {
               seenIds.add(uid)
               items.push(u)
@@ -87,8 +83,8 @@ export function AdminUsersPage() {
       }
 
       const mapped: AdminUser[] = items.map((u: UserProfile) => ({
-        id: u._id || u.user_id,
-        name: u.full_name || u.email.split('@')[0],
+        id: u.user_id,
+        name: u.full_name,
         email: u.email,
         role: u.role?.toUpperCase() === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN',
         is_active: u.status?.toUpperCase() === 'ACTIVE',

@@ -81,28 +81,7 @@ export interface SkillSubmissionItem {
 
 export const progressService = {
   async getCourseStudentsProgress(courseId: string): Promise<CourseStudentsProgressResponse> {
-    const res = await api.get<any>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
-    const payload = (res && res.data && (res.data.students || res.data.total_students !== undefined)) ? res.data : res
-
-    if (payload && payload.students && Array.isArray(payload.students)) {
-      return payload as CourseStudentsProgressResponse
-    }
-    if (Array.isArray(res)) {
-      return {
-        course_id: courseId,
-        total_students: res.length,
-        completed_students: 0,
-        average_progress_percentage: 0,
-        students: res,
-      }
-    }
-    return {
-      course_id: courseId,
-      total_students: 0,
-      completed_students: 0,
-      average_progress_percentage: 0,
-      students: [],
-    }
+    return api.get<CourseStudentsProgressResponse>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
   },
 
   async getGrowthChart(courseId: string): Promise<unknown> {

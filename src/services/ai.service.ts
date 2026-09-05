@@ -23,11 +23,9 @@ export interface GenerateQuizItem {
 }
 
 export interface TeacherGenerateQuizPayload {
-  content_or_topic?: string
-  topic?: string
+  content_or_topic: string
   question_count?: number
   cefr_level?: string
-  difficulty?: string
 }
 
 export interface TeacherGenerateQuizResponse {
@@ -42,18 +40,18 @@ export const aiAdminService = {
   async generateQuizForTeacher(
     payloadOrTopic: TeacherGenerateQuizPayload | string,
     questionCount = 5,
-    difficulty = 'MEDIUM'
+    cefrLevel = 'B1'
   ): Promise<TeacherGenerateQuizResponse & { items: QuizQuestionItem[] }> {
     let topicStr = ''
     let count = questionCount
-    let level = difficulty
+    let level = cefrLevel
 
     if (typeof payloadOrTopic === 'string') {
       topicStr = payloadOrTopic
     } else {
-      topicStr = payloadOrTopic.content_or_topic || payloadOrTopic.topic || ''
-      count = payloadOrTopic.question_count || questionCount
-      level = payloadOrTopic.cefr_level || payloadOrTopic.difficulty || difficulty
+      topicStr = payloadOrTopic.content_or_topic
+      count = payloadOrTopic.question_count ?? questionCount
+      level = payloadOrTopic.cefr_level ?? cefrLevel
     }
 
     const res = await api.post<Record<string, unknown>>('/ai/teacher/generate-quiz', {
@@ -122,14 +120,7 @@ export const aiAdminService = {
   },
 
   async getAiModels(): Promise<Array<{ model_name: string; provider: string; is_active: boolean }>> {
-    try {
-      return await api.get<Array<{ model_name: string; provider: string; is_active: boolean }>>('/ai/models')
-    } catch {
-      return [
-        { model_name: 'qwen/qwen3.8-27b', provider: 'GROQ_CLOUD', is_active: true },
-        { model_name: 'gemini-3.1-flash-lite', provider: 'GOOGLE_GEMINI', is_active: true },
-      ]
-    }
+    return api.get<Array<{ model_name: string; provider: string; is_active: boolean }>>('/ai/models')
   },
 }
 

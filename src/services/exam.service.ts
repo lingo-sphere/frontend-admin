@@ -4,6 +4,7 @@
  */
 
 import { api } from '@/services/api.client'
+import type { QuizQuestionItem } from '@/types/api.types'
 
 export interface ToeicExamItem {
   id?: string
@@ -27,7 +28,7 @@ export interface ToeicExamItem {
   code?: string
   description?: string
   created_at?: string
-  questions?: any[]
+  questions?: QuizQuestionItem[]
   audio_url?: string
 }
 

@@ -25,7 +25,7 @@ export function createCourseProgressColumns({
       sortable: true,
       render: (st) => {
         const u = usersMap.get(st.user_id) || usersMap.get(String(st.user_id))
-        const displayName = u?.full_name || (u as any)?.fullName || st.full_name || 'Học viên ẩn danh'
+        const displayName = u?.full_name || st.full_name || 'Học viên ẩn danh'
         const email = u?.email || st.email || 'Chưa cập nhật email'
 
         return (

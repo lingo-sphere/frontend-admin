@@ -39,7 +39,7 @@ export function createRoadmapColumns({
           )}
           <div className="flex items-center gap-2 pt-0.5">
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              /{record.slug || record._id}
+              /{record.slug}
             </span>
           </div>
         </div>

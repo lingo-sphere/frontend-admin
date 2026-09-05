@@ -108,12 +108,12 @@ export function CourseExamsPage() {
         isLoading={isLoading}
         columns={columns}
         data={paginatedExams}
-        rowKey={(e) => e.id || e._id || String(Math.random())}
+        rowKey={(e) => e._id || e.id || ''}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         renderGridItem={(exam) => (
           <CourseExamGridCard
-            key={exam.id || exam._id || String(Math.random())}
+            key={exam._id || exam.id}
             exam={exam}
             isVi={isVi}
             onOpenEdit={handleOpenEditModal}

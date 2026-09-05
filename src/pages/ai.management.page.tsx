@@ -10,7 +10,6 @@ import { toast } from '@/store/toast.store'
 import { AiArchitectureCards } from '@/components/ai/ai.architecture.cards'
 import { AiQuizGeneratorForm } from '@/components/ai/ai.quiz.generator.form'
 import { AiGeneratedQuizList } from '@/components/ai/ai.generated.quiz.list'
-import { DEFAULT_AI_SAMPLE_QUESTIONS } from '@/helpers/ai.helper'
 
 export function AiManagementPage() {
   const [topic, setTopic] = useState<string>('Business Meetings and Email Etiquette')
@@ -31,9 +30,9 @@ export function AiManagementPage() {
         if (res.model_used) setModelUsed(res.model_used)
         toast.success(`AI đã sinh thành công ${res.questions.length} câu hỏi trắc nghiệm!`, 'AI Sư Phạm')
       }
-    } catch {
-      setGeneratedQuestions(DEFAULT_AI_SAMPLE_QUESTIONS)
-      toast.success('Đã sinh bộ câu hỏi trắc nghiệm mẫu cho giáo viên!', 'AI Sẵn Sàng')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể sinh câu hỏi bằng AI. Vui lòng kiểm tra lại dịch vụ AI.'
+      toast.error(msg, 'Lỗi AI')
     } finally {
       setIsGenerating(false)
     }

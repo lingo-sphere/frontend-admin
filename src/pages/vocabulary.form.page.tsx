@@ -102,7 +102,7 @@ export function VocabularyFormPage({
         meaning_order: idx + 1,
         part_of_speech: m.part_of_speech || wordType,
         definition_en: m.definition_en,
-        definition_vi: m.definition_vi || m.short_meaning_vi || '',
+        definition_vi: m.definition_vi || '',
         short_meaning_vi: m.short_meaning_vi,
         examples: m.examples.filter(Boolean),
         is_primary: idx === 0,

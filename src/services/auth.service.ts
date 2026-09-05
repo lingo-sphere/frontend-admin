@@ -21,8 +21,7 @@ export interface RegisterPayload {
 }
 
 export interface ChangePasswordPayload {
-  old_password?: string
-  current_password?: string
+  old_password: string
   new_password: string
 }
 
@@ -60,7 +59,7 @@ export const authService = {
 
   async changePassword(userId: string, payload: ChangePasswordPayload): Promise<{ message: string }> {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD(userId), {
-      old_password: payload.old_password || payload.current_password,
+      old_password: payload.old_password,
       new_password: payload.new_password,
     })
   },

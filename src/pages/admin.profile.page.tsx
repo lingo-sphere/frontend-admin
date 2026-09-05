@@ -138,7 +138,6 @@ export function AdminProfilePage() {
         }
         await authService.changePassword(profileData.id, {
           old_password: form.currentPassword,
-          current_password: form.currentPassword,
           new_password: form.newPassword,
         })
         toast.success('Đổi mật khẩu bảo mật thành công!')

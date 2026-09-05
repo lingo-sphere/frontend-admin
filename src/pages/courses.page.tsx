@@ -63,16 +63,13 @@ export function CoursesPage() {
             target_score: c.target_score || 500,
             category: (c.category as Course['category']) || 'TOEIC_2_SKILLS',
             level: (c.level as Course['level']) || 'BEGINNER',
-            total_modules: c.total_modules || c.modules?.length || 0,
-            total_lessons:
-              c.total_lessons ||
-              (c.modules || []).reduce((acc: number, m: ApiCourseModule) => acc + (m.lessons?.length || 0), 0) ||
-              0,
+            total_modules: c.total_modules || 0,
+            total_lessons: c.total_lessons || 0,
             price: c.price || 0,
             discount_price: typeof c.discount_price === 'number' ? c.discount_price : undefined,
             is_published: c.is_published ?? true,
             author_id: c.author_id || '',
-            author_name: ((c as unknown as Record<string, unknown>).author_name as string) || 'Đội ngũ Giảng viên LingoSphere',
+            author_name: c.author_name || 'Đội ngũ Giảng viên LingoSphere',
             created_at: c.created_at || new Date().toISOString(),
             enrollments: c.students_count || 0,
             completed_count: Math.round((c.students_count || 0) * 0.4),

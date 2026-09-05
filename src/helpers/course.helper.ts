@@ -3,6 +3,8 @@
  * @description Mã nguồn thành phần course.helper.ts
  */
 
+import type { CourseFormData } from '@/components/courses/course.basic.info.tab'
+
 export type FilterCategory = 'ALL' | 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
 export type FilterLevel = 'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type FilterStatus = 'ALL' | 'PUBLISHED' | 'DRAFT'
@@ -57,7 +59,7 @@ export const COURSE_REGEX = {
   CORRECT_ANSWER: /^[A-D]$/i,
 }
 
-export function validateCourseFormData(formData: any, isVi: boolean = true): string | null {
+export function validateCourseFormData(formData: Partial<CourseFormData>, isVi: boolean = true): string | null {
   if (!formData.title || !formData.title.trim() || formData.title.trim().length < 3) {
     return isVi ? 'Tên khóa học phải có ít nhất 3 ký tự' : 'Course title must be at least 3 characters'
   }

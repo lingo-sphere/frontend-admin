@@ -63,12 +63,12 @@ export function SettingsPage() {
   }, [loadSettingsData])
 
   const handleTogglePlanActive = async (planId: string) => {
-    const targetPlan = plans.find((p) => (p._id || p.id || p.slug) === planId)
+    const targetPlan = plans.find((p) => (p._id || p.slug) === planId)
     if (!targetPlan) return
     const newStatus = !targetPlan.is_active
     setPlans((prev) =>
       prev.map((p) => {
-        const id = p._id || p.id || p.slug
+        const id = p._id || p.slug
         return id === planId ? { ...p, is_active: newStatus } : p
       })
     )
@@ -81,18 +81,19 @@ export function SettingsPage() {
   }
 
   const handleUpdatePlan = async (updatedPlan: SubscriptionPlan) => {
-    const planId = updatedPlan._id || updatedPlan.id || updatedPlan.slug
+    const planId = updatedPlan._id || updatedPlan.slug
     try {
       const res = await userService.updateSubscriptionPlan(planId, updatedPlan)
       setPlans((prev) =>
         prev.map((p) => {
-          const id = p._id || p.id || p.slug
+          const id = p._id || p.slug
           return id === planId ? { ...p, ...res, price: updatedPlan.price } : p
         })
       )
       toast.success(isVietnamese ? 'Cập nhật giá và gói dịch vụ thành công!' : 'Plan updated successfully!')
-    } catch (err: any) {
-      toast.error(err?.message || (isVietnamese ? 'Không thể cập nhật gói dịch vụ' : 'Failed to update plan'))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : (isVietnamese ? 'Không thể cập nhật gói dịch vụ' : 'Failed to update plan')
+      toast.error(msg)
       throw err
     }
   }

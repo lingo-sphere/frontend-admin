@@ -5,14 +5,14 @@
 
 import React, { RefObject } from 'react'
 import { ChevronDown, User as UserIcon, Shield, LogOut } from 'lucide-react'
-import type { UserProfile } from '@/types/api.types'
+import type { UserProfile, AuthUser } from '@/types/api.types'
 
 interface TopbarUserMenuProps {
   userDropdownRef: RefObject<HTMLDivElement | null>
   userDropdownOpen: boolean
   onToggleOpen: () => void
   profile: UserProfile | null
-  user: any
+  user: AuthUser | null
   avatarError: boolean
   onAvatarError: () => void
   onNavigateProfile: () => void

@@ -27,11 +27,11 @@ export function ExamsPage() {
   const [selectedExamForQuestions, setSelectedExamForQuestions] = useState<ToeicExamItem | null>(null)
 
   const handleExamQuestionsUpdated = (updated: ToeicExamItem) => {
-    const examId = updated.id || updated._id
+    const examId = updated._id || updated.id
     setExams((prev) =>
-      prev.map((e) => ((e.id || e._id) === examId ? { ...e, ...updated } : e))
+      prev.map((e) => ((e._id || e.id) === examId ? { ...e, ...updated } : e))
     )
-    if (selectedExamForQuestions && (selectedExamForQuestions.id || selectedExamForQuestions._id) === examId) {
+    if (selectedExamForQuestions && (selectedExamForQuestions._id || selectedExamForQuestions.id) === examId) {
       setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
     }
   }
@@ -68,7 +68,7 @@ export function ExamsPage() {
     try {
       await examAdminService.updateExam(id, { is_published: !current })
       setExams((prev) =>
-        prev.map((e) => ((e.id || e._id) === id ? { ...e, is_published: !current } : e))
+        prev.map((e) => ((e._id || e.id) === id ? { ...e, is_published: !current } : e))
       )
       toast.success(
         isVi
@@ -76,25 +76,17 @@ export function ExamsPage() {
           : 'Publish status updated successfully!'
       )
     } catch {
-      setExams((prev) =>
-        prev.map((e) => ((e.id || e._id) === id ? { ...e, is_published: !current } : e))
-      )
-      toast.success(
-        isVi
-          ? 'Đã chuyển đổi trạng thái đề thi (Local)!'
-          : 'Toggled exam status (Local)!'
-      )
+      toast.error(isVi ? 'Lỗi khi cập nhật trạng thái đề thi' : 'Failed to update exam status')
     }
   }
 
   const handleDeleteExam = async (id: string) => {
     try {
       await examAdminService.deleteExam(id)
-      setExams((prev) => prev.filter((e) => (e.id || e._id) !== id))
+      setExams((prev) => prev.filter((e) => (e._id || e.id) !== id))
       toast.success(isVi ? 'Đã xóa đề thi thành công!' : 'Exam deleted successfully!')
     } catch {
-      setExams((prev) => prev.filter((e) => (e.id || e._id) !== id))
-      toast.success(isVi ? 'Đã xóa đề thi khỏi danh sách!' : 'Exam removed from list!')
+      toast.error(isVi ? 'Lỗi khi xóa đề thi' : 'Failed to delete exam')
     }
   }
 

@@ -39,8 +39,8 @@ export function LearnersPage() {
       const res = await userService.getAllUsers({ role: 'STUDENT', limit: 100 })
       const items: UserProfile[] = Array.isArray(res) ? res : (res?.result || [])
       const mapped: User[] = items.map((u: UserProfile) => ({
-        id: u._id || u.user_id || '',
-        full_name: u.full_name || u.email.split('@')[0],
+        id: u.user_id,
+        full_name: u.full_name,
         email: u.email,
         target_toeic_score: u.target_toeic_score || 650,
         current_estimated_score: u.current_estimated_score || 450,
@@ -100,8 +100,8 @@ export function LearnersPage() {
 
     return [...list].sort((a, b) => {
       if (sortKey === 'user') {
-        const nameA = (a.full_name || a.email).toLowerCase()
-        const nameB = (b.full_name || b.email).toLowerCase()
+        const nameA = (a.full_name || '').toLowerCase()
+        const nameB = (b.full_name || '').toLowerCase()
         const comp = nameA.localeCompare(nameB)
         return sortOrder === 'asc' ? comp : -comp
       }

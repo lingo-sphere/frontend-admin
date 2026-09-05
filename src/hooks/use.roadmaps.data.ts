@@ -36,10 +36,7 @@ export function useRoadmapsData() {
       ])
 
       setRoadmaps(Array.isArray(roadmapsData) ? roadmapsData : [])
-      const rawCourses = Array.isArray(coursesRes)
-        ? coursesRes
-        : (coursesRes as any)?.result || (coursesRes as any)?.data || []
-      setCourses(rawCourses)
+      setCourses(coursesRes.result || [])
       setExams(Array.isArray(examsData) ? examsData : [])
     } catch (err) {
       console.error('Lỗi khi tải dữ liệu lộ trình:', err)

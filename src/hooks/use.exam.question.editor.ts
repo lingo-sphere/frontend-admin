@@ -26,6 +26,30 @@ export interface ExamQuestionItem {
   min_words?: number
 }
 
+interface RawExamQuestion {
+  id?: string
+  part_number?: number | string
+  part?: number | string
+  part_name?: string
+  question_type?: 'MULTIPLE_CHOICE' | 'SPEAKING' | 'WRITING'
+  question_text?: string
+  questionTextEn?: string
+  question_text_en?: string
+  options?: Array<string | { textEn?: string; text?: string }>
+  correct_answer?: string
+  correctOption?: string
+  correct_option?: string
+  explanation?: string
+  explanation_vi?: string
+  explanation_en?: string
+  media_url?: string
+  audio_url?: string
+  image_url?: string
+  prep_time_seconds?: number
+  response_time_seconds?: number
+  min_words?: number
+}
+
 interface UseExamQuestionEditorParams {
   isOpen: boolean
   exam: ToeicExamItem | null
@@ -43,8 +67,10 @@ export function useExamQuestionEditor({
 }: UseExamQuestionEditorParams) {
   const [questions, setQuestions] = useState<ExamQuestionItem[]>([])
   const [globalAudioUrl, setGlobalAudioUrl] = useState<string>('')
+  const [globalAudioFile, setGlobalAudioFile] = useState<File | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
+  const [selectedIdx, setSelectedIdx] = useState<number>(0)
 
   const [isProcessingZip, setIsProcessingZip] = useState<boolean>(false)
   const [zipProcessStatus, setZipProcessStatus] = useState<string>('')
@@ -65,7 +91,7 @@ export function useExamQuestionEditor({
   useEffect(() => {
     if (isOpen && exam) {
       const existingQs: ExamQuestionItem[] = Array.isArray(exam.questions)
-        ? exam.questions.map((q: any, idx: number) => ({
+        ? (exam.questions as unknown as RawExamQuestion[]).map((q: RawExamQuestion, idx: number) => ({
             id: q.id || `q_${idx}_${Date.now()}`,
             part_number: q.part_number || q.part || 5,
             part_name: q.part_name || '',
@@ -78,7 +104,7 @@ export function useExamQuestionEditor({
                   : 'MULTIPLE_CHOICE'),
             question_text: q.question_text || q.questionTextEn || q.question_text_en || '',
             options: Array.isArray(q.options)
-              ? q.options.map((opt: any) =>
+              ? q.options.map((opt: string | { textEn?: string; text?: string }) =>
                   typeof opt === 'string' ? opt : opt.textEn || opt.text || ''
                 )
               : ['', '', '', ''],

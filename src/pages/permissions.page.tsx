@@ -122,7 +122,7 @@ export function PermissionsPage() {
       toast.error('Vui lòng chọn thành viên để gán vai trò')
       return
     }
-    const targetUserId = selectedUser._id || selectedUser.user_id || ''
+    const targetUserId = selectedUser.user_id
     if (!targetUserId) {
       toast.error('Không tìm thấy ID thành viên')
       return
@@ -131,7 +131,7 @@ export function PermissionsPage() {
     setIsAssigning(true)
     try {
       await roleService.assignUserRole(targetUserId, assignRoleName)
-      toast.success(`Đã gán vai trò ${assignRoleName} cho ${selectedUser.full_name || selectedUser.email} thành công!`)
+      toast.success(`Đã gán vai trò ${assignRoleName} cho ${selectedUser.full_name} thành công!`)
       setSelectedUser(null)
       await loadData()
     } catch (err: unknown) {

@@ -68,7 +68,7 @@ export function CourseLearnersPage() {
       const q = progressSearch.toLowerCase()
       list = list.filter((st) => {
         const u = usersMap.get(st.user_id) || usersMap.get(String(st.user_id))
-        const name = (u?.full_name || (u as any)?.fullName || st.full_name || '').toLowerCase()
+        const name = (u?.full_name || st.full_name || '').toLowerCase()
         const email = (u?.email || st.email || '').toLowerCase()
         const course = (st.course_title || '').toLowerCase()
         return (
@@ -94,8 +94,8 @@ export function CourseLearnersPage() {
       if (progressSortKey === 'learner') {
         const uA = usersMap.get(a.user_id)
         const uB = usersMap.get(b.user_id)
-        const nameA = (uA?.full_name || a.full_name || a.email || a.user_id || '').toLowerCase()
-        const nameB = (uB?.full_name || b.full_name || b.email || b.user_id || '').toLowerCase()
+        const nameA = (uA?.full_name || a.full_name || '').toLowerCase()
+        const nameB = (uB?.full_name || b.full_name || '').toLowerCase()
         const comp = nameA.localeCompare(nameB)
         return progressSortOrder === 'asc' ? comp : -comp
       }

@@ -28,7 +28,7 @@ export function useCourseLearnersData() {
   const profile = useAuthStore((state) => state.profile)
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isTeacher = currentRole === 'TEACHER' || currentRole === 'INSTRUCTOR' || currentRole === 'GIANG_VIEN'
-  const currentUserId = user?.user_id || profile?.user_id || (user as unknown as { _id?: string; id?: string })?._id || ''
+  const currentUserId = user?.user_id || profile?.user_id || ''
 
   const [courses, setCourses] = useState<CourseSimple[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
@@ -50,8 +50,8 @@ export function useCourseLearnersData() {
         try {
           const teacherCourses = await courseService.getTeacherCourses()
           if (Array.isArray(teacherCourses) && teacherCourses.length > 0) {
-            loadedCourses = teacherCourses.map((c: any) => ({
-              id: c._id || c.id || '',
+            loadedCourses = teacherCourses.map((c: ApiCourse) => ({
+              id: c._id || '',
               title: c.title || '',
               thumbnail_url: c.thumbnail_url || '',
               author_id: c.author_id || '',
@@ -64,7 +64,7 @@ export function useCourseLearnersData() {
 
         if (loadedCourses.length === 0) {
           const allRes = await courseService.getAllCourses({ pageSize: 100 })
-          const rawList = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || (allRes as any)?.data || [])
+          const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || [])
           loadedCourses = rawList
             .filter((c: ApiCourse) => c.author_id === currentUserId)
             .map((c: ApiCourse) => ({
@@ -77,7 +77,7 @@ export function useCourseLearnersData() {
         }
       } else {
         const allRes = await courseService.getAllCourses({ pageSize: 100 })
-        const rawList = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || (allRes as any)?.data || [])
+        const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || [])
         loadedCourses = rawList.map((c: ApiCourse) => ({
           id: c._id || '',
           title: c.title || '',
@@ -135,18 +135,14 @@ export function useCourseLearnersData() {
       setAllStudentsProgress(mergedStudents)
 
       if (usersRes) {
-        const uList = Array.isArray(usersRes)
+        const uList: UserProfile[] = Array.isArray(usersRes)
           ? usersRes
-          : Array.isArray((usersRes as any).result)
-          ? (usersRes as any).result
-          : Array.isArray((usersRes as any).data)
-          ? (usersRes as any).data
+          : Array.isArray(usersRes.result)
+          ? usersRes.result
           : []
         const map = new Map<string, UserProfile>()
-        uList.forEach((u: any) => {
-          if (u.user_id) map.set(String(u.user_id), u)
-          if (u._id) map.set(String(u._id), u)
-          if (u.id) map.set(String(u.id), u)
+        uList.forEach((u: UserProfile) => {
+          if (u.user_id) map.set(u.user_id, u)
         })
         setUsersMap(map)
       }
@@ -207,14 +203,11 @@ export function useCourseLearnersData() {
     ).then((profiles) => {
       setUsersMap((prev) => {
         const next = new Map(prev)
-        profiles.forEach((p: any, idx) => {
+        profiles.forEach((p, idx) => {
           const fallbackUid = missingIds[idx]
           if (p) {
-            const actualProfile = p.profile || p.data || p
-            next.set(fallbackUid, actualProfile)
-            if (actualProfile.user_id) next.set(String(actualProfile.user_id), actualProfile)
-            if (actualProfile._id) next.set(String(actualProfile._id), actualProfile)
-            if (actualProfile.id) next.set(String(actualProfile.id), actualProfile)
+            next.set(fallbackUid, p)
+            if (p.user_id) next.set(p.user_id, p)
           }
         })
         return next
