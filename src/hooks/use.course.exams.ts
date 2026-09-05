@@ -325,24 +325,32 @@ export function useCourseExams() {
   const handleDeleteExam = async (examId?: string) => {
     if (!examId) return
     try {
-      await examAdminService.deleteExam(examId)
-      setExams((prev) => prev.filter((e) => e._id !== examId))
+      if (String(examId).startsWith('course_final_')) {
+        const courseId = examId.replace('course_final_', '')
+        await courseService.updateCourse(courseId, { final_test_questions: [] })
+      } else if (String(examId).startsWith('mod_challenge_')) {
+        const modId = examId.replace('mod_challenge_', '')
+        await courseService.updateModule(modId, { challenge_questions: [], post_mini_questions: [] })
+      } else {
+        await examAdminService.deleteExam(examId)
+      }
+      setExams((prev) => prev.filter((e) => (e._id || e.id) !== examId))
       toast.success(isVi ? 'Đã xóa bài thi thành công!' : 'Exam deleted successfully!')
     } catch {
-      setExams((prev) => prev.filter((e) => e._id !== examId))
+      setExams((prev) => prev.filter((e) => (e._id || e.id) !== examId))
       toast.success(isVi ? 'Đã xóa bài thi khỏi danh sách.' : 'Exam removed from list.')
     }
   }
 
   const handleTogglePublish = async (exam: ToeicExamItem) => {
-    const examId = exam._id || ''
+    const examId = exam._id || exam.id || ''
     const nextStatus = !exam.is_published
 
     if (nextStatus && (exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id)) {
       const is4Skills = exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS'
       const conflict = exams.find(
         (e) =>
-          e._id !== examId &&
+          (e._id || e.id) !== examId &&
           (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
           e.is_published &&
           (is4Skills
@@ -361,9 +369,16 @@ export function useCourseExams() {
     }
 
     try {
-      await examAdminService.updateExam(examId, { is_published: nextStatus })
+      if (exam.course_id && String(examId).startsWith('course_final_')) {
+        await courseService.updateCourse(exam.course_id, { is_published: nextStatus })
+      } else if (exam.module_id && String(examId).startsWith('mod_challenge_')) {
+        await courseService.updateModule(exam.module_id, { is_published: nextStatus })
+      } else {
+        await examAdminService.updateExam(examId, { is_published: nextStatus })
+      }
+
       setExams((prev) =>
-        prev.map((e) => (e._id === examId ? { ...e, is_published: nextStatus } : e))
+        prev.map((e) => ((e._id || e.id) === examId ? { ...e, is_published: nextStatus } : e))
       )
       toast.success(
         nextStatus
@@ -379,7 +394,21 @@ export function useCourseExams() {
   const handleSaveExam = async (payload: CreateExamDto, isEdit: boolean, editingExamId?: string) => {
     try {
       if (isEdit && editingExamId) {
-        await examAdminService.updateExam(editingExamId, payload)
+        if (String(editingExamId).startsWith('course_final_') && payload.course_id) {
+          await courseService.updateCourse(payload.course_id, {
+            title: payload.title,
+            final_test_passing_score: payload.passing_score,
+            final_test_audio_url: payload.audio_url || undefined,
+          })
+        } else if (String(editingExamId).startsWith('mod_challenge_') && editingExam?.module_id) {
+          await courseService.updateModule(editingExam.module_id, {
+            title: payload.title,
+            challenge_passing_score: payload.passing_score,
+            challenge_audio_url: payload.audio_url || undefined,
+          })
+        } else {
+          await examAdminService.updateExam(editingExamId, payload)
+        }
         setExams((prev) =>
           prev.map((e) =>
             (e._id || e.id) === editingExamId

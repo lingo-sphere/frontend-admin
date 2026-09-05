@@ -56,6 +56,8 @@ export const CreateExamDtoSchema = z.object({
   placement_type: z.string().optional(),
   code: z.string().optional(),
   description: z.string().optional(),
+  audio_url: z.string().optional(),
+  questions: z.array(QuizQuestionItemSchema).optional(),
 }).passthrough()
 
 export type ToeicExamItem = z.infer<typeof ToeicExamItemSchema>

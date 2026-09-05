@@ -343,11 +343,14 @@ export function useExamQuestionEditor({
 
     setIsSaving(true)
     try {
-      const updated = await examAdminService.saveExamQuestions(
-        examId,
-        questions,
-        globalAudioUrl
-      )
+      const isCourseTest = String(examId).startsWith('course_final_') || String(examId).startsWith('mod_challenge_')
+      const updated = isCourseTest
+        ? null
+        : await examAdminService.saveExamQuestions(
+            examId,
+            questions,
+            globalAudioUrl
+          )
       const mergedExam: ToeicExamItem = {
         ...exam,
         ...(updated || {}),
