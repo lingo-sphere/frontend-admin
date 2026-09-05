@@ -67,7 +67,6 @@ export const courseService = {
     return api.put<CourseModule>(`/courses/modules/${moduleId}`, payload)
   },
 
-
   async getLessons(courseId: string, moduleId: string): Promise<Lesson[]> {
     return api.get<Lesson[]>(API_CONFIG.ENDPOINTS.COURSES.LESSONS(courseId, moduleId))
   },

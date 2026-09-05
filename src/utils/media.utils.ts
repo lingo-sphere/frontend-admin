@@ -10,7 +10,6 @@ export function resolveMediaUrl(url?: string | null): string {
   const trimmed = url.trim()
   if (!trimmed) return ''
 
-  // 1. Dữ liệu âm thanh Base64 hoặc Blob URL trực tiếp
   if (
     trimmed.startsWith('data:audio/') ||
     trimmed.startsWith('data:video/') ||
@@ -19,13 +18,11 @@ export function resolveMediaUrl(url?: string | null): string {
     return trimmed
   }
 
-  // 2. Đường dẫn tương đối từ backend gateway (ví dụ: /media/stream/...)
   if (trimmed.startsWith('/')) {
     const baseUrl = (API_CONFIG.BASE_URL || '').replace(/\/+$/, '')
     return `${baseUrl}${trimmed}`
   }
 
-  // 3. Đường dẫn trực tiếp từ Cloudflare R2 bucket -> chuyển qua API Gateway stream để tránh lỗi CORS
   if (
     trimmed.includes('pub-') ||
     trimmed.includes('r2.cloudflarestorage.com') ||

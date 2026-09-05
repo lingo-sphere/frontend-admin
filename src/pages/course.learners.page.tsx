@@ -59,7 +59,6 @@ export function CourseLearnersPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
   const [isLoadingCourses, setIsLoadingCourses] = useState<boolean>(false)
 
-  // Progress state
   const [allStudentsProgress, setAllStudentsProgress] = useState<StudentProgressItem[]>([])
   const [usersMap, setUsersMap] = useState<Map<string, UserProfile>>(new Map())
   const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(false)
@@ -71,7 +70,6 @@ export function CourseLearnersPage() {
   const [progressSortOrder, setProgressSortOrder] = useState<'asc' | 'desc' | null>(null)
   const [selectedStudentDetail, setSelectedStudentDetail] = useState<StudentProgressItem | null>(null)
 
-  // Submissions state
   const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState<boolean>(false)
   const [selectedReviewSub, setSelectedReviewSub] = useState<SkillSubmissionItem | null>(null)
@@ -358,7 +356,6 @@ export function CourseLearnersPage() {
     setProgressCurrentPage(1)
   }
 
-  // Student Progress Columns
   const progressColumns: DataTableColumn<StudentProgressItem>[] = useMemo(
     () => [
       {
@@ -536,7 +533,7 @@ export function CourseLearnersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Overview Stats Cards */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
@@ -595,7 +592,7 @@ export function CourseLearnersPage() {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
+      
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
         <button
           type="button"
@@ -649,7 +646,7 @@ export function CourseLearnersPage() {
         </button>
       </div>
 
-      {/* Tab 1: Progress DataTable */}
+      
       {activeTab === 'PROGRESS' && (
         <DataTable<StudentProgressItem>
           title={
@@ -776,7 +773,7 @@ export function CourseLearnersPage() {
         />
       )}
 
-      {/* Tab 2: Submissions DataTable & Grid */}
+      
       {activeTab === 'SUBMISSIONS' && (
         <LearnerSubmissionsTab
           submissions={submissions}
@@ -792,7 +789,7 @@ export function CourseLearnersPage() {
         />
       )}
 
-      {/* Tab 3: Learning Analytics & Drop-off Report */}
+      
       {activeTab === 'ANALYTICS' && (
         <CourseAnalyticsTab
           allStudentsProgress={allStudentsProgress}
@@ -804,14 +801,14 @@ export function CourseLearnersPage() {
         />
       )}
 
-      {/* Modal Review Submission */}
+      
       <LearnerSubmissionReviewModal
         submission={selectedReviewSub}
         onClose={() => setSelectedReviewSub(null)}
         onSuccess={fetchSubmissions}
       />
 
-      {/* Modal Student Details */}
+      
       <StudentProgressDetailModal
         student={selectedStudentDetail}
         submissions={submissions}

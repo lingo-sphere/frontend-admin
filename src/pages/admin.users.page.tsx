@@ -73,7 +73,6 @@ export function AdminUsersPage() {
         })
       }
 
-      // Also check allRes to catch any newly created admins/instructors
       if (allRes.status === 'fulfilled' && allRes.value) {
         extractList(allRes.value).forEach((u) => {
           const roleUpper = (u.role || '').toUpperCase()

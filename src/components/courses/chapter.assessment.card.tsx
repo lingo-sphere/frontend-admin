@@ -220,7 +220,7 @@ export function ChapterAssessmentCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          {/* Thời lượng làm bài (phút) */}
+          
           <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-xs">
             <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
@@ -245,7 +245,7 @@ export function ChapterAssessmentCard({
             </div>
           </div>
 
-          {/* Điểm đạt tối thiểu */}
+          
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-xs">
             <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               {isVi ? 'Điểm đạt tối thiểu:' : 'Passing score:'}
@@ -383,7 +383,7 @@ export function ChapterAssessmentCard({
         </div>
       </div>
 
-      {/* Khung đề thi Nói & Viết cho chương (khi là khóa học 4 kỹ năng) */}
+      
       {is4Skills && (
         <div className="rounded-xl border border-indigo-200/80 bg-indigo-50/40 p-3.5 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
           <div className="flex items-center justify-between gap-2 border-b border-indigo-100 dark:border-indigo-900/50 pb-2">
@@ -406,7 +406,7 @@ export function ChapterAssessmentCard({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Kỹ năng Nói */}
+            
             <div className="rounded-xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-3 space-y-2.5 shadow-2xs">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
@@ -478,7 +478,7 @@ export function ChapterAssessmentCard({
               </div>
             </div>
 
-            {/* Kỹ năng Viết */}
+            
             <div className="rounded-xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-3 space-y-2.5 shadow-2xs">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">

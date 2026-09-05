@@ -1,3 +1,8 @@
+/**
+ * @file zip.exam.helper.ts
+ * @description Tiện ích xử lý hỗ trợ cho zip.exam.helper.ts
+ */
+
 import type { ExamQuestionItem } from '@/components/exams/exam.question.editor.modal'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast-store'
@@ -53,7 +58,6 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
   try {
     const zip = new JSZip()
 
-    // 1. Create sample Excel file with realistic TOEIC questions
     const sampleQuestions = [
       {
         STT: 1,
@@ -128,7 +132,6 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     zip.file('questions.xlsx', excelBuffer)
 
-    // 2. Add Readme guide inside zip
     const readmeText = `=== HƯỚNG DẪN SOẠN ĐỀ THI GÓI ZIP CHO LINGOSPHERE ===
 1. File questions.xlsx:
    - Cột "STT": Số thứ tự câu hỏi (1, 2, 3...)
@@ -146,7 +149,6 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
 `
     zip.file('HUONG_DAN_SU_DUNG.txt', readmeText)
 
-    // 3. Create sample small placeholder audio & image
     const dummyPngBase64 =
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
     zip.file('images/part1_q1.jpg', dummyPngBase64, { base64: true })
@@ -193,7 +195,6 @@ export async function parseAndUploadZipExam(
   onProgress?.(isVi ? 'Đang giải nén file ZIP...' : 'Extracting ZIP archive...')
   const zip = await JSZip.loadAsync(file)
 
-  // 1. Locate Excel or CSV file
   let excelEntry: JSZip.JSZipObject | null = null
   for (const [path, entry] of Object.entries(zip.files)) {
     if (!entry.dir && /\.(xlsx|xls|csv)$/i.test(path) && !path.includes('__MACOSX')) {
@@ -221,7 +222,6 @@ export async function parseAndUploadZipExam(
     throw new Error(isVi ? 'File Excel câu hỏi không có dòng dữ liệu nào!' : 'Question sheet is empty!')
   }
 
-  // 2. Discover all Audio and Image entries in ZIP
   const mediaEntries: Record<string, JSZip.JSZipObject> = {}
   let detectedGlobalAudioUrl: string | undefined = undefined
 
@@ -235,7 +235,6 @@ export async function parseAndUploadZipExam(
     }
   }
 
-  // 3. Find which media files are actually referenced by Excel rows
   const neededMediaNames = new Set<string>()
   rawRows.forEach((row) => {
     Object.entries(row).forEach(([k, v]) => {
@@ -250,14 +249,12 @@ export async function parseAndUploadZipExam(
     })
   })
 
-  // Include global audio if exists
   for (const name of Object.keys(mediaEntries)) {
     if (name.includes('full') || name.includes('exam_audio') || name.includes('toan_bai')) {
       neededMediaNames.add(name)
     }
   }
 
-  // 4. Upload needed media files
   const filesToUpload = Array.from(neededMediaNames).filter((name) => mediaEntries[name])
   const uploadedMap: Record<string, string> = {}
 
@@ -290,7 +287,6 @@ export async function parseAndUploadZipExam(
     }
   }
 
-  // 5. Map Excel rows to ExamQuestionItem[]
   onProgress?.(isVi ? 'Đang tổng hợp câu hỏi và hoàn tất nạp...' : 'Compiling questions...')
   let audioLinkedCount = 0
   let imageLinkedCount = 0

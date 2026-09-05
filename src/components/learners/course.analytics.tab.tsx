@@ -53,7 +53,6 @@ export function CourseAnalyticsTab({
 }: CourseAnalyticsTabProps) {
   const [selectedMetricView, setSelectedMetricView] = useState<'funnel' | 'difficulty' | 'recommendations'>('funnel')
 
-  // Filter students by selected course
   const currentStudents = useMemo(() => {
     if (selectedCourseId === 'ALL') return allStudentsProgress
     return allStudentsProgress.filter(
@@ -61,7 +60,6 @@ export function CourseAnalyticsTab({
     )
   }, [allStudentsProgress, selectedCourseId, courses])
 
-  // Aggregate high-level analytics
   const analyticsSummary = useMemo(() => {
     const totalEnrolled = currentStudents.length
     if (totalEnrolled === 0) {
@@ -127,11 +125,9 @@ export function CourseAnalyticsTab({
     }
   }, [currentStudents])
 
-  // Chapter Funnel & Drop-off Analysis
   const chapterFunnel = useMemo(() => {
     if (currentStudents.length === 0) return []
 
-    // Collect all modules
     const moduleMap = new Map<
       number,
       {
@@ -143,7 +139,6 @@ export function CourseAnalyticsTab({
       }
     >()
 
-    // Initialize 4 chapters default
     for (let i = 1; i <= 4; i++) {
       moduleMap.set(i, {
         order: i,
@@ -191,7 +186,7 @@ export function CourseAnalyticsTab({
           }
         })
       } else {
-        // Fallback calculation based on progress_percentage
+
         const reachedUpTo = Math.max(1, Math.min(4, Math.ceil((progress / 100) * 4)))
         for (let i = 1; i <= 4; i++) {
           const entry = moduleMap.get(i)!
@@ -231,7 +226,6 @@ export function CourseAnalyticsTab({
     })
   }, [currentStudents])
 
-  // Identify most critical drop-off chapter
   const worstChapter = useMemo(() => {
     if (chapterFunnel.length === 0) return null
     return [...chapterFunnel].sort((a, b) => b.dropOffFromPrev - a.dropOffFromPrev)[0]
@@ -239,7 +233,7 @@ export function CourseAnalyticsTab({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Filter & Course Selector Header */}
+      
       <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -264,7 +258,7 @@ export function CourseAnalyticsTab({
           </p>
         </div>
 
-        {/* Course Dropdown */}
+        
         <div className="flex items-center gap-2 min-w-[260px]">
           <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
           <select
@@ -286,9 +280,9 @@ export function CourseAnalyticsTab({
         </div>
       </div>
 
-      {/* KPI Overview Cards */}
+      
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Completion Rate */}
+        
         <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400">
             <span>TỶ LỆ HOÀN THÀNH</span>
@@ -310,7 +304,7 @@ export function CourseAnalyticsTab({
           </div>
         </div>
 
-        {/* Drop-off Rate Alert */}
+        
         <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400">
             <span>TỶ LỆ DỪNG LẠI SỚM</span>
@@ -330,7 +324,7 @@ export function CourseAnalyticsTab({
           </div>
         </div>
 
-        {/* Exam Pass Rate */}
+        
         <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400">
             <span>TỶ LỆ ĐỖ BÀI THI CUỐI</span>
@@ -352,7 +346,7 @@ export function CourseAnalyticsTab({
           </div>
         </div>
 
-        {/* Score Growth */}
+        
         <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400">
             <span>MỨC TĂNG ĐIỂM TB</span>
@@ -372,9 +366,9 @@ export function CourseAnalyticsTab({
         </div>
       </div>
 
-      {/* Main Analysis Section: Chapter Funnel & Drop-off Hotspots */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Chapter Funnel Chart */}
+        
         <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
@@ -388,7 +382,7 @@ export function CourseAnalyticsTab({
             </div>
           </div>
 
-          {/* Funnel Progress Bars */}
+          
           <div className="space-y-4 pt-2">
             {chapterFunnel.map((ch, idx) => (
               <div
@@ -415,7 +409,7 @@ export function CourseAnalyticsTab({
                   </div>
                 </div>
 
-                {/* Multi-layered progress bar */}
+                
                 <div className="w-full h-3 rounded-full bg-slate-200 dark:bg-slate-700/60 overflow-hidden flex">
                   <div
                     className={`h-full transition-all duration-500 ${
@@ -427,7 +421,7 @@ export function CourseAnalyticsTab({
                   />
                 </div>
 
-                {/* Drop-off Alert Sub-text */}
+                
                 <div className="flex items-center justify-between text-[11px] pt-0.5 text-slate-400">
                   <span>
                     {idx === 0
@@ -447,7 +441,7 @@ export function CourseAnalyticsTab({
             ))}
           </div>
 
-          {/* Summary Callout Banner */}
+          
           {worstChapter && worstChapter.dropOffFromPrev > 0 && (
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -463,7 +457,7 @@ export function CourseAnalyticsTab({
           )}
         </div>
 
-        {/* Right 1 Col: AI Pedagogical Advice & Actionable Insights */}
+        
         <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-900/10 via-purple-900/5 to-slate-900/10 dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900/40 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs space-y-5 flex flex-col justify-between">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -479,7 +473,7 @@ export function CourseAnalyticsTab({
             </div>
 
             <div className="space-y-3">
-              {/* Insight 1 */}
+              
               <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 space-y-1 shadow-2xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
                   <Lightbulb className="w-3.5 h-3.5 shrink-0" />
@@ -490,7 +484,7 @@ export function CourseAnalyticsTab({
                 </p>
               </div>
 
-              {/* Insight 2 */}
+              
               <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 space-y-1 shadow-2xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <Target className="w-3.5 h-3.5 shrink-0" />
@@ -501,7 +495,7 @@ export function CourseAnalyticsTab({
                 </p>
               </div>
 
-              {/* Insight 3 */}
+              
               <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 space-y-1 shadow-2xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                   <Clock className="w-3.5 h-3.5 shrink-0" />

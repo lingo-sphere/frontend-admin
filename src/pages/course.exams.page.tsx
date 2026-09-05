@@ -79,10 +79,10 @@ export function CourseExamsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Overview Stats Cards */}
+      
       <CourseExamStatsOverview stats={stats} isVi={isVi} />
 
-      {/* Main Standard DataTable */}
+      
       <DataTable<ToeicExamItem>
         title={
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -179,7 +179,7 @@ export function CourseExamsPage() {
         }}
       />
 
-      {/* Modal Add / Edit Exam */}
+      
       <CourseExamModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -193,7 +193,7 @@ export function CourseExamsPage() {
         isVi={isVi}
       />
 
-      {/* Exam Question Bank Editor Modal */}
+      
       <ExamQuestionEditorModal
         isOpen={showQuestionsModal}
         onClose={() => {

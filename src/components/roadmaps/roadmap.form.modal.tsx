@@ -213,7 +213,7 @@ export function RoadmapFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
       <div className="relative w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8">
-        {/* Modal Header */}
+        
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
@@ -232,9 +232,9 @@ export function RoadmapFormModal({
           </button>
         </div>
 
-        {/* Modal Body */}
+        
         <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-          {/* Basic Info */}
+          
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -276,7 +276,7 @@ export function RoadmapFormModal({
               />
             </div>
 
-            {/* Skills Focus & Targets */}
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -325,7 +325,7 @@ export function RoadmapFormModal({
               </div>
             </div>
 
-            {/* Score Bracket Match */}
+            
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-indigo-500" />
@@ -357,7 +357,7 @@ export function RoadmapFormModal({
               </div>
             </div>
 
-            {/* Pricing & Visibility */}
+            
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -397,7 +397,7 @@ export function RoadmapFormModal({
             </div>
           </div>
 
-          {/* Stages Builder */}
+          
           <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -531,7 +531,7 @@ export function RoadmapFormModal({
           </div>
         </div>
 
-        {/* Modal Footer */}
+        
         <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/50">
           <button
             type="button"

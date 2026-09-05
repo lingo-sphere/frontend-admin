@@ -46,7 +46,6 @@ export function RoleEditModal({
     }
   }, [editingRole, isOpen])
 
-
   const groupedPermissions = useMemo(() => {
     const map: Record<string, Permission[]> = {}
     for (const perm of allPermissions) {
@@ -58,7 +57,6 @@ export function RoleEditModal({
   }, [allPermissions])
 
   const moduleNames = useMemo(() => Object.keys(groupedPermissions).sort(), [groupedPermissions])
-
 
   useEffect(() => {
     if (isOpen) {

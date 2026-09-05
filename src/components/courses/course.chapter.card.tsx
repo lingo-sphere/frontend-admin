@@ -318,7 +318,7 @@ export function CourseChapterCard({
                     />
                   ))}
 
-                  {/* Nút thêm video của chương đặt ở DƯỚI các video của chương */}
+                  
                   <div className="pt-1.5">
                     <button
                       type="button"

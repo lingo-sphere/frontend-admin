@@ -49,7 +49,6 @@ export function useCourseExams() {
       setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
     }
 
-    // Đồng bộ câu hỏi vào Course hoặc Module nếu là bài thi thuộc khóa học
     try {
       if (updated.course_id && String(examId).startsWith('course_final_')) {
         await courseService.updateCourse(updated.course_id, {
@@ -121,17 +120,14 @@ export function useCourseExams() {
 
       setCourses(allowedCourses)
 
-      // 1. Tải các bài thi từ exam-service (gồm 2 bài thi đánh giá đầu vào toàn hệ thống)
       const apiExams = await examAdminService.getExams().catch(() => [])
 
-      // 2. Trích xuất toàn bộ bài thi thực tế từ các khóa học và chương học
       const courseExamsList: ToeicExamItem[] = []
 
       await Promise.all(
         allowedCourses.map(async (c) => {
           const rawCourse = rawCourses.find((rc: any) => (rc._id || rc.id) === c.id) || c
 
-          // a. Bài thi tốt nghiệp khóa học (Final Graduation Test)
           if (
             rawCourse.final_test_questions &&
             Array.isArray(rawCourse.final_test_questions) &&
@@ -154,7 +150,6 @@ export function useCourseExams() {
             })
           }
 
-          // b. Bài kiểm tra Challenge của chương học (hợp nhất 1 bài duy nhất cho mỗi chương)
           try {
             const modsRes = await courseService.getModules(c.id)
             const modulesList: any[] = Array.isArray(modsRes) ? modsRes : ((modsRes as any)?.data || [])
@@ -187,16 +182,14 @@ export function useCourseExams() {
               }
             }
           } catch {
-            // bỏ qua nếu không lấy được modules của khóa học
+
           }
         })
       )
 
-      // 3. Hợp nhất danh sách và loại bỏ trùng lặp ID
       const seenIds = new Set<string>()
       const combined: ToeicExamItem[] = []
 
-      // Thêm các bài thi hệ thống
       apiExams.forEach((e) => {
         const eid = e.id || e._id || ''
         if (eid && !seenIds.has(eid)) {
@@ -211,7 +204,6 @@ export function useCourseExams() {
         }
       })
 
-      // Thêm các bài thi thực tế từ các khóa học
       courseExamsList.forEach((e) => {
         const eid = e.id || e._id || ''
         if (eid && !seenIds.has(eid)) {
@@ -346,7 +338,6 @@ export function useCourseExams() {
     const examId = exam.id || exam._id || ''
     const nextStatus = !exam.is_published
 
-    // Nếu muốn xuất bản bài thi Toàn hệ thống, kiểm tra xem đã có bài nào đang Public chưa
     if (nextStatus && (exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id)) {
       const is4Skills = exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS'
       const conflict = exams.find(

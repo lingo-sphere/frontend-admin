@@ -345,7 +345,7 @@ export function CourseSubmissionsModal({
                 </button>
               </div>
 
-              {/* 1. Student Submission Content */}
+              
               <div className="space-y-3">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   {selectedSubmission.skill === 'SPEAKING' ? (
@@ -410,7 +410,7 @@ export function CourseSubmissionsModal({
                 )}
               </div>
 
-              {/* 2. AI Grading & Feedback Breakdown */}
+              
               <div className="space-y-3">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-purple-500" />
@@ -464,7 +464,7 @@ export function CourseSubmissionsModal({
                 </div>
               </div>
 
-              {/* 3. Teacher Calibration & Review */}
+              
               <div className="space-y-3">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Edit3 className="w-4 h-4 text-indigo-500" />
@@ -515,7 +515,7 @@ export function CourseSubmissionsModal({
                 </div>
               </div>
 
-              {/* Modal Actions */}
+              
               <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"

@@ -47,7 +47,6 @@ export function CourseExamModal({
 
   const editingId = editingExam?.id || editingExam?._id
 
-  // Kiểm tra xem đã có bài thi Toàn hệ thống nào đang Public (cho 2 kỹ năng và 4 kỹ năng) chưa
   const published2SkillsExam = useMemo(() => {
     return exams.find(
       (e) =>
@@ -96,7 +95,7 @@ export function CourseExamModal({
       setFormDescription(editingExam.description || '')
       setFormIsPublished(editingExam.is_published ?? true)
     } else {
-      // Khi ấn tạo bài thi: luôn tạo cho Toàn Hệ Thống (bài thi khóa học được tạo tại giao diện quản lý khóa học)
+
       setFormCourseId('GLOBAL_SYSTEM_PLACEMENT')
       setFormTitle('')
       setFormType('DIAGNOSTIC_TEST')
@@ -105,7 +104,6 @@ export function CourseExamModal({
       setFormPassingScore(500)
       setFormDescription('')
 
-      // Nếu 2 kỹ năng đã có bài public mà 4 kỹ năng chưa có, ưu tiên chọn 4 kỹ năng
       if (published2SkillsExam && !published4SkillsExam) {
         setFormPlacementSkills('4SKILLS')
         setFormDuration(90)
@@ -114,7 +112,7 @@ export function CourseExamModal({
         setFormIsPublished(true)
       } else if (published2SkillsExam && published4SkillsExam) {
         setFormPlacementSkills('2SKILLS')
-        setFormIsPublished(false) // Bắt buộc private nếu cả 2 đều đã có bài public
+        setFormIsPublished(false)
       } else {
         setFormPlacementSkills('2SKILLS')
         setFormIsPublished(true)
@@ -122,7 +120,6 @@ export function CourseExamModal({
     }
   }, [isOpen, editingExam, published2SkillsExam, published4SkillsExam])
 
-  // Khi người dùng chuyển kỹ năng, nếu cấu hình đó đã có bài public thì tự động tắt xuất bản
   const handlePlacementSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
     setFormPlacementSkills(skills)
     if (skills === '2SKILLS') {
@@ -240,7 +237,7 @@ export function CourseExamModal({
           className="space-y-3 overflow-y-auto pr-0.5 flex-1 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {/* Phạm vi bài thi */}
+          
           {!editingExam || formCourseId === 'GLOBAL_SYSTEM_PLACEMENT' ? (
             <div>
               <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">

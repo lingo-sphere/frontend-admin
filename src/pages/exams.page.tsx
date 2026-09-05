@@ -182,10 +182,10 @@ export function ExamsPage() {
         </div>
       </div>
 
-      {/* Overview Cards */}
+      
       <ExamStatsOverview stats={stats} />
 
-      {/* Main Table */}
+      
       <ExamListTable
         exams={exams}
         searchQuery={searchQuery}
@@ -200,14 +200,14 @@ export function ExamsPage() {
         }}
       />
 
-      {/* Create Exam Modal */}
+      
       <CreateExamModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreateExam}
       />
 
-      {/* Exam Question Bank Editor Modal */}
+      
       <ExamQuestionEditorModal
         isOpen={showQuestionsModal}
         onClose={() => {

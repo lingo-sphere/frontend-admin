@@ -38,7 +38,6 @@ export function AdminProfilePage() {
     confirmPassword: '',
   })
 
-
   const passwordStrength = useMemo(() => {
     return evaluatePasswordStrength(form.newPassword)
   }, [form.newPassword])
@@ -144,7 +143,6 @@ export function AdminProfilePage() {
         })
         toast.success('Đổi mật khẩu bảo mật thành công!')
       }
-
 
       await userService.updateMyProfile({
         full_name: form.name.trim(),

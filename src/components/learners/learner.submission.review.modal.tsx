@@ -68,7 +68,7 @@ export function LearnerSubmissionReviewModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 dark:bg-black/45 backdrop-blur-[2px] animate-in fade-in duration-150"
     >
       <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 p-6 space-y-5 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150">
-        {/* Modal Header */}
+        
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-3">
             <div
@@ -111,7 +111,7 @@ export function LearnerSubmissionReviewModal({
           </button>
         </div>
 
-        {/* 1. Student Submission Content Card */}
+        
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -191,7 +191,7 @@ export function LearnerSubmissionReviewModal({
           )}
         </div>
 
-        {/* 2. AI Grading & Feedback Card */}
+        
         <div className="space-y-3">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-purple-500" />
@@ -218,7 +218,7 @@ export function LearnerSubmissionReviewModal({
               </button>
             </div>
 
-            {/* Sub-scores breakdown */}
+            
             {submission.ai_feedback && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                 {submission.skill === 'SPEAKING' && (
@@ -263,7 +263,7 @@ export function LearnerSubmissionReviewModal({
               </div>
             )}
 
-            {/* AI detailed comments */}
+            
             {submission.ai_feedback?.detailed_comment && (
               <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/30 text-xs space-y-1">
                 <span className="font-bold text-purple-900 dark:text-purple-200 block">
@@ -275,7 +275,7 @@ export function LearnerSubmissionReviewModal({
               </div>
             )}
 
-            {/* AI improvement tips */}
+            
             {Array.isArray(submission.ai_feedback?.improvement_tips) &&
               submission.ai_feedback.improvement_tips.length > 0 && (
                 <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/30 text-xs space-y-1">
@@ -292,7 +292,7 @@ export function LearnerSubmissionReviewModal({
           </div>
         </div>
 
-        {/* 3. Teacher Calibration & Review Card */}
+        
         <div className="space-y-3">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Edit3 className="w-4 h-4 text-indigo-500" />
@@ -343,7 +343,7 @@ export function LearnerSubmissionReviewModal({
           </div>
         </div>
 
-        {/* Modal Actions */}
+        
         <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"

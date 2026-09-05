@@ -87,7 +87,6 @@ export function PageRouter() {
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
 
-
   if (!isAdmin) {
     if (
       activeNavItem === 'courses' ||

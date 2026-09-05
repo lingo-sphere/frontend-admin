@@ -149,7 +149,7 @@ export function StudentProgressDetailModal({
               </p>
             )}
 
-            {/* Student's Speaking & Writing Submissions */}
+            
             {studentSubs.length > 0 && (
               <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between">

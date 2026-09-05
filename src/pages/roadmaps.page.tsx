@@ -41,7 +41,6 @@ export function RoadmapsPage() {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
-  // Modal State
   const [showModal, setShowModal] = useState<boolean>(false)
   const [editingRoadmap, setEditingRoadmap] = useState<LearningRoadmap | null>(null)
 
@@ -106,7 +105,6 @@ export function RoadmapsPage() {
     }
   }
 
-  // Filter & Search
   const filteredRoadmaps = useMemo(() => {
     return roadmaps.filter((rm) => {
       const matchSearch =
@@ -128,7 +126,6 @@ export function RoadmapsPage() {
     })
   }, [roadmaps, searchQuery, skillsFilter, statusFilter])
 
-  // Overview Stats
   const stats = useMemo(() => {
     const total = roadmaps.length
     const twoSkills = roadmaps.filter((r) => r.skills_focus === '2SKILLS').length
@@ -138,7 +135,6 @@ export function RoadmapsPage() {
     return { total, twoSkills, fourSkills, published }
   }, [roadmaps])
 
-  // Table Columns
   const columns: DataTableColumn<LearningRoadmap>[] = useMemo(
     () => [
       {
@@ -289,7 +285,7 @@ export function RoadmapsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Header Banner */}
+      
       <div className="p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 text-white shadow-xl relative overflow-hidden">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -325,7 +321,7 @@ export function RoadmapsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
@@ -368,7 +364,7 @@ export function RoadmapsPage() {
         </div>
       </div>
 
-      {/* Filter Toolbar */}
+      
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -404,7 +400,7 @@ export function RoadmapsPage() {
         </div>
       </div>
 
-      {/* Main DataTable */}
+      
       <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
         <DataTable<LearningRoadmap>
           columns={columns}
@@ -432,7 +428,7 @@ export function RoadmapsPage() {
         />
       </div>
 
-      {/* Create / Edit Modal Subcomponent */}
+      
       <RoadmapFormModal
         isOpen={showModal}
         editingRoadmap={editingRoadmap}
