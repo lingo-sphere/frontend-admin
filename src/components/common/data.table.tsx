@@ -105,7 +105,7 @@ export function DataTable<T extends object>({
             return item[col.dataIndex]
           }
           const rec = item as Record<string, unknown>
-          if (colKey === 'user' || colKey === 'learner') return rec.full_name || rec.name || rec.email
+          if (colKey === 'user' || colKey === 'learner') return rec.full_name || rec.email
           if (colKey === 'info' || colKey === 'course') return rec.title || rec.name
           if (colKey === 'price') return rec.price ?? 0
           if (colKey === 'created_at') return rec.created_at

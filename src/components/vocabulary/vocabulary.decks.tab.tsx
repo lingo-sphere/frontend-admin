@@ -74,7 +74,7 @@ export function VocabularyDecksTab({
                   </span>
                 </div>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                  {deck.name_vi || deck.name_en || 'Bộ thẻ từ vựng'}
+                  {deck.name_vi || deck.name || deck.name_en || 'Bộ thẻ từ vựng'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-2">
                   {deck.description || 'Bộ từ vựng ôn tập hàng ngày theo kỹ thuật lặp lại ngắt quãng.'}

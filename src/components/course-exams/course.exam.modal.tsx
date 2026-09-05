@@ -46,7 +46,7 @@ export function CourseExamModal({
   const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>('2SKILLS')
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
-  const editingId = editingExam?.id || editingExam?._id
+  const editingId = editingExam?._id || editingExam?.id
 
   const published2SkillsExam = useMemo(() => {
     return exams.find(
@@ -54,7 +54,7 @@ export function CourseExamModal({
         (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
         (e.placement_type === '2SKILLS' || e.skills_enabled === 'LR') &&
         e.is_published &&
-        (e.id || e._id) !== editingId
+        (e._id || e.id) !== editingId
     )
   }, [exams, editingId])
 
@@ -62,9 +62,9 @@ export function CourseExamModal({
     return exams.find(
       (e) =>
         (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
-        (e.placement_type === '4SKILLS' || e.skills_enabled === 'ALL') &&
+        (e.placement_type === '4SKILLS' || e.skills_enabled === 'FULL') &&
         e.is_published &&
-        (e.id || e._id) !== editingId
+        (e._id || e.id) !== editingId
     )
   }, [exams, editingId])
 

@@ -75,7 +75,7 @@ export function PublicDecksPage() {
   const filteredDecks = useMemo(() => {
     return decks.filter(
       (d) =>
-        d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (d.title || d.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()))
     )
   }, [decks, searchQuery])

@@ -79,7 +79,7 @@ export const courseService = {
     )
   },
 
-  async createModule(courseId: string, payload: { title: string; module_order?: number; description?: string }): Promise<CourseModule> {
+  async createModule(courseId: string, payload: { title: string; order_index?: number; module_order?: number; description?: string; is_free_preview?: boolean }): Promise<CourseModule> {
     return api.post<CourseModule>(API_CONFIG.ENDPOINTS.COURSES.MODULES(courseId), payload, CourseModuleSchema)
   },
 

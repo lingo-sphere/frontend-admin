@@ -191,7 +191,7 @@ export function useCourseExams() {
       const combined: ToeicExamItem[] = []
 
       apiExams.forEach((e) => {
-        const eid = e.id || e._id || ''
+        const eid = e._id || e.id || ''
         if (eid && !seenIds.has(eid)) {
           seenIds.add(eid)
           combined.push({
@@ -205,7 +205,7 @@ export function useCourseExams() {
       })
 
       courseExamsList.forEach((e) => {
-        const eid = e.id || e._id || ''
+        const eid = e._id || e.id || ''
         if (eid && !seenIds.has(eid)) {
           seenIds.add(eid)
           combined.push(e)
@@ -382,7 +382,7 @@ export function useCourseExams() {
         await examAdminService.updateExam(editingExamId, payload)
         setExams((prev) =>
           prev.map((e) =>
-            (e.id || e._id) === editingExamId
+            (e._id || e.id) === editingExamId
               ? {
                   ...e,
                   ...payload,
@@ -394,7 +394,8 @@ export function useCourseExams() {
       } else {
         const created = await examAdminService.createExam(payload)
         const newExam: ToeicExamItem = {
-          id: created?.id || created?._id || `exam_${Date.now()}`,
+          _id: created?._id || created?.id || `exam_${Date.now()}`,
+          id: created?._id || created?.id || `exam_${Date.now()}`,
           title: payload.title,
           course_id: payload.course_id,
           course_title: payload.course_title,

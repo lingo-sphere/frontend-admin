@@ -27,7 +27,7 @@ export function PublicDeckCard({ deck, onDelete }: PublicDeckCardProps) {
           </span>
         </div>
 
-        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{deck.title}</h4>
+        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{deck.name || deck.title}</h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1.5">
           {deck.description || 'Bộ từ vựng công khai dành cho cộng đồng học viên TOEIC.'}
         </p>
@@ -37,7 +37,7 @@ export function PublicDeckCard({ deck, onDelete }: PublicDeckCardProps) {
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
-            {deck.total_cards || 0} thẻ
+            {deck.card_count ?? deck.total_cards ?? 0} thẻ
           </span>
           <span className="flex items-center gap-1">
             <Users className="w-3.5 h-3.5 text-teal-500" />

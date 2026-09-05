@@ -34,6 +34,9 @@ export interface Topic {
 
 export interface FlashcardDeck {
   id: string
+  _id?: string
+  name?: string
+  title?: string
   name_en?: string
   name_vi?: string
   description?: string
@@ -41,6 +44,7 @@ export interface FlashcardDeck {
   topic_name?: string
   cefr_level?: string
   card_count?: number
+  total_cards?: number
   total_studied?: number
   total_users?: number
   avg_mastery_percent?: number

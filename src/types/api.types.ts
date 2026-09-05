@@ -148,13 +148,17 @@ export interface Lesson {
   _id: string
   module_id: string
   title: string
-  lesson_order: number
-  duration_minutes: number
+  order_index: number
+  duration_seconds: number
   video_url?: string
-  content?: string
-  is_preview?: boolean
+  content_html?: string
+  is_free_preview?: boolean
   status?: string
   questions?: LessonQuestion[]
+  lesson_order?: number
+  duration_minutes?: number
+  content?: string
+  is_preview?: boolean
 }
 
 export interface CourseModule {
@@ -162,8 +166,9 @@ export interface CourseModule {
   id?: string
   course_id: string
   title: string
-  module_order: number
+  order_index: number
   description?: string
+  is_free_preview?: boolean
   passing_score?: number
   test_questions?: QuizQuestionItem[]
   challenge_test_exam_id?: string
@@ -180,6 +185,7 @@ export interface CourseModule {
   lessons?: Lesson[]
   created_at?: string
   updated_at?: string
+  module_order?: number
 }
 
 export interface Course {
@@ -335,12 +341,16 @@ export interface GrammarPoint {
 
 export interface FlashcardDeck {
   _id: string
-  title: string
+  name: string
+  name_vi?: string
+  title?: string
   description?: string
   creator_id?: string
-  is_public: boolean
+  card_count?: number
+  total_cards?: number
+  visibility?: string
+  is_public?: boolean
   is_system?: boolean
-  total_cards: number
   rating?: number
   enrolled_count?: number
   tags?: string[]

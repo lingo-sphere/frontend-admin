@@ -102,7 +102,6 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           const resolvedAvatar =
             currentProfile?.avatar_url ||
             (userPayload?.avatar_url as string) ||
-            (userPayload?.avatar as string) ||
             prev.author_avatar
           const resolvedRole = currentProfile?.role || currentUser?.role
           const resolvedTitle =
@@ -309,6 +308,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           course_id: currentCourseId || '',
           title: m.title,
           description: m.description,
+          order_index: mIdx + 1,
           module_order: mIdx + 1,
           passing_score:
             Number(m.passing_score) ||
@@ -355,6 +355,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
             content_html: l.content || '',
             is_preview: Boolean(l.is_preview),
             is_free_preview: Boolean(l.is_preview),
+            order_index: lIdx + 1,
             lesson_order: lIdx + 1,
           })),
         })),
@@ -394,9 +395,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã cập nhật khóa học "${formData.title}" thành công!`)
       } else {
         const created = await courseService.createCourse(payload)
-        const newCourseId =
-          (created as { _id?: string; id?: string })?._id ||
-          (created as { _id?: string; id?: string })?.id
+        const newCourseId = created?._id || (created as { id?: string })?.id
         if (allMediaUrls.length > 0) {
           mediaService.confirmMedia(allMediaUrls, newCourseId).catch(() => {})
         }

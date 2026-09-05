@@ -83,11 +83,12 @@ export function VocabularyPage() {
       if (decksRes.status === 'fulfilled' && decksRes.value) {
         const mappedDecks: FlashcardDeck[] = decksRes.value.map((d: ApiFlashcardDeck) => ({
           id: d._id,
+          name: d.name || d.title || 'Bộ thẻ',
           creator_name: 'LingoSphere Master',
-          name_vi: d.title,
-          name_en: d.title,
+          name_vi: d.name_vi || d.title || d.name,
+          name_en: d.title || d.name,
           description: d.description || '',
-          card_count: d.total_cards || 0,
+          card_count: d.card_count ?? d.total_cards ?? 0,
           created_at: d.created_at || new Date().toISOString(),
         }))
         setDecks(mappedDecks)

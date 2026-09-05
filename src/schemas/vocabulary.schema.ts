@@ -56,17 +56,19 @@ export const TopicSchema = z.object({
 export const TopicListSchema = z.array(TopicSchema)
 
 export const FlashcardDeckSchema = z.object({
-  _id: z.string(),
+  _id: z.string().default(''),
   id: z.string().optional(),
+  name: z.string().default(''),
   title: z.string().default(''),
-  name: z.string().optional(),
   name_vi: z.string().optional(),
+  name_en: z.string().optional(),
   description: z.string().optional(),
   creator_id: z.string().optional(),
+  creator_name: z.string().optional(),
   is_public: z.boolean().default(true),
   is_system: z.boolean().optional(),
   total_cards: z.number().default(0),
-  card_count: z.number().optional(),
+  card_count: z.number().default(0),
   rating: z.number().optional(),
   enrolled_count: z.number().optional(),
   tags: z.array(z.string()).optional(),
