@@ -21,11 +21,13 @@ import {
   Loader2,
   Mic,
   PenTool,
+  Archive,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { examAdminService } from '@/services/exam.service'
 import { mediaAdminService } from '@/services/media.service'
 import { ExcelQuizImporterModal } from '@/components/admin/ExcelQuizImporterModal'
+import { ZipExamPackageImporterModal } from '@/components/exams/ZipExamPackageImporterModal'
 import type { QuizQuestionItem } from '@/services/ai.service'
 import { toast } from '@/store/toast-store'
 import { Popconfirm } from '@/components/common/Popconfirm'
@@ -81,6 +83,7 @@ export function ExamQuestionEditorModal({
   const [partFilter, setPartFilter] = useState<string>('ALL')
 
   const [isExcelModalOpen, setIsExcelModalOpen] = useState<boolean>(false)
+  const [isZipModalOpen, setIsZipModalOpen] = useState<boolean>(false)
   const [isSaving, setIsSaving] = useState<boolean>(false)
   const [uploadingGlobalAudio, setUploadingGlobalAudio] = useState<boolean>(false)
   const [uploadingQuestionAudioIdx, setUploadingQuestionAudioIdx] = useState<number | null>(null)
@@ -316,6 +319,27 @@ export function ExamQuestionEditorModal({
     setIsExcelModalOpen(false)
   }
 
+  // Handle Apply Questions from ZIP Package Modal
+  const handleApplyZipQuestions = (
+    imported: ExamQuestionItem[],
+    mode: 'append' | 'replace' = 'replace',
+    importedAudioUrl?: string
+  ) => {
+    if (mode === 'replace') {
+      setQuestions(imported)
+      toast.success(isVi ? `Đã nạp ${imported.length} câu hỏi từ gói ZIP!` : `Applied ${imported.length} questions from ZIP!`)
+    } else {
+      setQuestions((prev) => [...prev, ...imported])
+      toast.success(isVi ? `Đã thêm nối tiếp ${imported.length} câu hỏi từ gói ZIP!` : `Appended ${imported.length} questions from ZIP!`)
+    }
+
+    if (importedAudioUrl && !globalAudioUrl) {
+      setGlobalAudioUrl(importedAudioUrl)
+    }
+
+    setIsZipModalOpen(false)
+  }
+
   // Save All Questions
   const handleSaveQuestions = async () => {
     const examId = exam.id || exam._id
@@ -458,6 +482,27 @@ export function ExamQuestionEditorModal({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap justify-end">
+            {/* ZIP Package Import Button */}
+            <button
+              type="button"
+              onClick={() => setIsZipModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-xs font-bold text-purple-700 dark:text-purple-300 transition-colors cursor-pointer shadow-2xs"
+              title={isVi ? 'Import toàn bộ đề thi (câu hỏi, audio và ảnh) từ 1 file ZIP duy nhất' : 'Import exam package via ZIP (Excel + Audios + Images)'}
+            >
+              <Archive className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span>{isVi ? 'Import Gói ZIP (Media + Excel)' : 'Import ZIP'}</span>
+            </button>
+
+            {/* Import Excel Button */}
+            <button
+              type="button"
+              onClick={() => setIsExcelModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>{isVi ? 'Import từ Excel' : 'Import Excel'}</span>
+            </button>
+
             {/* Global Audio Button */}
             <button
               type="button"
@@ -472,16 +517,6 @@ export function ExamQuestionEditorModal({
                 <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
               )}
               <span>{globalAudioUrl ? 'Đổi Audio Đề' : 'Gắn Audio Đề'}</span>
-            </button>
-
-            {/* Import Excel Button */}
-            <button
-              type="button"
-              onClick={() => setIsExcelModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{isVi ? 'Import từ Excel' : 'Import Excel'}</span>
             </button>
 
             {/* Add Question Dropdown/Buttons */}
@@ -557,22 +592,30 @@ export function ExamQuestionEditorModal({
                     : 'Add questions manually or quickly import questions in bulk from an Excel file.'}
                 </p>
               </div>
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsZipModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
+                >
+                  <Archive className="w-4 h-4" />
+                  <span>{isVi ? 'Import Gói ZIP (Excel + Audio + Ảnh)' : 'Import ZIP Package'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsExcelModalOpen(true)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition-all cursor-pointer shadow-xs"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>{isVi ? 'Import từ file Excel (.xlsx)' : 'Import from Excel'}</span>
+                  <span>{isVi ? 'Import từ Excel (.xlsx)' : 'Import from Excel'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddQuestion(5)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>{isVi ? 'Thêm câu hỏi thủ công' : 'Add First Question'}</span>
+                  <span>{isVi ? 'Thêm câu hỏi thủ công' : 'Add Question'}</span>
                 </button>
               </div>
             </div>
@@ -901,6 +944,15 @@ export function ExamQuestionEditorModal({
         moduleTitle={exam.title || 'Đề thi'}
         existingQuestionsCount={questions.length}
         initialAudioUrl={globalAudioUrl}
+      />
+
+      {/* ZIP Exam Package Importer Modal */}
+      <ZipExamPackageImporterModal
+        isOpen={isZipModalOpen}
+        onClose={() => setIsZipModalOpen(false)}
+        onApplyQuestions={handleApplyZipQuestions}
+        examTitle={exam.title || 'Đề thi'}
+        existingCount={questions.length}
       />
     </div>
   )
