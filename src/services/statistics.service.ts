@@ -4,69 +4,40 @@
  */
 
 import { api } from '@/services/api.client'
+import {
+  type TOEICScoreDistributionItem,
+  type TOEICPartStat,
+  type TOEICAnalyticsOverviewResponse,
+  type AIModelUsageItem,
+  type AIEvaluationCategoryItem,
+  type AiMetricsResponse,
+  TOEICAnalyticsOverviewResponseSchema,
+  AiMetricsResponseSchema,
+} from '@/schemas/statistics.schema'
 
-export interface TOEICScoreDistributionItem {
-  range: string
-  count: number
-  percent: number
-}
-
-export interface TOEICPartStat {
-  partNumber: number
-  partNameVi: string
-  section: string
-  avgAccuracyPercent: number
-}
-
-export interface TOEICAnalyticsOverviewResponse {
-  overview: {
-    averageTotalScore: number
-    averageListeningScore: number
-    averageReadingScore: number
-    highestScoreRecord: number
-    totalExams: number
-    totalExamAttempts: number
-  }
-  scoreDistribution: TOEICScoreDistributionItem[]
-  partStats: TOEICPartStat[]
-}
-
-export interface AIModelUsageItem {
-  id: string
-  modelName: string
-  provider: string
-  capabilities?: string[]
-  totalRequests: number
-  inputTokens: number
-  outputTokens: number
-  costUSD: number
-  costVND: number
-  avgLatencyMs: number
-  successRatePercent: number
-  isPrimary?: boolean
-}
-
-export interface AIEvaluationCategoryItem {
-  category: string
-  labelVi: string
-  totalEvaluations: number
-  avgScore: number
-  avgProcessingTimeMs: number
-}
-
-export interface AiMetricsResponse {
-  aiModelUsageList: AIModelUsageItem[]
-  aiEvaluationCategories: AIEvaluationCategoryItem[]
+export type {
+  TOEICScoreDistributionItem,
+  TOEICPartStat,
+  TOEICAnalyticsOverviewResponse,
+  AIModelUsageItem,
+  AIEvaluationCategoryItem,
+  AiMetricsResponse,
 }
 
 export const statisticsService = {
   async getToeicAnalyticsOverview(): Promise<TOEICAnalyticsOverviewResponse> {
-    const res = await api.get<TOEICAnalyticsOverviewResponse>('/exams/analytics/overview')
-    return res
+    return api.get<TOEICAnalyticsOverviewResponse>(
+      '/exams/analytics/overview',
+      undefined,
+      TOEICAnalyticsOverviewResponseSchema
+    )
   },
 
   async getAiMetrics(): Promise<AiMetricsResponse> {
-    const res = await api.get<AiMetricsResponse>('/ai/analytics/metrics')
-    return res
+    return api.get<AiMetricsResponse>(
+      '/ai/analytics/metrics',
+      undefined,
+      AiMetricsResponseSchema
+    )
   },
 }

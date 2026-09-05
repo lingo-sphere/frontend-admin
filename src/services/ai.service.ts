@@ -4,36 +4,20 @@
  */
 
 import { api } from '@/services/api.client'
+import {
+  type GenerateQuizItem,
+  type TeacherGenerateQuizResponse,
+  AiModelListSchema,
+  type AiModelItem,
+} from '@/schemas/ai.schema'
+import { type QuizQuestionItem } from '@/schemas/course.schema'
 
-export interface QuizQuestionItem {
-  question_text: string
-  options: string[]
-  correct_answer: string
-  explanation?: string
-  media_url?: string
-}
-
-export interface GenerateQuizItem {
-  question_text: string
-  options: string[]
-  correct_index: number
-  explanation_vi?: string
-  correct_answer?: string
-  explanation?: string
-}
+export type { QuizQuestionItem, GenerateQuizItem, TeacherGenerateQuizResponse, AiModelItem }
 
 export interface TeacherGenerateQuizPayload {
   content_or_topic: string
   question_count?: number
   cefr_level?: string
-}
-
-export interface TeacherGenerateQuizResponse {
-  topic?: string
-  passage_summary?: string
-  target_cefr?: string
-  model_used?: string
-  questions: GenerateQuizItem[]
 }
 
 export const aiAdminService = {
@@ -120,7 +104,7 @@ export const aiAdminService = {
   },
 
   async getAiModels(): Promise<Array<{ model_name: string; provider: string; is_active: boolean }>> {
-    return api.get<Array<{ model_name: string; provider: string; is_active: boolean }>>('/ai/models')
+    return api.get<Array<{ model_name: string; provider: string; is_active: boolean }>>('/ai/models', undefined, AiModelListSchema)
   },
 }
 

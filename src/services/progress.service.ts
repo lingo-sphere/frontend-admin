@@ -5,83 +5,36 @@
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { BetterStackMonitoringData, PostHogAnalyticsData } from '@/types/api.types'
+import {
+  type StudentModuleProgress,
+  type StudentProgressItem,
+  type CourseStudentsProgressResponse,
+  type SkillSubmissionItem,
+  type BetterStackMonitoringData,
+  type PostHogAnalyticsData,
+  CourseStudentsProgressResponseSchema,
+  SkillSubmissionListSchema,
+  SkillSubmissionItemSchema,
+  BetterStackMonitoringDataSchema,
+  PostHogAnalyticsDataSchema,
+} from '@/schemas/progress.schema'
 
-export interface StudentModuleProgress {
-  module_id: string
-  title?: string
-  order_index?: number
-  status: string
-  challenge_score?: number
-  challenge_taken?: boolean
-  is_passed_by_challenge?: boolean
-  post_mini_score?: number
-  best_score?: number
-}
-
-export interface StudentProgressItem {
-  user_id: string
-  full_name?: string
-  email?: string
-  avatar_url?: string
-  status?: string
-  course_id?: string
-  course_title?: string
-  progress_percentage: number
-  completed_lessons: number
-  total_lessons: number
-  baseline_score?: number
-  baseline_source?: string
-  final_test_score?: number
-  total_score_growth?: number
-  modules_progress?: StudentModuleProgress[]
-  last_accessed_at?: string
-  created_at?: string
-}
-
-export interface CourseStudentsProgressResponse {
-  course_id: string
-  total_students: number
-  completed_students: number
-  average_progress_percentage: number
-  students: StudentProgressItem[]
-}
-
-export interface SkillSubmissionItem {
-  _id: string
-  user_id: string
-  user_name: string
-  user_email?: string
-  course_id: string
-  course_title?: string
-  module_id?: string
-  test_type: string
-  skill: 'SPEAKING' | 'WRITING' | 'LISTENING' | 'READING'
-  audio_url?: string
-  essay_text?: string
-  whisper_transcript?: string
-  ai_score: number
-  ai_feedback?: {
-    pronunciation_score?: number
-    fluency_score?: number
-    grammar_score?: number
-    vocabulary_score?: number
-    detailed_comment?: string
-    improvement_tips?: string[]
-  }
-  teacher_score?: number
-  teacher_feedback?: string
-  teacher_id?: string
-  teacher_name?: string
-  is_teacher_reviewed: boolean
-  final_score: number
-  status: 'AI_GRADED' | 'TEACHER_REVIEWED'
-  created_at?: string
+export type {
+  StudentModuleProgress,
+  StudentProgressItem,
+  CourseStudentsProgressResponse,
+  SkillSubmissionItem,
+  BetterStackMonitoringData,
+  PostHogAnalyticsData,
 }
 
 export const progressService = {
   async getCourseStudentsProgress(courseId: string): Promise<CourseStudentsProgressResponse> {
-    return api.get<CourseStudentsProgressResponse>(API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId))
+    return api.get<CourseStudentsProgressResponse>(
+      API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId),
+      undefined,
+      CourseStudentsProgressResponseSchema
+    )
   },
 
   async getGrowthChart(courseId: string): Promise<unknown> {
@@ -94,14 +47,22 @@ export const progressService = {
 
   async getCourseSubmissions(courseId: string, moduleId?: string): Promise<SkillSubmissionItem[]> {
     const qs = moduleId ? `?moduleId=${moduleId}` : ''
-    return api.get<SkillSubmissionItem[]>(`/progress/teacher/courses/${courseId}/submissions${qs}`)
+    return api.get<SkillSubmissionItem[]>(
+      `/progress/teacher/courses/${courseId}/submissions${qs}`,
+      undefined,
+      SkillSubmissionListSchema
+    )
   },
 
   async reviewSubmission(
     submissionId: string,
     data: { teacher_score: number; teacher_feedback?: string }
   ): Promise<SkillSubmissionItem> {
-    return api.post<SkillSubmissionItem>(`/progress/teacher/submissions/${submissionId}/review`, data)
+    return api.post<SkillSubmissionItem>(
+      `/progress/teacher/submissions/${submissionId}/review`,
+      data,
+      SkillSubmissionItemSchema
+    )
   },
 
   async getBetterStackMonitoring(params?: {
@@ -119,7 +80,7 @@ export const progressService = {
     const endpoint = qs
       ? `${API_CONFIG.ENDPOINTS.PROGRESS.MONITORING_BETTERSTACK}?${qs}`
       : API_CONFIG.ENDPOINTS.PROGRESS.MONITORING_BETTERSTACK
-    return api.get<BetterStackMonitoringData>(endpoint)
+    return api.get<BetterStackMonitoringData>(endpoint, undefined, BetterStackMonitoringDataSchema)
   },
 
   async getPostHogAnalytics(params?: {
@@ -135,6 +96,6 @@ export const progressService = {
     const endpoint = qs
       ? `${API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG}?${qs}`
       : API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG
-    return api.get<PostHogAnalyticsData>(endpoint)
+    return api.get<PostHogAnalyticsData>(endpoint, undefined, PostHogAnalyticsDataSchema)
   },
 }

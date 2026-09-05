@@ -5,7 +5,14 @@
 
 import { api, apiClient } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { AuthUser, LoginResponse } from '@/types/api.types'
+import {
+  AuthUserSchema,
+  LoginResponseSchema,
+  type AuthUser,
+  type LoginResponse,
+} from '@/schemas/user.schema'
+
+export type { AuthUser, LoginResponse }
 
 export interface LoginCredentials {
   email: string
@@ -27,14 +34,22 @@ export interface ChangePasswordPayload {
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    return api.post<LoginResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
-      ...credentials,
-      remember_me: credentials.rememberMe !== false,
-    })
+    return api.post<LoginResponse>(
+      API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+      {
+        ...credentials,
+        remember_me: credentials.rememberMe !== false,
+      },
+      LoginResponseSchema
+    )
   },
 
   async register(payload: RegisterPayload): Promise<LoginResponse> {
-    return api.post<LoginResponse>(API_CONFIG.ENDPOINTS.AUTH.REGISTER, payload)
+    return api.post<LoginResponse>(
+      API_CONFIG.ENDPOINTS.AUTH.REGISTER,
+      payload,
+      LoginResponseSchema
+    )
   },
 
   async logout(): Promise<{ message: string }> {
@@ -50,7 +65,7 @@ export const authService = {
   },
 
   async getMe(): Promise<AuthUser> {
-    return api.get<AuthUser>(API_CONFIG.ENDPOINTS.AUTH.ME)
+    return api.get<AuthUser>(API_CONFIG.ENDPOINTS.AUTH.ME, undefined, AuthUserSchema)
   },
 
   async getRolePermissions(roleIdOrName: string): Promise<import('@/types/api.types').PermissionItem[]> {
