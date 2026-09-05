@@ -30,7 +30,7 @@ export function getCourseExamColumns({
       title: isVi ? 'Tên Bài Thi & Đánh Giá' : 'Exam Title & Details',
       sortable: true,
       render: (exam) => {
-        const examId = exam.id || exam._id || ''
+        const examId = exam._id
         return (
           <div className="space-y-1">
             <div className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
@@ -187,7 +187,7 @@ export function getCourseExamColumns({
       title: isVi ? 'Thao Tác' : 'Actions',
       align: 'right',
       render: (exam) => {
-        const examId = exam.id || exam._id || ''
+        const examId = exam._id
         return (
           <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
             <button

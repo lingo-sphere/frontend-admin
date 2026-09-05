@@ -19,7 +19,7 @@ export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps)
           <span>Tổng XP</span>
         </div>
         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          {(profileData.total_xp || 1450).toLocaleString()}
+          {(profileData.total_xp ?? 0).toLocaleString()}
         </p>
       </div>
 
@@ -29,7 +29,7 @@ export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps)
           <span>Streak Học</span>
         </div>
         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          {profileData.current_streak || 7} ngày
+          {profileData.current_streak ?? 0} ngày
         </p>
       </div>
 
@@ -39,7 +39,7 @@ export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps)
           <span>Target TOEIC</span>
         </div>
         <p className="text-lg font-bold text-teal-600 dark:text-teal-400">
-          {profileData.toeic_score || 750}+
+          {profileData.toeic_score ? `${profileData.toeic_score}+` : 'Chưa đặt'}
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps)
           <span>Level</span>
         </div>
         <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-          Level {profileData.level || 5}
+          Level {profileData.level ?? 1}
         </p>
       </div>
 
@@ -59,7 +59,7 @@ export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps)
           <span>Từ đã học</span>
         </div>
         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          {(profileData.total_words_learned || 240).toLocaleString()}
+          {(profileData.total_words_learned ?? 0).toLocaleString()}
         </p>
       </div>
 
@@ -69,7 +69,7 @@ export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps)
           <span>Bài học xong</span>
         </div>
         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          {profileData.total_lessons_completed || 18} bài
+          {profileData.total_lessons_completed ?? 0} bài
         </p>
       </div>
     </div>

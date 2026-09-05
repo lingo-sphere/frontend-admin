@@ -335,7 +335,7 @@ export function useExamQuestionEditor({
 
   const handleSaveQuestions = async () => {
     if (!exam) return
-    const examId = exam.id || exam._id
+    const examId = exam._id
     if (!examId) {
       toast.error('Mã đề thi không hợp lệ.')
       return

@@ -45,7 +45,7 @@ export function CourseExamGridCard({
   onDelete,
 }: CourseExamGridCardProps) {
   const badge = getExamTypeBadge(exam.type, exam)
-  const examId = exam.id || exam._id || ''
+  const examId = exam._id
 
   return (
     <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-indigo-300 dark:hover:border-indigo-800 transition-all flex flex-col justify-between space-y-4">

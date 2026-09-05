@@ -42,11 +42,11 @@ export function useCourseExams() {
   const [selectedExamForQuestions, setSelectedExamForQuestions] = useState<ToeicExamItem | null>(null)
 
   const handleExamQuestionsUpdated = async (updated: ToeicExamItem) => {
-    const examId = updated.id || updated._id
+    const examId = updated._id
     setExams((prev) =>
-      prev.map((e) => ((e.id || e._id) === examId ? { ...e, ...updated } : e))
+      prev.map((e) => (e._id === examId ? { ...e, ...updated } : e))
     )
-    if (selectedExamForQuestions && (selectedExamForQuestions.id || selectedExamForQuestions._id) === examId) {
+    if (selectedExamForQuestions && selectedExamForQuestions._id === examId) {
       setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
     }
 
@@ -326,23 +326,23 @@ export function useCourseExams() {
     if (!examId) return
     try {
       await examAdminService.deleteExam(examId)
-      setExams((prev) => prev.filter((e) => (e.id || e._id) !== examId))
+      setExams((prev) => prev.filter((e) => e._id !== examId))
       toast.success(isVi ? 'Đã xóa bài thi thành công!' : 'Exam deleted successfully!')
     } catch {
-      setExams((prev) => prev.filter((e) => (e.id || e._id) !== examId))
+      setExams((prev) => prev.filter((e) => e._id !== examId))
       toast.success(isVi ? 'Đã xóa bài thi khỏi danh sách.' : 'Exam removed from list.')
     }
   }
 
   const handleTogglePublish = async (exam: ToeicExamItem) => {
-    const examId = exam.id || exam._id || ''
+    const examId = exam._id || ''
     const nextStatus = !exam.is_published
 
     if (nextStatus && (exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id)) {
       const is4Skills = exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS'
       const conflict = exams.find(
         (e) =>
-          (e.id || e._id) !== examId &&
+          e._id !== examId &&
           (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
           e.is_published &&
           (is4Skills
@@ -363,7 +363,7 @@ export function useCourseExams() {
     try {
       await examAdminService.updateExam(examId, { is_published: nextStatus })
       setExams((prev) =>
-        prev.map((e) => ((e.id || e._id) === examId ? { ...e, is_published: nextStatus } : e))
+        prev.map((e) => (e._id === examId ? { ...e, is_published: nextStatus } : e))
       )
       toast.success(
         nextStatus

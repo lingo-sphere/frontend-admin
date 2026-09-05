@@ -165,7 +165,7 @@ export function ExamListTable({
               ) : (
                 paginatedExams.map((exam) => (
                   <ExamTableRow
-                    key={exam.id || exam._id}
+                    key={exam._id}
                     exam={exam}
                     isVi={isVi}
                     onTogglePublish={onTogglePublish}

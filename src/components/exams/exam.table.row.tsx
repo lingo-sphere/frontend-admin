@@ -63,7 +63,7 @@ export function ExamTableRow({
         <button
           type="button"
           onClick={() =>
-            onTogglePublish(exam.id || exam._id || '', exam.is_published ?? true)
+            onTogglePublish(exam._id || '', exam.is_published ?? true)
           }
           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors cursor-pointer ${
             exam.is_published
@@ -100,7 +100,7 @@ export function ExamTableRow({
             cancelText={isVi ? 'Hủy' : 'Cancel'}
             okType="danger"
             placement="topRight"
-            onConfirm={() => onDeleteExam(exam.id || exam._id || '')}
+            onConfirm={() => onDeleteExam(exam._id || '')}
           >
             <button
               className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"

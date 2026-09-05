@@ -59,7 +59,10 @@ export interface DataTableProps<T> {
 export function DataTable<T extends object>({
   columns,
   data,
-  rowKey = (record) => (record as { _id?: string; id?: string })._id || (record as { _id?: string; id?: string }).id || String(Math.random()),
+  rowKey = (record) => {
+    const rec = record as { _id?: string; user_id?: string; id?: string }
+    return rec._id || rec.user_id || rec.id || ''
+  },
   isLoading = false,
   emptyText,
   title,
