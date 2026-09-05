@@ -23,15 +23,24 @@ export interface MediaFileItem {
 
 export const mediaAdminService = {
   async getStorageUsage(): Promise<StorageQuota> {
-    try {
-      return await api.get<StorageQuota>('/media/storage-usage')
-    } catch {
-      return {
-        used_bytes: 524288000,
-        total_quota_bytes: 10737418240,
-        used_percentage: 4.88,
-        total_files_count: 142,
+    const res = await api.get<{
+      system_storage: {
+        used_bytes: number
+        used_mb: number
+        used_gb: number
+        max_gb: number
+        usage_percent: number
+        total_files: number
+        is_quota_exceeded: boolean
       }
+    }>('/media/storage/usage')
+
+    const sys = res?.system_storage
+    return {
+      used_bytes: sys?.used_bytes ?? 0,
+      total_quota_bytes: (sys?.max_gb ?? 10) * 1024 * 1024 * 1024,
+      used_percentage: sys?.usage_percent ?? 0,
+      total_files_count: sys?.total_files ?? 0,
     }
   },
 
@@ -39,8 +48,8 @@ export const mediaAdminService = {
     file: File,
     folder = 'courses',
     onProgress?: (percent: number, loaded: number, total: number) => void
-  ): Promise<{ file_url: string; url?: string; public_url?: string }> {
-    return await api.upload<{ file_url: string; url?: string; public_url?: string }>(
+  ): Promise<{ file_url: string; url: string; public_url: string; id: string; filename: string }> {
+    return api.upload<{ file_url: string; url: string; public_url: string; id: string; filename: string }>(
       '/media/upload',
       file,
       { folder },

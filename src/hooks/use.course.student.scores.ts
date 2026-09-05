@@ -72,14 +72,11 @@ export function useCourseStudentScores(courseId: string, isOpen: boolean) {
     ).then((profiles) => {
       setUsersMap((prev) => {
         const next = new Map(prev)
-        profiles.forEach((p: any, idx) => {
+        profiles.forEach((p, idx) => {
           const fallbackUid = missingIds[idx]
           if (p) {
-            const actualProfile = p.profile || p.data || p
-            next.set(fallbackUid, actualProfile)
-            if (actualProfile.user_id) next.set(String(actualProfile.user_id), actualProfile)
-            if (actualProfile._id) next.set(String(actualProfile._id), actualProfile)
-            if (actualProfile.id) next.set(String(actualProfile.id), actualProfile)
+            next.set(fallbackUid, p)
+            if (p.user_id) next.set(String(p.user_id), p)
           }
         })
         return next
