@@ -57,6 +57,10 @@ export const examAdminService = {
     }
   },
 
+  async getAllExams(params?: Record<string, unknown>): Promise<ToeicExamItem[]> {
+    return this.getExams(params)
+  },
+
   async getExamById(id: string): Promise<ToeicExamItem | null> {
     try {
       return await api.get<ToeicExamItem>(`/exams/${id}`)

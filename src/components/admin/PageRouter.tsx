@@ -34,6 +34,7 @@ import { PermissionsPage } from '@/pages/PermissionsPage'
 import { ExamsPage } from '@/pages/ExamsPage'
 import { MediaStoragePage } from '@/pages/MediaStoragePage'
 import { AiManagementPage } from '@/pages/AiManagementPage'
+import { RoadmapsPage } from '@/pages/RoadmapsPage'
 
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -48,6 +49,8 @@ const pageMap: Record<string, React.ComponentType> = {
   'course-learners': CourseLearnersPage,
   'course-exams': CourseExamsPage,
   'course-create': CourseFormPage,
+  roadmaps: RoadmapsPage,
+  'roadmaps-list': RoadmapsPage,
   vocabulary: VocabularyPage,
   'vocab-create': VocabularyFormPage,
   'vocabulary-import': VocabularyImportPage,
@@ -91,6 +94,8 @@ export function PageRouter() {
       activeNavItem === 'courses-list' ||
       activeNavItem === 'course-learners' ||
       activeNavItem === 'course-exams' ||
+      activeNavItem === 'roadmaps' ||
+      activeNavItem === 'roadmaps-list' ||
       activeNavItem.startsWith('course-edit:') ||
       activeNavItem.startsWith('course-form:')
     ) {

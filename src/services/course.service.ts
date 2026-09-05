@@ -5,7 +5,7 @@
 
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Course, CourseModule, Lesson, LessonQuestion, PaginatedResult } from '@/types/api.types'
+import type { Course, CourseModule, Lesson, LessonQuestion, PaginatedResult, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
 
 export interface CourseFilterParams {
   category?: string
@@ -99,3 +99,37 @@ export const courseService = {
     return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.COURSES.QUESTION_BY_ID(questionId))
   },
 }
+
+export const roadmapService = {
+  async getAllRoadmaps(params?: { skills_focus?: string; is_published?: boolean }): Promise<LearningRoadmap[]> {
+    return api.get<LearningRoadmap[]>(API_CONFIG.ENDPOINTS.ROADMAPS.LIST, params as Record<string, unknown>)
+  },
+
+  async getRoadmapById(id: string): Promise<LearningRoadmap> {
+    return api.get<LearningRoadmap>(API_CONFIG.ENDPOINTS.ROADMAPS.BY_ID(id))
+  },
+
+  async createRoadmap(payload: Partial<LearningRoadmap>): Promise<LearningRoadmap> {
+    return api.post<LearningRoadmap>(API_CONFIG.ENDPOINTS.ROADMAPS.LIST, payload)
+  },
+
+  async updateRoadmap(id: string, payload: Partial<LearningRoadmap>): Promise<LearningRoadmap> {
+    return api.put<LearningRoadmap>(API_CONFIG.ENDPOINTS.ROADMAPS.BY_ID(id), payload)
+  },
+
+  async deleteRoadmap(id: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.ROADMAPS.BY_ID(id))
+  },
+
+  async getRecommendation(query: {
+    total_score?: number
+    listening_score?: number
+    reading_score?: number
+    speaking_score?: number
+    writing_score?: number
+    skills_type?: string
+  }): Promise<{ recommended_roadmap: any; individual_courses: Course[]; note?: string }> {
+    return api.get(API_CONFIG.ENDPOINTS.ROADMAPS.RECOMMENDATION, query as Record<string, unknown>)
+  },
+}
+

@@ -90,6 +90,7 @@ const navGroups: NavGroup[] = [
           { id: "courses-list", label: "Quản lý khóa học" },
           { id: "course-learners", label: "Quản lý học viên" },
           { id: "course-exams", label: "Quản lý bài thi" },
+          { id: "roadmaps", label: "Quản lý lộ trình" },
         ],
       },
       { id: "vocabulary", icon: BookOpen, label: "Từ vựng" },
@@ -219,6 +220,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       case 'courses-list':
       case 'course-learners':
       case 'course-exams':
+      case 'roadmaps':
         return hasPermission('GET', '/courses') || hasModulePermission('COURSES');
       case 'vocabulary':
       case 'public-decks':

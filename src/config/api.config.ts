@@ -69,6 +69,12 @@ export const API_CONFIG = {
       QUESTION_BY_ID: (questionId: string) => `/courses/questions/${questionId}`,
     },
 
+    ROADMAPS: {
+      LIST: '/courses/roadmaps',
+      BY_ID: (id: string) => `/courses/roadmaps/${id}`,
+      RECOMMENDATION: '/courses/roadmaps/recommendation',
+    },
+
     VOCABULARY: {
       SEARCH: '/vocabulary/lexical-items/search',
       BY_ID: (id: string) => `/vocabulary/lexical-items/${id}`,

@@ -208,6 +208,36 @@ export interface Course {
   updated_at?: string
 }
 
+export interface LearningRoadmapStage {
+  stage_order: number
+  stage_title: string
+  stage_description?: string
+  course_id: string
+  target_band?: string
+  checkpoint_exam_id?: string
+  passing_score?: number
+  is_optional?: boolean
+  course?: Course | null
+}
+
+export interface LearningRoadmap {
+  _id: string
+  title: string
+  slug: string
+  description?: string
+  skills_focus: '2SKILLS' | '4SKILLS'
+  target_score: number
+  min_entry_score: number
+  max_entry_score: number
+  stages: LearningRoadmapStage[]
+  bundle_price?: number
+  original_price?: number
+  version?: number
+  is_published: boolean
+  created_at?: string
+  updated_at?: string
+}
+
 export type WordType = 'NOUN' | 'VERB' | 'ADJECTIVE' | 'ADVERB' | 'PREPOSITION' | 'CONJUNCTION' | 'PRONOUN' | 'PHRASE'
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
 
