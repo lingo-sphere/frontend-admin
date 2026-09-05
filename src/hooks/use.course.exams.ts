@@ -9,7 +9,7 @@ import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/serv
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
-import type { CourseSelectItem } from './course.exam.header.actions'
+import type { CourseSelectItem } from '@/components/course-exams/course.exam.header.actions'
 
 export function useCourseExams() {
   const { i18n } = useTranslation()

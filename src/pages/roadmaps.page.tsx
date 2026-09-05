@@ -16,7 +16,7 @@ import {
 import { DataTable } from '@/components/common/data.table'
 import { RoadmapFormModal } from '@/components/roadmaps/roadmap.form.modal'
 import type { LearningRoadmap } from '@/types/api.types'
-import { useRoadmapsData } from '@/pages/roadmaps/use.roadmaps.data'
+import { useRoadmapsData } from '@/hooks/use.roadmaps.data'
 import { createRoadmapColumns } from '@/pages/roadmaps/roadmaps.table.columns'
 import { RoadmapsFilterBar } from '@/pages/roadmaps/roadmaps.filter.bar'
 

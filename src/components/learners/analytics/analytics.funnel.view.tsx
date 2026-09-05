@@ -4,7 +4,7 @@
  */
 
 import { Activity, AlertTriangle } from 'lucide-react'
-import type { ChapterFunnelItem } from '../use.course.analytics'
+import type { ChapterFunnelItem } from '@/hooks/use.course.analytics'
 
 interface AnalyticsFunnelViewProps {
   chapterFunnel: ChapterFunnelItem[]

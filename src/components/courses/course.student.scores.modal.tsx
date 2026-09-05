@@ -12,7 +12,7 @@ import {
   BookOpen,
   RefreshCw,
 } from 'lucide-react'
-import { useCourseStudentScores } from './use.course.student.scores'
+import { useCourseStudentScores } from '@/hooks/use.course.student.scores'
 import { StudentScoresTableRow } from './student.scores.table.row'
 
 interface CourseStudentScoresModalProps {

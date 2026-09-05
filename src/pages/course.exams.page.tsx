@@ -13,7 +13,7 @@ import { CourseExamHeaderActions } from '@/components/course-exams/course.exam.h
 import { CourseExamGridCard } from '@/components/course-exams/course.exam.grid.card'
 import { CourseExamModal } from '@/components/course-exams/course.exam.modal'
 import { getCourseExamColumns } from '@/components/course-exams/course.exam.table.columns'
-import { useCourseExams } from '@/components/course-exams/use.course.exams'
+import { useCourseExams } from '@/hooks/use.course.exams'
 import type { ToeicExamItem } from '@/services/exam.service'
 
 export function CourseExamsPage() {

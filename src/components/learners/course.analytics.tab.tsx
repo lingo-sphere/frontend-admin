@@ -5,7 +5,7 @@
 
 import { BarChart2, BookOpen } from 'lucide-react'
 import type { StudentProgressItem } from '@/services/progress.service'
-import { useCourseAnalytics, type CourseSimple } from '@/components/learners/use.course.analytics'
+import { useCourseAnalytics, type CourseSimple } from '@/hooks/use.course.analytics'
 import { AnalyticsKpiCards } from '@/components/learners/analytics/analytics.kpi.cards'
 import { AnalyticsFunnelView } from '@/components/learners/analytics/analytics.funnel.view'
 import { AnalyticsRecommendationsView } from '@/components/learners/analytics/analytics.recommendations.view'

@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react'
-import type { CourseModule, CourseLesson } from './course.basic.info.tab'
+import type { CourseModule, CourseLesson } from '@/components/courses/course.basic.info.tab'
 import type { QuizQuestionItem } from '@/services/ai.service'
 
 interface UseCourseCurriculumProps {

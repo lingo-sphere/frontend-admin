@@ -8,7 +8,7 @@ import { Save } from 'lucide-react'
 import { CourseBasicInfoTab } from '@/components/courses/course.basic.info.tab'
 import { CourseCurriculumManager } from '@/components/courses/course.curriculum.manager'
 import { VideoPreviewModal } from '@/components/common/video.preview.modal'
-import { useCourseForm } from '@/pages/course-form/use.course.form'
+import { useCourseForm } from '@/hooks/use.course.form'
 import { CourseFormHeader } from '@/pages/course-form/course.form.header'
 
 interface CourseFormPageProps {

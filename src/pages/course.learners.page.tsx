@@ -22,7 +22,7 @@ import { CourseLearnersStatsBar } from '@/components/learners/course.learners.st
 import { CourseProgressTableTab } from '@/components/learners/course.progress.table.tab'
 import {
   useCourseLearnersData,
-} from '@/components/learners/use.course.learners.data'
+} from '@/hooks/use.course.learners.data'
 import type { StudentProgressItem, SkillSubmissionItem } from '@/services/progress.service'
 
 export function CourseLearnersPage() {

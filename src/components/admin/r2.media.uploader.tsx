@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { VideoPreviewModal } from '@/components/common/video.preview.modal'
-import { useR2Uploader, resolveStreamUrl } from './use.r2.uploader'
+import { useR2Uploader, resolveStreamUrl } from '@/hooks/use.r2.uploader'
 import { R2MediaPreviewCard } from './r2.media.preview.card'
 
 interface R2MediaUploaderProps {

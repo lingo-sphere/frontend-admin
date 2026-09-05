@@ -9,7 +9,7 @@ import {
   Award,
   Zap,
 } from 'lucide-react'
-import type { AnalyticsSummary } from '../use.course.analytics'
+import type { AnalyticsSummary } from '@/hooks/use.course.analytics'
 
 interface AnalyticsKpiCardsProps {
   analyticsSummary: AnalyticsSummary

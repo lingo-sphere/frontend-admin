@@ -4,7 +4,7 @@
  */
 
 import { Play, CheckCircle2, Eye, RefreshCw, ExternalLink, Trash2 } from 'lucide-react'
-import { resolveStreamUrl } from './use.r2.uploader'
+import { resolveStreamUrl } from '@/hooks/use.r2.uploader'
 
 interface R2MediaPreviewCardProps {
   value: string

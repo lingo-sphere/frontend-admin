@@ -9,7 +9,7 @@ import { ModuleQuestionViewerModal } from '@/components/admin/module.question.vi
 import { CourseChapterCard } from './course.chapter.card'
 import { CourseCurriculumHeader } from './course.curriculum.header'
 import { CourseCurriculumOutline } from './course.curriculum.outline'
-import { useCourseCurriculum } from './use.course.curriculum'
+import { useCourseCurriculum } from '@/hooks/use.course.curriculum'
 import type { CourseModule } from './course.basic.info.tab'
 import type { QuizQuestionItem } from '@/services/ai.service'
 

@@ -17,9 +17,9 @@ import { VideoControlsBar, type QualityOption } from '@/components/common/video.
 import {
   useVideoPlayer,
   videoDimensionsCache,
-} from '@/components/common/use.video.player'
+} from '@/hooks/use.video.player'
 
-export { videoDimensionsCache } from '@/components/common/use.video.player'
+export { videoDimensionsCache } from '@/hooks/use.video.player'
 
 export interface VideoPreviewModalProps {
   isOpen: boolean
