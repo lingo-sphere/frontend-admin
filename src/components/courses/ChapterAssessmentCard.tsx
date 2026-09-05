@@ -18,6 +18,7 @@ import {
   Mic,
   PenTool,
   FileDown,
+  Clock,
 } from 'lucide-react'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast-store'
@@ -218,27 +219,55 @@ export function ChapterAssessmentCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-            {isVi ? 'Điểm đạt tối thiểu:' : 'Passing score:'}
-          </span>
-          <div className="flex items-center gap-1">
-            <input
-              type="number"
-              min={10}
-              max={100}
-              value={passingScore}
-              onChange={(e) => {
-                const val = Math.max(10, Math.min(100, Number(e.target.value) || 70))
-                onUpdateModule({
-                  passing_score: val,
-                  challenge_passing_score: val,
-                  post_mini_passing_score: val,
-                })
-              }}
-              className="w-12 h-7 text-center rounded-lg border border-indigo-200 bg-indigo-50/50 text-xs font-black text-indigo-700 dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">%</span>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Thời lượng làm bài (phút) */}
+          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-xs">
+            <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              {isVi ? 'Thời lượng:' : 'Duration:'}
+            </span>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={5}
+                max={180}
+                value={module.challenge_duration_minutes ?? module.duration_minutes ?? 15}
+                onChange={(e) => {
+                  const val = Math.max(5, Math.min(180, Number(e.target.value) || 15))
+                  onUpdateModule({
+                    challenge_duration_minutes: val,
+                    duration_minutes: val,
+                  })
+                }}
+                className="w-12 h-7 text-center rounded-lg border border-indigo-200 bg-indigo-50/50 text-xs font-black text-indigo-700 dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{isVi ? 'phút' : 'min'}</span>
+            </div>
+          </div>
+
+          {/* Điểm đạt tối thiểu */}
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-xs">
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              {isVi ? 'Điểm đạt tối thiểu:' : 'Passing score:'}
+            </span>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={10}
+                max={100}
+                value={passingScore}
+                onChange={(e) => {
+                  const val = Math.max(10, Math.min(100, Number(e.target.value) || 70))
+                  onUpdateModule({
+                    passing_score: val,
+                    challenge_passing_score: val,
+                    post_mini_passing_score: val,
+                  })
+                }}
+                className="w-12 h-7 text-center rounded-lg border border-indigo-200 bg-indigo-50/50 text-xs font-black text-indigo-700 dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">%</span>
+            </div>
           </div>
         </div>
       </div>

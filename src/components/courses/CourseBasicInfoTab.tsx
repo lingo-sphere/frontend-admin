@@ -52,6 +52,7 @@ export interface CourseFormData {
   pre_test_exam_id?: string
   final_test_exam_id?: string
   final_test_passing_score?: number
+  final_test_duration_minutes?: number
   final_test_questions?: QuizQuestionItem[]
   final_test_audio_url?: string
   final_test_speaking_prompt?: string
@@ -89,9 +90,11 @@ export interface CourseModule {
   created_at_timestamp?: number
   is_free_preview?: boolean
   passing_score?: number
+  duration_minutes?: number
   test_questions?: QuizQuestionItem[]
   challenge_test_exam_id?: string
   challenge_passing_score?: number
+  challenge_duration_minutes?: number
   challenge_questions?: QuizQuestionItem[]
   post_mini_test_exam_id?: string
   post_mini_passing_score?: number

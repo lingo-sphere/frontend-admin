@@ -406,46 +406,18 @@ export function CourseExamModal({
 
           {isSystemPlacement ? (
             <div className="space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {isVi ? 'Thời lượng (phút):' : 'Duration (mins):'}
-                  </label>
-                  <input
-                    type="number"
-                    min={5}
-                    max={180}
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {isVi ? 'Số câu hỏi dự kiến:' : 'Expected Questions:'}
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={200}
-                    value={formQuestions}
-                    onChange={(e) => setFormQuestions(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-violet-700 dark:text-violet-300 mb-1">
-                    {isVi ? 'Thang điểm đánh giá:' : 'Assessment Scale:'}
-                  </label>
-                  <div className="w-full px-3 py-1.5 bg-violet-50 dark:bg-violet-950/50 border border-violet-200 dark:border-violet-800/80 rounded-xl text-xs font-semibold text-violet-800 dark:text-violet-300 flex items-center justify-between">
-                    <span>{formPlacementSkills === '4SKILLS' ? 'TOEIC 4 Kỹ Năng' : 'Thang điểm 10 - 990'}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-violet-200/70 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300">
-                      {isVi ? 'Baseline' : 'Baseline'}
-                    </span>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {isVi ? 'Thời lượng làm bài (phút):' : 'Duration (mins):'}
+                </label>
+                <input
+                  type="number"
+                  min={5}
+                  max={180}
+                  value={formDuration}
+                  onChange={(e) => setFormDuration(Number(e.target.value))}
+                  className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
+                />
               </div>
 
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-50/70 dark:bg-violet-950/30 border border-violet-200/60 dark:border-violet-800/50 text-[11px] text-violet-700 dark:text-violet-300">
@@ -458,10 +430,10 @@ export function CourseExamModal({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {isVi ? 'Thời lượng (phút):' : 'Duration (mins):'}
+                  {isVi ? 'Thời lượng làm bài (phút):' : 'Duration (mins):'}
                 </label>
                 <input
                   type="number"
@@ -469,20 +441,6 @@ export function CourseExamModal({
                   max={180}
                   value={formDuration}
                   onChange={(e) => setFormDuration(Number(e.target.value))}
-                  className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {isVi ? 'Số câu hỏi dự kiến:' : 'Expected Questions:'}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={200}
-                  value={formQuestions}
-                  onChange={(e) => setFormQuestions(Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold"
                 />
               </div>
