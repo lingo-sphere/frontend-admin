@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { CustomSelect } from '@/components/common/CustomSelect'
+import { CustomSelect } from '@/components/common/custom.select'
 
 interface PaginationProps {
   currentPage: number

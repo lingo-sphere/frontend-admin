@@ -6,8 +6,8 @@
 import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones, GraduationCap } from 'lucide-react'
 import type { Course } from '@/data/courses-data'
 import { categoryLabels, levelLabels } from '@/data/courses-data'
-import type { DataTableColumn } from '@/components/common/DataTable'
-import { Popconfirm } from '@/components/common/Popconfirm'
+import type { DataTableColumn } from '@/components/common/data.table'
+import { Popconfirm } from '@/components/common/popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/helpers/course.helper'
 
 interface GetCourseColumnsOptions {

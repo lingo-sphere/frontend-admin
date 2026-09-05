@@ -4,10 +4,10 @@
  */
 
 import { BookOpen, Clock, AlertCircle, Check, HelpCircle, Edit3, Trash2, Sparkles } from 'lucide-react'
-import type { DataTableColumn } from '@/components/common/DataTable'
-import { Popconfirm } from '@/components/common/Popconfirm'
+import type { DataTableColumn } from '@/components/common/data.table'
+import { Popconfirm } from '@/components/common/popconfirm'
 import type { ToeicExamItem } from '@/services/exam.service'
-import { getExamTypeBadge } from './CourseExamGridCard'
+import { getExamTypeBadge } from './course.exam.grid.card'
 
 interface GetCourseExamColumnsProps {
   isVi: boolean
