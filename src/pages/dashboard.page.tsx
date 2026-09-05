@@ -1,5 +1,5 @@
 /**
- * @file DashboardPage.tsx
+ * @file dashboard.page.tsx
  * @description Trang quản trị DashboardPage trong giao diện Admin
  */
 
@@ -11,7 +11,7 @@ import {
   Check,
   RefreshCw,
 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/services/user.service'
 import { courseService } from '@/services/course.service'
 import type { SystemAnalyticsOverview } from '@/types/api.types'

@@ -1,5 +1,5 @@
 /**
- * @file vocabulary-data.ts
+ * @file vocabulary.data.ts
  * @description Mã nguồn thành phần vocabulary-data.ts
  */
 

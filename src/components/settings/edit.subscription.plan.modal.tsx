@@ -1,5 +1,5 @@
 /**
- * @file EditSubscriptionPlanModal.tsx
+ * @file edit.subscription.plan.modal.tsx
  * @description Modal chỉnh sửa thông tin và giá bán gói dịch vụ thành viên, tự động tính ưu đãi và tối ưu giao diện
  */
 

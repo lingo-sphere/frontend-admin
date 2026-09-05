@@ -1,5 +1,5 @@
 /**
- * @file PracticeListeningPage.tsx
+ * @file practice.listening.page.tsx
  * @description Trang quản trị PracticeListeningPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Headphones } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { ListeningExercise } from '@/types/api.types'
 import { PracticeListeningCard } from '@/components/practice/practice.listening.card'
 import { CreateListeningModal } from '@/components/practice/create.listening.modal'

@@ -1,5 +1,5 @@
 /**
- * @file RolesPage.tsx
+ * @file roles.page.tsx
  * @description Trang quản trị RolesPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Shield } from 'lucide-react'
 import { roleService } from '@/services/role.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { Role, Permission } from '@/types/api.types'
 import { RolesListTab } from '@/components/roles/roles.list.tab'
 import { RoleEditModal } from '@/components/roles/role.edit.modal'

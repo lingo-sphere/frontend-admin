@@ -1,5 +1,5 @@
 /**
- * @file CourseExamsPage.tsx
+ * @file course.exams.page.tsx
  * @description Trang quản lý bài thi và bài kiểm tra theo từng khóa học sử dụng chuẩn DataTable và UI/UX hệ thống Admin
  */
 
@@ -12,8 +12,8 @@ import { CourseExamFilterBar } from '@/components/course-exams/course.exam.filte
 import { CourseExamHeaderActions } from '@/components/course-exams/course.exam.header.actions'
 import { CourseExamGridCard } from '@/components/course-exams/course.exam.grid.card'
 import { CourseExamModal } from '@/components/course-exams/course.exam.modal'
-import { getCourseExamColumns } from '@/components/course-exams/course-exam-table-columns'
-import { useCourseExams } from '@/components/course-exams/use-course-exams'
+import { getCourseExamColumns } from '@/components/course-exams/course.exam.table.columns'
+import { useCourseExams } from '@/components/course-exams/use.course.exams'
 import type { ToeicExamItem } from '@/services/exam.service'
 
 export function CourseExamsPage() {

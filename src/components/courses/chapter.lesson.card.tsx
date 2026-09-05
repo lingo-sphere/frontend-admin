@@ -1,5 +1,5 @@
 /**
- * @file ChapterLessonCard.tsx
+ * @file chapter.lesson.card.tsx
  * @description Component hiển thị và chỉnh sửa bài học video phân cấp rõ ràng theo chương học
  */
 

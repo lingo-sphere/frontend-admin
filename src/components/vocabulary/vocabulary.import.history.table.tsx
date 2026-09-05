@@ -1,5 +1,5 @@
 /**
- * @file VocabularyImportHistoryTable.tsx
+ * @file vocabulary.import.history.table.tsx
  * @description Component giao diện VocabularyImportHistoryTable phục vụ khu vực Quản trị Admin
  */
 

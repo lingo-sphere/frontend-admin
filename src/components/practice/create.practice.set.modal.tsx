@@ -1,5 +1,5 @@
 /**
- * @file CreatePracticeSetModal.tsx
+ * @file create.practice.set.modal.tsx
  * @description Component giao diện CreatePracticeSetModal phục vụ khu vực Quản trị Admin
  */
 

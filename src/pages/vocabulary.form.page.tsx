@@ -1,12 +1,12 @@
 /**
- * @file VocabularyFormPage.tsx
+ * @file vocabulary.form.page.tsx
  * @description Trang quản trị VocabularyFormPage trong giao diện Admin
  */
 
 import { useState } from 'react'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useAdminStore } from '@/store/admin-store'
-import { toast } from '@/store/toast-store'
+import { useAdminStore } from '@/store/admin.store'
+import { toast } from '@/store/toast.store'
 import { VocabularyBasicInfoForm } from '@/components/vocabulary/vocabulary.basic.info.form'
 import { VocabularyMeaningsForm, type Meaning } from '@/components/vocabulary/vocabulary.meanings.form'
 import { vocabularyService } from '@/services/vocabulary.service'

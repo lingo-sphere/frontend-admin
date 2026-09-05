@@ -1,5 +1,5 @@
 /**
- * @file AdminUserFilterBar.tsx
+ * @file admin.user.filter.bar.tsx
  * @description Component giao diện AdminUserFilterBar phục vụ khu vực Quản trị Admin
  */
 

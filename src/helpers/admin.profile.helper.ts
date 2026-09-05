@@ -1,5 +1,5 @@
 /**
- * @file admin-profile.helper.ts
+ * @file admin.profile.helper.ts
  * @description Mã nguồn thành phần admin-profile.helper.ts
  */
 

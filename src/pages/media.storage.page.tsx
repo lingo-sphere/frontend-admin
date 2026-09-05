@@ -1,12 +1,12 @@
 /**
- * @file MediaStoragePage.tsx
+ * @file media.storage.page.tsx
  * @description Trang quản trị MediaStoragePage trong giao diện Admin
  */
 
 import { useState, useEffect } from 'react'
 import { HardDrive } from 'lucide-react'
 import { mediaAdminService, type StorageQuota } from '@/services/media.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { MediaStorageQuotaCards } from '@/components/media/media.storage.quota.cards'
 import { MediaTtsGenerator } from '@/components/media/media.tts.generator'
 

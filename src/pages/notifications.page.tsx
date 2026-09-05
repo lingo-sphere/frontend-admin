@@ -1,5 +1,5 @@
 /**
- * @file NotificationsPage.tsx
+ * @file notifications.page.tsx
  * @description Trang quản trị NotificationsPage trong giao diện Admin
  */
 
@@ -12,8 +12,8 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { notificationService } from '@/services/notification.service'
-import { toast } from '@/store/toast-store'
-import type { Notification } from '@/data/notifications-data'
+import { toast } from '@/store/toast.store'
+import type { Notification } from '@/data/notifications.data'
 import type { AppNotification } from '@/types/api.types'
 import { Pagination } from '@/components/common/pagination'
 import { NotificationFilterBar } from '@/components/notifications/notification.filter.bar'

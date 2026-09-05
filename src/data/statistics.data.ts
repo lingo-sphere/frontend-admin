@@ -1,5 +1,5 @@
 /**
- * @file statistics-data.ts
+ * @file statistics.data.ts
  * @description Mã nguồn thành phần statistics-data.ts
  */
 
@@ -462,4 +462,3 @@ export interface UserActivityLog {
   status?: 'SUCCESS' | 'IN_PROGRESS' | 'COMPLETED' | string
   timestamp: string | Date
 }
-

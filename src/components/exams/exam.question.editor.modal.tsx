@@ -5,27 +5,17 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  X,
-  Trash2,
-  Volume2,
-  Save,
-  Search,
-  BookOpen,
-  Archive,
-  Loader2,
-  Plus,
-  Mic,
-  PenTool,
-  Download,
-} from 'lucide-react'
+import { BookOpen, Plus } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { examAdminService } from '@/services/exam.service'
 import { mediaAdminService } from '@/services/media.service'
 import { parseAndUploadZipExam, downloadSampleZip } from '@/components/exams/zip.exam.helper'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { ExamQuestionCard } from '@/components/exams/exam.question.card'
 import { ExamZipDropzone } from '@/components/exams/exam.zip.dropzone'
+import { ExamEditorHeader } from './editor/exam.editor.header'
+import { ExamEditorFooter } from './editor/exam.editor.footer'
+import { ExamEditorGlobalAudio } from './editor/exam.editor.global.audio'
 
 export interface ExamQuestionItem {
   id?: string
@@ -87,12 +77,27 @@ export function ExamQuestionEditorModal({
             id: q.id || `q_${idx}_${Date.now()}`,
             part_number: q.part_number || q.part || 5,
             part_name: q.part_name || '',
-            question_type: q.question_type || (q.part_number === 'speaking' ? 'SPEAKING' : q.part_number === 'writing' ? 'WRITING' : 'MULTIPLE_CHOICE'),
+            question_type:
+              q.question_type ||
+              (q.part_number === 'speaking'
+                ? 'SPEAKING'
+                : q.part_number === 'writing'
+                  ? 'WRITING'
+                  : 'MULTIPLE_CHOICE'),
             question_text: q.question_text || q.questionTextEn || q.question_text_en || '',
             options: Array.isArray(q.options)
-              ? q.options.map((opt: any) => (typeof opt === 'string' ? opt : opt.textEn || opt.text || ''))
+              ? q.options.map((opt: any) =>
+                  typeof opt === 'string' ? opt : opt.textEn || opt.text || ''
+                )
               : ['', '', '', ''],
-            correct_answer: (q.correct_answer || q.correctOption || q.correct_option || 'A').toString().toUpperCase(),
+            correct_answer: (
+              q.correct_answer ||
+              q.correctOption ||
+              q.correct_option ||
+              'A'
+            )
+              .toString()
+              .toUpperCase(),
             explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
             media_url: q.media_url || q.audio_url || '',
             image_url: q.image_url || '',
@@ -113,9 +118,7 @@ export function ExamQuestionEditorModal({
 
   const is4Skills = exam.placement_type === '4SKILLS' || exam.skills_enabled === 'ALL'
   const isSystemPlacement = Boolean(
-    exam.is_system_placement ||
-    exam.type === 'DIAGNOSTIC_TEST' ||
-    !exam.course_id
+    exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id
   )
 
   const filteredQuestions = questions.filter((q, index) => {
@@ -146,8 +149,8 @@ export function ExamQuestionEditorModal({
       question_text: isSpeaking
         ? 'Describe the picture in detail using as much vocabulary as possible.'
         : isWriting
-        ? 'Write an email responding to the customer request (at least 100 words).'
-        : '',
+          ? 'Write an email responding to the customer request (at least 100 words).'
+          : '',
       options: isSpeaking || isWriting ? [] : ['', '', '', ''],
       correct_answer: 'A',
       explanation: '',
@@ -165,7 +168,11 @@ export function ExamQuestionEditorModal({
     if (!file) return
 
     if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
-      toast.error(isVi ? 'Vui lòng chọn file âm thanh (.mp3, .wav, .m4a)' : 'Please select an audio file (.mp3, .wav)')
+      toast.error(
+        isVi
+          ? 'Vui lòng chọn file âm thanh (.mp3, .wav, .m4a)'
+          : 'Please select an audio file (.mp3, .wav)'
+      )
       return
     }
 
@@ -175,7 +182,9 @@ export function ExamQuestionEditorModal({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         setGlobalAudioUrl(uploadedUrl)
-        toast.success(isVi ? `Đã tải file nghe đề thi: ${file.name}` : `Uploaded exam audio: ${file.name}`)
+        toast.success(
+          isVi ? `Đã tải file nghe đề thi: ${file.name}` : `Uploaded exam audio: ${file.name}`
+        )
       } else {
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
       }
@@ -239,7 +248,9 @@ export function ExamQuestionEditorModal({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         handleUpdateQuestion(qIdx, { media_url: uploadedUrl })
-        toast.success(isVi ? `Đã gắn file nghe vào câu ${qIdx + 1}` : `Attached audio to question ${qIdx + 1}`)
+        toast.success(
+          isVi ? `Đã gắn file nghe vào câu ${qIdx + 1}` : `Attached audio to question ${qIdx + 1}`
+        )
       }
     } catch {
       toast.error('Lỗi khi tải file nghe của câu hỏi.')
@@ -261,7 +272,11 @@ export function ExamQuestionEditorModal({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         handleUpdateQuestion(qIdx, { image_url: uploadedUrl })
-        toast.success(isVi ? `Đã gắn ảnh minh họa vào câu ${qIdx + 1}` : `Attached image to question ${qIdx + 1}`)
+        toast.success(
+          isVi
+            ? `Đã gắn ảnh minh họa vào câu ${qIdx + 1}`
+            : `Attached image to question ${qIdx + 1}`
+        )
       }
     } catch {
       toast.error('Lỗi khi tải ảnh minh họa.')
@@ -307,18 +322,6 @@ export function ExamQuestionEditorModal({
     }
   }
 
-  const handleZipInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleZipFileSelected(file)
-  }
-
-  const handleDropZip = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setIsDragOverZip(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) handleZipFileSelected(file)
-  }
-
   const handleSaveQuestions = async () => {
     const examId = exam.id || exam._id
     if (!examId) {
@@ -328,7 +331,11 @@ export function ExamQuestionEditorModal({
 
     setIsSaving(true)
     try {
-      const updated = await examAdminService.saveExamQuestions(examId, questions, globalAudioUrl)
+      const updated = await examAdminService.saveExamQuestions(
+        examId,
+        questions,
+        globalAudioUrl
+      )
       const mergedExam: ToeicExamItem = {
         ...exam,
         ...(updated || {}),
@@ -337,7 +344,11 @@ export function ExamQuestionEditorModal({
         audio_url: globalAudioUrl,
       }
       onExamUpdated(mergedExam)
-      toast.success(isVi ? `Đã lưu thành công bộ ${questions.length} câu hỏi vào đề thi!` : `Saved ${questions.length} questions to exam!`)
+      toast.success(
+        isVi
+          ? `Đã lưu thành công bộ ${questions.length} câu hỏi vào đề thi!`
+          : `Saved ${questions.length} questions to exam!`
+      )
       onClose()
     } catch {
       const mergedExam: ToeicExamItem = {
@@ -347,7 +358,11 @@ export function ExamQuestionEditorModal({
         audio_url: globalAudioUrl,
       }
       onExamUpdated(mergedExam)
-      toast.success(isVi ? `Đã cập nhật ${questions.length} câu hỏi vào đề thi (Local)!` : `Updated ${questions.length} questions (Local)!`)
+      toast.success(
+        isVi
+          ? `Đã cập nhật ${questions.length} câu hỏi vào đề thi (Local)!`
+          : `Updated ${questions.length} questions (Local)!`
+      )
       onClose()
     } finally {
       setIsSaving(false)
@@ -362,7 +377,10 @@ export function ExamQuestionEditorModal({
           type="file"
           accept=".zip,application/zip"
           className="hidden"
-          onChange={handleZipInputChange}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleZipFileSelected(file)
+          }}
         />
         <input
           ref={globalAudioInputRef}
@@ -386,192 +404,33 @@ export function ExamQuestionEditorModal({
           onChange={handleUploadQuestionImage}
         />
 
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/50 dark:border-indigo-800/50">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                  {isVi ? 'Soạn Ngân Hàng Câu Hỏi Đề Thi' : 'Exam Question Bank Editor'}
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                  {questions.length} câu hỏi
-                </span>
-                {isSystemPlacement ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                    {isVi ? 'Đầu vào hệ thống (ZIP)' : 'System Placement (ZIP)'}
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                    {isVi ? 'Bài thi khóa học' : 'Course Exam'}
-                  </span>
-                )}
-                {is4Skills ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                    4 Kỹ năng (LRSW)
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
-                    2 Kỹ năng (LR)
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">
-                {exam.title} {exam.course_title ? `• ${exam.course_title}` : ''}
-              </p>
-            </div>
-          </div>
+        <ExamEditorHeader
+          exam={exam}
+          isVi={isVi}
+          is4Skills={is4Skills}
+          isSystemPlacement={isSystemPlacement}
+          questionsCount={questions.length}
+          searchQuery={searchQuery}
+          partFilter={partFilter}
+          isProcessingZip={isProcessingZip}
+          uploadingGlobalAudio={uploadingGlobalAudio}
+          globalAudioUrl={globalAudioUrl}
+          onClose={onClose}
+          onSearchChange={setSearchQuery}
+          onPartFilterChange={setPartFilter}
+          onDownloadSampleZip={() => downloadSampleZip(isVi)}
+          onOpenZipPicker={() => zipFileInputRef.current?.click()}
+          onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
+          onAddQuestion={handleAddQuestion}
+        />
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <ExamEditorGlobalAudio
+          globalAudioUrl={globalAudioUrl}
+          isVi={isVi}
+          onRemove={() => setGlobalAudioUrl('')}
+        />
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900">
-          <div className="flex items-center gap-2 flex-1 max-w-md">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isVi ? 'Tìm kiếm theo nội dung, câu số...' : 'Search questions...'}
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-            <select
-              value={partFilter}
-              onChange={(e) => setPartFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-            >
-              <option value="ALL">{isVi ? 'Tất cả phần' : 'All Parts'}</option>
-              <option value="1">Part 1 (Ảnh)</option>
-              <option value="2">Part 2 (Hỏi đáp)</option>
-              <option value="3">Part 3 (Hội thoại)</option>
-              <option value="4">Part 4 (Bài nói)</option>
-              <option value="5">Part 5 (Điền câu)</option>
-              <option value="6">Part 6 (Điền đoạn)</option>
-              <option value="7">Part 7 (Đọc hiểu)</option>
-              {is4Skills && (
-                <>
-                  <option value="speaking">Speaking (Nói)</option>
-                  <option value="writing">Writing (Viết)</option>
-                </>
-              )}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 justify-end flex-wrap">
-            {isSystemPlacement ? (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => downloadSampleZip(isVi)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                  title={isVi ? 'Tải xuống gói ZIP đề thi mẫu chuẩn' : 'Download sample ZIP'}
-                >
-                  <Download className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>{isVi ? 'Tải ZIP mẫu' : 'Sample ZIP'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isProcessingZip}
-                  onClick={() => zipFileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold shadow-xs hover:shadow-purple-500/20 transition-all cursor-pointer"
-                  title={isVi ? 'Mở cửa sổ chọn file ZIP đề thi' : 'Choose ZIP file'}
-                >
-                  {isProcessingZip ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{isVi ? 'Đang nạp ZIP...' : 'Importing...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Archive className="w-4 h-4" />
-                      <span>{isVi ? 'Import Gói ZIP (Excel + Media)' : 'Import ZIP Package'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => globalAudioInputRef.current?.click()}
-                  disabled={uploadingGlobalAudio}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                  title={isVi ? 'Upload file nghe chung cho toàn đề thi' : 'Upload global audio file'}
-                >
-                  <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>
-                    {uploadingGlobalAudio
-                      ? (isVi ? 'Đang tải...' : 'Uploading...')
-                      : globalAudioUrl
-                      ? (isVi ? 'Đổi Audio Đề' : 'Change Audio')
-                      : (isVi ? 'Gắn Audio Đề' : 'Set Audio')}
-                  </span>
-                </button>
-
-                {is4Skills && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => handleAddQuestion('speaking')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-700 dark:text-teal-300 text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      <Mic className="w-3.5 h-3.5 text-teal-600" />
-                      <span>+ {isVi ? 'Nói' : 'Speaking'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddQuestion('writing')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      <PenTool className="w-3.5 h-3.5 text-blue-600" />
-                      <span>+ {isVi ? 'Viết' : 'Writing'}</span>
-                    </button>
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => handleAddQuestion(partFilter !== 'ALL' && !isNaN(Number(partFilter)) ? Number(partFilter) : 5)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isVi ? 'Thêm câu hỏi' : 'Add Question'}</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {globalAudioUrl && (
-          <div className="flex items-center justify-between gap-3 px-6 py-2 bg-indigo-50/50 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/40 text-xs">
-            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
-              <Volume2 className="w-4 h-4 text-indigo-500" />
-              <span className="font-semibold">{isVi ? 'Audio toàn bài thi:' : 'Global Exam Audio:'}</span>
-              <audio controls src={globalAudioUrl} className="h-7 max-w-xs" />
-            </div>
-            <button
-              type="button"
-              onClick={() => setGlobalAudioUrl('')}
-              className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 cursor-pointer"
-              title="Xóa audio toàn bài"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        <div 
+        <div
           className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
@@ -588,7 +447,12 @@ export function ExamQuestionEditorModal({
                   setIsDragOverZip(true)
                 }}
                 onDragLeave={() => setIsDragOverZip(false)}
-                onDrop={handleDropZip}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setIsDragOverZip(false)
+                  const file = e.dataTransfer.files?.[0]
+                  if (file) handleZipFileSelected(file)
+                }}
                 onOpenZipPicker={() => zipFileInputRef.current?.click()}
                 onDownloadSampleZip={() => downloadSampleZip(isVi)}
               />
@@ -599,7 +463,9 @@ export function ExamQuestionEditorModal({
                 </div>
                 <div className="max-w-md space-y-1">
                   <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {isVi ? 'Đề thi khóa học hiện chưa có câu hỏi nào' : 'No questions in this course exam yet'}
+                    {isVi
+                      ? 'Đề thi khóa học hiện chưa có câu hỏi nào'
+                      : 'No questions in this course exam yet'}
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {isVi
@@ -610,7 +476,13 @@ export function ExamQuestionEditorModal({
                 <div className="flex items-center justify-center pt-2">
                   <button
                     type="button"
-                    onClick={() => handleAddQuestion(partFilter !== 'ALL' && !isNaN(Number(partFilter)) ? Number(partFilter) : 5)}
+                    onClick={() =>
+                      handleAddQuestion(
+                        partFilter !== 'ALL' && !isNaN(Number(partFilter))
+                          ? Number(partFilter)
+                          : 5
+                      )
+                    }
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-indigo-500/20"
                   >
                     <Plus className="w-4 h-4" />
@@ -650,43 +522,13 @@ export function ExamQuestionEditorModal({
           )}
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            {isVi ? 'Tổng số câu hỏi:' : 'Total Questions:'}{' '}
-            <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">
-              {questions.length}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              {isVi ? 'Hủy' : 'Cancel'}
-            </button>
-
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={handleSaveQuestions}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{isVi ? 'Đang lưu...' : 'Saving...'}</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>{isVi ? 'Lưu bộ câu hỏi đề thi' : 'Save Question Bank'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        <ExamEditorFooter
+          questionsCount={questions.length}
+          isVi={isVi}
+          isSaving={isSaving}
+          onClose={onClose}
+          onSave={handleSaveQuestions}
+        />
       </div>
     </div>
   )

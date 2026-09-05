@@ -1,5 +1,5 @@
 /**
- * @file CommunityFilterBar.tsx
+ * @file community.filter.bar.tsx
  * @description Component giao diện CommunityFilterBar phục vụ khu vực Quản trị Admin
  */
 

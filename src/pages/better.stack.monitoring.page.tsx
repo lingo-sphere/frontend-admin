@@ -1,5 +1,5 @@
 /**
- * @file BetterStackMonitoringPage.tsx
+ * @file better.stack.monitoring.page.tsx
  * @description Trang quản trị BetterStackMonitoringPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { progressService } from '@/services/progress.service'
 import { BetterStackMonitoringTab } from '@/components/progress/better.stack.monitoring.tab'
 import type { BetterStackMonitoringData } from '@/types/api.types'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 export function BetterStackMonitoringPage() {
   const [data, setData] = useState<BetterStackMonitoringData | null>(null)

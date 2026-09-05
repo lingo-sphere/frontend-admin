@@ -1,5 +1,5 @@
 /**
- * @file DateRangeFilter.tsx
+ * @file date.range.filter.tsx
  * @description Component giao diện DateRangeFilter phục vụ khu vực Quản trị Admin
  */
 

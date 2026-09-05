@@ -1,5 +1,5 @@
 /**
- * @file VocabularyMeaningsForm.tsx
+ * @file vocabulary.meanings.form.tsx
  * @description Component giao diện VocabularyMeaningsForm phục vụ khu vực Quản trị Admin
  */
 

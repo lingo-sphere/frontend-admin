@@ -1,5 +1,5 @@
 /**
- * @file Sidebar.tsx
+ * @file sidebar.tsx
  * @description Component giao diện Sidebar phục vụ khu vực Quản trị Admin
  */
 
@@ -26,8 +26,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { useAdminStore } from "@/store/admin-store";
-import { useAuthStore } from "@/store/auth-store";
+import { useAdminStore } from "@/store/admin.store";
+import { useAuthStore } from "@/store/auth.store";
 import { useTranslation } from "react-i18next";
 
 interface NavSubItem {

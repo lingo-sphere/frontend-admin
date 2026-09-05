@@ -1,5 +1,5 @@
 /**
- * @file settings-data.ts
+ * @file settings.data.ts
  * @description Mã nguồn thành phần settings-data.ts
  */
 

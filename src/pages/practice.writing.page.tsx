@@ -1,5 +1,5 @@
 /**
- * @file PracticeWritingPage.tsx
+ * @file practice.writing.page.tsx
  * @description Trang quản trị PracticeWritingPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, PenTool } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { WritingExercise } from '@/types/api.types'
 import { PracticeWritingCard } from '@/components/practice/practice.writing.card'
 import { CreateWritingModal } from '@/components/practice/create.writing.modal'

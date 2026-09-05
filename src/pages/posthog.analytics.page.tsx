@@ -1,5 +1,5 @@
 /**
- * @file PostHogAnalyticsPage.tsx
+ * @file posthog.analytics.page.tsx
  * @description Trang quản trị PostHogAnalyticsPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { progressService } from '@/services/progress.service'
 import { PostHogAnalyticsTab } from '@/components/progress/posthog.analytics.tab'
 import type { PostHogAnalyticsData } from '@/types/api.types'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 export function PostHogAnalyticsPage() {
   const [data, setData] = useState<PostHogAnalyticsData | null>(null)

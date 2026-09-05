@@ -1,5 +1,5 @@
 /**
- * @file DataTable.tsx
+ * @file data.table.tsx
  * @description Component giao diện DataTable phục vụ khu vực Quản trị Admin
  */
 

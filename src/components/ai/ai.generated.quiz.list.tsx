@@ -1,5 +1,5 @@
 /**
- * @file AiGeneratedQuizList.tsx
+ * @file ai.generated.quiz.list.tsx
  * @description Component giao diện AiGeneratedQuizList phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file LoginPage.tsx
+ * @file login.page.tsx
  * @description Trang quản trị LoginPage trong giao diện Admin
  */
 
@@ -16,8 +16,8 @@ import {
   GraduationCap,
   ShieldCheck,
 } from 'lucide-react'
-import { useAuthStore } from '@/store/auth-store'
-import { toast } from '@/store/toast-store'
+import { useAuthStore } from '@/store/auth.store'
+import { toast } from '@/store/toast.store'
 
 export function LoginPage() {
   const [email, setEmail] = useState('admin@lingosphere.local')
@@ -61,14 +61,11 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4 text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden">
-      {}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/15 dark:bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/15 dark:bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[140px] pointer-events-none" />
 
-      {}
       <div className="w-full max-w-[440px] bg-white/95 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-7 sm:p-8 shadow-2xl shadow-indigo-500/5 dark:shadow-black/40 backdrop-blur-xl relative z-10 flex flex-col gap-6 transition-all">
-        {}
         <div className="flex flex-col items-center text-center gap-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-4 ring-indigo-500/10 mb-1">
             <Shield className="w-7 h-7 text-white" />
@@ -83,7 +80,6 @@ export function LoginPage() {
           </div>
         </div>
 
-        {}
         {errorMessage && (
           <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-medium animate-in fade-in">
             <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
@@ -91,7 +87,6 @@ export function LoginPage() {
           </div>
         )}
 
-        {}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -174,7 +169,6 @@ export function LoginPage() {
           </button>
         </form>
 
-        {}
         <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -185,7 +179,6 @@ export function LoginPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {}
             <button
               type="button"
               onClick={() => fillQuickAccount('admin@lingosphere.local', 'admin123', 'admin')}
@@ -215,7 +208,6 @@ export function LoginPage() {
               </p>
             </button>
 
-            {}
             <button
               type="button"
               onClick={() => fillQuickAccount('teacher@lingosphere.local', 'teacher123', 'teacher')}

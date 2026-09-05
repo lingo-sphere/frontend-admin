@@ -1,5 +1,5 @@
 /**
- * @file CommunityPostCard.tsx
+ * @file community.post.card.tsx
  * @description Component giao diện CommunityPostCard phục vụ khu vực Quản trị Admin
  */
 

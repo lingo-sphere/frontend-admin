@@ -1,5 +1,5 @@
 /**
- * @file users-data.ts
+ * @file users.data.ts
  * @description Mã nguồn thành phần users-data.ts
  */
 

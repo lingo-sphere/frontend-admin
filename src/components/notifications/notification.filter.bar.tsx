@@ -1,5 +1,5 @@
 /**
- * @file NotificationFilterBar.tsx
+ * @file notification.filter.bar.tsx
  * @description Component giao diện NotificationFilterBar phục vụ khu vực Quản trị Admin
  */
 
@@ -10,7 +10,7 @@ import type {
   FilterPriority,
   FilterStatus,
 } from '@/helpers/notification.helper'
-import { categoryLabels } from '@/data/notifications-data'
+import { categoryLabels } from '@/data/notifications.data'
 import { CustomSelect } from '@/components/common/custom.select'
 
 interface NotificationFilterBarProps {

@@ -1,5 +1,5 @@
 /**
- * @file CourseFormPage.tsx
+ * @file course.form.page.tsx
  * @description Trang quản trị CourseFormPage trong giao diện Admin
  */
 
@@ -10,9 +10,9 @@ import {
 import { CourseCurriculumManager } from '@/components/courses/course.curriculum.manager'
 import { courseService } from '@/services/course.service'
 import { mediaService } from '@/services/media.service'
-import { useAdminStore } from '@/store/admin-store'
-import { authStore, useAuthStore } from '@/store/auth-store'
-import { toast } from '@/store/toast-store'
+import { useAdminStore } from '@/store/admin.store'
+import { authStore, useAuthStore } from '@/store/auth.store'
+import { toast } from '@/store/toast.store'
 import { BookOpen, ChevronLeft, Save, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'

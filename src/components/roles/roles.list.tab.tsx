@@ -1,5 +1,5 @@
 /**
- * @file RolesListTab.tsx
+ * @file roles.list.tab.tsx
  * @description Component giao diện RolesListTab phục vụ khu vực Quản trị Admin
  */
 

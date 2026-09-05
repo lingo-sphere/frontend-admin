@@ -1,5 +1,5 @@
 /**
- * @file AiArchitectureCards.tsx
+ * @file ai.architecture.cards.tsx
  * @description Component giao diện AiArchitectureCards phục vụ khu vực Quản trị Admin
  */
 

@@ -1,13 +1,13 @@
 /**
- * @file AdminProfilePage.tsx
+ * @file admin.profile.page.tsx
  * @description Trang quản trị AdminProfilePage trong giao diện Admin
  */
 
 import { authService } from '@/services/auth.service'
 import { userService } from '@/services/user.service'
-import { useAdminStore } from '@/store/admin-store'
-import { useAuthStore } from '@/store/auth-store'
-import { toast } from '@/store/toast-store'
+import { useAdminStore } from '@/store/admin.store'
+import { useAuthStore } from '@/store/auth.store'
+import { toast } from '@/store/toast.store'
 import { CheckCircle2, ChevronLeft, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 

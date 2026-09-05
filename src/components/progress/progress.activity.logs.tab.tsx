@@ -1,5 +1,5 @@
 /**
- * @file ProgressActivityLogsTab.tsx
+ * @file progress.activity.logs.tab.tsx
  * @description Component giao diện ProgressActivityLogsTab phục vụ khu vực Quản trị Admin
  */
 

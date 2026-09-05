@@ -1,5 +1,5 @@
 /**
- * @file AdminUsersPage.tsx
+ * @file admin.users.page.tsx
  * @description Trang quản trị AdminUsersPage trong giao diện Admin
  */
 
@@ -7,9 +7,9 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/common/data.table'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { UserProfile } from '@/types/api.types'
 
 import type { AdminUser, FilterRole, FilterStatus } from '@/helpers/admin.user.helper'

@@ -1,5 +1,5 @@
 /**
- * @file RoleEditModal.tsx
+ * @file role.edit.modal.tsx
  * @description Component giao diện RoleEditModal phục vụ khu vực Quản trị Admin
  */
 
@@ -127,7 +127,6 @@ export function RoleEditModal({
         className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col h-[85vh] max-h-[850px] animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
@@ -150,11 +149,8 @@ export function RoleEditModal({
           </button>
         </div>
 
-        {}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {}
           <div className="flex-1 overflow-y-auto p-6 space-y-5">
-            {}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -226,7 +222,6 @@ export function RoleEditModal({
             </div>
           </div>
 
-          {}
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -250,7 +245,6 @@ export function RoleEditModal({
               </div>
             </div>
 
-            {}
             <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-800 p-2 bg-slate-50/50 dark:bg-slate-950/40">
               {moduleNames.map((mod) => {
                 const modPerms = groupedPermissions[mod] || []
@@ -276,7 +270,6 @@ export function RoleEditModal({
                     key={mod}
                     className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs"
                   >
-                    {}
                     <div className="flex items-center justify-between px-4 py-3 bg-slate-100/70 dark:bg-slate-800/60 select-none">
                       <button
                         type="button"
@@ -294,7 +287,6 @@ export function RoleEditModal({
                         </span>
                       </button>
 
-                      {}
                       <div className="flex items-center gap-2 pl-3">
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
                           {isAllSelected ? 'Bỏ chọn hết' : 'Chọn tất cả'}
@@ -315,7 +307,6 @@ export function RoleEditModal({
                       </div>
                     </div>
 
-                    {}
                     {isExpanded && (
                       <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/80">
                         {filteredModPerms.map((perm) => {
@@ -331,7 +322,6 @@ export function RoleEditModal({
                                   : 'bg-slate-50/50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                               }`}
                             >
-                              {}
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -349,7 +339,6 @@ export function RoleEditModal({
                                 />
                               </button>
 
-                              {}
                               <div className="flex-1 min-w-0">
                                 <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                                   {perm.name}
@@ -379,7 +368,6 @@ export function RoleEditModal({
           </div>
         </div>
 
-        {}
           <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 backdrop-blur-xs shrink-0">
             <span className="text-xs text-slate-500 dark:text-slate-400">
               Đã chọn <strong className="text-blue-600 dark:text-blue-400">{selectedPermIds.length}</strong> / {allPermissions.length} quyền

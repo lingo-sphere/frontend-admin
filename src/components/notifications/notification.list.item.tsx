@@ -1,10 +1,10 @@
 /**
- * @file NotificationListItem.tsx
+ * @file notification.list.item.tsx
  * @description Component giao diện NotificationListItem phục vụ khu vực Quản trị Admin
  */
 
 import { Bell, Pin, PinOff, Check, CheckCheck, Trash2 } from 'lucide-react'
-import type { Notification } from '@/data/notifications-data'
+import type { Notification } from '@/data/notifications.data'
 import { formatTimeAgo } from '@/helpers/notification.helper'
 import { Popconfirm } from '@/components/common/popconfirm'
 

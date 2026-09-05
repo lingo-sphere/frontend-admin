@@ -1,5 +1,5 @@
 /**
- * @file admin-user.helper.ts
+ * @file admin.user.helper.ts
  * @description Mã nguồn thành phần admin-user.helper.ts
  */
 

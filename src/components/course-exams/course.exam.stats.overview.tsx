@@ -1,5 +1,5 @@
 /**
- * @file CourseExamStatsOverview.tsx
+ * @file course.exam.stats.overview.tsx
  * @description Component hiển thị các thẻ thống kê tổng quan bài thi (Tổng bài thi, Đang xuất bản, Lượt thi, Điểm trung bình)
  */
 

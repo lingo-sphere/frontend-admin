@@ -1,5 +1,5 @@
 /**
- * @file LearnerFilterBar.tsx
+ * @file learner.filter.bar.tsx
  * @description Component giao diện LearnerFilterBar phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file ProgressOverviewTab.tsx
+ * @file progress.overview.tab.tsx
  * @description Component giao diện ProgressOverviewTab phục vụ khu vực Quản trị Admin
  */
 

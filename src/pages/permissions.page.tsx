@@ -1,5 +1,5 @@
 /**
- * @file PermissionsPage.tsx
+ * @file permissions.page.tsx
  * @description Trang quản trị PermissionsPage trong giao diện Admin
  */
 
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { KeyRound, UserCheck } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { Role, Permission, UserProfile } from '@/types/api.types'
 import { PermissionsListTab } from '@/components/roles/permissions.list.tab'
 import { AssignRoleTab } from '@/components/roles/assign.role.tab'

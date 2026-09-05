@@ -1,10 +1,10 @@
 /**
- * @file ProgressToeicAnalyticsTab.tsx
+ * @file progress.toeic.analytics.tab.tsx
  * @description Component giao diện ProgressToeicAnalyticsTab phục vụ khu vực Quản trị Admin
  */
 
 import { Target, BarChart3 } from 'lucide-react'
-import { toeicPartStats, toeicScoreOverview } from '@/data/statistics-data'
+import { toeicPartStats, toeicScoreOverview } from '@/data/statistics.data'
 
 export function ProgressToeicAnalyticsTab() {
   return (

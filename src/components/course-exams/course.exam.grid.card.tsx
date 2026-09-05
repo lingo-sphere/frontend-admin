@@ -1,5 +1,5 @@
 /**
- * @file CourseExamGridCard.tsx
+ * @file course.exam.grid.card.tsx
  * @description Card hiển thị bài thi dạng lưới (Grid View)
  */
 

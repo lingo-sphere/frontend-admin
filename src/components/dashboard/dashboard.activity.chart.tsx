@@ -1,5 +1,5 @@
 /**
- * @file DashboardActivityChart.tsx
+ * @file dashboard.activity.chart.tsx
  * @description Component giao diện DashboardActivityChart phục vụ khu vực Quản trị Admin
  */
 

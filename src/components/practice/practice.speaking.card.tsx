@@ -1,5 +1,5 @@
 /**
- * @file PracticeSpeakingCard.tsx
+ * @file practice.speaking.card.tsx
  * @description Component giao diện PracticeSpeakingCard phục vụ khu vực Quản trị Admin
  */
 

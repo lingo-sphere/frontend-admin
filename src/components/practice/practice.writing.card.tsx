@@ -1,5 +1,5 @@
 /**
- * @file PracticeWritingCard.tsx
+ * @file practice.writing.card.tsx
  * @description Component giao diện PracticeWritingCard phục vụ khu vực Quản trị Admin
  */
 

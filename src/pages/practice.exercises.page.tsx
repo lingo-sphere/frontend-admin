@@ -1,5 +1,5 @@
 /**
- * @file PracticeExercisesPage.tsx
+ * @file practice.exercises.page.tsx
  * @description Trang quản trị PracticeExercisesPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { PracticeSet } from '@/types/api.types'
 import { PracticeSetCard } from '@/components/practice/practice.set.card'
 import { CreatePracticeSetModal } from '@/components/practice/create.practice.set.modal'

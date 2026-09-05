@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import type { QuizQuestionItem } from '@/services/ai.service'
 import { mediaAdminService } from '@/services/media.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import {
   generateQuizExcelTemplate,
   parseQuizExcelBinary,

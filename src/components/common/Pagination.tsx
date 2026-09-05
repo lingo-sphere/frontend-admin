@@ -1,5 +1,5 @@
 /**
- * @file Pagination.tsx
+ * @file pagination.tsx
  * @description Component giao diện Pagination phục vụ khu vực Quản trị Admin
  */
 
@@ -90,9 +90,7 @@ export function Pagination({
         </div>
       )}
 
-      {}
       <ul className="flex items-center gap-1.5 list-none p-0 m-0">
-        {}
         <li
           onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
           className={`w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer ${
@@ -105,7 +103,6 @@ export function Pagination({
           <ChevronLeft className="w-4 h-4 stroke-[1.75]" />
         </li>
 
-        {}
         {getPageNumbers().map((page, index) =>
           page === 'ellipsis' ? (
             <li
@@ -129,7 +126,6 @@ export function Pagination({
           )
         )}
 
-        {}
         <li
           onClick={() => currentPage < safeTotalPages && onPageChange(currentPage + 1)}
           className={`w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer ${
@@ -172,4 +168,3 @@ export function Pagination({
     </div>
   )
 }
-

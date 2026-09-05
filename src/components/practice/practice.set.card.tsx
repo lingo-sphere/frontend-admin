@@ -1,5 +1,5 @@
 /**
- * @file PracticeSetCard.tsx
+ * @file practice.set.card.tsx
  * @description Component giao diện PracticeSetCard phục vụ khu vực Quản trị Admin
  */
 

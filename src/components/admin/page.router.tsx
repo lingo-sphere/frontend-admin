@@ -1,10 +1,10 @@
 /**
- * @file PageRouter.tsx
+ * @file page.router.tsx
  * @description Component giao diện PageRouter phục vụ khu vực Quản trị Admin
  */
 
-import { useAdminStore } from '@/store/admin-store'
-import { useAuthStore } from '@/store/auth-store'
+import { useAdminStore } from '@/store/admin.store'
+import { useAuthStore } from '@/store/auth.store'
 import { DashboardPage } from '@/pages/dashboard.page'
 import { LearnersPage } from '@/pages/learners.page'
 import { AdminUsersPage } from '@/pages/admin.users.page'

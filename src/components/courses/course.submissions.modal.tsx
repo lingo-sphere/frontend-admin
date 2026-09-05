@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, Headphones, FileCheck2 } from 'lucide-react'
 import { progressService, type SkillSubmissionItem } from '@/services/progress.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { CourseSubmissionItemCard } from './course.submission.item.card'
 import { CourseSubmissionReviewDialog } from './course.submission.review.dialog'
 

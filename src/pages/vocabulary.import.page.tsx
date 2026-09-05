@@ -1,13 +1,13 @@
 /**
- * @file VocabularyImportPage.tsx
+ * @file vocabulary.import.page.tsx
  * @description Trang quản trị VocabularyImportPage trong giao diện Admin
  */
 
 import { useState } from 'react'
 import { ChevronLeft, Download } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { useAdminStore } from '@/store/admin-store'
-import { toast } from '@/store/toast-store'
+import { useAdminStore } from '@/store/admin.store'
+import { toast } from '@/store/toast.store'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { VocabularyImportDropzone } from '@/components/vocabulary/vocabulary.import.dropzone'
 import {

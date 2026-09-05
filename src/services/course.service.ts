@@ -3,7 +3,7 @@
  * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ course
  */
 
-import { api } from '@/services/api-client'
+import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { Course, CourseModule, Lesson, LessonQuestion, PaginatedResult, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
 
@@ -136,4 +136,3 @@ export const roadmapService = {
     return api.get(API_CONFIG.ENDPOINTS.ROADMAPS.RECOMMENDATION, query as Record<string, unknown>)
   },
 }
-

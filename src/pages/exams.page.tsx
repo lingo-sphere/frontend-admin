@@ -1,5 +1,5 @@
 /**
- * @file ExamsPage.tsx
+ * @file exams.page.tsx
  * @description Trang quản trị ExamsPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'
 import { examAdminService, type ToeicExamItem } from '@/services/exam.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 import { ExamStatsOverview } from '@/components/exams/exam.stats.overview'
 import { ExamListTable } from '@/components/exams/exam.list.table'

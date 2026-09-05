@@ -1,5 +1,5 @@
 /**
- * @file AdminProfileHeader.tsx
+ * @file admin.profile.header.tsx
  * @description Component giao diện AdminProfileHeader phục vụ khu vực Quản trị Admin
  */
 

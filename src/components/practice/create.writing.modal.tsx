@@ -1,5 +1,5 @@
 /**
- * @file CreateWritingModal.tsx
+ * @file create.writing.modal.tsx
  * @description Component giao diện CreateWritingModal phục vụ khu vực Quản trị Admin
  */
 

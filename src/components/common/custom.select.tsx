@@ -1,5 +1,5 @@
 /**
- * @file CustomSelect.tsx
+ * @file custom.select.tsx
  * @description Component giao diện CustomSelect phục vụ khu vực Quản trị Admin
  */
 

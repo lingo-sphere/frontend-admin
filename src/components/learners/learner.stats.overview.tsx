@@ -1,5 +1,5 @@
 /**
- * @file LearnerStatsOverview.tsx
+ * @file learner.stats.overview.tsx
  * @description Component giao diện LearnerStatsOverview phục vụ khu vực Quản trị Admin
  */
 

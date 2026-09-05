@@ -1,5 +1,5 @@
 /**
- * @file CreateListeningModal.tsx
+ * @file create.listening.modal.tsx
  * @description Component giao diện CreateListeningModal phục vụ khu vực Quản trị Admin
  */
 

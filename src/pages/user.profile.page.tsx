@@ -1,11 +1,11 @@
 /**
- * @file UserProfilePage.tsx
+ * @file user.profile.page.tsx
  * @description Trang quản trị UserProfilePage trong giao diện Admin
  */
 
 import { useState, useEffect } from 'react'
 import { ChevronLeft } from 'lucide-react'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/services/user.service'
 import {
   UserProfileHeader,

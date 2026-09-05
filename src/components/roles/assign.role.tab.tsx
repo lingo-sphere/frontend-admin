@@ -1,5 +1,5 @@
 /**
- * @file AssignRoleTab.tsx
+ * @file assign.role.tab.tsx
  * @description Component giao diện AssignRoleTab phục vụ khu vực Quản trị Admin
  */
 

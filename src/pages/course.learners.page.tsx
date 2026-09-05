@@ -27,8 +27,8 @@ import {
   type SkillSubmissionItem,
 } from '@/services/progress.service'
 import { userService } from '@/services/user.service'
-import { useAuthStore } from '@/store/auth-store'
-import { toast } from '@/store/toast-store'
+import { useAuthStore } from '@/store/auth.store'
+import { toast } from '@/store/toast.store'
 import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
 
 interface CourseSimple {

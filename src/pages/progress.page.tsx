@@ -1,5 +1,5 @@
 /**
- * @file ProgressPage.tsx
+ * @file progress.page.tsx
  * @description Trang quản trị ProgressPage trong giao diện Admin
  */
 

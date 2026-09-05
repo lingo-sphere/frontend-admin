@@ -1,11 +1,11 @@
 /**
- * @file vocabulary-table-columns.tsx
+ * @file vocabulary.table.columns.tsx
  * @description Component giao diện vocabulary-table-columns phục vụ khu vực Quản trị Admin
  */
 
 import { Volume2, Edit2, Trash2 } from 'lucide-react'
-import type { LexicalItem } from '@/data/vocabulary-data'
-import { wordTypeLabels } from '@/data/vocabulary-data'
+import type { LexicalItem } from '@/data/vocabulary.data'
+import { wordTypeLabels } from '@/data/vocabulary.data'
 import type { DataTableColumn } from '@/components/common/data.table'
 import { Popconfirm } from '@/components/common/popconfirm'
 import { playAudio } from '@/helpers/vocabulary.helper'

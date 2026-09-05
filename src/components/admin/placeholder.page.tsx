@@ -1,5 +1,5 @@
 /**
- * @file PlaceholderPage.tsx
+ * @file placeholder.page.tsx
  * @description Component giao diện PlaceholderPage phục vụ khu vực Quản trị Admin
  */
 

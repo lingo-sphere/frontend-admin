@@ -1,5 +1,5 @@
 /**
- * @file LearnersPage.tsx
+ * @file learners.page.tsx
  * @description Trang quản trị LearnersPage trong giao diện Admin
  */
 
@@ -7,10 +7,10 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/common/data.table'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
-import type { User } from '@/data/users-data'
+import { toast } from '@/store/toast.store'
+import type { User } from '@/data/users.data'
 import type { UserProfile } from '@/types/api.types'
 
 import type { FilterStatus, FilterPlan } from '@/helpers/learner.helper'

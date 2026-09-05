@@ -1,5 +1,5 @@
 /**
- * @file AiQuizGeneratorForm.tsx
+ * @file ai.quiz.generator.form.tsx
  * @description Component giao diện AiQuizGeneratorForm phục vụ khu vực Quản trị Admin
  */
 

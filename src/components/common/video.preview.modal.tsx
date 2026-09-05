@@ -12,7 +12,7 @@ import {
   RotateCw,
   Copy,
 } from 'lucide-react'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
 import { VideoControlsBar, type QualityOption } from '@/components/common/video.controls.bar'
 

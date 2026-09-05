@@ -3,7 +3,7 @@
  * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ exam
  */
 
-import { api } from '@/services/api-client'
+import { api } from '@/services/api.client'
 
 export interface ToeicExamItem {
   id?: string

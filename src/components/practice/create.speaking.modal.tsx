@@ -1,5 +1,5 @@
 /**
- * @file CreateSpeakingModal.tsx
+ * @file create.speaking.modal.tsx
  * @description Component giao diện CreateSpeakingModal phục vụ khu vực Quản trị Admin
  */
 

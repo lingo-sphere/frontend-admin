@@ -1,12 +1,12 @@
 /**
- * @file AdminShell.tsx
+ * @file admin.shell.tsx
  * @description Component giao diện AdminShell phục vụ khu vực Quản trị Admin
  */
 
 import { Sheet } from '@/components/ui/sheet'
 import { Sidebar } from '@/components/admin/sidebar'
 import { Topbar } from '@/components/admin/topbar'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 
 interface AdminShellProps {
   children: React.ReactNode

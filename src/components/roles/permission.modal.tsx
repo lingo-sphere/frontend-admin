@@ -1,12 +1,12 @@
 /**
- * @file PermissionModal.tsx
+ * @file permission.modal.tsx
  * @description Component giao diện PermissionModal phục vụ khu vực Quản trị Admin
  */
 
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, KeyRound, AlertCircle } from 'lucide-react'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { Permission } from '@/types/api.types'
 import { CustomSelect } from '@/components/common/custom.select'
 

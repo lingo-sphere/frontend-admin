@@ -1,5 +1,5 @@
 /**
- * @file CourseExamHeaderActions.tsx
+ * @file course.exam.header.actions.tsx
  * @description Các thao tác hành động trên header bảng: chọn khóa học, làm mới dữ liệu và tạo bài thi mới
  */
 

@@ -1,12 +1,12 @@
 /**
- * @file VocabularyDecksTab.tsx
+ * @file vocabulary.decks.tab.tsx
  * @description Component giao diện VocabularyDecksTab phục vụ khu vực Quản trị Admin
  */
 
 import { useState, useMemo } from 'react'
 import { Layers, Edit2, Plus } from 'lucide-react'
-import type { FlashcardDeck } from '@/data/vocabulary-data'
-import { toast } from '@/store/toast-store'
+import type { FlashcardDeck } from '@/data/vocabulary.data'
+import { toast } from '@/store/toast.store'
 import { Pagination } from '@/components/common/pagination'
 
 interface VocabularyDecksTabProps {

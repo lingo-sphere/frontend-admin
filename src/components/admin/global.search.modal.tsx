@@ -1,5 +1,5 @@
 /**
- * @file GlobalSearchModal.tsx
+ * @file global.search.modal.tsx
  * @description Component giao diện GlobalSearchModal phục vụ khu vực Quản trị Admin
  */
 
@@ -25,7 +25,7 @@ import {
   ArrowRight,
   X,
 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 
 interface NavSearchItem {
   id: string

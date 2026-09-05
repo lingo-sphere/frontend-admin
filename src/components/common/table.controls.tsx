@@ -1,5 +1,5 @@
 /**
- * @file TableControls.tsx
+ * @file table.controls.tsx
  * @description Component giao diện TableControls phục vụ khu vực Quản trị Admin
  */
 

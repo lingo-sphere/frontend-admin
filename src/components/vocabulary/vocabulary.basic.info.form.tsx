@@ -1,5 +1,5 @@
 /**
- * @file VocabularyBasicInfoForm.tsx
+ * @file vocabulary.basic.info.form.tsx
  * @description Component giao diện VocabularyBasicInfoForm phục vụ khu vực Quản trị Admin
  */
 

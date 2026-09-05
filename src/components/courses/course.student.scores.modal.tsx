@@ -1,5 +1,5 @@
 /**
- * @file CourseStudentScoresModal.tsx
+ * @file course.student.scores.modal.tsx
  * @description Modal quản trị cho giảng viên và admin xem bảng điểm kiểm tra chi tiết từng chương và tiến độ học tập của toàn bộ học viên trong khóa học
  */
 
@@ -21,7 +21,7 @@ import {
 import { progressService, type CourseStudentsProgressResponse, type StudentProgressItem } from '@/services/progress.service'
 import { userService } from '@/services/user.service'
 import type { UserProfile } from '@/types/api.types'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 interface CourseStudentScoresModalProps {
   isOpen: boolean

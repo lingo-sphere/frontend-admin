@@ -1,5 +1,5 @@
 /**
- * @file CourseStatsOverview.tsx
+ * @file course.stats.overview.tsx
  * @description Component giao diện CourseStatsOverview phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file AdminProfileSecurityForm.tsx
+ * @file admin.profile.security.form.tsx
  * @description Component giao diện AdminProfileSecurityForm phục vụ khu vực Quản trị Admin
  */
 

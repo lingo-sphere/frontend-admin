@@ -18,7 +18,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { mediaAdminService } from '@/services/media.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { CourseModule } from './course.basic.info.tab'
 import { ChapterSpeakingWritingCard } from './chapter.speaking.writing.card'
 

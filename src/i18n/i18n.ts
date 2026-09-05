@@ -1,5 +1,5 @@
 /**
- * @file index.ts
+ * @file i18n.ts
  * @description Mã nguồn thành phần index.ts
  */
 

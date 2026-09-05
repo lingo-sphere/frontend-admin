@@ -1,5 +1,5 @@
 /**
- * @file Popconfirm.tsx
+ * @file popconfirm.tsx
  * @description Component giao diện Popconfirm phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file VocabularyImportDropzone.tsx
+ * @file vocabulary.import.dropzone.tsx
  * @description Component giao diện VocabularyImportDropzone phục vụ khu vực Quản trị Admin
  */
 

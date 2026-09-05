@@ -3,7 +3,7 @@
  * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ progress và quản lý bài nộp kỹ năng Speaking/Writing của học viên cho giáo viên chấm/sửa điểm
  */
 
-import { api } from '@/services/api-client'
+import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { BetterStackMonitoringData, PostHogAnalyticsData } from '@/types/api.types'
 

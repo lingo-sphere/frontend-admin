@@ -1,5 +1,5 @@
 /**
- * @file courses-data.ts
+ * @file courses.data.ts
  * @description Mã nguồn thành phần courses-data.ts
  */
 

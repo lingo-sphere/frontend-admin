@@ -1,5 +1,5 @@
 /**
- * @file PermissionsListTab.tsx
+ * @file permissions.list.tab.tsx
  * @description Component giao diện PermissionsListTab phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file AdminUserStatsOverview.tsx
+ * @file admin.user.stats.overview.tsx
  * @description Component giao diện AdminUserStatsOverview phục vụ khu vực Quản trị Admin
  */
 

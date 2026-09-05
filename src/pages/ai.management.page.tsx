@@ -1,12 +1,12 @@
 /**
- * @file AiManagementPage.tsx
+ * @file ai.management.page.tsx
  * @description Trang quản trị AiManagementPage trong giao diện Admin
  */
 
 import { useState } from 'react'
 import { Brain } from 'lucide-react'
 import { aiAdminService, type GenerateQuizItem } from '@/services/ai.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { AiArchitectureCards } from '@/components/ai/ai.architecture.cards'
 import { AiQuizGeneratorForm } from '@/components/ai/ai.quiz.generator.form'
 import { AiGeneratedQuizList } from '@/components/ai/ai.generated.quiz.list'

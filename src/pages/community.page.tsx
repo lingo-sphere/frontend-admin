@@ -1,11 +1,11 @@
 /**
- * @file CommunityPage.tsx
+ * @file community.page.tsx
  * @description Trang quản trị CommunityPage trong giao diện Admin
  */
 
 import { useState, useMemo } from 'react'
 import { MessageCircle } from 'lucide-react'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { CommunityFilterBar } from '@/components/community/community.filter.bar'
 import { CommunityPostCard } from '@/components/community/community.post.card'
 import type { CommunityPost } from '@/helpers/community.helper'

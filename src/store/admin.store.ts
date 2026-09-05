@@ -1,5 +1,5 @@
 /**
- * @file admin-store.ts
+ * @file admin.store.ts
  * @description Mã nguồn thành phần admin-store.ts
  */
 

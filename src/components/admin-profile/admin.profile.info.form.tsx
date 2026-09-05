@@ -1,5 +1,5 @@
 /**
- * @file AdminProfileInfoForm.tsx
+ * @file admin.profile.info.form.tsx
  * @description Component giao diện AdminProfileInfoForm phục vụ khu vực Quản trị Admin
  */
 

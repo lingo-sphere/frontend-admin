@@ -1,5 +1,5 @@
 /**
- * @file useCourseExams.ts
+ * @file use.course.exams.ts
  * @description Hook quản lý state, nạp dữ liệu và các tác vụ nghiệp vụ cho trang Quản lý bài thi
  */
 
@@ -7,8 +7,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/services/exam.service'
 import { courseService } from '@/services/course.service'
-import { useAuthStore } from '@/store/auth-store'
-import { toast } from '@/store/toast-store'
+import { useAuthStore } from '@/store/auth.store'
+import { toast } from '@/store/toast.store'
 import type { CourseSelectItem } from './course.exam.header.actions'
 
 export function useCourseExams() {

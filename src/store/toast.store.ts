@@ -1,5 +1,5 @@
 /**
- * @file toast-store.ts
+ * @file toast.store.ts
  * @description Mã nguồn thành phần toast-store.ts
  */
 

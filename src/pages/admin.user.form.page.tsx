@@ -1,13 +1,13 @@
 /**
- * @file AdminUserFormPage.tsx
+ * @file admin.user.form.page.tsx
  * @description Trang quản trị AdminUserFormPage trong giao diện Admin
  */
 
 import { useState, useEffect } from 'react'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { AdminUserAccountForm } from '@/components/admin-users/admin.user.account.form'
 import { AdminUserRoleSelector } from '@/components/admin-users/admin.user.role.selector'
 

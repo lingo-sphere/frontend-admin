@@ -1,10 +1,10 @@
 /**
- * @file Can.tsx
+ * @file can.tsx
  * @description Component giao diện Can phục vụ khu vực Quản trị Admin
  */
 
 import React from 'react'
-import { usePermission } from '@/hooks/use-permission'
+import { usePermission } from '@/hooks/use.permission'
 
 interface CanProps {
   do?: string

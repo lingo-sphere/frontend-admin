@@ -1,5 +1,5 @@
 /**
- * @file UserProfileStatsGrid.tsx
+ * @file user.profile.stats.grid.tsx
  * @description Component giao diện UserProfileStatsGrid phục vụ khu vực Quản trị Admin
  */
 

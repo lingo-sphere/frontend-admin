@@ -1,5 +1,5 @@
 /**
- * @file SettingsPage.tsx
+ * @file settings.page.tsx
  * @description Trang quản trị SettingsPage trong giao diện Admin
  */
 
@@ -9,8 +9,8 @@ import { Settings, Shield, Bot, Crown, RefreshCw } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { mediaService } from '@/services/media.service'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
-import { systemSettings, type SystemSetting } from '@/data/settings-data'
+import { toast } from '@/store/toast.store'
+import { systemSettings, type SystemSetting } from '@/data/settings.data'
 import type { StorageUsageReport, SubscriptionPlan } from '@/types/api.types'
 
 import type { SettingsTabType } from '@/helpers/settings.helper'

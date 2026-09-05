@@ -1,5 +1,5 @@
 /**
- * @file ExamStatsOverview.tsx
+ * @file exam.stats.overview.tsx
  * @description Component giao diện ExamStatsOverview phục vụ khu vực Quản trị Admin
  */
 

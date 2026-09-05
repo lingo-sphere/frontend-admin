@@ -1,5 +1,5 @@
 /**
- * @file course-exam-table-columns.tsx
+ * @file course.exam.table.columns.tsx
  * @description Định nghĩa các cột hiển thị cho DataTable quản lý bài thi
  */
 

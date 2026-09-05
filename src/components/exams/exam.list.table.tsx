@@ -1,5 +1,5 @@
 /**
- * @file ExamListTable.tsx
+ * @file exam.list.table.tsx
  * @description Component giao diện ExamListTable phục vụ khu vực Quản trị Admin
  */
 

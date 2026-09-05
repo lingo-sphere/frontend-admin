@@ -1,5 +1,5 @@
 /**
- * @file admin-user-table-columns.tsx
+ * @file admin.user.table.columns.tsx
  * @description Component giao diện admin-user-table-columns phục vụ khu vực Quản trị Admin
  */
 

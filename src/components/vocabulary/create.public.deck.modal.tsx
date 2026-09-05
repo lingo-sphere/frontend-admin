@@ -1,5 +1,5 @@
 /**
- * @file CreatePublicDeckModal.tsx
+ * @file create.public.deck.modal.tsx
  * @description Component giao diện CreatePublicDeckModal phục vụ khu vực Quản trị Admin
  */
 

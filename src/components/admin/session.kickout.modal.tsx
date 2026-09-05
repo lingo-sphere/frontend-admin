@@ -1,10 +1,10 @@
 /**
- * @file SessionKickoutModal.tsx
+ * @file session.kickout.modal.tsx
  * @description Component giao diện SessionKickoutModal phục vụ khu vực Quản trị Admin
  */
 
 import { ConfirmModal } from '@/components/common/confirm.modal'
-import { useSessionSync } from '@/hooks/use-session-sync'
+import { useSessionSync } from '@/hooks/use.session.sync'
 
 export function SessionKickoutModal() {
   const { kickoutMessage, dismissKickout } = useSessionSync()

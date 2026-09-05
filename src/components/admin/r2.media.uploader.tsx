@@ -1,5 +1,5 @@
 /**
- * @file R2MediaUploader.tsx
+ * @file r2.media.uploader.tsx
  * @description Component giao diện R2MediaUploader phục vụ khu vực Quản trị Admin
  */
 
@@ -209,7 +209,6 @@ export function R2MediaUploader({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {}
       <div className="flex items-center justify-between">
         {label && (
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">

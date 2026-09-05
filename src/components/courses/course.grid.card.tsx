@@ -1,11 +1,11 @@
 /**
- * @file CourseGridCard.tsx
+ * @file course.grid.card.tsx
  * @description Component giao diện CourseGridCard phục vụ khu vực Quản trị Admin
  */
 
 import { BookOpen, Edit2, Trash2, Headphones } from 'lucide-react'
-import type { Course } from '@/data/courses-data'
-import { categoryLabels, levelLabels } from '@/data/courses-data'
+import type { Course } from '@/data/courses.data'
+import { categoryLabels, levelLabels } from '@/data/courses.data'
 import { Popconfirm } from '@/components/common/popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/helpers/course.helper'
 

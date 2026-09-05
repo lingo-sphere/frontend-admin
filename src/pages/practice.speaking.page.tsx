@@ -1,5 +1,5 @@
 /**
- * @file PracticeSpeakingPage.tsx
+ * @file practice.speaking.page.tsx
  * @description Trang quản trị PracticeSpeakingPage trong giao diện Admin
  */
 
@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Mic } from 'lucide-react'
 import { practiceService } from '@/services/practice.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { SpeakingExercise } from '@/types/api.types'
 import { PracticeSpeakingCard } from '@/components/practice/practice.speaking.card'
 import { CreateSpeakingModal } from '@/components/practice/create.speaking.modal'

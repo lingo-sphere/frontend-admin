@@ -1,5 +1,5 @@
 /**
- * @file CourseExamFilterBar.tsx
+ * @file course.exam.filter.bar.tsx
  * @description Thanh công cụ tìm kiếm và lọc bài thi theo loại (Challenge, Final Test, Đầu vào hệ thống) và trạng thái
  */
 

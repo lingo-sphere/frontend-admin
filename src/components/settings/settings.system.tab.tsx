@@ -1,11 +1,11 @@
 /**
- * @file SettingsSystemTab.tsx
+ * @file settings.system.tab.tsx
  * @description Component giao diện SettingsSystemTab phục vụ khu vực Quản trị Admin
  */
 
 import { HardDrive, Save } from 'lucide-react'
 import type { StorageUsageReport } from '@/types/api.types'
-import type { SystemSetting } from '@/data/settings-data'
+import type { SystemSetting } from '@/data/settings.data'
 
 interface SettingsSystemTabProps {
   settings: SystemSetting[]

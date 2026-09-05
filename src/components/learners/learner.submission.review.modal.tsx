@@ -15,7 +15,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { progressService, type SkillSubmissionItem } from '@/services/progress.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface LearnerSubmissionReviewModalProps {

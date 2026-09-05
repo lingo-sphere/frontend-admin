@@ -1,10 +1,10 @@
 /**
- * @file use-session-sync.ts
+ * @file use.session.sync.ts
  * @description Custom React hook use-session-sync trong ứng dụng Admin
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { API_CONFIG } from '@/config/api.config'
 
 export function useSessionSync() {

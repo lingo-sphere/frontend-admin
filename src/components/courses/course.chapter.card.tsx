@@ -1,5 +1,5 @@
 /**
- * @file CourseChapterCard.tsx
+ * @file course.chapter.card.tsx
  * @description Component quản lý và hiển thị toàn bộ nội dung của một chương học theo cấu trúc cây timeline phân cấp rõ ràng
  */
 

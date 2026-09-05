@@ -1,10 +1,10 @@
 /**
- * @file learner-table-columns.tsx
+ * @file learner.table.columns.tsx
  * @description Component giao diện learner-table-columns phục vụ khu vực Quản trị Admin
  */
 
 import { Target, Zap, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
-import type { User } from '@/data/users-data'
+import type { User } from '@/data/users.data'
 import type { DataTableColumn } from '@/components/common/data.table'
 import { Popconfirm } from '@/components/common/popconfirm'
 

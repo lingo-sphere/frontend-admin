@@ -1,5 +1,5 @@
 /**
- * @file DashboardStatsGrid.tsx
+ * @file dashboard.stats.grid.tsx
  * @description Component giao diện DashboardStatsGrid phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file VocabularyFilterBar.tsx
+ * @file vocabulary.filter.bar.tsx
  * @description Component giao diện VocabularyFilterBar phục vụ khu vực Quản trị Admin
  */
 

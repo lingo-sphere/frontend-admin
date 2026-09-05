@@ -1,5 +1,5 @@
 /**
- * @file SettingsPlansTab.tsx
+ * @file settings.plans.tab.tsx
  * @description Component giao diện SettingsPlansTab phục vụ khu vực Quản trị Admin, hỗ trợ đầy đủ giao diện sáng và tối
  */
 

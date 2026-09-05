@@ -1,5 +1,5 @@
 /**
- * @file PracticeListeningCard.tsx
+ * @file practice.listening.card.tsx
  * @description Component giao diện PracticeListeningCard phục vụ khu vực Quản trị Admin
  */
 

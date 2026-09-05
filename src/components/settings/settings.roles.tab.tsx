@@ -1,5 +1,5 @@
 /**
- * @file SettingsRolesTab.tsx
+ * @file settings.roles.tab.tsx
  * @description Component giao diện SettingsRolesTab phục vụ khu vực Quản trị Admin
  */
 

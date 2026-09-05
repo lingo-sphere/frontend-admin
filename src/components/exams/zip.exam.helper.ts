@@ -5,7 +5,7 @@
 
 import type { ExamQuestionItem } from '@/components/exams/exam.question.editor.modal'
 import { mediaAdminService } from '@/services/media.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import JSZip from 'jszip'
 import * as XLSX from 'xlsx'
 

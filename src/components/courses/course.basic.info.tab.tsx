@@ -4,11 +4,11 @@
  */
 
 import { useMemo, useEffect } from 'react'
-import { categoryLabels, levelLabels } from '@/data/courses-data'
+import { categoryLabels, levelLabels } from '@/data/courses.data'
 import { R2MediaUploader } from '@/components/admin/r2.media.uploader'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { QuizQuestionItem } from '@/services/ai.service'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { CourseInstructorCard } from '@/components/courses/course.instructor.card'
 import { CourseFinalTestCard } from '@/components/courses/course.final.test.card'
 

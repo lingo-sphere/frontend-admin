@@ -1,5 +1,5 @@
 /**
- * @file PublicDeckCard.tsx
+ * @file public.deck.card.tsx
  * @description Component giao diện PublicDeckCard phục vụ khu vực Quản trị Admin
  */
 

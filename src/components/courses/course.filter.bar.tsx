@@ -1,5 +1,5 @@
 /**
- * @file CourseFilterBar.tsx
+ * @file course.filter.bar.tsx
  * @description Component giao diện CourseFilterBar phục vụ khu vực Quản trị Admin
  */
 

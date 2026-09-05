@@ -1,5 +1,5 @@
 /**
- * @file AdminUserAccountForm.tsx
+ * @file admin.user.account.form.tsx
  * @description Component giao diện AdminUserAccountForm phục vụ khu vực Quản trị Admin
  */
 

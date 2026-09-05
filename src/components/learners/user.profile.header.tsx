@@ -1,5 +1,5 @@
 /**
- * @file UserProfileHeader.tsx
+ * @file user.profile.header.tsx
  * @description Component giao diện UserProfileHeader phục vụ khu vực Quản trị Admin
  */
 

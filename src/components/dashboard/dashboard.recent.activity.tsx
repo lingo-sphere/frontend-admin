@@ -1,5 +1,5 @@
 /**
- * @file DashboardRecentActivity.tsx
+ * @file dashboard.recent.activity.tsx
  * @description Component giao diện DashboardRecentActivity phục vụ khu vực Quản trị Admin
  */
 

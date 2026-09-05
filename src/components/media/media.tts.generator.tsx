@@ -1,5 +1,5 @@
 /**
- * @file MediaTtsGenerator.tsx
+ * @file media.tts.generator.tsx
  * @description Component giao diện MediaTtsGenerator phục vụ khu vực Quản trị Admin
  */
 

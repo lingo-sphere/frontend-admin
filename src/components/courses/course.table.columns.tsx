@@ -1,11 +1,11 @@
 /**
- * @file course-table-columns.tsx
+ * @file course.table.columns.tsx
  * @description Component giao diện course-table-columns phục vụ khu vực Quản trị Admin
  */
 
 import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones, GraduationCap } from 'lucide-react'
-import type { Course } from '@/data/courses-data'
-import { categoryLabels, levelLabels } from '@/data/courses-data'
+import type { Course } from '@/data/courses.data'
+import { categoryLabels, levelLabels } from '@/data/courses.data'
 import type { DataTableColumn } from '@/components/common/data.table'
 import { Popconfirm } from '@/components/common/popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/helpers/course.helper'
@@ -279,4 +279,3 @@ export function getCourseColumns({
     },
   ]
 }
-

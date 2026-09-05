@@ -1,5 +1,5 @@
 /**
- * @file VocabularyPage.tsx
+ * @file vocabulary.page.tsx
  * @description Trang quản trị VocabularyPage trong giao diện Admin
  */
 
@@ -7,10 +7,10 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Bookmark, Layers, RotateCcw, FileSpreadsheet, Plus } from 'lucide-react'
 import { DataTable } from '@/components/common/data.table'
-import { useAdminStore } from '@/store/admin-store'
+import { useAdminStore } from '@/store/admin.store'
 import { vocabularyService } from '@/services/vocabulary.service'
-import { toast } from '@/store/toast-store'
-import type { LexicalItem, Topic, FlashcardDeck } from '@/data/vocabulary-data'
+import { toast } from '@/store/toast.store'
+import type { LexicalItem, Topic, FlashcardDeck } from '@/data/vocabulary.data'
 import type {
   LexicalItem as ApiLexicalItem,
   Topic as ApiTopic,

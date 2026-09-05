@@ -1,5 +1,5 @@
 /**
- * @file ConfirmModal.tsx
+ * @file confirm.modal.tsx
  * @description Component giao diện ConfirmModal phục vụ khu vực Quản trị Admin
  */
 

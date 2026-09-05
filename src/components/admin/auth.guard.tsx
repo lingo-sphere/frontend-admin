@@ -1,10 +1,10 @@
 /**
- * @file AuthGuard.tsx
+ * @file auth.guard.tsx
  * @description Component giao diện AuthGuard phục vụ khu vực Quản trị Admin
  */
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { LoginPage } from '@/pages/login.page'
 
 export function AuthGuard({ children }: { children: ReactNode }) {

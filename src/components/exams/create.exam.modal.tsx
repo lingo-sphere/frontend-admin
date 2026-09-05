@@ -1,5 +1,5 @@
 /**
- * @file CreateExamModal.tsx
+ * @file create.exam.modal.tsx
  * @description Component giao diện CreateExamModal phục vụ khu vực Quản trị Admin
  */
 

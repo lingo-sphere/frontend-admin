@@ -1,5 +1,5 @@
 /**
- * @file AdminUserRoleSelector.tsx
+ * @file admin.user.role.selector.tsx
  * @description Component giao diện AdminUserRoleSelector phục vụ khu vực Quản trị Admin
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file MediaStorageQuotaCards.tsx
+ * @file media.storage.quota.cards.tsx
  * @description Component giao diện MediaStorageQuotaCards phục vụ khu vực Quản trị Admin
  */
 
