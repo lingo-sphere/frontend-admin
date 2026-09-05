@@ -7,15 +7,13 @@ import { useMemo } from 'react'
 import { UserCheck, ShieldCheck } from 'lucide-react'
 import { DataTable } from '@/components/common/DataTable'
 import { ExamQuestionEditorModal } from '@/components/exams/ExamQuestionEditorModal'
-import {
-  CourseExamStatsOverview,
-  CourseExamFilterBar,
-  CourseExamHeaderActions,
-  CourseExamGridCard,
-  CourseExamModal,
-  getCourseExamColumns,
-  useCourseExams,
-} from '@/components/course-exams'
+import { CourseExamStatsOverview } from '@/components/course-exams/CourseExamStatsOverview'
+import { CourseExamFilterBar } from '@/components/course-exams/CourseExamFilterBar'
+import { CourseExamHeaderActions } from '@/components/course-exams/CourseExamHeaderActions'
+import { CourseExamGridCard } from '@/components/course-exams/CourseExamGridCard'
+import { CourseExamModal } from '@/components/course-exams/CourseExamModal'
+import { getCourseExamColumns } from '@/components/course-exams/course-exam-table-columns'
+import { useCourseExams } from '@/components/course-exams/useCourseExams'
 import type { ToeicExamItem } from '@/services/exam.service'
 
 export function CourseExamsPage() {
