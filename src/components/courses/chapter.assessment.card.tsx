@@ -4,23 +4,13 @@
  */
 
 import { useState, useRef } from 'react'
-import {
-  Award,
-  FileSpreadsheet,
-  Eye,
-  Volume2,
-  Upload,
-  Trash2,
-  Loader2,
-  CheckCircle2,
-  HelpCircle,
-  Sparkles,
-  Clock,
-} from 'lucide-react'
+import { Award, Clock } from 'lucide-react'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import type { CourseModule } from './course.basic.info.tab'
 import { ChapterSpeakingWritingCard } from './chapter.speaking.writing.card'
+import { ChapterAssessmentAudio } from './chapter.assessment.audio'
+import { ChapterAssessmentSummary } from './chapter.assessment.summary'
 
 interface ChapterAssessmentCardProps {
   module: CourseModule
@@ -107,7 +97,8 @@ export function ChapterAssessmentCard({
         toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi tải file audio lên máy chủ lưu trữ.'
+      const msg =
+        err instanceof Error ? err.message : 'Lỗi khi tải file audio lên máy chủ lưu trữ.'
       toast.error(msg)
     } finally {
       setIsUploadingAudio(false)
@@ -149,7 +140,9 @@ export function ChapterAssessmentCard({
       if (uploadedUrl) {
         onUpdateModule({ speaking_file_url: uploadedUrl })
         toast.success(
-          isVi ? `Đã tải lên file đề Speaking: ${file.name}` : `Uploaded speaking file: ${file.name}`
+          isVi
+            ? `Đã tải lên file đề Speaking: ${file.name}`
+            : `Uploaded speaking file: ${file.name}`
         )
       } else {
         toast.error('Không nhận được đường dẫn file tải lên.')
@@ -179,7 +172,9 @@ export function ChapterAssessmentCard({
       if (uploadedUrl) {
         onUpdateModule({ writing_file_url: uploadedUrl })
         toast.success(
-          isVi ? `Đã tải lên file tài liệu Writing: ${file.name}` : `Uploaded writing file: ${file.name}`
+          isVi
+            ? `Đã tải lên file tài liệu Writing: ${file.name}`
+            : `Uploaded writing file: ${file.name}`
         )
       } else {
         toast.error('Không nhận được đường dẫn file tải lên.')
@@ -238,7 +233,9 @@ export function ChapterAssessmentCard({
                 }}
                 className="w-12 h-7 text-center rounded-lg border border-indigo-200 bg-indigo-50/50 text-xs font-black text-indigo-700 dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
-              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{isVi ? 'phút' : 'min'}</span>
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                {isVi ? 'phút' : 'min'}
+              </span>
             </div>
           </div>
 
@@ -269,114 +266,20 @@ export function ChapterAssessmentCard({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>{isVi ? 'Ngân hàng câu hỏi trắc nghiệm' : 'Question Bank'}</span>
-            </span>
-            {questionCount > 0 ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
-                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                <span>{questionCount} {isVi ? 'câu hỏi' : 'questions'}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
-                <HelpCircle className="w-3 h-3 text-amber-600" />
-                <span>{isVi ? 'Chưa có câu hỏi' : 'Empty'}</span>
-              </span>
-            )}
-          </div>
+        <ChapterAssessmentSummary
+          questionCount={questionCount}
+          isVi={isVi}
+          onOpenExcelModal={onOpenExcelModal}
+          onOpenViewerModal={onOpenViewerModal}
+        />
 
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            {isVi
-              ? 'Tải file Excel mẫu câu hỏi trắc nghiệm để nhập tự động hàng loạt câu hỏi cho chương.'
-              : 'Upload Excel file to bulk import multiple choice questions for this chapter.'}
-          </p>
-
-          <div className="flex items-center gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onOpenExcelModal}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>{isVi ? 'Upload File Excel' : 'Import Excel'}</span>
-            </button>
-
-            {questionCount > 0 && (
-              <button
-                type="button"
-                onClick={onOpenViewerModal}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                <Eye className="w-3.5 h-3.5 text-indigo-500" />
-                <span>{isVi ? 'Xem & Sửa' : 'View/Edit'}</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Volume2 className="w-4 h-4 text-indigo-600" />
-              <span>{isVi ? 'File âm thanh đề thi (Audio)' : 'Listening Audio'}</span>
-            </span>
-            {commonAudioUrl ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 text-[11px] font-extrabold border border-indigo-300/80 dark:border-indigo-700">
-                <Sparkles className="w-3 h-3 text-indigo-600" />
-                <span>{isVi ? 'Đã có file nghe' : 'Audio attached'}</span>
-              </span>
-            ) : (
-              <span className="text-[11px] text-slate-400">
-                {isVi ? '(Tùy chọn cho phần Nghe)' : '(Optional for Listening)'}
-              </span>
-            )}
-          </div>
-
-          {commonAudioUrl ? (
-            <div className="space-y-2">
-              <audio controls src={commonAudioUrl} className="h-7 w-full" />
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => audioInputRef.current?.click()}
-                  disabled={isUploadingAudio}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {isUploadingAudio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                  <span>{isVi ? 'Đổi file audio' : 'Replace audio'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRemoveAudio}
-                  className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-                  title={isVi ? 'Gỡ file nghe' : 'Remove audio'}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col justify-end space-y-2">
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {isVi
-                  ? 'Gắn file âm thanh nếu bài test chương có câu hỏi nghe hiểu (Listening).'
-                  : 'Attach audio if this chapter test includes listening questions.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => audioInputRef.current?.click()}
-                disabled={isUploadingAudio}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 hover:bg-indigo-100/70 dark:border-indigo-800 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isUploadingAudio ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                <span>{isVi ? '+ Tải Lên File Audio (.mp3, .wav)' : '+ Upload Audio File'}</span>
-              </button>
-            </div>
-          )}
-        </div>
+        <ChapterAssessmentAudio
+          commonAudioUrl={commonAudioUrl}
+          isVi={isVi}
+          isUploadingAudio={isUploadingAudio}
+          onUploadClick={() => audioInputRef.current?.click()}
+          onRemoveAudio={handleRemoveAudio}
+        />
       </div>
 
       {is4Skills && (

@@ -1,0 +1,186 @@
+/**
+ * @file global.search.config.ts
+ * @description Định nghĩa danh mục tìm kiếm toàn cục, phím tắt và chỉ mục các trang quản trị
+ */
+
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Layers,
+  FileCheck,
+  Headphones,
+  Mic,
+  PenTool,
+  Shield,
+  Bot,
+  HardDrive,
+  Bell,
+  Activity,
+  Settings,
+  User,
+} from 'lucide-react'
+
+export interface NavSearchItem {
+  id: string
+  titleVi: string
+  titleEn: string
+  subtitleVi: string
+  subtitleEn: string
+  category: 'NAVIGATION' | 'ACTION'
+  icon: typeof LayoutDashboard
+  navTarget: string
+}
+
+export const NAVIGATION_INDEX: NavSearchItem[] = [
+  {
+    id: 'nav-dashboard',
+    titleVi: 'Tổng quan hệ thống',
+    titleEn: 'System Overview',
+    subtitleVi: 'Thống kê hoạt động, doanh thu và DAU/MAU',
+    subtitleEn: 'System activity, revenue metrics and DAU/MAU statistics',
+    category: 'NAVIGATION',
+    icon: LayoutDashboard,
+    navTarget: 'dashboard',
+  },
+  {
+    id: 'nav-learners',
+    titleVi: 'Quản lý Học viên',
+    titleEn: 'Learner Management',
+    subtitleVi: 'Danh sách học viên, tiến độ TOEIC, gói cước',
+    subtitleEn: 'Learner list, TOEIC progress, and subscription plans',
+    category: 'NAVIGATION',
+    icon: Users,
+    navTarget: 'users',
+  },
+  {
+    id: 'nav-courses',
+    titleVi: 'Quản lý Khóa học',
+    titleEn: 'Course Management',
+    subtitleVi: 'Khóa học TOEIC 2 kỹ năng, 4 kỹ năng và giáo trình',
+    subtitleEn: 'TOEIC courses, syllabus, and curriculum management',
+    category: 'NAVIGATION',
+    icon: BookOpen,
+    navTarget: 'courses',
+  },
+  {
+    id: 'nav-vocabulary',
+    titleVi: 'Kho Từ vựng & Flashcards',
+    titleEn: 'Vocabulary & Flashcards',
+    subtitleVi: 'Từ điển song ngữ, phiên âm IPA, bộ thẻ SRS',
+    subtitleEn: 'Bilingual dictionary, IPA phonetics, and SRS flashcard decks',
+    category: 'NAVIGATION',
+    icon: Layers,
+    navTarget: 'vocabulary',
+  },
+  {
+    id: 'nav-exams',
+    titleVi: 'Ngân hàng Đề thi TOEIC',
+    titleEn: 'TOEIC Exam Bank',
+    subtitleVi: 'Đề Full Test 7 Parts, Mini Test và ma trận đề thi',
+    subtitleEn: 'Full Test 7 Parts, Mini Test, and question matrices',
+    category: 'NAVIGATION',
+    icon: FileCheck,
+    navTarget: 'exams',
+  },
+  {
+    id: 'nav-listening',
+    titleVi: 'Luyện Nghe Listening & Dictation',
+    titleEn: 'Listening & Dictation',
+    subtitleVi: 'Bài nghe chép chính tả Part 1-4 và File Audio bài nghe',
+    subtitleEn: 'Dictation practice Part 1-4 and listening audio files',
+    category: 'NAVIGATION',
+    icon: Headphones,
+    navTarget: 'practice-listening',
+  },
+  {
+    id: 'nav-speaking',
+    titleVi: 'Luyện Nói & Phát âm AI Whisper',
+    titleEn: 'Speaking & Pronunciation AI',
+    subtitleVi: 'Nhận diện phát âm chuẩn bản xứ và thang điểm chấm',
+    subtitleEn: 'Native pronunciation assessment and AI scoring',
+    category: 'NAVIGATION',
+    icon: Mic,
+    navTarget: 'practice-speaking',
+  },
+  {
+    id: 'nav-writing',
+    titleVi: 'Luyện Viết Writing & Essay',
+    titleEn: 'Writing & Essay Grading',
+    subtitleVi: 'Viết email thương mại và bài luận chấm AI',
+    subtitleEn: 'Business email composition and AI essay grading',
+    category: 'NAVIGATION',
+    icon: PenTool,
+    navTarget: 'practice-writing',
+  },
+  {
+    id: 'nav-roles',
+    titleVi: 'Phân quyền & Vai trò',
+    titleEn: 'Roles & RBAC Permissions',
+    subtitleVi: 'Quản trị RBAC, tài khoản Admin, Giảng viên',
+    subtitleEn: 'RBAC management, Admin, and Teacher access controls',
+    category: 'NAVIGATION',
+    icon: Shield,
+    navTarget: 'roles',
+  },
+  {
+    id: 'nav-ai',
+    titleVi: 'Gia sư AI & Prompting',
+    titleEn: 'AI Tutor & Prompts',
+    subtitleVi: 'Cấu hình Groq LPU, Gemini Flash và sinh đề thi tự động',
+    subtitleEn: 'Configure Groq LPU, Gemini Flash, and quiz generation',
+    category: 'NAVIGATION',
+    icon: Bot,
+    navTarget: 'ai',
+  },
+  {
+    id: 'nav-media',
+    titleVi: 'Quản lý Kho Media & Lưu Trữ',
+    titleEn: 'Media & Storage Management',
+    subtitleVi: 'Dung lượng lưu trữ đám mây, sinh giọng nói TTS',
+    subtitleEn: 'Cloud storage quota and Text-to-Speech generation',
+    category: 'NAVIGATION',
+    icon: HardDrive,
+    navTarget: 'media',
+  },
+  {
+    id: 'nav-notifications',
+    titleVi: 'Thông báo & Chiến dịch nhắc học',
+    titleEn: 'Notifications & Campaigns',
+    subtitleVi: 'Push Notification, Email nhắc Streak học viên',
+    subtitleEn: 'Push notifications and learner study streak reminders',
+    category: 'NAVIGATION',
+    icon: Bell,
+    navTarget: 'notifications',
+  },
+  {
+    id: 'nav-progress',
+    titleVi: 'Giám sát & Báo cáo hệ thống',
+    titleEn: 'Monitoring & System Reports',
+    subtitleVi: 'Phân tích điểm TOEIC, BetterStack Uptime, PostHog',
+    subtitleEn: 'TOEIC analytics, BetterStack Uptime, and PostHog metrics',
+    category: 'NAVIGATION',
+    icon: Activity,
+    navTarget: 'progress',
+  },
+  {
+    id: 'nav-settings',
+    titleVi: 'Cài đặt hệ thống',
+    titleEn: 'System Settings',
+    subtitleVi: 'Gói thanh toán, cấu hình AI, bảo mật',
+    subtitleEn: 'Payment plans, AI configurations, and security preferences',
+    category: 'NAVIGATION',
+    icon: Settings,
+    navTarget: 'settings',
+  },
+  {
+    id: 'nav-profile',
+    titleVi: 'Hồ sơ Quản trị viên',
+    titleEn: 'Admin Profile',
+    subtitleVi: 'Đổi mật khẩu, cập nhật họ tên và ảnh đại diện',
+    subtitleEn: 'Change password, update name, and profile avatar',
+    category: 'ACTION',
+    icon: User,
+    navTarget: 'admin-profile:me',
+  },
+]
