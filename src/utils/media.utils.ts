@@ -21,7 +21,7 @@ export function resolveMediaUrl(url?: string | null): string {
 
   // 2. Đường dẫn tương đối từ backend gateway (ví dụ: /media/stream/...)
   if (trimmed.startsWith('/')) {
-    const baseUrl = (API_CONFIG.BASE_URL || 'http://localhost:8080').replace(/\/+$/, '')
+    const baseUrl = (API_CONFIG.BASE_URL || '').replace(/\/+$/, '')
     return `${baseUrl}${trimmed}`
   }
 
@@ -33,7 +33,7 @@ export function resolveMediaUrl(url?: string | null): string {
   ) {
     try {
       const parsed = new URL(trimmed)
-      const baseUrl = (API_CONFIG.BASE_URL || 'http://localhost:8080').replace(/\/+$/, '')
+      const baseUrl = (API_CONFIG.BASE_URL || '').replace(/\/+$/, '')
       return `${baseUrl}/media/stream${parsed.pathname}`
     } catch {
       return trimmed
