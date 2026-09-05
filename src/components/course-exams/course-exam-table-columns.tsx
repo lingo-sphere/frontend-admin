@@ -95,10 +95,15 @@ export function getCourseExamColumns({
     },
     {
       key: 'questions',
-      title: isVi ? 'Số Câu / Điểm Đạt' : 'Questions / Pass',
+      title: isVi ? 'Số Câu / Đánh Giá' : 'Questions / Evaluation',
       align: 'center',
       sortable: true,
       render: (exam) => {
+        const isPlacement = Boolean(
+          exam.is_system_placement ||
+          exam.type === 'DIAGNOSTIC_TEST' ||
+          !exam.course_id
+        )
         const qCount = Array.isArray(exam.questions) ? exam.questions.length : (exam.total_questions || 0)
         const isZero = qCount === 0
         return (
@@ -113,9 +118,15 @@ export function getCourseExamColumns({
                 {qCount} câu
               </span>
             )}
-            <span className="text-[10px] text-slate-400 block whitespace-nowrap">
-              Đạt: ≥ {exam.passing_score ?? 70}%
-            </span>
+            {isPlacement ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200 dark:border-violet-800/80 inline-block whitespace-nowrap">
+                {isVi ? 'Đánh giá Baseline' : 'Baseline Score'}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 block whitespace-nowrap">
+                Đạt: ≥ {exam.passing_score ?? 70}%
+              </span>
+            )}
           </div>
         )
       },
