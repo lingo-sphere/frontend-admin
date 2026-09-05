@@ -24,6 +24,8 @@ export interface ToeicExamItem {
   is_system_placement?: boolean
   skills_enabled?: 'LR' | 'ALL' | 'SW' | string
   placement_type?: '2SKILLS' | '4SKILLS' | string
+  code?: string
+  description?: string
   created_at?: string
   questions?: any[]
   audio_url?: string

@@ -63,6 +63,11 @@ export const courseService = {
     return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.COURSES.DELETE_MODULE(moduleId))
   },
 
+  async updateModule(moduleId: string, payload: Partial<CourseModule> & Record<string, unknown>): Promise<CourseModule> {
+    return api.put<CourseModule>(`/courses/modules/${moduleId}`, payload)
+  },
+
+
   async getLessons(courseId: string, moduleId: string): Promise<Lesson[]> {
     return api.get<Lesson[]>(API_CONFIG.ENDPOINTS.COURSES.LESSONS(courseId, moduleId))
   },
