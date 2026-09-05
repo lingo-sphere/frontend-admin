@@ -3,9 +3,10 @@
  * @description Modal tạo mới và chỉnh sửa thông tin bài thi (Challenge, Final Test hoặc Đầu vào hệ thống)
  */
 
-import { useState, useEffect } from 'react'
-import { FileCheck2, X, Sparkles } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { FileCheck2, X, Sparkles, AlertTriangle, Lock } from 'lucide-react'
 import type { ToeicExamItem, CreateExamDto } from '@/services/exam.service'
+import { toast } from '@/store/toast-store'
 import type { CourseSelectItem } from './CourseExamHeaderActions'
 
 interface CourseExamModalProps {
@@ -14,6 +15,7 @@ interface CourseExamModalProps {
   onSave: (payload: CreateExamDto, isEdit: boolean, editingExamId?: string) => Promise<void>
   editingExam: ToeicExamItem | null
   courses: CourseSelectItem[]
+  exams: ToeicExamItem[]
   selectedCourseId: string
   isTeacher: boolean
   currentUserId: string
@@ -26,6 +28,7 @@ export function CourseExamModal({
   onSave,
   editingExam,
   courses,
+  exams,
   selectedCourseId,
   isTeacher,
   currentUserId,
@@ -42,11 +45,44 @@ export function CourseExamModal({
   const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>('2SKILLS')
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
+  const editingId = editingExam?.id || editingExam?._id
+
+  // Kiểm tra xem đã có bài thi Toàn hệ thống nào đang Public (cho 2 kỹ năng và 4 kỹ năng) chưa
+  const published2SkillsExam = useMemo(() => {
+    return exams.find(
+      (e) =>
+        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+        (e.placement_type === '2SKILLS' || e.skills_enabled === 'LR') &&
+        e.is_published &&
+        (e.id || e._id) !== editingId
+    )
+  }, [exams, editingId])
+
+  const published4SkillsExam = useMemo(() => {
+    return exams.find(
+      (e) =>
+        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+        (e.placement_type === '4SKILLS' || e.skills_enabled === 'ALL') &&
+        e.is_published &&
+        (e.id || e._id) !== editingId
+    )
+  }, [exams, editingId])
+
+  const isSystemPlacement = formCourseId === 'GLOBAL_SYSTEM_PLACEMENT'
+  const currentActiveConflict = isSystemPlacement
+    ? formPlacementSkills === '2SKILLS'
+      ? published2SkillsExam
+      : published4SkillsExam
+    : undefined
+
   useEffect(() => {
     if (!isOpen) return
 
     if (editingExam) {
-      const isGlobal = editingExam.is_system_placement || editingExam.type === 'DIAGNOSTIC_TEST' || !editingExam.course_id
+      const isGlobal =
+        editingExam.is_system_placement ||
+        editingExam.type === 'DIAGNOSTIC_TEST' ||
+        !editingExam.course_id
       setFormCourseId(isGlobal ? 'GLOBAL_SYSTEM_PLACEMENT' : editingExam.course_id || courses[0]?.id || '')
       setFormTitle(editingExam.title || '')
       setFormType(editingExam.type === 'FULL_TEST' ? 'FULL_TEST' : 'CHALLENGE_TEST')
@@ -60,23 +96,65 @@ export function CourseExamModal({
       setFormDescription(editingExam.description || '')
       setFormIsPublished(editingExam.is_published ?? true)
     } else {
-      const defaultCourse = !isTeacher
-        ? 'GLOBAL_SYSTEM_PLACEMENT'
-        : selectedCourseId !== 'ALL' && selectedCourseId !== 'GLOBAL_SYSTEM'
-        ? selectedCourseId
-        : courses[0]?.id || ''
+      // Mặc định chọn khóa học (nếu đang xem bộ lọc khóa học nào thì chọn khóa đó,
+      // hoặc chọn khóa đầu tiên; CHỈ chọn Toàn hệ thống nếu đang filter GLOBAL_SYSTEM hoặc không có khóa nào)
+      const defaultCourse =
+        selectedCourseId === 'GLOBAL_SYSTEM'
+          ? 'GLOBAL_SYSTEM_PLACEMENT'
+          : selectedCourseId !== 'ALL' && selectedCourseId !== 'GLOBAL_SYSTEM'
+          ? selectedCourseId
+          : courses[0]?.id || 'GLOBAL_SYSTEM_PLACEMENT'
 
       setFormCourseId(defaultCourse)
       setFormTitle('')
-      setFormType(!isTeacher ? 'DIAGNOSTIC_TEST' : 'CHALLENGE_TEST')
-      setFormPlacementSkills('2SKILLS')
-      setFormDuration(!isTeacher ? 60 : 30)
-      setFormQuestions(!isTeacher ? 100 : 30)
-      setFormPassingScore(!isTeacher ? 500 : 70)
+
+      if (defaultCourse === 'GLOBAL_SYSTEM_PLACEMENT') {
+        setFormType('DIAGNOSTIC_TEST')
+        setFormDuration(60)
+        setFormQuestions(100)
+        setFormPassingScore(500)
+        // Nếu 2 kỹ năng đã có bài public mà 4 kỹ năng chưa có, ưu tiên 4 kỹ năng
+        if (published2SkillsExam && !published4SkillsExam) {
+          setFormPlacementSkills('4SKILLS')
+          setFormIsPublished(true)
+        } else if (published2SkillsExam && published4SkillsExam) {
+          setFormPlacementSkills('2SKILLS')
+          setFormIsPublished(false) // Bắt buộc private nếu cả 2 đều đã có bài public
+        } else {
+          setFormPlacementSkills('2SKILLS')
+          setFormIsPublished(true)
+        }
+      } else {
+        setFormType('CHALLENGE_TEST')
+        setFormPlacementSkills('2SKILLS')
+        setFormDuration(30)
+        setFormQuestions(30)
+        setFormPassingScore(70)
+        setFormIsPublished(true)
+      }
       setFormDescription('')
-      setFormIsPublished(true)
     }
-  }, [isOpen, editingExam, courses, selectedCourseId, isTeacher])
+  }, [isOpen, editingExam, courses, selectedCourseId, published2SkillsExam, published4SkillsExam])
+
+  // Khi người dùng chuyển kỹ năng, nếu cấu hình đó đã có bài public thì tự động tắt xuất bản
+  const handlePlacementSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
+    setFormPlacementSkills(skills)
+    if (skills === '2SKILLS') {
+      setFormDuration(60)
+      setFormQuestions(100)
+      setFormPassingScore(500)
+      if (published2SkillsExam) {
+        setFormIsPublished(false)
+      }
+    } else {
+      setFormDuration(90)
+      setFormQuestions(120)
+      setFormPassingScore(650)
+      if (published4SkillsExam) {
+        setFormIsPublished(false)
+      }
+    }
+  }
 
   if (!isOpen) return null
 
@@ -88,18 +166,33 @@ export function CourseExamModal({
       setFormDuration(60)
       setFormQuestions(100)
       setFormPassingScore(500)
+      if (published2SkillsExam) {
+        setFormIsPublished(false)
+      }
     } else if (formType === 'DIAGNOSTIC_TEST') {
       setFormType('CHALLENGE_TEST')
       setFormDuration(30)
       setFormQuestions(30)
       setFormPassingScore(70)
+      setFormIsPublished(true)
     }
   }
 
   const handleSubmit = async () => {
-    if (!formTitle.trim()) return
+    if (!formTitle.trim()) {
+      toast.error(isVi ? 'Vui lòng nhập tiêu đề bài thi.' : 'Please enter exam title.')
+      return
+    }
 
-    const isSystemPlacement = formCourseId === 'GLOBAL_SYSTEM_PLACEMENT'
+    if (isSystemPlacement && formIsPublished && currentActiveConflict) {
+      toast.error(
+        isVi
+          ? `Đã có bài thi "${currentActiveConflict.title}" đang Public toàn hệ thống. Bạn chỉ có thể tạo bài mới ở chế độ Private (Bản nháp), hoặc chuyển bài thi trước về Private trước!`
+          : `System placement test for this skill set is already public. New test must be Private (Draft), or make the previous test private first!`
+      )
+      return
+    }
+
     const matchedCourse = courses.find((c) => c.id === formCourseId)
 
     setIsSaving(true)
@@ -116,7 +209,7 @@ export function CourseExamModal({
         total_questions: Number(formQuestions) || 30,
         passing_score: Number(formPassingScore) || 70,
         description: formDescription.trim(),
-        is_published: formIsPublished,
+        is_published: isSystemPlacement && currentActiveConflict ? false : formIsPublished,
         author_id: currentUserId,
       }
 
@@ -126,8 +219,6 @@ export function CourseExamModal({
       setIsSaving(false)
     }
   }
-
-  const isSystemPlacement = formCourseId === 'GLOBAL_SYSTEM_PLACEMENT'
 
   return (
     <div
@@ -140,7 +231,15 @@ export function CourseExamModal({
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <FileCheck2 className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
-            <span>{editingExam ? (isVi ? 'Chỉnh Sửa Bài Thi' : 'Edit Exam') : (isVi ? 'Tạo Bài Thi Đánh Giá Mới' : 'Create New Exam')}</span>
+            <span>
+              {editingExam
+                ? isVi
+                  ? 'Chỉnh Sửa Bài Thi'
+                  : 'Edit Exam'
+                : isVi
+                ? 'Tạo Bài Thi Đánh Giá Mới'
+                : 'Create New Exam'}
+            </span>
           </h3>
           <button
             type="button"
@@ -161,16 +260,16 @@ export function CourseExamModal({
               onChange={(e) => handleFormCourseChange(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             >
-              {!isTeacher && (
-                <option value="GLOBAL_SYSTEM_PLACEMENT" className="font-bold text-violet-600 dark:text-violet-400">
-                  🌐 [TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)
-                </option>
-              )}
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.title}
                 </option>
               ))}
+              {!isTeacher && (
+                <option value="GLOBAL_SYSTEM_PLACEMENT" className="font-bold text-violet-600 dark:text-violet-400">
+                  🌐 [TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)
+                </option>
+              )}
             </select>
           </div>
 
@@ -184,8 +283,12 @@ export function CourseExamModal({
               onChange={(e) => setFormTitle(e.target.value)}
               placeholder={
                 isSystemPlacement
-                  ? (isVi ? 'Ví dụ: Bài Test Đầu Vào Hệ Thống - TOEIC 2 Kỹ Năng (LR Baseline)...' : 'e.g. System Placement Test - TOEIC 2 Skills...')
-                  : (isVi ? 'Ví dụ: Challenge Test: Kiểm tra cột mốc Chương 1...' : 'e.g. Challenge Test: Chapter 1 Milestone...')
+                  ? isVi
+                    ? 'Ví dụ: Bài Test Đầu Vào Hệ Thống - TOEIC 2 Kỹ Năng (LR Baseline)...'
+                    : 'e.g. System Placement Test - TOEIC 2 Skills...'
+                  : isVi
+                  ? 'Ví dụ: Challenge Test: Kiểm tra cột mốc Chương 1...'
+                  : 'e.g. Challenge Test: Chapter 1 Milestone...'
               }
               className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             />
@@ -195,13 +298,39 @@ export function CourseExamModal({
             <div className="p-3.5 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/80 space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-violet-800 dark:text-violet-300">
                 <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                <span>{isVi ? 'Bài Thi Đầu Vào Phân Loại Trình Độ Hệ Thống' : 'System Placement Test Configuration'}</span>
+                <span>
+                  {isVi
+                    ? 'Bài Thi Đầu Vào Phân Loại Trình Độ Hệ Thống'
+                    : 'System Placement Test Configuration'}
+                </span>
               </div>
               <p className="text-[11px] text-violet-600 dark:text-violet-400 leading-relaxed">
                 {isVi
-                  ? 'Chỉ Quản trị viên (Admin) mới có quyền tạo và chỉnh sửa bài thi đầu vào này. Kết quả của bài thi sẽ tự động được đồng bộ vào Hồ sơ học viên và dùng để kích hoạt bộ gợi ý khóa học phù hợp.'
-                  : 'Only Administrators can configure this system-wide placement test. Results will feed into student profiles to drive automated course recommendations.'}
+                  ? 'Toàn hệ thống chỉ được phép tồn tại tối đa 2 bài thi Public (1 bài 2 Kỹ năng và 1 bài 4 Kỹ năng). Nếu đã có bài Public, bài mới chỉ được lưu dạng Private (Bản nháp), hoặc Admin phải chuyển bài cũ về Private trước.'
+                  : 'The system only allows at most 2 public placement tests (1 for 2 Skills and 1 for 4 Skills). If a public test already exists, any new test must be Private (Draft), or make the previous test private.'}
               </p>
+
+              {currentActiveConflict && (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs space-y-1 animate-in fade-in duration-150">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>
+                      {isVi
+                        ? `Đã có bài thi ${formPlacementSkills === '2SKILLS' ? '2 Kỹ Năng' : '4 Kỹ Năng'} đang hoạt động Public:`
+                        : `Active public test already exists for ${formPlacementSkills === '2SKILLS' ? '2 Skills' : '4 Skills'}:`}
+                    </span>
+                  </div>
+                  <p className="font-semibold text-amber-900 dark:text-amber-100 pl-5">
+                    "{currentActiveConflict.title}"
+                  </p>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 pl-5 leading-relaxed">
+                    {isVi
+                      ? 'Bài thi mới này bắt buộc phải tạo ở chế độ Private (Bản nháp). Nếu muốn bài này là bài chính thức Public, bạn cần chuyển bài thi trước về Private trước.'
+                      : 'This test will be created as Private (Draft). To make it Public, make the existing test Private first.'}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                   {isVi ? 'Chọn cấu hình kỹ năng đánh giá:' : 'Evaluation Skills:'}
@@ -209,36 +338,41 @@ export function CourseExamModal({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormPlacementSkills('2SKILLS')
-                      setFormDuration(60)
-                      setFormQuestions(100)
-                      setFormPassingScore(500)
-                    }}
+                    onClick={() => handlePlacementSkillsChange('2SKILLS')}
                     className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       formPlacementSkills === '2SKILLS'
                         ? 'bg-white dark:bg-slate-900 border-violet-500 ring-2 ring-violet-500/20 text-violet-900 dark:text-violet-200 shadow-sm'
                         : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-violet-300'
                     }`}
                   >
-                    <div className="text-xs font-bold">🎧 📖 2 Kỹ Năng</div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold">🎧 📖 2 Kỹ Năng</span>
+                      {published2SkillsExam && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                          {isVi ? 'Đã có Public' : 'Public Active'}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-slate-500 mt-0.5">Listening & Reading (10 - 990)</div>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormPlacementSkills('4SKILLS')
-                      setFormDuration(90)
-                      setFormQuestions(120)
-                      setFormPassingScore(650)
-                    }}
+                    onClick={() => handlePlacementSkillsChange('4SKILLS')}
                     className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       formPlacementSkills === '4SKILLS'
                         ? 'bg-white dark:bg-slate-900 border-teal-500 ring-2 ring-teal-500/20 text-teal-900 dark:text-teal-200 shadow-sm'
                         : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-teal-300'
                     }`}
                   >
-                    <div className="text-xs font-bold">🎧 📖 🗣️ ✍️ 4 Kỹ Năng</div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold">🎧 📖 🗣️ ✍️ 4 Kỹ Năng</span>
+                      {published4SkillsExam && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                          {isVi ? 'Đã có Public' : 'Public Active'}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-slate-500 mt-0.5">LR + Speaking & Writing</div>
                   </button>
                 </div>
@@ -297,12 +431,12 @@ export function CourseExamModal({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isVi ? 'Điểm đạt yêu cầu (0 - 100):' : 'Passing Score (0 - 100):'}
+                {isVi ? 'Điểm đạt yêu cầu:' : 'Passing Score:'}
               </label>
               <input
                 type="number"
                 min={0}
-                max={100}
+                max={isSystemPlacement ? 990 : 100}
                 value={formPassingScore}
                 onChange={(e) => setFormPassingScore(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -323,17 +457,47 @@ export function CourseExamModal({
             />
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-start gap-2 pt-1">
             <input
               type="checkbox"
               id="formIsPublishedModal"
-              checked={formIsPublished}
-              onChange={(e) => setFormIsPublished(e.target.checked)}
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+              checked={isSystemPlacement && currentActiveConflict ? false : formIsPublished}
+              disabled={Boolean(isSystemPlacement && currentActiveConflict)}
+              onChange={(e) => {
+                if (isSystemPlacement && currentActiveConflict && e.target.checked) {
+                  toast.error(
+                    isVi
+                      ? 'Đã có 1 bài thi cùng loại kỹ năng đang Public. Bạn chỉ có thể tạo ở chế độ Private (Bản nháp) hoặc chuyển bài thi cũ về Private trước!'
+                      : 'An active public test exists. You can only create as Private (Draft) or make the previous test private first!'
+                  )
+                  return
+                }
+                setFormIsPublished(e.target.checked)
+              }}
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer mt-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <label htmlFor="formIsPublishedModal" className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
-              {isVi ? 'Xuất bản ngay cho học viên làm bài' : 'Publish immediately for learners'}
-            </label>
+            <div>
+              <label
+                htmlFor="formIsPublishedModal"
+                className={`text-xs font-semibold ${
+                  isSystemPlacement && currentActiveConflict
+                    ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    : 'text-slate-700 dark:text-slate-300 cursor-pointer'
+                }`}
+              >
+                {isVi ? 'Xuất bản ngay cho học viên làm bài (Public)' : 'Publish immediately for learners (Public)'}
+              </label>
+              {isSystemPlacement && currentActiveConflict && (
+                <p className="text-[11px] text-rose-500 dark:text-rose-400 font-medium mt-0.5 flex items-center gap-1">
+                  <Lock className="w-3 h-3 shrink-0" />
+                  <span>
+                    {isVi
+                      ? 'Khóa xuất bản: Đã có 1 bài thi đang Public. Bài này sẽ được lưu ở chế độ Private (Bản nháp).'
+                      : 'Locked: Public test already exists. This will be saved as Private (Draft).'}
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -352,10 +516,16 @@ export function CourseExamModal({
             className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
           >
             {isSaving
-              ? (isVi ? 'Đang lưu...' : 'Saving...')
+              ? isVi
+                ? 'Đang lưu...'
+                : 'Saving...'
               : editingExam
-              ? (isVi ? 'Lưu cập nhật' : 'Save Changes')
-              : (isVi ? 'Tiếp tục: Soạn câu hỏi đề thi ➔' : 'Continue: Compose Questions ➔')}
+              ? isVi
+                ? 'Lưu cập nhật'
+                : 'Save Changes'
+              : isVi
+              ? 'Tiếp tục: Soạn câu hỏi đề thi ➔'
+              : 'Continue: Compose Questions ➔'}
           </button>
         </div>
       </div>

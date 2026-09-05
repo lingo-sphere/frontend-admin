@@ -345,70 +345,91 @@ export function useCourseExams() {
   const handleTogglePublish = async (exam: ToeicExamItem) => {
     const examId = exam.id || exam._id || ''
     const nextStatus = !exam.is_published
+
+    // Nếu muốn xuất bản bài thi Toàn hệ thống, kiểm tra xem đã có bài nào đang Public chưa
+    if (nextStatus && (exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id)) {
+      const is4Skills = exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS'
+      const conflict = exams.find(
+        (e) =>
+          (e.id || e._id) !== examId &&
+          (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+          e.is_published &&
+          (is4Skills
+            ? e.skills_enabled === 'ALL' || e.placement_type === '4SKILLS'
+            : e.skills_enabled === 'LR' || e.placement_type === '2SKILLS')
+      )
+
+      if (conflict) {
+        toast.error(
+          isVi
+            ? `Toàn hệ thống đã có bài thi "${conflict.title}" đang Public. Vui lòng chuyển bài thi đó về Private (Bản nháp) trước!`
+            : `System already has a public test for this skill set. Please make "${conflict.title}" private first!`
+        )
+        return
+      }
+    }
+
     try {
-      await examAdminService.updateExam(examId, { is_published: nextStatus }).catch(() => null)
+      await examAdminService.updateExam(examId, { is_published: nextStatus })
       setExams((prev) =>
         prev.map((e) => ((e.id || e._id) === examId ? { ...e, is_published: nextStatus } : e))
       )
       toast.success(
         nextStatus
           ? (isVi ? 'Đã xuất bản bài thi!' : 'Exam published!')
-          : (isVi ? 'Đã chuyển bài thi về bản nháp!' : 'Exam set to draft!')
+          : (isVi ? 'Đã chuyển bài thi về bản nháp / Private!' : 'Exam set to private draft!')
       )
-    } catch {
-      setExams((prev) =>
-        prev.map((e) => ((e.id || e._id) === examId ? { ...e, is_published: nextStatus } : e))
-      )
-      toast.success(
-        nextStatus
-          ? (isVi ? 'Đã xuất bản bài thi!' : 'Exam published!')
-          : (isVi ? 'Đã chuyển bài thi về bản nháp!' : 'Exam set to draft!')
-      )
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể cập nhật trạng thái xuất bản bài thi.')
     }
   }
 
   const handleSaveExam = async (payload: CreateExamDto, isEdit: boolean, editingExamId?: string) => {
-    if (isEdit && editingExamId) {
-      await examAdminService.updateExam(editingExamId, payload).catch(() => null)
-      setExams((prev) =>
-        prev.map((e) =>
-          (e.id || e._id) === editingExamId
-            ? {
-                ...e,
-                ...payload,
-              }
-            : e
+    try {
+      if (isEdit && editingExamId) {
+        await examAdminService.updateExam(editingExamId, payload)
+        setExams((prev) =>
+          prev.map((e) =>
+            (e.id || e._id) === editingExamId
+              ? {
+                  ...e,
+                  ...payload,
+                }
+              : e
+          )
         )
-      )
-      toast.success(isVi ? 'Đã cập nhật thông tin bài thi thành công!' : 'Exam metadata updated successfully!')
-    } else {
-      const created = await examAdminService.createExam(payload).catch(() => null)
-      const newExam: ToeicExamItem = {
-        id: created?.id || created?._id || `exam_${Date.now()}`,
-        title: payload.title,
-        course_id: payload.course_id,
-        course_title: payload.course_title,
-        type: payload.type,
-        is_system_placement: payload.is_system_placement,
-        skills_enabled: payload.skills_enabled,
-        placement_type: payload.placement_type,
-        duration_minutes: payload.duration_minutes,
-        total_questions: payload.total_questions,
-        passing_score: payload.passing_score,
-        total_attempts: 0,
-        avg_score: 0,
-        is_published: payload.is_published,
-        created_at: new Date().toISOString(),
-        questions: created?.questions || [],
+        toast.success(isVi ? 'Đã cập nhật thông tin bài thi thành công!' : 'Exam metadata updated successfully!')
+      } else {
+        const created = await examAdminService.createExam(payload)
+        const newExam: ToeicExamItem = {
+          id: created?.id || created?._id || `exam_${Date.now()}`,
+          title: payload.title,
+          course_id: payload.course_id,
+          course_title: payload.course_title,
+          type: payload.type,
+          is_system_placement: payload.is_system_placement,
+          skills_enabled: payload.skills_enabled,
+          placement_type: payload.placement_type,
+          duration_minutes: payload.duration_minutes,
+          total_questions: payload.total_questions,
+          passing_score: payload.passing_score,
+          total_attempts: 0,
+          avg_score: 0,
+          is_published: payload.is_published,
+          created_at: new Date().toISOString(),
+          questions: created?.questions || [],
+        }
+        setExams((prev) => [newExam, ...prev])
+        setSelectedExamForQuestions(newExam)
+        setShowQuestionsModal(true)
+        toast.success(
+          isVi
+            ? 'Đã tạo khung bài thi! Mời bạn soạn thảo ngân hàng câu hỏi.'
+            : 'Created exam shell! Opening question bank editor...'
+        )
       }
-      setExams((prev) => [newExam, ...prev])
-      setSelectedExamForQuestions(newExam)
-      setShowQuestionsModal(true)
-      toast.success(
-        isVi
-          ? 'Đã tạo khung bài thi! Mời bạn soạn thảo ngân hàng câu hỏi.'
-          : 'Created exam shell! Opening question bank editor...'
-      )
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể lưu bài thi. Vui lòng thử lại.')
     }
   }
 

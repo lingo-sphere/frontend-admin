@@ -186,6 +186,7 @@ export function CourseExamsPage() {
         onSave={handleSaveExam}
         editingExam={editingExam}
         courses={courses}
+        exams={exams}
         selectedCourseId={selectedCourseId}
         isTeacher={isTeacher}
         currentUserId={currentUserId}
