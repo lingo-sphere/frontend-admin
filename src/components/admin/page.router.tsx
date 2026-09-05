@@ -27,6 +27,7 @@ import { UserProfilePage } from '@/pages/user.profile.page'
 import { CourseFormPage } from '@/pages/course.form.page'
 import { CourseScoresPage } from '@/pages/course.scores.page'
 import { CourseSubmissionsPage } from '@/pages/course.submissions.page'
+import { LearnerProgressDetailPage } from '@/pages/learner.progress.detail.page'
 import { AdminUserFormPage } from '@/pages/admin.user.form.page'
 import { VocabularyImportPage } from '@/pages/vocabulary.import.page'
 import { VocabularyFormPage } from '@/pages/vocabulary.form.page'
@@ -99,6 +100,7 @@ export function PageRouter() {
       activeNavItem === 'roadmaps-list' ||
       activeNavItem.startsWith('course-scores:') ||
       activeNavItem.startsWith('course-submissions:') ||
+      activeNavItem.startsWith('learner-progress:') ||
       activeNavItem.startsWith('course-edit:') ||
       activeNavItem.startsWith('course-form:')
     ) {
@@ -167,6 +169,13 @@ export function PageRouter() {
   if (activeNavItem.startsWith('course-submissions:')) {
     const courseId = activeNavItem.split(':')[1]
     return <CourseSubmissionsPage courseId={courseId} />
+  }
+
+  if (activeNavItem.startsWith('learner-progress:')) {
+    const parts = activeNavItem.split(':')
+    const courseId = parts[1]
+    const userId = parts[2]
+    return <LearnerProgressDetailPage courseId={courseId} userId={userId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || DashboardPage

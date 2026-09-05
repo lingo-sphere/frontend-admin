@@ -3,7 +3,7 @@
  * @description Course learners management page featuring progress table, submissions review, and analytics
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   GraduationCap,
@@ -13,10 +13,10 @@ import {
 import { CourseAnalyticsTab } from '@/components/learners/course.analytics.tab'
 import { LearnerSubmissionsTab } from '@/components/learners/learner.submissions.tab'
 import { LearnerSubmissionReviewModal } from '@/components/learners/learner.submission.review.modal'
-import { StudentProgressDetailModal } from '@/components/learners/student.progress.detail.modal'
 import { CourseLearnersStatsBar } from '@/components/learners/course.learners.stats.bar'
 import { CourseProgressTableTab } from '@/components/learners/course.progress.table.tab'
 import { createCourseProgressColumns } from '@/components/learners/course.progress.columns'
+import { useAdminStore } from '@/store/admin.store'
 import {
   useCourseLearnersData,
 } from '@/hooks/use.course.learners.data'
@@ -25,6 +25,7 @@ import type { StudentProgressItem, SkillSubmissionItem } from '@/services/progre
 export function CourseLearnersPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
   const {
     isTeacher,
@@ -48,7 +49,6 @@ export function CourseLearnersPage() {
   const [progressPageSize, setProgressPageSize] = useState<number>(10)
   const [progressSortKey, setProgressSortKey] = useState<string | null>(null)
   const [progressSortOrder, setProgressSortOrder] = useState<'asc' | 'desc' | null>(null)
-  const [selectedStudentDetail, setSelectedStudentDetail] = useState<StudentProgressItem | null>(null)
   const [selectedReviewSub, setSelectedReviewSub] = useState<SkillSubmissionItem | null>(null)
 
   useEffect(() => {
@@ -144,14 +144,22 @@ export function CourseLearnersPage() {
     setProgressSortOrder(order)
   }
 
+  const handleSelectStudentDetail = useCallback(
+    (st: StudentProgressItem) => {
+      const targetCourseId = st.course_id || (selectedCourseId !== 'ALL' ? selectedCourseId : 'all')
+      setActiveNavItem(`learner-progress:${targetCourseId}:${st.user_id}`)
+    },
+    [selectedCourseId, setActiveNavItem]
+  )
+
   const progressColumns = useMemo(
     () =>
       createCourseProgressColumns({
         isVi,
         usersMap,
-        onSelectStudentDetail: setSelectedStudentDetail,
+        onSelectStudentDetail: handleSelectStudentDetail,
       }),
-    [isVi, usersMap]
+    [isVi, usersMap, handleSelectStudentDetail]
   )
 
   return (
@@ -267,15 +275,6 @@ export function CourseLearnersPage() {
           submission={selectedReviewSub}
           onClose={() => setSelectedReviewSub(null)}
           onSuccess={fetchSubmissions}
-        />
-      )}
-
-      {selectedStudentDetail && (
-        <StudentProgressDetailModal
-          student={selectedStudentDetail}
-          submissions={submissions}
-          onOpenReview={(sub) => setSelectedReviewSub(sub)}
-          onClose={() => setSelectedStudentDetail(null)}
         />
       )}
     </div>
