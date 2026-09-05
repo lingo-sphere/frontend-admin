@@ -21,6 +21,14 @@ export function navItemToPath(navItem: string): string {
   if (navItem === 'course-exams') return '/course-exams'
   if (navItem === 'roadmaps' || navItem === 'roadmaps-list') return '/courses/roadmaps'
   if (navItem === 'course-create') return '/courses/create'
+  if (navItem.startsWith('course-scores:')) {
+    const id = navItem.split(':')[1]
+    return `/courses/${id}/scores`
+  }
+  if (navItem.startsWith('course-submissions:')) {
+    const id = navItem.split(':')[1]
+    return `/courses/${id}/submissions`
+  }
   if (navItem.startsWith('course-edit:') || navItem.startsWith('course-form:')) {
     const id = navItem.split(':')[1]
     return `/courses/${id}/edit`
@@ -72,6 +80,14 @@ export function pathToNavItem(pathname: string): string {
   if (pathname === '/courses/exams' || pathname === '/course-exams') return 'course-exams'
   if (pathname === '/courses/roadmaps' || pathname === '/roadmaps') return 'roadmaps'
   if (pathname === '/courses/create') return 'course-create'
+  if (pathname.startsWith('/courses/') && pathname.endsWith('/scores')) {
+    const id = pathname.replace('/courses/', '').replace('/scores', '')
+    return `course-scores:${id}`
+  }
+  if (pathname.startsWith('/courses/') && pathname.endsWith('/submissions')) {
+    const id = pathname.replace('/courses/', '').replace('/submissions', '')
+    return `course-submissions:${id}`
+  }
   if (pathname.startsWith('/courses/') && pathname.endsWith('/edit')) {
     const id = pathname.replace('/courses/', '').replace('/edit', '')
     return `course-edit:${id}`

@@ -25,6 +25,8 @@ import { NotificationsPage } from '@/pages/notifications.page'
 import { SettingsPage } from '@/pages/settings.page'
 import { UserProfilePage } from '@/pages/user.profile.page'
 import { CourseFormPage } from '@/pages/course.form.page'
+import { CourseScoresPage } from '@/pages/course.scores.page'
+import { CourseSubmissionsPage } from '@/pages/course.submissions.page'
 import { AdminUserFormPage } from '@/pages/admin.user.form.page'
 import { VocabularyImportPage } from '@/pages/vocabulary.import.page'
 import { VocabularyFormPage } from '@/pages/vocabulary.form.page'
@@ -95,6 +97,8 @@ export function PageRouter() {
       activeNavItem === 'course-exams' ||
       activeNavItem === 'roadmaps' ||
       activeNavItem === 'roadmaps-list' ||
+      activeNavItem.startsWith('course-scores:') ||
+      activeNavItem.startsWith('course-submissions:') ||
       activeNavItem.startsWith('course-edit:') ||
       activeNavItem.startsWith('course-form:')
     ) {
@@ -153,6 +157,16 @@ export function PageRouter() {
   if (activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
     const courseId = activeNavItem.split(':')[1]
     return <CourseFormPage editCourseId={courseId} />
+  }
+
+  if (activeNavItem.startsWith('course-scores:')) {
+    const courseId = activeNavItem.split(':')[1]
+    return <CourseScoresPage courseId={courseId} />
+  }
+
+  if (activeNavItem.startsWith('course-submissions:')) {
+    const courseId = activeNavItem.split(':')[1]
+    return <CourseSubmissionsPage courseId={courseId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || DashboardPage

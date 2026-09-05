@@ -20,8 +20,6 @@ import { CourseStatsOverview } from '@/components/courses/course.stats.overview'
 import { CourseFilterBar } from '@/components/courses/course.filter.bar'
 import { CourseGridCard } from '@/components/courses/course.grid.card'
 import { getCourseColumns } from '@/components/courses/course.table.columns'
-import { CourseSubmissionsModal } from '@/components/courses/course.submissions.modal'
-import { CourseStudentScoresModal } from '@/components/courses/course.student.scores.modal'
 import type { FilterCategory, FilterLevel, FilterStatus } from '@/helpers/course.helper'
 
 export function CoursesPage() {
@@ -37,8 +35,6 @@ export function CoursesPage() {
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
-  const [selectedSubmissionsCourse, setSelectedSubmissionsCourse] = useState<Course | null>(null)
-  const [selectedScoresCourse, setSelectedScoresCourse] = useState<Course | null>(null)
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
@@ -184,10 +180,10 @@ export function CoursesPage() {
       canDelete: can('DELETE', '/courses/:id'),
       onEdit: handleEditCourse,
       onDelete: handleDeleteCourse,
-      onViewSubmissions: (course) => setSelectedSubmissionsCourse(course),
-      onViewStudentScores: (course) => setSelectedScoresCourse(course),
+      onViewSubmissions: (course) => setActiveNavItem(`course-submissions:${course.id}`),
+      onViewStudentScores: (course) => setActiveNavItem(`course-scores:${course.id}`),
     })
-  }, [isVi, can])
+  }, [isVi, can, setActiveNavItem])
 
   return (
     <div className="space-y-6">
@@ -214,7 +210,8 @@ export function CoursesPage() {
             canDelete={can('DELETE', '/courses/:id')}
             onEdit={handleEditCourse}
             onDelete={handleDeleteCourse}
-            onViewSubmissions={(c) => setSelectedSubmissionsCourse(c)}
+            onViewSubmissions={(c) => setActiveNavItem(`course-submissions:${c.id}`)}
+            onViewScores={(c) => setActiveNavItem(`course-scores:${c.id}`)}
           />
         )}
         sortKey={sortKey}
@@ -282,24 +279,6 @@ export function CoursesPage() {
           },
         }}
       />
-
-      {selectedSubmissionsCourse && (
-        <CourseSubmissionsModal
-          isOpen={Boolean(selectedSubmissionsCourse)}
-          onClose={() => setSelectedSubmissionsCourse(null)}
-          courseId={selectedSubmissionsCourse.id}
-          courseTitle={selectedSubmissionsCourse.title}
-        />
-      )}
-
-      {selectedScoresCourse && (
-        <CourseStudentScoresModal
-          isOpen={Boolean(selectedScoresCourse)}
-          onClose={() => setSelectedScoresCourse(null)}
-          courseId={selectedScoresCourse.id}
-          courseTitle={selectedScoresCourse.title}
-        />
-      )}
     </div>
   )
 }
