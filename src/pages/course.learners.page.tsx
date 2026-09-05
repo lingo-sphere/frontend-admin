@@ -27,8 +27,10 @@ import {
   UserCheck,
   BarChart3,
   ExternalLink,
+  TrendingUp,
 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/data.table'
+import { CourseAnalyticsTab } from '@/components/learners/course.analytics.tab'
 import { courseService } from '@/services/course.service'
 import {
   progressService,
@@ -60,7 +62,7 @@ export function CourseLearnersPage() {
   const isTeacher = currentRole === 'TEACHER' || currentRole === 'INSTRUCTOR' || currentRole === 'GIANG_VIEN'
   const currentUserId = user?.user_id || profile?.user_id || (user as unknown as { _id?: string; id?: string })?._id || ''
 
-  const [activeTab, setActiveTab] = useState<'PROGRESS' | 'SUBMISSIONS'>('PROGRESS')
+  const [activeTab, setActiveTab] = useState<'PROGRESS' | 'SUBMISSIONS' | 'ANALYTICS'>('PROGRESS')
   const [courses, setCourses] = useState<CourseSimple[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
   const [isLoadingCourses, setIsLoadingCourses] = useState<boolean>(false)
@@ -247,7 +249,7 @@ export function CourseLearnersPage() {
 
   useEffect(() => {
     if (courses.length > 0) {
-      if (activeTab === 'PROGRESS') {
+      if (activeTab === 'PROGRESS' || activeTab === 'ANALYTICS') {
         fetchProgress()
       } else {
         fetchSubmissions()
@@ -886,6 +888,19 @@ export function CourseLearnersPage() {
             </span>
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('ANALYTICS')}
+          className={`flex items-center gap-2.5 px-5 py-3 text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'ANALYTICS'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <TrendingUp className="w-4.5 h-4.5" />
+          <span>{isVi ? 'Báo Cáo Phân Tích & Điểm Rơi' : 'Learning Analytics & Retention'}</span>
+        </button>
       </div>
 
       {/* Tab 1: Progress DataTable */}
@@ -1282,6 +1297,18 @@ export function CourseLearnersPage() {
               setSubCurrentPage(1)
             },
           }}
+        />
+      )}
+
+      {/* Tab 3: Learning Analytics & Drop-off Report */}
+      {activeTab === 'ANALYTICS' && (
+        <CourseAnalyticsTab
+          allStudentsProgress={allStudentsProgress}
+          courses={courses}
+          selectedCourseId={selectedCourseId}
+          onSelectCourseId={setSelectedCourseId}
+          isVi={isVi}
+          isTeacher={isTeacher}
         />
       )}
 
