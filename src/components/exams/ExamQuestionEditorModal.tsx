@@ -17,11 +17,16 @@ import {
   BookOpen,
   Archive,
   Loader2,
+  Plus,
+  Mic,
+  PenTool,
+  Download,
+  FolderArchive,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { examAdminService } from '@/services/exam.service'
 import { mediaAdminService } from '@/services/media.service'
-import { ZipExamPackageImporterModal } from '@/components/exams/ZipExamPackageImporterModal'
+import { parseAndUploadZipExam, downloadSampleZip } from '@/components/exams/zipExamHelper'
 import { toast } from '@/store/toast-store'
 import { Popconfirm } from '@/components/common/Popconfirm'
 
@@ -75,11 +80,18 @@ export function ExamQuestionEditorModal({
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
 
-  const [isZipModalOpen, setIsZipModalOpen] = useState<boolean>(false)
+  const [isProcessingZip, setIsProcessingZip] = useState<boolean>(false)
+  const [zipProcessStatus, setZipProcessStatus] = useState<string>('')
+  const [zipProgress, setZipProgress] = useState<{ current: number; total: number } | null>(null)
+  const [isDragOverZip, setIsDragOverZip] = useState<boolean>(false)
+
   const [isSaving, setIsSaving] = useState<boolean>(false)
+  const [uploadingGlobalAudio, setUploadingGlobalAudio] = useState<boolean>(false)
   const [uploadingQuestionAudioIdx, setUploadingQuestionAudioIdx] = useState<number | null>(null)
   const [uploadingQuestionImageIdx, setUploadingQuestionImageIdx] = useState<number | null>(null)
 
+  const zipFileInputRef = useRef<HTMLInputElement>(null)
+  const globalAudioInputRef = useRef<HTMLInputElement>(null)
   const questionAudioInputRef = useRef<HTMLInputElement>(null)
   const questionImageInputRef = useRef<HTMLInputElement>(null)
   const activeQuestionIdxRef = useRef<number | null>(null)
@@ -117,6 +129,11 @@ export function ExamQuestionEditorModal({
   if (!isOpen || !exam) return null
 
   const is4Skills = exam.placement_type === '4SKILLS' || exam.skills_enabled === 'ALL'
+  const isSystemPlacement = Boolean(
+    exam.is_system_placement ||
+    exam.type === 'DIAGNOSTIC_TEST' ||
+    !exam.course_id
+  )
 
   // Filter questions for rendering
   const filteredQuestions = questions.filter((q, index) => {
@@ -137,7 +154,58 @@ export function ExamQuestionEditorModal({
     return matchesFilter && matchesSearch
   })
 
+  // Handlers for Question Editing (dành cho các bài kiểm tra khóa học thêm thủ công)
+  const handleAddQuestion = (partNum: number | string = 5) => {
+    const isSpeaking = partNum === 'speaking'
+    const isWriting = partNum === 'writing'
+    const newQuestion: ExamQuestionItem = {
+      id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      part_number: partNum,
+      question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
+      question_text: isSpeaking
+        ? 'Describe the picture in detail using as much vocabulary as possible.'
+        : isWriting
+        ? 'Write an email responding to the customer request (at least 100 words).'
+        : '',
+      options: isSpeaking || isWriting ? [] : ['', '', '', ''],
+      correct_answer: 'A',
+      explanation: '',
+      prep_time_seconds: isSpeaking ? 45 : undefined,
+      response_time_seconds: isSpeaking ? 60 : undefined,
+      min_words: isWriting ? 100 : undefined,
+    }
 
+    setQuestions((prev) => [...prev, newQuestion])
+    toast.success(isVi ? 'Đã thêm 1 câu hỏi mới!' : 'Added 1 new question!')
+  }
+
+  // Upload Audio for Whole Exam
+  const handleUploadGlobalAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
+      toast.error(isVi ? 'Vui lòng chọn file âm thanh (.mp3, .wav, .m4a)' : 'Please select an audio file (.mp3, .wav)')
+      return
+    }
+
+    setUploadingGlobalAudio(true)
+    try {
+      const res = await mediaAdminService.uploadFile(file, 'exam-audio')
+      const uploadedUrl = res.file_url || res.url || res.public_url
+      if (uploadedUrl) {
+        setGlobalAudioUrl(uploadedUrl)
+        toast.success(isVi ? `Đã tải file nghe đề thi: ${file.name}` : `Uploaded exam audio: ${file.name}`)
+      } else {
+        toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
+      }
+    } catch {
+      toast.error('Lỗi khi tải file nghe lên hệ thống.')
+    } finally {
+      setUploadingGlobalAudio(false)
+      if (globalAudioInputRef.current) globalAudioInputRef.current.value = ''
+    }
+  }
 
   const handleDuplicateQuestion = (index: number) => {
     const target = questions[index]
@@ -230,25 +298,52 @@ export function ExamQuestionEditorModal({
 
 
 
-  // Handle Apply Questions from ZIP Package Modal
-  const handleApplyZipQuestions = (
-    imported: ExamQuestionItem[],
-    mode: 'append' | 'replace' = 'replace',
-    importedAudioUrl?: string
-  ) => {
-    if (mode === 'replace') {
-      setQuestions(imported)
-      toast.success(isVi ? `Đã nạp ${imported.length} câu hỏi từ gói ZIP!` : `Applied ${imported.length} questions from ZIP!`)
-    } else {
-      setQuestions((prev) => [...prev, ...imported])
-      toast.success(isVi ? `Đã thêm nối tiếp ${imported.length} câu hỏi từ gói ZIP!` : `Appended ${imported.length} questions from ZIP!`)
-    }
+  // Handle direct ZIP file selection and processing
+  const handleZipFileSelected = async (file: File) => {
+    if (!file) return
+    setIsProcessingZip(true)
+    setZipProcessStatus(isVi ? 'Đang đọc và giải nén file ZIP...' : 'Reading ZIP file...')
+    setZipProgress(null)
 
-    if (importedAudioUrl && !globalAudioUrl) {
-      setGlobalAudioUrl(importedAudioUrl)
-    }
+    try {
+      const result = await parseAndUploadZipExam(file, isVi, (status, current, total) => {
+        setZipProcessStatus(status)
+        if (current !== undefined && total !== undefined) {
+          setZipProgress({ current, total })
+        }
+      })
 
-    setIsZipModalOpen(false)
+      setQuestions(result.questions)
+      if (result.globalAudioUrl && !globalAudioUrl) {
+        setGlobalAudioUrl(result.globalAudioUrl)
+      }
+
+      toast.success(
+        isVi
+          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh) từ file ZIP!`
+          : `Successfully imported ${result.questions.length} questions from ZIP!`
+      )
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi xử lý file ZIP.'
+      toast.error(msg)
+    } finally {
+      setIsProcessingZip(false)
+      setZipProcessStatus('')
+      setZipProgress(null)
+      if (zipFileInputRef.current) zipFileInputRef.current.value = ''
+    }
+  }
+
+  const handleZipInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleZipFileSelected(file)
+  }
+
+  const handleDropZip = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragOverZip(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleZipFileSelected(file)
   }
 
   // Save All Questions
@@ -295,6 +390,20 @@ export function ExamQuestionEditorModal({
       <div className="flex flex-col w-full max-w-5xl max-h-[94vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
 
         <input
+          ref={zipFileInputRef}
+          type="file"
+          accept=".zip,application/zip"
+          className="hidden"
+          onChange={handleZipInputChange}
+        />
+        <input
+          ref={globalAudioInputRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={handleUploadGlobalAudio}
+        />
+        <input
           ref={questionAudioInputRef}
           type="file"
           accept="audio/*"
@@ -323,6 +432,15 @@ export function ExamQuestionEditorModal({
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                   {questions.length} câu hỏi
                 </span>
+                {isSystemPlacement ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    {isVi ? 'Đầu vào hệ thống (ZIP)' : 'System Placement (ZIP)'}
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    {isVi ? 'Bài thi khóa học' : 'Course Exam'}
+                  </span>
+                )}
                 {is4Skills ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
                     4 Kỹ năng (LRSW)
@@ -384,17 +502,92 @@ export function ExamQuestionEditorModal({
             </select>
           </div>
 
-          {/* Action Buttons - Chỉ duy nhất Import Gói ZIP */}
-          <div className="flex items-center gap-2 justify-end">
-            <button
-              type="button"
-              onClick={() => setIsZipModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-xs hover:shadow-purple-500/20 transition-all cursor-pointer"
-              title={isVi ? 'Import toàn bộ đề thi (câu hỏi, audio và ảnh) từ 1 file ZIP duy nhất' : 'Import exam package via ZIP (Excel + Audios + Images)'}
-            >
-              <Archive className="w-4 h-4" />
-              <span>{isVi ? 'Import Gói ZIP (Excel + Media)' : 'Import ZIP Package'}</span>
-            </button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 justify-end flex-wrap">
+            {isSystemPlacement ? (
+              /* Chỉ duy nhất bài test đầu vào hệ thống mới cho import Gói ZIP - Mở file picker trực tiếp */
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadSampleZip(isVi)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                  title={isVi ? 'Tải xuống gói ZIP đề thi mẫu chuẩn' : 'Download sample ZIP'}
+                >
+                  <Download className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>{isVi ? 'Tải ZIP mẫu' : 'Sample ZIP'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isProcessingZip}
+                  onClick={() => zipFileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold shadow-xs hover:shadow-purple-500/20 transition-all cursor-pointer"
+                  title={isVi ? 'Mở cửa sổ chọn file ZIP đề thi' : 'Choose ZIP file'}
+                >
+                  {isProcessingZip ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{isVi ? 'Đang nạp ZIP...' : 'Importing...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="w-4 h-4" />
+                      <span>{isVi ? 'Import Gói ZIP (Excel + Media)' : 'Import ZIP Package'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              /* Các bài thi khóa học (Challenge, Final...) không cho import ZIP, cho thêm câu hỏi và gắn audio */
+              <>
+                <button
+                  type="button"
+                  onClick={() => globalAudioInputRef.current?.click()}
+                  disabled={uploadingGlobalAudio}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                  title={isVi ? 'Upload file nghe chung cho toàn đề thi' : 'Upload global audio file'}
+                >
+                  <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>
+                    {uploadingGlobalAudio
+                      ? (isVi ? 'Đang tải...' : 'Uploading...')
+                      : globalAudioUrl
+                      ? (isVi ? 'Đổi Audio Đề' : 'Change Audio')
+                      : (isVi ? 'Gắn Audio Đề' : 'Set Audio')}
+                  </span>
+                </button>
+
+                {is4Skills && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleAddQuestion('speaking')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-700 dark:text-teal-300 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      <Mic className="w-3.5 h-3.5 text-teal-600" />
+                      <span>+ {isVi ? 'Nói' : 'Speaking'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddQuestion('writing')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      <PenTool className="w-3.5 h-3.5 text-blue-600" />
+                      <span>+ {isVi ? 'Viết' : 'Writing'}</span>
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleAddQuestion(partFilter !== 'ALL' && !isNaN(Number(partFilter)) ? Number(partFilter) : 5)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isVi ? 'Thêm câu hỏi' : 'Add Question'}</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -420,31 +613,104 @@ export function ExamQuestionEditorModal({
         {/* Main Questions List Container */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
           {questions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                <Archive className="w-7 h-7" />
+            isProcessingZip ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 space-y-4 animate-pulse">
+                <div className="w-16 h-16 rounded-3xl bg-purple-600/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+                <div className="max-w-md space-y-1">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {zipProcessStatus || (isVi ? 'Đang giải nén và nạp câu hỏi từ file ZIP...' : 'Processing ZIP package...')}
+                  </h4>
+                  {zipProgress && (
+                    <p className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                      {zipProgress.current} / {zipProgress.total} file
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {isVi
+                      ? 'Hệ thống đang tự động trích xuất bảng Excel và tải lên file âm thanh, hình ảnh. Vui lòng chờ...'
+                      : 'Unpacking spreadsheet and uploading media assets...'}
+                  </p>
+                </div>
               </div>
-              <div className="max-w-md space-y-1">
-                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  {isVi ? 'Đề thi hiện chưa có câu hỏi nào' : 'No questions in this exam yet'}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isVi
-                    ? 'Vui lòng import gói đề thi trọn gói (.zip) chứa file Excel câu hỏi cùng toàn bộ file âm thanh và hình ảnh đính kèm.'
-                    : 'Please import an exam package (.zip) containing the question Excel spreadsheet along with all audio and image assets.'}
-                </p>
+            ) : isSystemPlacement ? (
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setIsDragOverZip(true)
+                }}
+                onDragLeave={() => setIsDragOverZip(false)}
+                onDrop={handleDropZip}
+                className={`flex flex-col items-center justify-center py-14 px-6 text-center rounded-3xl border-2 border-dashed transition-all bg-white dark:bg-slate-900 space-y-4 ${
+                  isDragOverZip
+                    ? 'border-purple-500 bg-purple-50/40 dark:bg-purple-950/30 scale-[1.01]'
+                    : 'border-slate-200 dark:border-slate-800'
+                }`}
+              >
+                <div className="w-16 h-16 rounded-3xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs">
+                  <FolderArchive className="w-8 h-8" />
+                </div>
+
+                <div className="max-w-md space-y-1.5">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {isVi ? 'Kéo thả hoặc chọn file ZIP đề thi' : 'Drag & drop or select Exam ZIP file'}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {isVi
+                      ? 'Gói ZIP gồm file questions.xlsx cùng các file âm thanh (.mp3) và ảnh (.jpg/.png). Nhấn nút bên dưới để chọn file và nạp ngay vào đề thi.'
+                      : 'ZIP archive contains questions.xlsx spreadsheet and audio/image media files.'}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={isProcessingZip}
+                    onClick={() => zipFileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
+                  >
+                    <Archive className="w-4 h-4" />
+                    <span>{isVi ? 'Chọn file ZIP từ máy tính' : 'Choose ZIP File'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => downloadSampleZip(isVi)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span>{isVi ? 'Tải Gói ZIP Mẫu Chuẩn' : 'Download Sample ZIP'}</span>
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsZipModalOpen(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
-                >
-                  <Archive className="w-4 h-4" />
-                  <span>{isVi ? 'Import Gói ZIP (Excel + Audio + Ảnh)' : 'Import ZIP Package'}</span>
-                </button>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <BookOpen className="w-7 h-7" />
+                </div>
+                <div className="max-w-md space-y-1">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {isVi ? 'Đề thi khóa học hiện chưa có câu hỏi nào' : 'No questions in this course exam yet'}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {isVi
+                      ? 'Nhấn nút "Thêm câu hỏi" để bắt đầu soạn câu hỏi cho bài thi này.'
+                      : 'Click "Add Question" to start crafting questions for this exam.'}
+                  </p>
+                </div>
+                <div className="flex items-center justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => handleAddQuestion(partFilter !== 'ALL' && !isNaN(Number(partFilter)) ? Number(partFilter) : 5)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-indigo-500/20"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{isVi ? 'Thêm câu hỏi đầu tiên' : 'Add First Question'}</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )
           ) : (
             filteredQuestions.map((q, filteredIdx) => {
               const actualIdx = questions.findIndex((item) => item.id === q.id)
@@ -761,17 +1027,6 @@ export function ExamQuestionEditorModal({
           </div>
         </div>
       </div>
-
-
-
-      {/* ZIP Exam Package Importer Modal */}
-      <ZipExamPackageImporterModal
-        isOpen={isZipModalOpen}
-        onClose={() => setIsZipModalOpen(false)}
-        onApplyQuestions={handleApplyZipQuestions}
-        examTitle={exam.title || 'Đề thi'}
-        existingCount={questions.length}
-      />
     </div>
   )
 }
