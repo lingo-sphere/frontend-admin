@@ -127,7 +127,7 @@ export function CreateExamModal({
             >
               {isSubmitting
                 ? (isVi ? 'Đang tạo...' : 'Creating...')
-                : (isVi ? 'Tạo Đề Thi' : 'Create Exam')}
+                : (isVi ? 'Tiếp tục: Soạn câu hỏi đề thi ➔' : 'Continue: Compose Questions ➔')}
             </button>
           </div>
         </form>

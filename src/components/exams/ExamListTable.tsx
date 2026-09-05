@@ -24,6 +24,7 @@ interface ExamListTableProps {
   onTypeChange: (val: string) => void
   onTogglePublish: (id: string, current: boolean) => void
   onDeleteExam: (id: string) => Promise<void> | void
+  onManageQuestions?: (exam: ToeicExamItem) => void
 }
 
 export function ExamListTable({
@@ -34,6 +35,7 @@ export function ExamListTable({
   onTypeChange,
   onTogglePublish,
   onDeleteExam,
+  onManageQuestions,
 }: ExamListTableProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -239,10 +241,16 @@ export function ExamListTable({
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="flex items-center gap-1">
-                        <HelpCircle size={13} className="text-slate-400" />
-                        {exam.total_questions} {isVi ? 'câu' : 'questions'}
-                      </span>
+                      {exam.total_questions === 0 || (!exam.questions?.length && exam.total_questions === 0) ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          0 {isVi ? 'câu (Chưa có câu hỏi)' : 'questions (Empty)'}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400">
+                          <HelpCircle size={13} className="text-slate-400" />
+                          {exam.questions?.length ?? exam.total_questions} {isVi ? 'câu' : 'questions'}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
                       {(exam.total_attempts || 0).toLocaleString(isVi ? 'vi-VN' : 'en-US')}
@@ -268,6 +276,17 @@ export function ExamListTable({
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {onManageQuestions && (
+                          <button
+                            type="button"
+                            onClick={() => onManageQuestions(exam)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-colors cursor-pointer"
+                            title={isVi ? 'Soạn / Quản lý câu hỏi' : 'Manage Questions'}
+                          >
+                            <HelpCircle size={13} />
+                            <span className="hidden sm:inline">{isVi ? 'Soạn câu hỏi' : 'Questions'}</span>
+                          </button>
+                        )}
                         <Popconfirm
                           title={isVi ? 'Xóa đề thi này?' : 'Delete this exam?'}
                           description={

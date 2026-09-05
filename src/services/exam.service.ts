@@ -25,6 +25,8 @@ export interface ToeicExamItem {
   skills_enabled?: 'LR' | 'ALL' | 'SW' | string
   placement_type?: '2SKILLS' | '4SKILLS' | string
   created_at?: string
+  questions?: any[]
+  audio_url?: string
 }
 
 export interface CreateExamDto {
@@ -43,6 +45,8 @@ export interface CreateExamDto {
   is_system_placement?: boolean
   skills_enabled?: 'LR' | 'ALL' | 'SW' | string
   placement_type?: '2SKILLS' | '4SKILLS' | string
+  questions?: any[]
+  audio_url?: string
 }
 
 export const examAdminService = {
@@ -75,6 +79,14 @@ export const examAdminService = {
 
   async updateExam(id: string, dto: Partial<CreateExamDto>): Promise<ToeicExamItem> {
     return api.put<ToeicExamItem>(`/exams/${id}`, dto)
+  },
+
+  async saveExamQuestions(examId: string, questions: any[], audioUrl?: string): Promise<ToeicExamItem> {
+    return this.updateExam(examId, {
+      questions,
+      total_questions: questions.length,
+      ...(audioUrl ? { audio_url: audioUrl } : {}),
+    } as any)
   },
 
   async deleteExam(id: string): Promise<{ message: string }> {

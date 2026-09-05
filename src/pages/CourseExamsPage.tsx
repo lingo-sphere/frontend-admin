@@ -24,10 +24,12 @@ import {
   Check,
   AlertCircle,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { Popconfirm } from '@/components/common/Popconfirm'
 import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/services/exam.service'
+import { ExamQuestionEditorModal } from '@/components/exams/ExamQuestionEditorModal'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from '@/store/toast-store'
@@ -77,6 +79,18 @@ export function CourseExamsPage() {
   const [formIsPublished, setFormIsPublished] = useState<boolean>(true)
   const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>('2SKILLS')
   const [isSaving, setIsSaving] = useState<boolean>(false)
+  const [showQuestionsModal, setShowQuestionsModal] = useState<boolean>(false)
+  const [selectedExamForQuestions, setSelectedExamForQuestions] = useState<ToeicExamItem | null>(null)
+
+  const handleExamQuestionsUpdated = (updated: ToeicExamItem) => {
+    const examId = updated.id || updated._id
+    setExams((prev) =>
+      prev.map((e) => ((e.id || e._id) === examId ? { ...e, ...updated } : e))
+    )
+    if (selectedExamForQuestions && (selectedExamForQuestions.id || selectedExamForQuestions._id) === examId) {
+      setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
+    }
+  }
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
@@ -328,7 +342,8 @@ export function CourseExamsPage() {
               : e
           )
         )
-        toast.success('Đã cập nhật bài thi thành công!')
+        setShowModal(false)
+        toast.success(isVi ? 'Đã cập nhật thông tin bài thi thành công!' : 'Exam metadata updated successfully!')
       } else {
         const created = await examAdminService.createExam(payload).catch(() => null)
         const newExam: ToeicExamItem = {
@@ -347,11 +362,18 @@ export function CourseExamsPage() {
           avg_score: 0,
           is_published: formIsPublished,
           created_at: new Date().toISOString(),
+          questions: created?.questions || [],
         }
         setExams((prev) => [newExam, ...prev])
-        toast.success(isSystemPlacement ? 'Đã tạo bài thi đầu vào hệ thống thành công!' : 'Đã tạo bài thi mới thành công!')
+        setShowModal(false)
+        setSelectedExamForQuestions(newExam)
+        setShowQuestionsModal(true)
+        toast.success(
+          isVi
+            ? 'Đã tạo khung bài thi! Mời bạn soạn thảo ngân hàng câu hỏi.'
+            : 'Created exam shell! Opening question bank editor...'
+        )
       }
-      setShowModal(false)
     } catch {
       toast.error('Không thể lưu bài thi. Vui lòng thử lại.')
     } finally {
@@ -473,16 +495,27 @@ export function CourseExamsPage() {
         title: isVi ? 'Số Câu / Điểm Đạt' : 'Questions / Pass',
         align: 'center',
         sortable: true,
-        render: (exam) => (
-          <div className="space-y-0.5 whitespace-nowrap text-center">
-            <span className="font-bold text-indigo-600 dark:text-indigo-400 block whitespace-nowrap">
-              {exam.total_questions || 30} câu
-            </span>
-            <span className="text-[10px] text-slate-400 block whitespace-nowrap">
-              Đạt: ≥ {exam.passing_score ?? 70}%
-            </span>
-          </div>
-        ),
+        render: (exam) => {
+          const qCount = Array.isArray(exam.questions) ? exam.questions.length : (exam.total_questions || 0)
+          const isZero = qCount === 0
+          return (
+            <div className="space-y-0.5 whitespace-nowrap text-center">
+              {isZero ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span>0 câu (Chưa có câu hỏi)</span>
+                </span>
+              ) : (
+                <span className="font-bold text-indigo-600 dark:text-indigo-400 block whitespace-nowrap">
+                  {qCount} câu
+                </span>
+              )}
+              <span className="text-[10px] text-slate-400 block whitespace-nowrap">
+                Đạt: ≥ {exam.passing_score ?? 70}%
+              </span>
+            </div>
+          )
+        },
       },
       {
         key: 'attempts',
@@ -545,8 +578,20 @@ export function CourseExamsPage() {
             <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
               <button
                 type="button"
+                onClick={() => {
+                  setSelectedExamForQuestions(exam)
+                  setShowQuestionsModal(true)
+                }}
+                title={isVi ? 'Soạn / Quản lý câu hỏi đề thi' : 'Manage Question Bank'}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="hidden xl:inline">{isVi ? 'Soạn câu hỏi' : 'Questions'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => handleOpenEditModal(exam)}
-                title="Chỉnh sửa bài thi"
+                title="Chỉnh sửa thông tin bài thi"
                 className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
               >
                 <Edit3 className="w-4 h-4" />
@@ -719,8 +764,19 @@ export function CourseExamsPage() {
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
+                    onClick={() => {
+                      setSelectedExamForQuestions(exam)
+                      setShowQuestionsModal(true)
+                    }}
+                    title={isVi ? 'Soạn câu hỏi đề thi' : 'Manage Question Bank'}
+                    className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleOpenEditModal(exam)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 cursor-pointer"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
@@ -1101,12 +1157,23 @@ export function CourseExamsPage() {
                 onClick={handleSaveExam}
                 className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
               >
-                {isSaving ? 'Đang lưu...' : editingExam ? 'Lưu cập nhật' : 'Tạo bài thi'}
+                {isSaving ? 'Đang lưu...' : editingExam ? 'Lưu cập nhật' : (isVi ? 'Tiếp tục: Soạn câu hỏi đề thi ➔' : 'Continue: Compose Questions ➔')}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Exam Question Bank Editor Modal */}
+      <ExamQuestionEditorModal
+        isOpen={showQuestionsModal}
+        onClose={() => {
+          setShowQuestionsModal(false)
+          setSelectedExamForQuestions(null)
+        }}
+        exam={selectedExamForQuestions}
+        onExamUpdated={handleExamQuestionsUpdated}
+      />
     </div>
   )
 }

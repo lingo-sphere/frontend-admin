@@ -12,6 +12,7 @@ import { toast } from '@/store/toast-store'
 import { ExamStatsOverview } from '@/components/exams/ExamStatsOverview'
 import { ExamListTable } from '@/components/exams/ExamListTable'
 import { CreateExamModal } from '@/components/exams/CreateExamModal'
+import { ExamQuestionEditorModal } from '@/components/exams/ExamQuestionEditorModal'
 
 export function ExamsPage() {
   const { i18n } = useTranslation()
@@ -22,6 +23,18 @@ export function ExamsPage() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedType, setSelectedType] = useState<string>('ALL')
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
+  const [showQuestionsModal, setShowQuestionsModal] = useState<boolean>(false)
+  const [selectedExamForQuestions, setSelectedExamForQuestions] = useState<ToeicExamItem | null>(null)
+
+  const handleExamQuestionsUpdated = (updated: ToeicExamItem) => {
+    const examId = updated.id || updated._id
+    setExams((prev) =>
+      prev.map((e) => ((e.id || e._id) === examId ? { ...e, ...updated } : e))
+    )
+    if (selectedExamForQuestions && (selectedExamForQuestions.id || selectedExamForQuestions._id) === examId) {
+      setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
+    }
+  }
 
   const fetchExams = useCallback(async () => {
     setIsLoading(true)
@@ -93,11 +106,26 @@ export function ExamsPage() {
         duration_minutes: duration,
         is_published: true,
       })
-      if (created) {
-        setExams((prev) => [created, ...prev])
+      const examItem = created || {
+        id: `exam_${Date.now()}`,
+        title,
+        type: type as ToeicExamItem['type'],
+        duration_minutes: duration,
+        total_questions: type === 'FULL_TEST' ? 200 : 50,
+        total_attempts: 0,
+        avg_score: 0,
+        is_published: true,
+        created_at: new Date().toISOString().split('T')[0],
       }
+      setExams((prev) => [examItem, ...prev])
       setShowAddModal(false)
-      toast.success(isVi ? 'Thêm mới đề thi TOEIC thành công!' : 'Added new TOEIC exam successfully!')
+      setSelectedExamForQuestions(examItem)
+      setShowQuestionsModal(true)
+      toast.success(
+        isVi
+          ? 'Đã tạo khung đề thi! Chuyển sang bước soạn câu hỏi...'
+          : 'Created exam shell! Opening question bank editor...'
+      )
     } catch {
       const fallbackExam: ToeicExamItem = {
         id: `exam_${Date.now()}`,
@@ -112,7 +140,13 @@ export function ExamsPage() {
       }
       setExams((prev) => [fallbackExam, ...prev])
       setShowAddModal(false)
-      toast.success(isVi ? 'Đã tạo đề thi mới (Local)!' : 'Created new exam (Local)!')
+      setSelectedExamForQuestions(fallbackExam)
+      setShowQuestionsModal(true)
+      toast.success(
+        isVi
+          ? 'Đã tạo đề thi mới (Local)! Mời bạn soạn câu hỏi.'
+          : 'Created new exam (Local)! Opening question editor.'
+      )
     }
   }
 
@@ -148,10 +182,10 @@ export function ExamsPage() {
         </div>
       </div>
 
-      {}
+      {/* Overview Cards */}
       <ExamStatsOverview stats={stats} />
 
-      {}
+      {/* Main Table */}
       <ExamListTable
         exams={exams}
         searchQuery={searchQuery}
@@ -160,13 +194,28 @@ export function ExamsPage() {
         onTypeChange={setSelectedType}
         onTogglePublish={handleTogglePublish}
         onDeleteExam={handleDeleteExam}
+        onManageQuestions={(exam) => {
+          setSelectedExamForQuestions(exam)
+          setShowQuestionsModal(true)
+        }}
       />
 
-      {}
+      {/* Create Exam Modal */}
       <CreateExamModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreateExam}
+      />
+
+      {/* Exam Question Bank Editor Modal */}
+      <ExamQuestionEditorModal
+        isOpen={showQuestionsModal}
+        onClose={() => {
+          setShowQuestionsModal(false)
+          setSelectedExamForQuestions(null)
+        }}
+        exam={selectedExamForQuestions}
+        onExamUpdated={handleExamQuestionsUpdated}
       />
     </div>
   )
