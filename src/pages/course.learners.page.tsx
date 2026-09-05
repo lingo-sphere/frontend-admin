@@ -8,23 +8,18 @@ import { useTranslation } from 'react-i18next'
 import {
   GraduationCap,
   FileCheck2,
-  Search,
-  RotateCcw,
-  BookOpen,
-  Users,
-  Trophy,
-  Clock,
-  Zap,
-  ShieldCheck,
-  UserCheck,
-  BarChart3,
   TrendingUp,
+  BookOpen,
+  BarChart3,
+  Zap,
 } from 'lucide-react'
-import { DataTable, type DataTableColumn } from '@/components/common/data.table'
+import type { DataTableColumn } from '@/components/common/data.table'
 import { CourseAnalyticsTab } from '@/components/learners/course.analytics.tab'
 import { LearnerSubmissionsTab } from '@/components/learners/learner.submissions.tab'
 import { LearnerSubmissionReviewModal } from '@/components/learners/learner.submission.review.modal'
 import { StudentProgressDetailModal } from '@/components/learners/student.progress.detail.modal'
+import { CourseLearnersStatsBar } from '@/components/learners/course.learners.stats.bar'
+import { CourseProgressTableTab } from '@/components/learners/course.progress.table.tab'
 import { courseService } from '@/services/course.service'
 import {
   progressService,
@@ -57,7 +52,7 @@ export function CourseLearnersPage() {
   const [activeTab, setActiveTab] = useState<'PROGRESS' | 'SUBMISSIONS' | 'ANALYTICS'>('PROGRESS')
   const [courses, setCourses] = useState<CourseSimple[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
-  const [isLoadingCourses, setIsLoadingCourses] = useState<boolean>(false)
+  const [, setIsLoadingCourses] = useState<boolean>(false)
 
   const [allStudentsProgress, setAllStudentsProgress] = useState<StudentProgressItem[]>([])
   const [usersMap, setUsersMap] = useState<Map<string, UserProfile>>(new Map())
@@ -356,6 +351,11 @@ export function CourseLearnersPage() {
     setProgressCurrentPage(1)
   }
 
+  const handleSort = (key: string, order: 'asc' | 'desc' | null) => {
+    setProgressSortKey(order ? key : null)
+    setProgressSortOrder(order)
+  }
+
   const progressColumns: DataTableColumn<StudentProgressItem>[] = useMemo(
     () => [
       {
@@ -533,247 +533,86 @@ export function CourseLearnersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {isVi ? 'Tổng Học Viên' : 'Total Students'}
-            </span>
-            <span className="text-xl font-black text-slate-900 dark:text-slate-100">
-              {stats.totalStudents}
-            </span>
-          </div>
-        </div>
+      <CourseLearnersStatsBar
+        isVi={isVi}
+        totalStudents={stats.totalStudents}
+        avgProgress={stats.avgProgress}
+        totalSubmissions={stats.totalSubmissions}
+        pendingReviews={stats.pendingReviews}
+      />
 
-        <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <Trophy className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {isVi ? 'Tiến Độ Trung Bình' : 'Avg Progress'}
-            </span>
-            <span className="text-xl font-black text-slate-900 dark:text-slate-100">
-              {stats.avgProgress}%
-            </span>
-          </div>
-        </div>
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('PROGRESS')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'PROGRESS'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4" />
+            <span>{isVi ? 'Bảng Điểm & Tiến Độ Học Tập' : 'Learner Progress Table'}</span>
+          </button>
 
-        <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
-            <FileCheck2 className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {isVi ? 'Bài Nộp Kỹ Năng' : 'Skill Submissions'}
-            </span>
-            <span className="text-xl font-black text-slate-900 dark:text-slate-100">
-              {stats.totalSubmissions}
-            </span>
-          </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('SUBMISSIONS')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+              activeTab === 'SUBMISSIONS'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <FileCheck2 className="w-4 h-4" />
+            <span>{isVi ? 'Chấm Điểm & Phúc Khảo Bài Nộp' : 'Speaking & Writing Submissions'}</span>
+            {stats.pendingReviews > 0 && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 absolute top-1.5 right-1.5 animate-pulse" />
+            )}
+          </button>
 
-        <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {isVi ? 'Chờ Giáo Viên Chấm' : 'Pending Review'}
-            </span>
-            <span className="text-xl font-black text-amber-600 dark:text-amber-400">
-              {stats.pendingReviews}
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('ANALYTICS')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'ANALYTICS'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>{isVi ? 'Phân Tích Tăng Trưởng & Insights' : 'Course Analytics & Insights'}</span>
+          </button>
         </div>
       </div>
 
-      
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab('PROGRESS')}
-          className={`flex items-center gap-2.5 px-5 py-3 text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'PROGRESS'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <GraduationCap className="w-4.5 h-4.5" />
-          <span>{isVi ? 'Bảng Điểm & Tiến Độ Học Viên' : 'Scores & Learning Progress'}</span>
-          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            {stats.totalStudents}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('SUBMISSIONS')}
-          className={`flex items-center gap-2.5 px-5 py-3 text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'SUBMISSIONS'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <FileCheck2 className="w-4.5 h-4.5" />
-          <span>{isVi ? 'Phúc Khảo & Chấm Bài Nộp Kỹ Năng' : 'Speaking & Writing Review'}</span>
-          {stats.pendingReviews > 0 ? (
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white animate-pulse">
-              {stats.pendingReviews}
-            </span>
-          ) : (
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              {stats.totalSubmissions}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('ANALYTICS')}
-          className={`flex items-center gap-2.5 px-5 py-3 text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'ANALYTICS'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <TrendingUp className="w-4.5 h-4.5" />
-          <span>{isVi ? 'Báo Cáo Phân Tích & Điểm Rơi' : 'Learning Analytics & Retention'}</span>
-        </button>
-      </div>
-
-      
       {activeTab === 'PROGRESS' && (
-        <DataTable<StudentProgressItem>
-          title={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <span>{isVi ? 'Bảng Điểm & Tiến Độ Học Viên Khóa Học' : 'Student Scores & Learning Progress'}</span>
-              {isTeacher ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  <UserCheck className="w-3.5 h-3.5" />
-                  {isVi ? 'Giảng viên' : 'Teacher Mode'}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {isVi ? 'Quản trị viên' : 'Admin Mode'}
-                </span>
-              )}
-            </div>
-          }
-          subtitle={
-            isVi
-              ? 'Theo dõi khóa học đang tham gia, tiến trình bài học, điểm đánh giá đầu vào Pre-test, bài kiểm tra các chương và kết khóa'
-              : 'Track enrolled course, lesson progress, Pre-test baselines, chapter tests, and final exam performance'
-          }
-          isLoading={isLoadingProgress}
-          columns={progressColumns}
-          data={paginatedStudents}
-          rowKey={(st) => `${st.course_id || 'c'}_${st.user_id}`}
-          sortKey={progressSortKey}
-          sortOrder={progressSortOrder}
-          onSortChange={(k, o) => {
-            setProgressSortKey(k)
-            setProgressSortOrder(o)
-            setProgressCurrentPage(1)
-          }}
+        <CourseProgressTableTab
+          isVi={isVi}
+          courses={courses}
+          selectedCourseId={selectedCourseId}
+          onSelectCourseId={setSelectedCourseId}
+          progressSearch={progressSearch}
+          onProgressSearchChange={setProgressSearch}
+          progressStatusFilter={progressStatusFilter}
+          onProgressStatusFilterChange={setProgressStatusFilter}
           onResetFilters={handleResetProgressFilters}
-          extraActions={
-            <>
-              <div className="flex items-center gap-2 min-w-[220px]">
-                <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-                <select
-                  value={selectedCourseId}
-                  onChange={(e) => {
-                    setSelectedCourseId(e.target.value)
-                    setProgressCurrentPage(1)
-                  }}
-                  disabled={isLoadingCourses || courses.length === 0}
-                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-                >
-                  <option value="ALL">
-                    {isTeacher
-                      ? `Tất cả khóa học của tôi (${courses.length})`
-                      : `Tất cả khóa học (${courses.length})`}
-                  </option>
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={fetchProgress}
-                title="Làm mới dữ liệu"
-                className="flex items-center justify-center p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
-              >
-                <RotateCcw className={`w-4 h-4 ${isLoadingProgress ? 'animate-spin text-indigo-500' : ''}`} />
-              </button>
-            </>
-          }
-          filterSlot={
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={progressSearch}
-                  onChange={(e) => {
-                    setProgressSearch(e.target.value)
-                    setProgressCurrentPage(1)
-                  }}
-                  placeholder={isVi ? 'Tìm học viên theo tên, email, khóa học, mã ID...' : 'Search by name, email, course, ID...'}
-                  className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {[
-                  { id: 'ALL', label: isVi ? 'Tất cả tiến độ' : 'All Progress' },
-                  { id: 'COMPLETED', label: isVi ? 'Đã hoàn thành' : 'Completed' },
-                  { id: 'IN_PROGRESS', label: isVi ? 'Đang học' : 'In Progress' },
-                  { id: 'STARTED', label: isVi ? 'Mới bắt đầu' : 'Started' },
-                ].map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => {
-                      setProgressStatusFilter(f.id as any)
-                      setProgressCurrentPage(1)
-                    }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                      progressStatusFilter === f.id
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          }
-          pagination={{
-            currentPage: progressCurrentPage,
-            pageSize: progressPageSize,
-            totalItems: filteredStudents.length,
-            onPageChange: setProgressCurrentPage,
-            onPageSizeChange: (limit) => {
-              setProgressPageSize(limit)
-              setProgressCurrentPage(1)
-            },
-          }}
+          onRefresh={fetchProgress}
+          isLoadingProgress={isLoadingProgress}
+          filteredStudents={filteredStudents}
+          paginatedStudents={paginatedStudents}
+          progressColumns={progressColumns}
+          progressCurrentPage={progressCurrentPage}
+          progressPageSize={progressPageSize}
+          onPageChange={setProgressCurrentPage}
+          onPageSizeChange={setProgressPageSize}
+          progressSortKey={progressSortKey}
+          progressSortOrder={progressSortOrder}
+          onSort={handleSort}
         />
       )}
 
-      
       {activeTab === 'SUBMISSIONS' && (
         <LearnerSubmissionsTab
           submissions={submissions}
@@ -782,14 +621,13 @@ export function CourseLearnersPage() {
           selectedCourseId={selectedCourseId}
           onSelectCourseId={setSelectedCourseId}
           onRefresh={fetchSubmissions}
-          onOpenReview={(sub) => setSelectedReviewSub(sub)}
+          onOpenReview={(sub: SkillSubmissionItem) => setSelectedReviewSub(sub)}
           pendingReviewsCount={stats.pendingReviews}
           isVi={isVi}
           isTeacher={isTeacher}
         />
       )}
 
-      
       {activeTab === 'ANALYTICS' && (
         <CourseAnalyticsTab
           allStudentsProgress={allStudentsProgress}
@@ -801,20 +639,22 @@ export function CourseLearnersPage() {
         />
       )}
 
-      
-      <LearnerSubmissionReviewModal
-        submission={selectedReviewSub}
-        onClose={() => setSelectedReviewSub(null)}
-        onSuccess={fetchSubmissions}
-      />
+      {selectedReviewSub && (
+        <LearnerSubmissionReviewModal
+          submission={selectedReviewSub}
+          onClose={() => setSelectedReviewSub(null)}
+          onSuccess={fetchSubmissions}
+        />
+      )}
 
-      
-      <StudentProgressDetailModal
-        student={selectedStudentDetail}
-        submissions={submissions}
-        onOpenReview={(sub) => setSelectedReviewSub(sub)}
-        onClose={() => setSelectedStudentDetail(null)}
-      />
+      {selectedStudentDetail && (
+        <StudentProgressDetailModal
+          student={selectedStudentDetail}
+          submissions={submissions}
+          onOpenReview={(sub) => setSelectedReviewSub(sub)}
+          onClose={() => setSelectedStudentDetail(null)}
+        />
+      )}
     </div>
   )
 }
