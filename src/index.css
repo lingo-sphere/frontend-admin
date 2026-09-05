@@ -303,9 +303,13 @@ html[data-theme="light"] .bg-indigo-950\/30 {
 
 
 
-.sidebar-scroll,
-.no-scrollbar {
+.sidebar-scroll {
   overflow-y: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.no-scrollbar {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
@@ -316,3 +320,4 @@ html[data-theme="light"] .bg-indigo-950\/30 {
   width: 0 !important;
   height: 0 !important;
 }
+

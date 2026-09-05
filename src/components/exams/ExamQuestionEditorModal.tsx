@@ -611,7 +611,10 @@ export function ExamQuestionEditorModal({
         )}
 
         {/* Main Questions List Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
+        <div 
+          className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {questions.length === 0 ? (
             isProcessingZip ? (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 space-y-4 animate-pulse">
