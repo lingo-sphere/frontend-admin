@@ -40,6 +40,7 @@ import { userService } from '@/services/user.service'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from '@/store/toast-store'
 import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface CourseSimple {
   id: string
@@ -694,7 +695,12 @@ export function CourseLearnersPage() {
             </span>
 
             {sub.skill === 'SPEAKING' && sub.audio_url && (
-              <audio controls className="w-full h-7 mt-1" src={sub.audio_url} />
+              <audio
+                controls
+                className="w-full h-7 mt-1"
+                src={resolveMediaUrl(sub.audio_url)}
+                preload="metadata"
+              />
             )}
 
             {sub.skill === 'SPEAKING' && sub.whisper_transcript && (
@@ -1085,7 +1091,7 @@ export function CourseLearnersPage() {
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
                         <span>🎧 Bản ghi âm học viên:</span>
                         <a
-                          href={sub.audio_url}
+                          href={resolveMediaUrl(sub.audio_url)}
                           target="_blank"
                           rel="noreferrer"
                           className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 text-[11px]"
@@ -1093,7 +1099,12 @@ export function CourseLearnersPage() {
                           Tải về <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
-                      <audio controls className="w-full h-8" src={sub.audio_url} />
+                      <audio
+                        controls
+                        className="w-full h-8"
+                        src={resolveMediaUrl(sub.audio_url)}
+                        preload="metadata"
+                      />
                     </div>
                   )}
 
@@ -1356,7 +1367,7 @@ export function CourseLearnersPage() {
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
                         <span>🎧 Bản ghi âm bài nói:</span>
                         <a
-                          href={selectedReviewSub.audio_url}
+                          href={resolveMediaUrl(selectedReviewSub.audio_url)}
                           target="_blank"
                           rel="noreferrer"
                           className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 text-[11px]"
@@ -1364,7 +1375,12 @@ export function CourseLearnersPage() {
                           Tải audio gốc <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
-                      <audio controls className="w-full h-9 rounded-lg" src={selectedReviewSub.audio_url} />
+                      <audio
+                        controls
+                        className="w-full h-9 rounded-lg"
+                        src={resolveMediaUrl(selectedReviewSub.audio_url)}
+                        preload="metadata"
+                      />
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 italic">Không tìm thấy tệp ghi âm.</p>
@@ -1753,7 +1769,12 @@ export function CourseLearnersPage() {
                               </div>
 
                               {sub.skill === 'SPEAKING' && sub.audio_url && (
-                                <audio controls className="w-full h-7" src={sub.audio_url} />
+                                <audio
+                                  controls
+                                  className="w-full h-7"
+                                  src={resolveMediaUrl(sub.audio_url)}
+                                  preload="metadata"
+                                />
                               )}
 
                               {sub.skill === 'SPEAKING' && sub.whisper_transcript && (

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { progressService, type SkillSubmissionItem } from '@/services/progress.service'
 import { toast } from '@/store/toast-store'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface CourseSubmissionsModalProps {
   isOpen: boolean
@@ -248,7 +249,12 @@ export function CourseSubmissionsModal({
                           <Headphones className="h-3.5 w-3.5 text-indigo-500" />
                           <span>Bản ghi âm giọng nói của học viên:</span>
                         </div>
-                        <audio controls src={sub.audio_url} className="w-full h-8" />
+                        <audio
+                          controls
+                          src={resolveMediaUrl(sub.audio_url)}
+                          className="w-full h-8"
+                          preload="metadata"
+                        />
                       </div>
                     )}
 
@@ -362,7 +368,12 @@ export function CourseSubmissionsModal({
                         <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
                           <span>🎧 Bản ghi âm bài nói:</span>
                         </div>
-                        <audio controls className="w-full h-9 rounded-lg" src={selectedSubmission.audio_url} />
+                        <audio
+                          controls
+                          className="w-full h-9 rounded-lg"
+                          src={resolveMediaUrl(selectedSubmission.audio_url)}
+                          preload="metadata"
+                        />
                       </div>
                     ) : (
                       <p className="text-xs text-slate-400 italic">Không tìm thấy tệp ghi âm.</p>
