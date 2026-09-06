@@ -1,7 +1,4 @@
-/**
- * @file exam.zip.dropzone.tsx
- * @description Khu vực kéo thả và nạp file ZIP đề thi kèm tài nguyên âm thanh/hình ảnh
- */
+// Khu vuc keo tha va nap file ZIP de thi.
 
 import React from 'react'
 import { FolderArchive, Archive, Download, Loader2 } from 'lucide-react'

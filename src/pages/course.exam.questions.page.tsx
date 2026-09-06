@@ -1,7 +1,4 @@
-/**
- * @file course.exam.questions.page.tsx
- * @description Trang studio hợp nhất cấu hình bài thi và biên soạn ngân hàng câu hỏi toàn diện
- */
+// Trang studio hop nhat cau hinh bai thi va bien soan ngan hang cau hoi toan dien.
 
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -488,7 +485,7 @@ function CourseExamQuestionsEditor({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 ${!isSystemPlacement ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-4`}>
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   <div className="flex items-center gap-1.5">
@@ -506,22 +503,24 @@ function CourseExamQuestionsEditor({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                    <span>{isVi ? 'Điểm chuẩn đạt:' : 'Passing Score:'}</span>
-                  </div>
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={990}
-                  value={formPassingScore}
-                  onChange={(e) => setFormPassingScore(Number(e.target.value) || 0)}
-                  className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
+              {!isSystemPlacement && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                      <span>{isVi ? 'Điểm chuẩn đạt:' : 'Passing Score:'}</span>
+                    </div>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={990}
+                    value={formPassingScore}
+                    onChange={(e) => setFormPassingScore(Number(e.target.value) || 0)}
+                    className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -603,13 +602,10 @@ function CourseExamQuestionsEditor({
           isSystemPlacement={isSystemPlacement}
           questionsCount={questions.length}
           searchQuery={searchQuery}
-          isProcessingZip={isProcessingZip}
           uploadingGlobalAudio={uploadingGlobalAudio}
           globalAudioUrl={globalAudioUrl}
           onClose={onBack}
           onSearchChange={setSearchQuery}
-          onDownloadSampleZip={() => downloadSampleZip(isVi)}
-          onOpenZipPicker={() => zipFileInputRef.current?.click()}
           onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
           onAddQuestion={handleAddQuestion}
         />

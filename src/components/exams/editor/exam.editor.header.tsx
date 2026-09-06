@@ -1,13 +1,7 @@
-/**
- * @file exam.editor.header.tsx
- * @description Header và thanh công cụ tìm kiếm, lọc part thi và các nút chức năng trong modal soạn ngân hàng câu hỏi đề thi
- */
+// Header va thanh cong cu tim kiem, them cau hoi cho de thi.
 
 import {
-  Archive,
   BookOpen,
-  Download,
-  Loader2,
   Mic,
   PenTool,
   Plus,
@@ -24,13 +18,10 @@ interface ExamEditorHeaderProps {
   isSystemPlacement: boolean
   questionsCount: number
   searchQuery: string
-  isProcessingZip: boolean
   uploadingGlobalAudio: boolean
   globalAudioUrl: string
   onClose: () => void
   onSearchChange: (val: string) => void
-  onDownloadSampleZip: () => void
-  onOpenZipPicker: () => void
   onOpenGlobalAudioPicker: () => void
   onAddQuestion: (targetSkill?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | string | number) => void
 }
@@ -42,17 +33,13 @@ export function ExamEditorHeader({
   isSystemPlacement,
   questionsCount,
   searchQuery,
-  isProcessingZip,
   uploadingGlobalAudio,
   globalAudioUrl,
   onClose,
   onSearchChange,
-  onDownloadSampleZip,
-  onOpenZipPicker,
   onOpenGlobalAudioPicker,
   onAddQuestion,
 }: ExamEditorHeaderProps) {
-
   return (
     <>
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60">
@@ -117,42 +104,6 @@ export function ExamEditorHeader({
         </div>
 
         <div className="flex items-center gap-2 justify-end flex-wrap">
-          {isSystemPlacement && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onDownloadSampleZip}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                title={isVi ? 'Tải xuống gói ZIP đề thi mẫu chuẩn' : 'Download sample ZIP'}
-              >
-                <Download className="w-3.5 h-3.5 text-indigo-500" />
-                <span>{isVi ? 'Tải ZIP mẫu' : 'Sample ZIP'}</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={isProcessingZip}
-                onClick={onOpenZipPicker}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold shadow-xs hover:shadow-purple-500/20 transition-all cursor-pointer"
-                title={isVi ? 'Mở cửa sổ chọn file ZIP đề thi' : 'Choose ZIP file'}
-              >
-                {isProcessingZip ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{isVi ? 'Đang nạp...' : 'Importing...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Archive className="w-4 h-4" />
-                    <span>
-                      {isVi ? 'Import ZIP' : 'Import ZIP'}
-                    </span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
           <button
             type="button"
             onClick={onOpenGlobalAudioPicker}
