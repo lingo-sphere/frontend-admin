@@ -1,7 +1,4 @@
-/**
- * @file course.final.test.card.tsx
- * @description Course graduation final test card managing questions, Excel import, audio, and Speaking/Writing prompts
- */
+// Thẻ quản lý đề thi tốt nghiệp khóa học.
 
 import { useState } from 'react'
 import {
@@ -13,7 +10,6 @@ import {
 } from 'lucide-react'
 import { ExamQuestionStudioModal } from '@/components/exams/editor/exam.question.studio.modal'
 import type { CourseFormData } from './course.basic.info.tab'
-import { CourseFinalTestAudio } from './course.final.test.audio'
 import { CourseFinalTestSkillsSection } from './course.final.test.skills.section'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
@@ -41,72 +37,64 @@ export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTes
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {isVi
-                ? 'Nạp đề thi tốt nghiệp từ file ZIP (kèm audio & ảnh) hoặc file Excel (.xlsx), đồng thời biên soạn trực quan.'
-                : 'Upload graduation exam from ZIP archive (with media) or Excel file (.xlsx), with realtime card editing.'}
+                ? 'Nạp đề thi tốt nghiệp từ file ZIP (bao gồm toàn bộ câu hỏi, audio và hình ảnh), đồng thời biên soạn trực quan.'
+                : 'Upload graduation exam from ZIP archive (including questions, audio, and images), with visual realtime editing.'}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-200/80 bg-white/90 p-4 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col justify-between space-y-3">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
-                <span>{isVi ? 'Ngân hàng câu hỏi Final Test' : 'Question Bank'}</span>
+      <div className="rounded-xl border border-slate-200/80 bg-white/90 p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+              <span>{isVi ? 'Ngân hàng câu hỏi Final Test' : 'Question Bank'}</span>
+            </span>
+            {finalQuestionsCount > 0 ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span>{finalQuestionsCount} {isVi ? 'câu hỏi' : 'questions'}</span>
               </span>
-              {finalQuestionsCount > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>{finalQuestionsCount} {isVi ? 'câu hỏi' : 'questions'}</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
-                  <HelpCircle className="w-3 h-3 text-amber-600" />
-                  <span>{isVi ? 'Chưa có câu hỏi' : 'Empty'}</span>
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              {isVi
-                ? 'Hỗ trợ nạp gói ZIP (kèm file nghe & ảnh) hoặc file Excel (.xlsx), đồng thời xem và chỉnh sửa trực tiếp từng câu hỏi.'
-                : 'Upload ZIP archive (with audio & images) or Excel spreadsheet to bulk import graduation test questions.'}
-            </p>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
+                <HelpCircle className="w-3 h-3 text-amber-600" />
+                <span>{isVi ? 'Chưa có câu hỏi' : 'Empty'}</span>
+              </span>
+            )}
           </div>
-
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={() => setIsStudioModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-            >
-              {finalQuestionsCount > 0 ? (
-                <>
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>
-                    {isVi
-                      ? `Chỉnh Sửa Ngân Hàng Câu Hỏi (${finalQuestionsCount} câu)`
-                      : `Edit Question Bank (${finalQuestionsCount} qs)`}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>
-                    {isVi ? 'Soạn Đề Thi / Nạp ZIP & Excel' : 'Create Exam / Import ZIP'}
-                  </span>
-                </>
-              )}
-            </button>
-          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            {isVi
+              ? 'Hỗ trợ nạp gói ZIP đề thi (bao gồm file câu hỏi Excel và toàn bộ file nghe audio, hình ảnh), đồng thời xem và chỉnh sửa trực tiếp từng câu hỏi.'
+              : 'Upload ZIP archive (including question spreadsheet and audio/image media), with realtime visual editing.'}
+          </p>
         </div>
 
-        <CourseFinalTestAudio
-          formData={formData}
-          onChange={onChange}
-          isVi={isVi}
-        />
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsStudioModalOpen(true)}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+          >
+            {finalQuestionsCount > 0 ? (
+              <>
+                <Eye className="w-3.5 h-3.5" />
+                <span>
+                  {isVi
+                    ? `Chỉnh Sửa Ngân Hàng Câu Hỏi (${finalQuestionsCount} câu)`
+                    : `Edit Question Bank (${finalQuestionsCount} qs)`}
+                </span>
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>
+                  {isVi ? 'Soạn Đề Thi / Nạp ZIP' : 'Create Exam / Import ZIP'}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {formData.category === 'TOEIC_4_SKILLS' && (

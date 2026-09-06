@@ -491,8 +491,8 @@ function CourseExamQuestionsEditor({
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {isVi
-                      ? 'Thi Trắc nghiệm Part 1-7, thời gian chuẩn 60 phút, tối đa 990 điểm.'
-                      : 'Standard Multiple Choice Part 1-7, 60 mins duration.'}
+                      ? 'Thi Trắc nghiệm Đọc và Nghe, thời gian chuẩn 60 phút, tối đa 990 điểm.'
+                      : 'Standard Multiple Reading and Listening, 60 mins duration.'}
                   </p>
                 </div>
 

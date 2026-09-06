@@ -1,4 +1,4 @@
-// Quan ly bai kiem tra danh gia ket thuc tung chuong hoc.
+// Quản lý bài kiểm tra đánh giá kết thúc từng chương học.
 
 import { useState, useRef } from 'react'
 import { Award, Clock } from 'lucide-react'
@@ -7,7 +7,6 @@ import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import type { CourseModule } from './course.basic.info.tab'
 import { ChapterSpeakingWritingCard } from './chapter.speaking.writing.card'
-import { ChapterAssessmentAudio } from './chapter.assessment.audio'
 import { ChapterAssessmentSummary } from './chapter.assessment.summary'
 
 interface ChapterAssessmentCardProps {
@@ -27,11 +26,9 @@ export function ChapterAssessmentCard({
   onUpdateModule,
   onOpenStudio,
 }: ChapterAssessmentCardProps) {
-  const audioInputRef = useRef<HTMLInputElement>(null)
   const speakingFileInputRef = useRef<HTMLInputElement>(null)
   const writingFileInputRef = useRef<HTMLInputElement>(null)
 
-  const [isUploadingAudio, setIsUploadingAudio] = useState(false)
   const [isUploadingSpeakingFile, setIsUploadingSpeakingFile] = useState(false)
   const [isUploadingWritingFile, setIsUploadingWritingFile] = useState(false)
 
@@ -47,82 +44,14 @@ export function ChapterAssessmentCard({
     module.challenge_passing_score ??
     70
 
-  const commonAudioUrl =
-    module.test_audio_url ||
-    module.challenge_audio_url ||
-    module.audio_url ||
-    questionsList.find((q) => q.media_url)?.media_url
-
-  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!/\.(mp3|wav|m4a|ogg)$/i.test(file.name)) {
-      toast.error('Chỉ chấp nhận file âm thanh (.mp3, .wav, .m4a, .ogg)')
-      return
-    }
-
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error('Dung lượng file âm thanh không được vượt quá 50MB')
-      return
-    }
-
-    setIsUploadingAudio(true)
-    try {
-      const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
-      const uploadedUrl = res.file_url || res.url || res.public_url
-      if (uploadedUrl) {
-        const cleanedQuestions = questionsList.map((q) => ({
-          ...q,
-          media_url: undefined,
-        }))
-        onUpdateModule({
-          test_audio_url: uploadedUrl,
-          challenge_audio_url: uploadedUrl,
-          audio_url: uploadedUrl,
-          test_questions: cleanedQuestions,
-          challenge_questions: cleanedQuestions,
-          post_mini_questions: cleanedQuestions,
-        })
-        toast.success(
-          isVi
-            ? `Đã cập nhật file nghe cho bộ đề chương: ${file.name}`
-            : `Updated chapter test audio: ${file.name}`
-        )
-      } else {
-        toast.error('Không nhận được đường dẫn file âm thanh từ máy chủ.')
-      }
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Lỗi khi tải file audio lên máy chủ lưu trữ.'
-      toast.error(msg)
-    } finally {
-      setIsUploadingAudio(false)
-      if (audioInputRef.current) audioInputRef.current.value = ''
-    }
-  }
-
-  const handleRemoveAudio = () => {
-    const updated = questionsList.map((q) => ({
-      ...q,
-      media_url: undefined,
-    }))
-    onUpdateModule({
-      test_audio_url: '',
-      challenge_audio_url: '',
-      audio_url: '',
-      test_questions: updated,
-      challenge_questions: updated,
-      post_mini_questions: updated,
-    })
-    toast.success(
-      isVi ? 'Đã gỡ file nghe khỏi bộ đề thi chương' : 'Removed audio from chapter test'
-    )
-  }
-
   const handleSpeakingFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (!/\.(pdf|doc|docx|txt|mp3|wav|png|jpg|jpeg)$/i.test(file.name)) {
+      toast.error('Định dạng file không được hỗ trợ')
+      return
+    }
 
     if (file.size > 50 * 1024 * 1024) {
       toast.error('Dung lượng file không được vượt quá 50MB')
@@ -155,6 +84,11 @@ export function ChapterAssessmentCard({
   const handleWritingFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (!/\.(pdf|doc|docx|txt|png|jpg|jpeg)$/i.test(file.name)) {
+      toast.error('Định dạng file không được hỗ trợ')
+      return
+    }
 
     if (file.size > 50 * 1024 * 1024) {
       toast.error('Dung lượng file không được vượt quá 50MB')
@@ -259,21 +193,11 @@ export function ChapterAssessmentCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChapterAssessmentSummary
-          questionCount={questionCount}
-          isVi={isVi}
-          onOpenStudio={onOpenStudio}
-        />
-
-        <ChapterAssessmentAudio
-          commonAudioUrl={commonAudioUrl}
-          isVi={isVi}
-          isUploadingAudio={isUploadingAudio}
-          onUploadClick={() => audioInputRef.current?.click()}
-          onRemoveAudio={handleRemoveAudio}
-        />
-      </div>
+      <ChapterAssessmentSummary
+        questionCount={questionCount}
+        isVi={isVi}
+        onOpenStudio={onOpenStudio}
+      />
 
       {is4Skills && (
         <ChapterSpeakingWritingCard
@@ -287,17 +211,6 @@ export function ChapterAssessmentCard({
           onUpdateModule={onUpdateModule}
         />
       )}
-
-      <input
-        ref={audioInputRef}
-        type="file"
-        accept="audio/*,.mp3,.wav,.ogg,.m4a"
-        onChange={handleAudioUpload}
-        onClick={(e) => {
-          ;(e.target as HTMLInputElement).value = ''
-        }}
-        className="hidden"
-      />
 
       <input
         ref={speakingFileInputRef}
