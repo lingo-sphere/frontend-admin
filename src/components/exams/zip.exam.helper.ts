@@ -10,6 +10,7 @@ function normalizeKey(str: string): string {
   return str
     .toLowerCase()
     .trim()
+    .replace(/đ/g, 'd')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]/g, '')
