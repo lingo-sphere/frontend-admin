@@ -25,6 +25,10 @@ export function navItemToPath(navItem: string): string {
     return `/course-learners/${courseId}/students/${userId}`
   }
   if (navItem === 'course-exams') return '/course-exams'
+  if (navItem.startsWith('course-exam-questions:')) {
+    const id = navItem.split(':')[1]
+    return `/course-exams/${id}/questions`
+  }
   if (navItem === 'roadmaps' || navItem === 'roadmaps-list') return '/courses/roadmaps'
   if (navItem === 'course-create') return '/courses/create'
   if (navItem.startsWith('course-scores:')) {
@@ -91,6 +95,10 @@ export function pathToNavItem(pathname: string): string {
     return `learner-progress:${courseId}:${userId}`
   }
   if (pathname === '/courses/exams' || pathname === '/course-exams') return 'course-exams'
+  if (pathname.startsWith('/course-exams/') && pathname.endsWith('/questions')) {
+    const id = pathname.replace('/course-exams/', '').replace('/questions', '')
+    return `course-exam-questions:${id}`
+  }
   if (pathname === '/courses/roadmaps' || pathname === '/roadmaps') return 'roadmaps'
   if (pathname === '/courses/create') return 'course-create'
   if (pathname.startsWith('/courses/') && pathname.endsWith('/scores')) {

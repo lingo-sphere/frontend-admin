@@ -11,6 +11,7 @@ import { AdminUsersPage } from '@/pages/admin.users.page'
 import { CoursesPage } from '@/pages/courses.page'
 import { CourseLearnersPage } from '@/pages/course.learners.page'
 import { CourseExamsPage } from '@/pages/course.exams.page'
+import { CourseExamQuestionsPage } from '@/pages/course.exam.questions.page'
 import { VocabularyPage } from '@/pages/vocabulary.page'
 import { PracticeExercisesPage } from '@/pages/practice.exercises.page'
 import { PracticeListeningPage } from '@/pages/practice.listening.page'
@@ -96,6 +97,7 @@ export function PageRouter() {
       activeNavItem === 'courses-list' ||
       activeNavItem === 'course-learners' ||
       activeNavItem === 'course-exams' ||
+      activeNavItem.startsWith('course-exam-questions:') ||
       activeNavItem === 'roadmaps' ||
       activeNavItem === 'roadmaps-list' ||
       activeNavItem.startsWith('course-scores:') ||
@@ -169,6 +171,11 @@ export function PageRouter() {
   if (activeNavItem.startsWith('course-submissions:')) {
     const courseId = activeNavItem.split(':')[1]
     return <CourseSubmissionsPage courseId={courseId} />
+  }
+
+  if (activeNavItem.startsWith('course-exam-questions:')) {
+    const examId = activeNavItem.split(':')[1]
+    return <CourseExamQuestionsPage examId={examId} />
   }
 
   if (activeNavItem.startsWith('learner-progress:')) {

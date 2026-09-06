@@ -6,7 +6,6 @@
 import { useMemo } from 'react'
 import { UserCheck, ShieldCheck } from 'lucide-react'
 import { DataTable } from '@/components/common/data.table'
-import { ExamQuestionEditorModal } from '@/components/exams/exam.question.editor.modal'
 import { CourseExamStatsOverview } from '@/components/course-exams/course.exam.stats.overview'
 import { CourseExamFilterBar } from '@/components/course-exams/course.exam.filter.bar'
 import { CourseExamHeaderActions } from '@/components/course-exams/course.exam.header.actions'
@@ -14,9 +13,12 @@ import { CourseExamGridCard } from '@/components/course-exams/course.exam.grid.c
 import { CourseExamModal } from '@/components/course-exams/course.exam.modal'
 import { getCourseExamColumns } from '@/components/course-exams/course.exam.table.columns'
 import { useCourseExams } from '@/hooks/use.course.exams'
+import { useAdminStore } from '@/store/admin.store'
 import type { ToeicExamItem } from '@/services/exam.service'
 
 export function CourseExamsPage() {
+  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+
   const {
     isVi,
     isTeacher,
@@ -48,10 +50,6 @@ export function CourseExamsPage() {
     showModal,
     setShowModal,
     editingExam,
-    showQuestionsModal,
-    setShowQuestionsModal,
-    selectedExamForQuestions,
-    setSelectedExamForQuestions,
     loadData,
     handleResetFilters,
     handleOpenCreateModal,
@@ -59,8 +57,12 @@ export function CourseExamsPage() {
     handleDeleteExam,
     handleTogglePublish,
     handleSaveExam,
-    handleExamQuestionsUpdated,
   } = useCourseExams()
+
+  const handleManageQuestions = (exam: ToeicExamItem) => {
+    sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(exam))
+    setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
+  }
 
   const columns = useMemo(
     () =>
@@ -68,21 +70,16 @@ export function CourseExamsPage() {
         isVi,
         onTogglePublish: handleTogglePublish,
         onOpenEdit: handleOpenEditModal,
-        onManageQuestions: (exam) => {
-          setSelectedExamForQuestions(exam)
-          setShowQuestionsModal(true)
-        },
+        onManageQuestions: handleManageQuestions,
         onDelete: handleDeleteExam,
       }),
-    [isVi, handleTogglePublish, handleOpenEditModal, handleDeleteExam, setSelectedExamForQuestions, setShowQuestionsModal]
+    [isVi, handleTogglePublish, handleOpenEditModal, handleDeleteExam, setActiveNavItem]
   )
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      
       <CourseExamStatsOverview stats={stats} isVi={isVi} />
 
-      
       <DataTable<ToeicExamItem>
         title={
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -117,10 +114,7 @@ export function CourseExamsPage() {
             exam={exam}
             isVi={isVi}
             onOpenEdit={handleOpenEditModal}
-            onManageQuestions={(e) => {
-              setSelectedExamForQuestions(e)
-              setShowQuestionsModal(true)
-            }}
+            onManageQuestions={handleManageQuestions}
             onDelete={handleDeleteExam}
           />
         )}
@@ -179,7 +173,6 @@ export function CourseExamsPage() {
         }}
       />
 
-      
       <CourseExamModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -191,17 +184,6 @@ export function CourseExamsPage() {
         isTeacher={isTeacher}
         currentUserId={currentUserId}
         isVi={isVi}
-      />
-
-      
-      <ExamQuestionEditorModal
-        isOpen={showQuestionsModal}
-        onClose={() => {
-          setShowQuestionsModal(false)
-          setSelectedExamForQuestions(null)
-        }}
-        exam={selectedExamForQuestions}
-        onExamUpdated={handleExamQuestionsUpdated}
       />
     </div>
   )

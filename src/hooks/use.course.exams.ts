@@ -9,6 +9,7 @@ import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/serv
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
+import { useAdminStore } from '@/store/admin.store'
 import type { CourseSelectItem } from '@/components/course-exams/course.exam.header.actions'
 import type { Course } from '@/types/api.types'
 
@@ -38,41 +39,6 @@ export function useCourseExams() {
 
   const [showModal, setShowModal] = useState<boolean>(false)
   const [editingExam, setEditingExam] = useState<ToeicExamItem | null>(null)
-  const [showQuestionsModal, setShowQuestionsModal] = useState<boolean>(false)
-  const [selectedExamForQuestions, setSelectedExamForQuestions] = useState<ToeicExamItem | null>(null)
-
-  const handleExamQuestionsUpdated = async (updated: ToeicExamItem) => {
-    const examId = updated._id
-    setExams((prev) =>
-      prev.map((e) => (e._id === examId ? { ...e, ...updated } : e))
-    )
-    if (selectedExamForQuestions && selectedExamForQuestions._id === examId) {
-      setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
-    }
-
-    try {
-      if (updated.course_id && String(examId).startsWith('course_final_')) {
-        await courseService.updateCourse(updated.course_id, {
-          final_test_questions: updated.questions,
-          ...(updated.audio_url ? { final_test_audio_url: updated.audio_url } : {}),
-        })
-      } else if (updated.module_id) {
-        const modId = updated.module_id
-        await courseService.updateModule(modId, {
-          challenge_questions: updated.questions,
-          post_mini_questions: updated.questions,
-          ...(updated.audio_url
-            ? {
-                challenge_audio_url: updated.audio_url,
-                test_audio_url: updated.audio_url,
-              }
-            : {}),
-        })
-      }
-    } catch (syncErr) {
-      console.warn('Lỗi đồng bộ câu hỏi vào khóa học/chương học:', syncErr)
-    }
-  }
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
@@ -442,8 +408,8 @@ export function useCourseExams() {
           questions: created?.questions || [],
         }
         setExams((prev) => [newExam, ...prev])
-        setSelectedExamForQuestions(newExam)
-        setShowQuestionsModal(true)
+        sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(newExam))
+        useAdminStore.getState().setActiveNavItem(`course-exam-questions:${newExam._id || newExam.id}`)
         toast.success(
           isVi
             ? 'Đã tạo khung bài thi! Mời bạn soạn thảo ngân hàng câu hỏi.'
@@ -487,10 +453,6 @@ export function useCourseExams() {
     showModal,
     setShowModal,
     editingExam,
-    showQuestionsModal,
-    setShowQuestionsModal,
-    selectedExamForQuestions,
-    setSelectedExamForQuestions,
     loadData,
     handleResetFilters,
     handleOpenCreateModal,
@@ -498,6 +460,5 @@ export function useCourseExams() {
     handleDeleteExam,
     handleTogglePublish,
     handleSaveExam,
-    handleExamQuestionsUpdated,
   }
 }
