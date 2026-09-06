@@ -30,10 +30,11 @@ export function ExamEditorGlobalAudio({
       <button
         type="button"
         onClick={onRemove}
-        className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 cursor-pointer"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-100/70 dark:hover:bg-rose-950/50 dark:text-rose-400 font-medium transition cursor-pointer shrink-0 border border-rose-200 dark:border-rose-900/40"
         title="Xóa audio toàn bài"
       >
         <Trash2 className="w-3.5 h-3.5" />
+        <span>{isVi ? 'Xóa audio toàn bài' : 'Delete audio'}</span>
       </button>
     </div>
   )

@@ -218,11 +218,16 @@ export function useExamQuestionEditor({
       return
     }
 
+    const oldUrl = globalAudioUrl
     setUploadingGlobalAudio(true)
     try {
       const res = await mediaAdminService.uploadFile(file, 'exam-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        if (oldUrl && oldUrl !== uploadedUrl) {
+          mediaAdminService.cleanupTempMedia([oldUrl]).catch(() => {})
+          sessionUploadedUrlsRef.current.delete(oldUrl)
+        }
         sessionUploadedUrlsRef.current.add(uploadedUrl)
         setGlobalAudioUrl(uploadedUrl)
         toast.success(
@@ -236,6 +241,15 @@ export function useExamQuestionEditor({
     } finally {
       setUploadingGlobalAudio(false)
       if (globalAudioInputRef.current) globalAudioInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveGlobalAudio = () => {
+    if (globalAudioUrl) {
+      mediaAdminService.cleanupTempMedia([globalAudioUrl]).catch(() => {})
+      sessionUploadedUrlsRef.current.delete(globalAudioUrl)
+      setGlobalAudioUrl('')
+      toast.success(isVi ? 'Đã xóa file nghe toàn bài thi!' : 'Removed global exam audio!')
     }
   }
 
@@ -257,10 +271,40 @@ export function useExamQuestionEditor({
   }
 
   const handleDeleteQuestion = (index: number) => {
+    const target = questions[index]
+    if (target) {
+      const urlsToClean: string[] = []
+      if (target.media_url) {
+        urlsToClean.push(target.media_url)
+        sessionUploadedUrlsRef.current.delete(target.media_url)
+      }
+      if (target.image_url) {
+        urlsToClean.push(target.image_url)
+        sessionUploadedUrlsRef.current.delete(target.image_url)
+      }
+      if (urlsToClean.length > 0) {
+        mediaAdminService.cleanupTempMedia(urlsToClean).catch(() => {})
+      }
+    }
     setQuestions((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleUpdateQuestion = (index: number, updates: Partial<ExamQuestionItem>) => {
+    const currentQ = questions[index]
+    if ('media_url' in updates) {
+      const newMedia = updates.media_url || ''
+      if (currentQ?.media_url && currentQ.media_url !== newMedia) {
+        mediaAdminService.cleanupTempMedia([currentQ.media_url]).catch(() => {})
+        sessionUploadedUrlsRef.current.delete(currentQ.media_url)
+      }
+    }
+    if ('image_url' in updates) {
+      const newImg = updates.image_url || ''
+      if (currentQ?.image_url && currentQ.image_url !== newImg) {
+        mediaAdminService.cleanupTempMedia([currentQ.image_url]).catch(() => {})
+        sessionUploadedUrlsRef.current.delete(currentQ.image_url)
+      }
+    }
     setQuestions((prev) => {
       const next = [...prev]
       next[index] = { ...next[index], ...updates }
@@ -285,11 +329,16 @@ export function useExamQuestionEditor({
     const qIdx = activeQuestionIdxRef.current
     if (!file || qIdx === null) return
 
+    const oldUrl = questions[qIdx]?.media_url
     setUploadingQuestionAudioIdx(qIdx)
     try {
       const res = await mediaAdminService.uploadFile(file, 'exam-question-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        if (oldUrl && oldUrl !== uploadedUrl) {
+          mediaAdminService.cleanupTempMedia([oldUrl]).catch(() => {})
+          sessionUploadedUrlsRef.current.delete(oldUrl)
+        }
         sessionUploadedUrlsRef.current.add(uploadedUrl)
         handleUpdateQuestion(qIdx, { media_url: uploadedUrl })
         toast.success(
@@ -310,11 +359,16 @@ export function useExamQuestionEditor({
     const qIdx = activeQuestionIdxRef.current
     if (!file || qIdx === null) return
 
+    const oldUrl = questions[qIdx]?.image_url
     setUploadingQuestionImageIdx(qIdx)
     try {
       const res = await mediaAdminService.uploadFile(file, 'exam-question-image')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        if (oldUrl && oldUrl !== uploadedUrl) {
+          mediaAdminService.cleanupTempMedia([oldUrl]).catch(() => {})
+          sessionUploadedUrlsRef.current.delete(oldUrl)
+        }
         sessionUploadedUrlsRef.current.add(uploadedUrl)
         handleUpdateQuestion(qIdx, { image_url: uploadedUrl })
         toast.success(
@@ -458,6 +512,7 @@ export function useExamQuestionEditor({
     filteredQuestions,
     handleAddQuestion,
     handleUploadGlobalAudio,
+    handleRemoveGlobalAudio,
     handleDuplicateQuestion,
     handleDeleteQuestion,
     handleUpdateQuestion,

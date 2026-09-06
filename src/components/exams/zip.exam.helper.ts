@@ -207,11 +207,9 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
 
     const sampleQ1Audio = createSampleAudioBytes(2, 440)
     const sampleQ2Audio = createSampleAudioBytes(2, 554)
-    const sampleFullAudio = createSampleAudioBytes(4, 330)
 
     zip.file('audios/audio_q1.wav', sampleQ1Audio)
     zip.file('audios/audio_q2.wav', sampleQ2Audio)
-    zip.file('full_exam.wav', sampleFullAudio)
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     const downloadUrl = URL.createObjectURL(zipBlob)
@@ -332,16 +330,12 @@ export async function parseAndUploadZipExam(
           if (isAudio) {
             const lowerNoExt = noExt.toLowerCase()
             const isNamedGlobal =
-              lowerNoExt.includes('full') ||
-              lowerNoExt.includes('exam') ||
-              lowerNoExt.includes('toan_bai') ||
-              lowerNoExt.includes('toanbai') ||
-              lowerNoExt.includes('global') ||
-              lowerNoExt.includes('chung') ||
-              lowerNoExt.includes('test') ||
-              lowerNoExt.includes('listening') ||
-              lowerNoExt.includes('audio') ||
-              distinctMediaNames.filter((f) => /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(f)).length === 1
+              lowerNoExt === 'full_exam' ||
+              lowerNoExt === 'full-exam' ||
+              lowerNoExt === 'fullexam' ||
+              lowerNoExt === 'toan_bai' ||
+              lowerNoExt === 'toanbai' ||
+              lowerNoExt === 'exam_audio'
 
             if (isNamedGlobal && !detectedGlobalAudioUrl) {
               detectedGlobalAudioUrl = url

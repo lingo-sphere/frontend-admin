@@ -144,6 +144,7 @@ function CourseExamQuestionsEditor({
     filteredQuestions,
     handleAddQuestion,
     handleUploadGlobalAudio,
+    handleRemoveGlobalAudio,
     handleDuplicateQuestion,
     handleDeleteQuestion,
     handleUpdateQuestion,
@@ -651,7 +652,7 @@ function CourseExamQuestionsEditor({
         <ExamEditorGlobalAudio
           globalAudioUrl={globalAudioUrl}
           isVi={isVi}
-          onRemove={() => setGlobalAudioUrl('')}
+          onRemove={handleRemoveGlobalAudio}
         />
 
         <div className="p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40 min-h-[400px]">

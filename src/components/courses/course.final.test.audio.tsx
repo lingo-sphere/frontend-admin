@@ -42,6 +42,9 @@ export function CourseFinalTestAudio({
       const res = await mediaAdminService.uploadFile(file, 'quiz-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        if (formData.final_test_audio_url && formData.final_test_audio_url !== uploadedUrl) {
+          mediaAdminService.cleanupTempMedia([formData.final_test_audio_url]).catch(() => {})
+        }
         onChange({
           ...formData,
           final_test_audio_url: uploadedUrl,
@@ -64,6 +67,9 @@ export function CourseFinalTestAudio({
   }
 
   const handleRemoveFinalAudio = () => {
+    if (formData.final_test_audio_url) {
+      mediaAdminService.cleanupTempMedia([formData.final_test_audio_url]).catch(() => {})
+    }
     onChange({
       ...formData,
       final_test_audio_url: '',
