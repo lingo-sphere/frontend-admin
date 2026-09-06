@@ -11,11 +11,11 @@ import {
   CheckCircle2,
   HelpCircle,
 } from 'lucide-react'
-import { ExcelQuizImporterModal } from '@/components/admin/excel.quiz.importer.modal'
-import { ModuleQuestionViewerModal } from '@/components/admin/module.question.viewer.modal'
+import { ExamQuestionStudioModal } from '@/components/exams/editor/exam.question.studio.modal'
 import type { CourseFormData } from './course.basic.info.tab'
 import { CourseFinalTestAudio } from './course.final.test.audio'
 import { CourseFinalTestSkillsSection } from './course.final.test.skills.section'
+import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 interface CourseFinalTestCardProps {
   formData: CourseFormData
@@ -24,8 +24,7 @@ interface CourseFinalTestCardProps {
 }
 
 export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTestCardProps) {
-  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false)
-  const [isViewerModalOpen, setIsViewerModalOpen] = useState(false)
+  const [isStudioModalOpen, setIsStudioModalOpen] = useState(false)
 
   const finalQuestionsCount = formData.final_test_questions?.length || 0
 
@@ -42,8 +41,8 @@ export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTes
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {isVi
-                ? 'Upload đề thi tốt nghiệp cuối khóa từ file Excel (.xlsx).'
-                : 'Upload graduation final exam from Excel file (.xlsx).'}
+                ? 'Nạp đề thi tốt nghiệp từ file ZIP (kèm audio & ảnh) hoặc file Excel (.xlsx), đồng thời biên soạn trực quan.'
+                : 'Upload graduation exam from ZIP archive (with media) or Excel file (.xlsx), with realtime card editing.'}
             </p>
           </div>
         </div>
@@ -54,48 +53,52 @@ export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTes
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
                 <span>{isVi ? 'Ngân hàng câu hỏi Final Test' : 'Question Bank'}</span>
               </span>
               {finalQuestionsCount > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300/80 dark:border-emerald-700">
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                   <span>{finalQuestionsCount} {isVi ? 'câu hỏi' : 'questions'}</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-semibold border border-amber-300/80 dark:border-amber-700">
                   <HelpCircle className="w-3 h-3 text-amber-600" />
                   <span>{isVi ? 'Chưa có câu hỏi' : 'Empty'}</span>
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               {isVi
-                ? 'Tải file Excel để nạp tự động hàng loạt câu hỏi cho đề thi tốt nghiệp cuối khóa.'
-                : 'Upload Excel file to bulk import graduation test questions.'}
+                ? 'Hỗ trợ nạp gói ZIP (kèm file nghe & ảnh) hoặc file Excel (.xlsx), đồng thời xem và chỉnh sửa trực tiếp từng câu hỏi.'
+                : 'Upload ZIP archive (with audio & images) or Excel spreadsheet to bulk import graduation test questions.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="pt-1">
             <button
               type="button"
-              onClick={() => setIsExcelModalOpen(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+              onClick={() => setIsStudioModalOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Upload File Excel (.xlsx)</span>
+              {finalQuestionsCount > 0 ? (
+                <>
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>
+                    {isVi
+                      ? `Chỉnh Sửa Ngân Hàng Câu Hỏi (${finalQuestionsCount} câu)`
+                      : `Edit Question Bank (${finalQuestionsCount} qs)`}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>
+                    {isVi ? 'Soạn Đề Thi / Nạp ZIP & Excel' : 'Create Exam / Import ZIP'}
+                  </span>
+                </>
+              )}
             </button>
-
-            {finalQuestionsCount > 0 && (
-              <button
-                type="button"
-                onClick={() => setIsViewerModalOpen(true)}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                <Eye className="w-3.5 h-3.5 text-indigo-500" />
-                <span>{isVi ? 'Xem & Sửa' : 'View/Edit'}</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -113,31 +116,22 @@ export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTes
         />
       )}
 
-      <ExcelQuizImporterModal
-        key="final-test-excel-modal"
-        isOpen={isExcelModalOpen}
-        onClose={() => setIsExcelModalOpen(false)}
-        onApplyQuestions={(q, mode = 'append', audioUrl?: string) => {
-          const existing = formData.final_test_questions || []
-          const combined = mode === 'append' ? [...existing, ...q] : q
+      <ExamQuestionStudioModal
+        key="final-test-studio-modal"
+        isOpen={isStudioModalOpen}
+        onClose={() => setIsStudioModalOpen(false)}
+        title={`${isVi ? 'Soạn Đề Thi Tốt Nghiệp Final Test - ' : 'Final Test Exam Editor - '}${formData.title || 'Khóa học'}`}
+        subtitle={isVi ? 'Đề thi tốt nghiệp đánh giá toàn diện năng lực' : 'Comprehensive graduation exam'}
+        is4Skills={formData.category === 'TOEIC_4_SKILLS'}
+        isVi={isVi}
+        initialQuestions={(formData.final_test_questions || []) as ExamQuestionItem[]}
+        initialGlobalAudioUrl={formData.final_test_audio_url || ''}
+        onSave={(q, audioUrl) => {
           onChange({
-            final_test_questions: combined,
-            ...(audioUrl !== undefined ? { final_test_audio_url: audioUrl } : {}),
+            final_test_questions: q,
+            ...(audioUrl ? { final_test_audio_url: audioUrl } : {}),
           })
         }}
-        initialAudioUrl={formData.final_test_audio_url}
-        moduleTitle={`Final Test Khóa Học: ${formData.title || 'Khóa học'}`}
-        existingQuestionsCount={formData.final_test_questions?.length || 0}
-      />
-
-      <ModuleQuestionViewerModal
-        key="final-test-viewer-modal"
-        isOpen={isViewerModalOpen}
-        onClose={() => setIsViewerModalOpen(false)}
-        questions={formData.final_test_questions || []}
-        onSaveQuestions={(q) => onChange({ final_test_questions: q })}
-        moduleTitle={formData.title || 'Khóa học'}
-        testTitle={`Bài Kiểm Tra Tốt Nghiệp Final Test`}
       />
     </div>
   )

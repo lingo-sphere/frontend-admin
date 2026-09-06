@@ -52,17 +52,23 @@ interface RawExamQuestion {
 
 interface UseExamQuestionEditorParams {
   isOpen: boolean
-  exam: ToeicExamItem | null
+  exam?: ToeicExamItem | null
+  initialQuestions?: ExamQuestionItem[]
+  initialGlobalAudioUrl?: string
   isVi: boolean
-  onExamUpdated: (updatedExam: ToeicExamItem) => void
+  onExamUpdated?: (updatedExam: ToeicExamItem) => void
+  onSave?: (questions: ExamQuestionItem[], globalAudioUrl: string) => Promise<void> | void
   onClose: () => void
 }
 
 export function useExamQuestionEditor({
   isOpen,
   exam,
+  initialQuestions,
+  initialGlobalAudioUrl,
   isVi,
   onExamUpdated,
+  onSave,
   onClose,
 }: UseExamQuestionEditorParams) {
   const [questions, setQuestions] = useState<ExamQuestionItem[]>([])
@@ -141,8 +147,18 @@ export function useExamQuestionEditor({
       setGlobalAudioUrl(exam.audio_url || '')
       setSearchQuery('')
       setPartFilter('ALL')
+    } else if (isOpen && initialQuestions) {
+      setQuestions(initialQuestions)
+      setGlobalAudioUrl(initialGlobalAudioUrl || '')
+      setSearchQuery('')
+      setPartFilter('ALL')
+    } else if (isOpen && !exam && !initialQuestions) {
+      setQuestions([])
+      setGlobalAudioUrl('')
+      setSearchQuery('')
+      setPartFilter('ALL')
     }
-  }, [isOpen, exam])
+  }, [isOpen, exam, initialQuestions, initialGlobalAudioUrl])
 
   const filteredQuestions = questions.filter((q, index) => {
     const matchesFilter =
@@ -427,6 +443,17 @@ export function useExamQuestionEditor({
   }
 
   const handleSaveQuestions = async () => {
+    if (onSave) {
+      setIsSaving(true)
+      try {
+        await onSave(questions, globalAudioUrl)
+        onClose()
+      } finally {
+        setIsSaving(false)
+      }
+      return
+    }
+
     if (!exam) return
     const examId = exam._id
     if (!examId) {
@@ -461,7 +488,7 @@ export function useExamQuestionEditor({
         total_questions: questions.length,
         audio_url: globalAudioUrl,
       }
-      onExamUpdated(mergedExam)
+      onExamUpdated?.(mergedExam)
       toast.success(
         isVi
           ? `Đã lưu thành công bộ ${questions.length} câu hỏi vào đề thi!`
@@ -475,7 +502,7 @@ export function useExamQuestionEditor({
         total_questions: questions.length,
         audio_url: globalAudioUrl,
       }
-      onExamUpdated(mergedExam)
+      onExamUpdated?.(mergedExam)
       toast.success(
         isVi
           ? `Đã cập nhật ${questions.length} câu hỏi vào đề thi (Local)!`

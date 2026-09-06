@@ -232,60 +232,79 @@ export async function parseAndUploadZipExam(
   isVi: boolean,
   onProgress?: (status: string, current?: number, total?: number) => void
 ): Promise<ParseZipResult> {
-  if (!/\.(zip)$/i.test(file.name)) {
-    throw new Error(isVi ? 'Vui lòng chọn file nén định dạng .zip' : 'Please select a .zip archive file')
-  }
+  const isDirectExcel = /\.(xlsx|xls|csv)$/i.test(file.name)
+  const isZip = /\.(zip)$/i.test(file.name)
 
-  if (file.size > 200 * 1024 * 1024) {
-    throw new Error(isVi ? 'Dung lượng file ZIP không được vượt quá 200MB' : 'ZIP file must not exceed 200MB')
-  }
-
-  onProgress?.(isVi ? 'Đang giải nén file ZIP...' : 'Extracting ZIP archive...')
-  const zip = await JSZip.loadAsync(file)
-
-  let excelEntry: JSZip.JSZipObject | null = null
-  for (const [path, entry] of Object.entries(zip.files)) {
-    if (!entry.dir && /\.(xlsx|xls|csv)$/i.test(path) && !path.includes('__MACOSX')) {
-      excelEntry = entry
-      break
-    }
-  }
-
-  if (!excelEntry) {
+  if (!isZip && !isDirectExcel) {
     throw new Error(
       isVi
-        ? 'Không tìm thấy file Excel (.xlsx / .csv) bên trong file ZIP! Vui lòng đảm bảo trong ZIP có chứa file questions.xlsx.'
-        : 'No Excel (.xlsx / .csv) question file found in this ZIP archive.'
+        ? 'Vui lòng chọn file nén định dạng .zip hoặc file bảng tính .xlsx'
+        : 'Please select a .zip archive or .xlsx spreadsheet file'
     )
   }
 
-  onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
-  const excelBuffer = await excelEntry.async('arraybuffer')
-  const workbook = XLSX.read(excelBuffer, { type: 'array' })
-  const firstSheetName = workbook.SheetNames[0]
-  const worksheet = workbook.Sheets[firstSheetName]
-  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
-
-  if (!rawRows || rawRows.length === 0) {
-    throw new Error(isVi ? 'File Excel câu hỏi không có dòng dữ liệu nào!' : 'Question sheet is empty!')
+  if (file.size > 200 * 1024 * 1024) {
+    throw new Error(
+      isVi ? 'Dung lượng file không được vượt quá 200MB' : 'File size must not exceed 200MB'
+    )
   }
 
+  let rawRows: Record<string, unknown>[] = []
   const mediaEntries: Record<string, JSZip.JSZipObject> = {}
   const distinctMediaNames: string[] = []
 
-  for (const [path, entry] of Object.entries(zip.files)) {
-    if (entry.dir || path.includes('__MACOSX')) continue
-    const cleanPath = path.replace(/\\/g, '/')
-    const filename = cleanPath.split('/').pop() || cleanPath
-    const lowerName = filename.toLowerCase().trim()
+  if (isDirectExcel) {
+    onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
+    const excelBuffer = await file.arrayBuffer()
+    const workbook = XLSX.read(excelBuffer, { type: 'array' })
+    const firstSheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[firstSheetName]
+    rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+  } else {
+    onProgress?.(isVi ? 'Đang giải nén file ZIP...' : 'Extracting ZIP archive...')
+    const zip = await JSZip.loadAsync(file)
 
-    if (/\.(mp3|wav|m4a|ogg|aac|flac|jpg|jpeg|png|webp|gif|svg)$/i.test(lowerName)) {
-      mediaEntries[cleanPath.toLowerCase()] = entry
-      mediaEntries[lowerName] = entry
-      if (!distinctMediaNames.includes(lowerName)) {
-        distinctMediaNames.push(lowerName)
+    let excelEntry: JSZip.JSZipObject | null = null
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (!entry.dir && /\.(xlsx|xls|csv)$/i.test(path) && !path.includes('__MACOSX')) {
+        excelEntry = entry
+        break
       }
     }
+
+    if (!excelEntry) {
+      throw new Error(
+        isVi
+          ? 'Không tìm thấy file Excel (.xlsx / .csv) bên trong file ZIP! Vui lòng đảm bảo trong ZIP có chứa file questions.xlsx.'
+          : 'No Excel (.xlsx / .csv) question file found in this ZIP archive.'
+      )
+    }
+
+    onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
+    const excelBuffer = await excelEntry.async('arraybuffer')
+    const workbook = XLSX.read(excelBuffer, { type: 'array' })
+    const firstSheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[firstSheetName]
+    rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir || path.includes('__MACOSX')) continue
+      const cleanPath = path.replace(/\\/g, '/')
+      const filename = cleanPath.split('/').pop() || cleanPath
+      const lowerName = filename.toLowerCase().trim()
+
+      if (/\.(mp3|wav|m4a|ogg|aac|flac|jpg|jpeg|png|webp|gif|svg)$/i.test(lowerName)) {
+        mediaEntries[cleanPath.toLowerCase()] = entry
+        mediaEntries[lowerName] = entry
+        if (!distinctMediaNames.includes(lowerName)) {
+          distinctMediaNames.push(lowerName)
+        }
+      }
+    }
+  }
+
+  if (!rawRows || rawRows.length === 0) {
+    throw new Error(isVi ? 'File Excel câu hỏi không có dòng dữ liệu nào!' : 'Question sheet is empty!')
   }
 
   const uploadedMap: Record<string, string> = {}

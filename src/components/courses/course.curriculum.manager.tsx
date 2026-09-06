@@ -4,14 +4,13 @@
  */
 
 import { Film, Plus } from 'lucide-react'
-import { ExcelQuizImporterModal } from '@/components/admin/excel.quiz.importer.modal'
-import { ModuleQuestionViewerModal } from '@/components/admin/module.question.viewer.modal'
+import { ExamQuestionStudioModal } from '@/components/exams/editor/exam.question.studio.modal'
 import { CourseChapterCard } from './course.chapter.card'
 import { CourseCurriculumHeader } from './course.curriculum.header'
 import { CourseCurriculumOutline } from './course.curriculum.outline'
 import { useCourseCurriculum } from '@/hooks/use.course.curriculum'
 import type { CourseModule } from './course.basic.info.tab'
-import type { QuizQuestionItem } from '@/services/ai.service'
+import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 interface CourseCurriculumManagerProps {
   modules: CourseModule[]
@@ -32,10 +31,8 @@ export function CourseCurriculumManager({
 }: CourseCurriculumManagerProps) {
   const {
     expandedModules,
-    excelModalState,
-    setExcelModalState,
-    viewerModalState,
-    setViewerModalState,
+    studioModalState,
+    setStudioModalState,
     totalLessons,
     totalMinutes,
     totalTests,
@@ -129,25 +126,23 @@ export function CourseCurriculumManager({
               onUpdateLessonFields={(lesId, fields) =>
                 updateLessonFields(mod.id, lesId, fields)
               }
-              onOpenExcelModal={() =>
-                setExcelModalState({
-                  isOpen: true,
-                  moduleId: mod.id,
-                  moduleTitle: mod.title || (isVi ? `Chương ${modIdx + 1}` : `Chapter ${modIdx + 1}`),
-                })
-              }
-              onOpenViewerModal={() => {
+              onOpenStudio={() => {
                 const questionsList =
                   mod.test_questions ||
                   mod.post_mini_questions ||
                   mod.challenge_questions ||
                   []
-                setViewerModalState({
+                const audioUrl =
+                  mod.test_audio_url ||
+                  mod.challenge_audio_url ||
+                  mod.audio_url ||
+                  ''
+                setStudioModalState({
                   isOpen: true,
                   moduleId: mod.id,
                   moduleTitle: mod.title || (isVi ? `Chương ${modIdx + 1}` : `Chapter ${modIdx + 1}`),
-                  testTitle: `${isVi ? 'Bài Kiểm Tra - ' : 'Assessment - '}${mod.title || (isVi ? `Chương ${modIdx + 1}` : `Chapter ${modIdx + 1}`)}`,
-                  questions: questionsList,
+                  questions: questionsList as ExamQuestionItem[],
+                  globalAudioUrl: audioUrl,
                 })
               }}
               formatDurationDisplay={formatDurationDisplay}
@@ -173,35 +168,19 @@ export function CourseCurriculumManager({
         </div>
       )}
 
-      <ExcelQuizImporterModal
-        key={excelModalState.moduleId || 'excel-modal'}
-        isOpen={excelModalState.isOpen}
-        onClose={() => setExcelModalState((prev) => ({ ...prev, isOpen: false }))}
-        onApplyQuestions={(q: QuizQuestionItem[], mode?: 'append' | 'replace', audioUrl?: string) =>
-          handleApplyQuestions(excelModalState.moduleId, q, mode, audioUrl)
-        }
-        moduleTitle={excelModalState.moduleTitle}
-        existingQuestionsCount={
-          modules.find((m) => m.id === excelModalState.moduleId)?.test_questions?.length || 0
-        }
-        initialAudioUrl={
-          modules.find((m) => m.id === excelModalState.moduleId)?.test_audio_url ||
-          modules.find((m) => m.id === excelModalState.moduleId)?.challenge_audio_url ||
-          modules.find((m) => m.id === excelModalState.moduleId)?.audio_url ||
-          ''
-        }
-      />
-
-      <ModuleQuestionViewerModal
-        key={viewerModalState.moduleId || 'viewer-modal'}
-        isOpen={viewerModalState.isOpen}
-        onClose={() => setViewerModalState((prev) => ({ ...prev, isOpen: false }))}
-        questions={viewerModalState.questions}
-        onSaveQuestions={(q: QuizQuestionItem[]) =>
-          handleApplyQuestions(viewerModalState.moduleId, q)
-        }
-        moduleTitle={viewerModalState.moduleTitle}
-        testTitle={viewerModalState.testTitle}
+      <ExamQuestionStudioModal
+        key={studioModalState.moduleId || 'studio-modal'}
+        isOpen={studioModalState.isOpen}
+        onClose={() => setStudioModalState((prev) => ({ ...prev, isOpen: false }))}
+        title={`${isVi ? 'Soạn Bài Kiểm Tra - ' : 'Assessment - '}${studioModalState.moduleTitle}`}
+        subtitle={isVi ? 'Bài thi trắc nghiệm kết thúc chương học' : 'Chapter assessment test'}
+        is4Skills={is4Skills}
+        isVi={isVi}
+        initialQuestions={studioModalState.questions}
+        initialGlobalAudioUrl={studioModalState.globalAudioUrl}
+        onSave={(q, audioUrl) => {
+          handleApplyQuestions(studioModalState.moduleId, q, audioUrl)
+        }}
       />
     </div>
   )

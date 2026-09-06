@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import type { CourseModule, CourseLesson } from '@/components/courses/course.basic.info.tab'
-import type { QuizQuestionItem } from '@/services/ai.service'
+import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 interface UseCourseCurriculumProps {
   modules: CourseModule[]
@@ -15,28 +15,18 @@ interface UseCourseCurriculumProps {
 export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumProps) {
   const [expandedModules, setExpandedModules] = useState<string[]>(modules.map((m) => m.id))
 
-  const [excelModalState, setExcelModalState] = useState<{
+  const [studioModalState, setStudioModalState] = useState<{
     isOpen: boolean
     moduleId: string
     moduleTitle: string
+    questions: ExamQuestionItem[]
+    globalAudioUrl: string
   }>({
     isOpen: false,
     moduleId: '',
     moduleTitle: '',
-  })
-
-  const [viewerModalState, setViewerModalState] = useState<{
-    isOpen: boolean
-    moduleId: string
-    moduleTitle: string
-    testTitle: string
-    questions: QuizQuestionItem[]
-  }>({
-    isOpen: false,
-    moduleId: '',
-    moduleTitle: '',
-    testTitle: '',
     questions: [],
+    globalAudioUrl: '',
   })
 
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
@@ -250,27 +240,16 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
 
   const handleApplyQuestions = (
     moduleId: string,
-    questions: QuizQuestionItem[],
-    mode: 'append' | 'replace' = 'append',
+    questions: ExamQuestionItem[],
     audioUrl?: string
   ) => {
-    const targetModule = modules.find((m) => m.id === moduleId)
-    const existing = targetModule?.test_questions || []
-    const updated = mode === 'append' ? [...existing, ...questions] : questions
-
-    const audioUpdates = audioUrl
-      ? {
-          test_audio_url: audioUrl,
-          challenge_audio_url: audioUrl,
-          audio_url: audioUrl,
-        }
-      : {}
-
     updateModule(moduleId, {
-      test_questions: updated,
-      challenge_questions: updated,
-      post_mini_questions: updated,
-      ...audioUpdates,
+      test_questions: questions,
+      challenge_questions: questions,
+      post_mini_questions: questions,
+      test_audio_url: audioUrl || '',
+      challenge_audio_url: audioUrl || '',
+      audio_url: audioUrl || '',
     })
   }
 
@@ -282,10 +261,8 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
 
   return {
     expandedModules,
-    excelModalState,
-    setExcelModalState,
-    viewerModalState,
-    setViewerModalState,
+    studioModalState,
+    setStudioModalState,
     totalLessons,
     totalMinutes,
     totalTests,

@@ -16,8 +16,7 @@ interface ChapterAssessmentCardProps {
   isVi: boolean
   is4Skills?: boolean
   onUpdateModule: (updated: Partial<CourseModule>) => void
-  onOpenExcelModal: () => void
-  onOpenViewerModal: () => void
+  onOpenStudio: () => void
 }
 
 export function ChapterAssessmentCard({
@@ -26,8 +25,7 @@ export function ChapterAssessmentCard({
   isVi,
   is4Skills = false,
   onUpdateModule,
-  onOpenExcelModal,
-  onOpenViewerModal,
+  onOpenStudio,
 }: ChapterAssessmentCardProps) {
   const audioInputRef = useRef<HTMLInputElement>(null)
   const speakingFileInputRef = useRef<HTMLInputElement>(null)
@@ -265,8 +263,7 @@ export function ChapterAssessmentCard({
         <ChapterAssessmentSummary
           questionCount={questionCount}
           isVi={isVi}
-          onOpenExcelModal={onOpenExcelModal}
-          onOpenViewerModal={onOpenViewerModal}
+          onOpenStudio={onOpenStudio}
         />
 
         <ChapterAssessmentAudio

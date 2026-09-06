@@ -37,8 +37,7 @@ interface CourseChapterCardProps {
     value: string | number | boolean
   ) => void
   onUpdateLessonFields: (lessonId: string, fields: Partial<CourseLesson>) => void
-  onOpenExcelModal: () => void
-  onOpenViewerModal: () => void
+  onOpenStudio: () => void
   formatDurationDisplay: (seconds?: number, minutes?: number) => string
 }
 
@@ -61,8 +60,7 @@ export function CourseChapterCard({
   onMoveModuleDown,
   onUpdateLessonField,
   onUpdateLessonFields,
-  onOpenExcelModal,
-  onOpenViewerModal,
+  onOpenStudio,
   formatDurationDisplay,
 }: CourseChapterCardProps) {
   const modDuration = module.lessons.reduce(
@@ -250,8 +248,7 @@ export function CourseChapterCard({
                   isVi={isVi}
                   is4Skills={is4Skills}
                   onUpdateModule={onUpdateModule}
-                  onOpenExcelModal={onOpenExcelModal}
-                  onOpenViewerModal={onOpenViewerModal}
+                  onOpenStudio={onOpenStudio}
                 />
               </div>
             </div>
