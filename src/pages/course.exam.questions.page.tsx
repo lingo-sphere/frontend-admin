@@ -603,13 +603,11 @@ function CourseExamQuestionsEditor({
           isSystemPlacement={isSystemPlacement}
           questionsCount={questions.length}
           searchQuery={searchQuery}
-          partFilter={partFilter}
           isProcessingZip={isProcessingZip}
           uploadingGlobalAudio={uploadingGlobalAudio}
           globalAudioUrl={globalAudioUrl}
           onClose={onBack}
           onSearchChange={setSearchQuery}
-          onPartFilterChange={setPartFilter}
           onDownloadSampleZip={() => downloadSampleZip(isVi)}
           onOpenZipPicker={() => zipFileInputRef.current?.click()}
           onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}

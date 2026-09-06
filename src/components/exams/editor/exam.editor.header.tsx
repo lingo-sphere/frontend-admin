@@ -3,7 +3,6 @@
  * @description Header và thanh công cụ tìm kiếm, lọc part thi và các nút chức năng trong modal soạn ngân hàng câu hỏi đề thi
  */
 
-import { useMemo } from 'react'
 import {
   Archive,
   BookOpen,
@@ -17,7 +16,6 @@ import {
   X,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
-import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 
 interface ExamEditorHeaderProps {
   exam: ToeicExamItem
@@ -26,13 +24,11 @@ interface ExamEditorHeaderProps {
   isSystemPlacement: boolean
   questionsCount: number
   searchQuery: string
-  partFilter: string
   isProcessingZip: boolean
   uploadingGlobalAudio: boolean
   globalAudioUrl: string
   onClose: () => void
   onSearchChange: (val: string) => void
-  onPartFilterChange: (val: string) => void
   onDownloadSampleZip: () => void
   onOpenZipPicker: () => void
   onOpenGlobalAudioPicker: () => void
@@ -46,32 +42,16 @@ export function ExamEditorHeader({
   isSystemPlacement,
   questionsCount,
   searchQuery,
-  partFilter,
   isProcessingZip,
   uploadingGlobalAudio,
   globalAudioUrl,
   onClose,
   onSearchChange,
-  onPartFilterChange,
   onDownloadSampleZip,
   onOpenZipPicker,
   onOpenGlobalAudioPicker,
   onAddQuestion,
 }: ExamEditorHeaderProps) {
-  const filterOptions: SelectOption[] = useMemo(() => {
-    const base: SelectOption[] = [
-      { value: 'ALL', label: isVi ? 'Tất cả kỹ năng' : 'All Skills' },
-      { value: 'LISTENING', label: isVi ? '🎧 Nghe (Listening)' : '🎧 Listening' },
-      { value: 'READING', label: isVi ? '📖 Đọc (Reading)' : '📖 Reading' },
-    ]
-    if (is4Skills) {
-      base.push(
-        { value: 'SPEAKING', label: isVi ? '🎙️ Nói (Speaking)' : '🎙️ Speaking' },
-        { value: 'WRITING', label: isVi ? '✍️ Viết (Writing)' : '✍️ Writing' }
-      )
-    }
-    return base
-  }, [isVi, is4Skills])
 
   return (
     <>
@@ -123,7 +103,7 @@ export function ExamEditorHeader({
       </div>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900">
-        <div className="flex items-center gap-2 flex-1 max-w-md">
+        <div className="flex items-center gap-2 flex-1 max-w-sm">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -132,14 +112,6 @@ export function ExamEditorHeader({
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={isVi ? 'Tìm kiếm theo nội dung, câu số...' : 'Search questions...'}
               className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-          <div className="w-48 shrink-0">
-            <CustomSelect
-              value={partFilter}
-              onChange={onPartFilterChange}
-              options={filterOptions}
-              size="sm"
             />
           </div>
         </div>
