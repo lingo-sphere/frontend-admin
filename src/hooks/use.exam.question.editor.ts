@@ -12,6 +12,7 @@ import { toast } from '@/store/toast.store'
 
 export interface ExamQuestionItem {
   id?: string
+  skill_type?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
   part_number?: number | string
   part_name?: string
   question_type?: 'MULTIPLE_CHOICE' | 'SPEAKING' | 'WRITING'
@@ -28,6 +29,8 @@ export interface ExamQuestionItem {
 
 interface RawExamQuestion {
   id?: string
+  skill_type?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
+  skillType?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
   part_number?: number | string
   part?: number | string
   part_name?: string
@@ -91,38 +94,49 @@ export function useExamQuestionEditor({
   useEffect(() => {
     if (isOpen && exam) {
       const existingQs: ExamQuestionItem[] = Array.isArray(exam.questions)
-        ? (exam.questions as unknown as RawExamQuestion[]).map((q: RawExamQuestion, idx: number) => ({
-            id: q.id || `q_${idx}_${Date.now()}`,
-            part_number: q.part_number || q.part || 5,
-            part_name: q.part_name || '',
-            question_type:
-              q.question_type ||
-              (q.part_number === 'speaking'
-                ? 'SPEAKING'
-                : q.part_number === 'writing'
-                  ? 'WRITING'
-                  : 'MULTIPLE_CHOICE'),
-            question_text: q.question_text || q.questionTextEn || q.question_text_en || '',
-            options: Array.isArray(q.options)
-              ? q.options.map((opt: string | { textEn?: string; text?: string }) =>
-                  typeof opt === 'string' ? opt : opt.textEn || opt.text || ''
-                )
-              : ['', '', '', ''],
-            correct_answer: (
-              q.correct_answer ||
-              q.correctOption ||
-              q.correct_option ||
-              'A'
-            )
-              .toString()
-              .toUpperCase(),
-            explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
-            media_url: q.media_url || q.audio_url || '',
-            image_url: q.image_url || '',
-            prep_time_seconds: q.prep_time_seconds,
-            response_time_seconds: q.response_time_seconds,
-            min_words: q.min_words,
-          }))
+        ? (exam.questions as unknown as RawExamQuestion[]).map((q: RawExamQuestion, idx: number) => {
+            const rawPart = q.part_number ?? q.part ?? 5
+            const isSpk = rawPart === 'speaking' || q.question_type === 'SPEAKING' || q.skill_type === 'SPEAKING' || q.skillType === 'SPEAKING'
+            const isWrt = rawPart === 'writing' || q.question_type === 'WRITING' || q.skill_type === 'WRITING' || q.skillType === 'WRITING'
+            const numPart = typeof rawPart === 'number' ? rawPart : parseInt(String(rawPart), 10)
+            const isListen = q.skill_type === 'LISTENING' || q.skillType === 'LISTENING' || (!isNaN(numPart) && numPart <= 4)
+
+            const derivedSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isSpk
+              ? 'SPEAKING'
+              : isWrt
+                ? 'WRITING'
+                : isListen
+                  ? 'LISTENING'
+                  : 'READING'
+
+            return {
+              id: q.id || `q_${idx}_${Date.now()}`,
+              skill_type: derivedSkill,
+              part_number: isSpk ? 'speaking' : isWrt ? 'writing' : isListen ? 1 : 5,
+              part_name: q.part_name || '',
+              question_type: isSpk ? 'SPEAKING' : isWrt ? 'WRITING' : 'MULTIPLE_CHOICE',
+              question_text: q.question_text || q.questionTextEn || q.question_text_en || '',
+              options: Array.isArray(q.options)
+                ? q.options.map((opt: string | { textEn?: string; text?: string }) =>
+                    typeof opt === 'string' ? opt : opt.textEn || opt.text || ''
+                  )
+                : ['', '', '', ''],
+              correct_answer: (
+                q.correct_answer ||
+                q.correctOption ||
+                q.correct_option ||
+                'A'
+              )
+                .toString()
+                .toUpperCase(),
+              explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
+              media_url: q.media_url || q.audio_url || '',
+              image_url: q.image_url || '',
+              prep_time_seconds: q.prep_time_seconds,
+              response_time_seconds: q.response_time_seconds,
+              min_words: q.min_words,
+            }
+          })
         : []
 
       setQuestions(existingQs)
@@ -135,9 +149,14 @@ export function useExamQuestionEditor({
   const filteredQuestions = questions.filter((q, index) => {
     const matchesFilter =
       partFilter === 'ALL' ||
+      q.skill_type === partFilter ||
       String(q.part_number) === partFilter ||
-      (partFilter === 'speaking' && q.question_type === 'SPEAKING') ||
-      (partFilter === 'writing' && q.question_type === 'WRITING')
+      (partFilter === 'LISTENING' && q.skill_type === 'LISTENING') ||
+      (partFilter === 'READING' && q.skill_type === 'READING') ||
+      (partFilter === 'SPEAKING' && (q.skill_type === 'SPEAKING' || q.question_type === 'SPEAKING')) ||
+      (partFilter === 'WRITING' && (q.skill_type === 'WRITING' || q.question_type === 'WRITING')) ||
+      (partFilter === 'speaking' && (q.skill_type === 'SPEAKING' || q.question_type === 'SPEAKING')) ||
+      (partFilter === 'writing' && (q.skill_type === 'WRITING' || q.question_type === 'WRITING'))
 
     const qSearch = searchQuery.toLowerCase().trim()
     const matchesSearch =
@@ -150,18 +169,32 @@ export function useExamQuestionEditor({
     return matchesFilter && matchesSearch
   })
 
-  const handleAddQuestion = (partNum: number | string = 5) => {
-    const isSpeaking = partNum === 'speaking'
-    const isWriting = partNum === 'writing'
+  const handleAddQuestion = (targetSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | number | string = 'READING') => {
+    const skill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' =
+      targetSkill === 'SPEAKING' || targetSkill === 'speaking'
+        ? 'SPEAKING'
+        : targetSkill === 'WRITING' || targetSkill === 'writing'
+          ? 'WRITING'
+          : targetSkill === 'LISTENING' || (typeof targetSkill === 'number' && targetSkill <= 4)
+            ? 'LISTENING'
+            : 'READING'
+
+    const isSpeaking = skill === 'SPEAKING'
+    const isWriting = skill === 'WRITING'
+    const isListening = skill === 'LISTENING'
+
     const newQuestion: ExamQuestionItem = {
       id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      part_number: partNum,
+      skill_type: skill,
+      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : isListening ? 1 : 5,
       question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
       question_text: isSpeaking
         ? 'Describe the picture in detail using as much vocabulary as possible.'
         : isWriting
           ? 'Write an email responding to the customer request (at least 100 words).'
-          : '',
+          : isListening
+            ? 'Listen to the audio and select the best answer.'
+            : '',
       options: isSpeaking || isWriting ? [] : ['', '', '', ''],
       correct_answer: 'A',
       explanation: '',

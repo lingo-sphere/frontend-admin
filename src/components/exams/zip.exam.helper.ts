@@ -51,9 +51,6 @@ export interface ParseZipResult {
   imageCount: number
 }
 
-/**
- * Generate and download standard sample ZIP package
- */
 export async function downloadSampleZip(isVi = true): Promise<void> {
   try {
     const zip = new JSZip()
@@ -61,33 +58,33 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     const sampleQuestions = [
       {
         STT: 1,
-        Part: 1,
+        'Kỹ năng': 'Nghe',
         'Câu hỏi': 'Look at the picture and listen to the four statements. Select the one that best describes what you see.',
         'Lựa chọn A': 'The woman is reading a document at the library.',
         'Lựa chọn B': 'The woman is typing on a laptop computer.',
         'Lựa chọn C': 'The woman is pouring a cup of coffee.',
         'Lựa chọn D': 'The woman is leaving the conference room.',
         'Đáp án đúng': 'B',
-        'File Audio': 'part1_q1.mp3',
+        'File Audio': 'audio_q1.mp3',
         'File Ảnh': 'part1_q1.jpg',
         'Lời giải': 'Trong hình ảnh người phụ nữ đang thao tác gõ bàn phím trên laptop (typing on a laptop).',
       },
       {
         STT: 2,
-        Part: 2,
+        'Kỹ năng': 'Nghe',
         'Câu hỏi': 'Where should I submit the monthly expense report?',
         'Lựa chọn A': 'To Ms. Johnson in the accounting department on the 4th floor.',
         'Lựa chọn B': 'At about 4:30 PM yesterday afternoon.',
         'Lựa chọn C': 'Yes, I received your email already.',
         'Lựa chọn D': '',
         'Đáp án đúng': 'A',
-        'File Audio': 'part2_q2.mp3',
+        'File Audio': 'audio_q2.mp3',
         'File Ảnh': '',
         'Lời giải': 'Câu hỏi "Where" (Ở đâu), câu trả lời A chỉ rõ người và phòng ban nhận báo cáo.',
       },
       {
         STT: 3,
-        Part: 5,
+        'Kỹ năng': 'Đọc',
         'Câu hỏi': 'All international passengers must _____ their boarding pass and passport at Gate 12.',
         'Lựa chọn A': 'present',
         'Lựa chọn B': 'presents',
@@ -100,20 +97,7 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
       },
       {
         STT: 4,
-        Part: 5,
-        'Câu hỏi': 'The engineering team completed the software upgrade much _____ than scheduled.',
-        'Lựa chọn A': 'quick',
-        'Lựa chọn B': 'more quickly',
-        'Lựa chọn C': 'quickest',
-        'Lựa chọn D': 'quicker',
-        'Đáp án đúng': 'B',
-        'File Audio': '',
-        'File Ảnh': '',
-        'Lời giải': 'Bổ nghĩa cho động từ "completed" với cấu trúc so sánh hơn "than" -> dùng trạng từ "more quickly".',
-      },
-      {
-        STT: 5,
-        Part: 7,
+        'Kỹ năng': 'Đọc',
         'Câu hỏi': 'What is the primary topic of this internal announcement?',
         'Lựa chọn A': 'The upcoming office maintenance schedule next Monday.',
         'Lựa chọn B': 'The introduction of a new marketing manager.',
@@ -123,6 +107,32 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
         'File Audio': '',
         'File Ảnh': 'part7_email.png',
         'Lời giải': 'Đoạn đầu thông báo ghi rõ mục đích: "Please be advised that the main elevator will undergo maintenance on Monday."',
+      },
+      {
+        STT: 5,
+        'Kỹ năng': 'Nói',
+        'Câu hỏi': 'Describe a time you solved a difficult problem at work or school in detail.',
+        'Lựa chọn A': '',
+        'Lựa chọn B': '',
+        'Lựa chọn C': '',
+        'Lựa chọn D': '',
+        'Đáp án đúng': '',
+        'File Audio': '',
+        'File Ảnh': '',
+        'Lời giải': 'Tiêu chí đánh giá: Phát âm rõ ràng, độ lưu loát, ngữ pháp quá khứ.',
+      },
+      {
+        STT: 6,
+        'Kỹ năng': 'Viết',
+        'Câu hỏi': 'Write an email (at least 100 words) requesting a 3-day extension on your project deadline.',
+        'Lựa chọn A': '',
+        'Lựa chọn B': '',
+        'Lựa chọn C': '',
+        'Lựa chọn D': '',
+        'Đáp án đúng': '',
+        'File Audio': '',
+        'File Ảnh': '',
+        'Lời giải': 'Tiêu chí đánh giá: Cấu trúc thư trang trọng, lý do rõ ràng, số từ đạt yêu cầu.',
       },
     ]
 
@@ -135,12 +145,12 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     const readmeText = `=== HƯỚNG DẪN SOẠN ĐỀ THI GÓI ZIP CHO LINGOSPHERE ===
 1. File questions.xlsx:
    - Cột "STT": Số thứ tự câu hỏi (1, 2, 3...)
-   - Cột "Part": Số Part tương ứng (1, 2, 3, 4, 5, 6, 7, hoặc speaking, writing)
-   - Cột "Câu hỏi": Nội dung câu hỏi / Prompt
-   - Cột "Lựa chọn A/B/C/D": Các phương án trắc nghiệm
-   - Cột "Đáp án đúng": A, B, C hoặc D
-   - Cột "File Audio": Tên file audio (ví dụ: part1_q1.mp3)
-   - Cột "File Ảnh": Tên file hình ảnh (ví dụ: part1_q1.jpg)
+   - Cột "Kỹ năng": Nghe, Đọc, Nói, hoặc Viết (hoặc Listening, Reading, Speaking, Writing)
+   - Cột "Câu hỏi": Nội dung câu hỏi hoặc đề bài Nói / Viết
+   - Cột "Lựa chọn A/B/C/D": Các phương án trắc nghiệm (để trống với Nói/Viết)
+   - Cột "Đáp án đúng": A, B, C hoặc D (để trống với Nói/Viết)
+   - Cột "File Audio": Tên file audio trong gói zip (dành cho câu Nghe, ví dụ: audio_q1.mp3)
+   - Cột "File Ảnh": Tên file hình ảnh trong gói zip (nếu có ảnh câu hỏi / bài đọc)
    - Cột "Lời giải": Giải thích chi tiết đáp án
 
 2. Thư mục hoặc file Media:
@@ -157,8 +167,8 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     const dummyMp3Bytes = new Uint8Array([
       0xff, 0xfb, 0x90, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ])
-    zip.file('audios/part1_q1.mp3', dummyMp3Bytes)
-    zip.file('audios/part2_q2.mp3', dummyMp3Bytes)
+    zip.file('audios/audio_q1.mp3', dummyMp3Bytes)
+    zip.file('audios/audio_q2.mp3', dummyMp3Bytes)
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     const downloadUrl = URL.createObjectURL(zipBlob)
@@ -299,6 +309,7 @@ export async function parseAndUploadZipExam(
     let optD = ''
     let correctLetter = 'A'
     let explanation = ''
+    let skillType: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = 'READING'
     let partNum: number | string = 5
     let audioFileName = ''
     let imageFileName = ''
@@ -309,11 +320,34 @@ export async function parseAndUploadZipExam(
 
       if (norm.includes('cauhoi') || norm.includes('question') || norm.includes('debai') || norm.includes('prompt')) {
         questionText = strVal
-      } else if (norm === 'part' || norm === 'phan' || norm.includes('partnumber')) {
-        const parsedPart = parseInt(strVal, 10)
-        if (!isNaN(parsedPart)) partNum = parsedPart
-        else if (strVal.toLowerCase().includes('speaking')) partNum = 'speaking'
-        else if (strVal.toLowerCase().includes('writing')) partNum = 'writing'
+      } else if (
+        norm.includes('kynang') ||
+        norm.includes('skill') ||
+        norm.includes('loai') ||
+        norm.includes('type') ||
+        norm === 'part' ||
+        norm === 'phan' ||
+        norm.includes('partnumber')
+      ) {
+        const lower = strVal.toLowerCase()
+        if (lower.includes('speaking') || lower.includes('noi') || lower === 's') {
+          skillType = 'SPEAKING'
+          partNum = 'speaking'
+        } else if (lower.includes('writing') || lower.includes('viet') || lower === 'w') {
+          skillType = 'WRITING'
+          partNum = 'writing'
+        } else if (
+          lower.includes('nghe') ||
+          lower.includes('listen') ||
+          lower === 'l' ||
+          ['1', '2', '3', '4'].includes(lower)
+        ) {
+          skillType = 'LISTENING'
+          partNum = 1
+        } else {
+          skillType = 'READING'
+          partNum = 5
+        }
       } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm.includes('dapana')) {
         optA = strVal
       } else if (norm.includes('luachonb') || norm.includes('optionb') || norm === 'b' || norm.includes('dapanb')) {
@@ -340,12 +374,16 @@ export async function parseAndUploadZipExam(
     if (matchedAudioUrl) audioLinkedCount++
     if (matchedImageUrl) imageLinkedCount++
 
-    const isSpeaking = String(partNum).toLowerCase() === 'speaking'
-    const isWriting = String(partNum).toLowerCase() === 'writing'
+    const isSpeaking = skillType === 'SPEAKING' || String(partNum).toLowerCase() === 'speaking'
+    const isWriting = skillType === 'WRITING' || String(partNum).toLowerCase() === 'writing'
+    const isListening = skillType === 'LISTENING' || (typeof partNum === 'number' && partNum <= 4)
+    const finalSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' =
+      isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : isListening ? 'LISTENING' : 'READING'
 
     return {
       id: `q_zip_${Date.now()}_${idx}`,
-      part_number: partNum,
+      skill_type: finalSkill,
+      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : isListening ? 1 : 5,
       question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
       question_text: questionText || `Question ${idx + 1}`,
       options: isSpeaking || isWriting ? [] : [optA, optB, optC, optD],

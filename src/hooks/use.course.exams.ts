@@ -9,7 +9,6 @@ import { examAdminService, type ToeicExamItem } from '@/services/exam.service'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
-import { useAdminStore } from '@/store/admin.store'
 import type { CourseSelectItem } from '@/components/course-exams/course.exam.header.actions'
 import type { Course } from '@/types/api.types'
 

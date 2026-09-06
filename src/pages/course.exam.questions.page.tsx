@@ -665,13 +665,7 @@ function CourseExamQuestionsEditor({
                 <div className="flex items-center justify-center pt-2">
                   <button
                     type="button"
-                    onClick={() =>
-                      handleAddQuestion(
-                        partFilter !== 'ALL' && !isNaN(Number(partFilter))
-                          ? Number(partFilter)
-                          : 5
-                      )
-                    }
+                    onClick={() => handleAddQuestion('READING')}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-indigo-500/20"
                   >
                     <Plus className="w-4 h-4" />
@@ -691,6 +685,7 @@ function CourseExamQuestionsEditor({
                   question={q}
                   index={qIndex}
                   isVi={isVi}
+                  skillsMode={formPlacementSkills}
                   isUploadingAudio={uploadingQuestionAudioIdx === qIndex}
                   isUploadingImage={uploadingQuestionImageIdx === qIndex}
                   onUpdate={(updates) => handleUpdateQuestion(qIndex, updates)}

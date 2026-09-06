@@ -9,16 +9,16 @@ import { Popconfirm } from '@/components/common/popconfirm'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
-const PART_OPTIONS: SelectOption[] = [
-  { value: '1', label: 'Part 1: Mô tả hình ảnh (Photographs)' },
-  { value: '2', label: 'Part 2: Hỏi & Đáp (Question - Response)' },
-  { value: '3', label: 'Part 3: Đoạn hội thoại (Conversations)' },
-  { value: '4', label: 'Part 4: Bài nói ngắn (Short Talks)' },
-  { value: '5', label: 'Part 5: Hoàn thành câu (Incomplete Sentences)' },
-  { value: '6', label: 'Part 6: Hoàn thành đoạn văn (Text Completion)' },
-  { value: '7', label: 'Part 7: Đọc hiểu văn bản (Reading Comprehension)' },
-  { value: 'speaking', label: 'Speaking: Bài thi Nói TOEIC (11 câu hỏi)' },
-  { value: 'writing', label: 'Writing: Bài thi Viết TOEIC (8 câu hỏi)' },
+const SKILL_OPTIONS_2: SelectOption[] = [
+  { value: 'LISTENING', label: '🎧 Nghe (Listening)' },
+  { value: 'READING', label: '📖 Đọc (Reading)' },
+]
+
+const SKILL_OPTIONS_4: SelectOption[] = [
+  { value: 'LISTENING', label: '🎧 Nghe (Listening)' },
+  { value: 'READING', label: '📖 Đọc (Reading)' },
+  { value: 'SPEAKING', label: '🎙️ Nói (Speaking)' },
+  { value: 'WRITING', label: '✍️ Viết (Writing)' },
 ]
 
 const LETTERS = ['A', 'B', 'C', 'D']
@@ -27,6 +27,7 @@ interface ExamQuestionCardProps {
   question: ExamQuestionItem
   index: number
   isVi: boolean
+  skillsMode?: '2SKILLS' | '4SKILLS'
   isUploadingAudio: boolean
   isUploadingImage: boolean
   onUpdate: (updates: Partial<ExamQuestionItem>) => void
@@ -41,6 +42,7 @@ export function ExamQuestionCard({
   question: q,
   index: qIndex,
   isVi,
+  skillsMode = '2SKILLS',
   isUploadingAudio,
   isUploadingImage,
   onUpdate,
@@ -50,8 +52,20 @@ export function ExamQuestionCard({
   onRequestUploadAudio,
   onRequestUploadImage,
 }: ExamQuestionCardProps) {
-  const isSpeaking = q.question_type === 'SPEAKING' || q.part_number === 'speaking'
-  const isWriting = q.question_type === 'WRITING' || q.part_number === 'writing'
+  const currentSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' =
+    q.skill_type ||
+    (q.question_type === 'SPEAKING' || q.part_number === 'speaking'
+      ? 'SPEAKING'
+      : q.question_type === 'WRITING' || q.part_number === 'writing'
+        ? 'WRITING'
+        : typeof q.part_number === 'number' && q.part_number <= 4
+          ? 'LISTENING'
+          : 'READING')
+
+  const isSpeaking = currentSkill === 'SPEAKING'
+  const isWriting = currentSkill === 'WRITING'
+  const isListening = currentSkill === 'LISTENING'
+  const isReading = currentSkill === 'READING'
 
   return (
     <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4 transition-all hover:border-indigo-300 dark:hover:border-indigo-800">
@@ -61,19 +75,22 @@ export function ExamQuestionCard({
             {qIndex + 1}
           </span>
 
-          <div className="w-72 max-w-full">
+          <div className="w-56 max-w-full">
             <CustomSelect
-              value={String(q.part_number || (isSpeaking ? 'speaking' : isWriting ? 'writing' : 5))}
+              value={currentSkill}
               onChange={(val) => {
-                const isSp = val === 'speaking'
-                const isWr = val === 'writing'
+                const skill = val as 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
+                const isSp = skill === 'SPEAKING'
+                const isWr = skill === 'WRITING'
+                const isLs = skill === 'LISTENING'
                 onUpdate({
-                  part_number: isSp || isWr ? val : Number(val),
+                  skill_type: skill,
+                  part_number: isSp ? 'speaking' : isWr ? 'writing' : isLs ? 1 : 5,
                   question_type: isSp ? 'SPEAKING' : isWr ? 'WRITING' : 'MULTIPLE_CHOICE',
                   options: isSp || isWr ? [] : q.options.length ? q.options : ['', '', '', ''],
                 })
               }}
-              options={PART_OPTIONS}
+              options={skillsMode === '4SKILLS' ? SKILL_OPTIONS_4 : SKILL_OPTIONS_2}
               size="sm"
             />
           </div>
@@ -110,7 +127,9 @@ export function ExamQuestionCard({
             ? 'Đề bài / Yêu cầu phần thi Nói (Prompt):'
             : isWriting
             ? 'Đề bài / Yêu cầu phần thi Viết (Prompt):'
-            : 'Nội dung câu hỏi:'}
+            : isListening
+            ? 'Nội dung câu hỏi phần Nghe:'
+            : 'Nội dung câu hỏi phần Đọc:'}
         </label>
         <textarea
           rows={2}
@@ -121,6 +140,8 @@ export function ExamQuestionCard({
               ? 'Ví dụ: Describe what you see in the photo in as much detail as possible...'
               : isWriting
               ? 'Ví dụ: You received an email from your manager. Write a response addressing two points...'
+              : isListening
+              ? 'Nhập nội dung câu hỏi nghe hoặc câu hỏi dẫn...'
               : 'Nhập câu hỏi (ví dụ: Mr. Henderson requested that the quarterly report _____ by Friday.)...'
           }
           className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -128,67 +149,71 @@ export function ExamQuestionCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-1">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={isUploadingAudio}
-            onClick={onRequestUploadAudio}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
-          >
-            {isUploadingAudio ? (
-              <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
-            ) : (
-              <Volume2 className="w-3 h-3 text-indigo-500" />
+        {isListening && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isUploadingAudio}
+              onClick={onRequestUploadAudio}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+            >
+              {isUploadingAudio ? (
+                <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+              ) : (
+                <Volume2 className="w-3 h-3 text-indigo-500" />
+              )}
+              <span>{q.media_url ? 'Đổi Audio câu' : 'Thêm Audio câu'}</span>
+            </button>
+            {q.media_url && (
+              <div className="flex items-center gap-1">
+                <audio controls src={q.media_url} className="h-6 max-w-[180px]" />
+                <button
+                  type="button"
+                  onClick={() => onUpdate({ media_url: undefined })}
+                  className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
+                  title="Xóa audio"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             )}
-            <span>{q.media_url ? 'Đổi Audio câu' : 'Thêm Audio câu'}</span>
-          </button>
-          {q.media_url && (
-            <div className="flex items-center gap-1">
-              <audio controls src={q.media_url} className="h-6 max-w-[180px]" />
-              <button
-                type="button"
-                onClick={() => onUpdate({ media_url: undefined })}
-                className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                title="Xóa audio"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={isUploadingImage}
-            onClick={onRequestUploadImage}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
-          >
-            {isUploadingImage ? (
-              <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
-            ) : (
-              <ImageIcon className="w-3 h-3 text-amber-500" />
+        {(isListening || isReading) && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isUploadingImage}
+              onClick={onRequestUploadImage}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+            >
+              {isUploadingImage ? (
+                <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
+              ) : (
+                <ImageIcon className="w-3 h-3 text-amber-500" />
+              )}
+              <span>{q.image_url ? 'Đổi ảnh câu' : 'Thêm Ảnh câu'}</span>
+            </button>
+            {q.image_url && (
+              <div className="flex items-center gap-1">
+                <img
+                  src={q.image_url}
+                  alt="minh hoa"
+                  className="h-7 w-12 object-cover rounded-md border border-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => onUpdate({ image_url: undefined })}
+                  className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
+                  title="Xóa ảnh"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             )}
-            <span>{q.image_url ? 'Đổi ảnh câu' : 'Thêm Ảnh câu'}</span>
-          </button>
-          {q.image_url && (
-            <div className="flex items-center gap-1">
-              <img
-                src={q.image_url}
-                alt="minh hoa"
-                className="h-7 w-12 object-cover rounded-md border border-slate-200"
-              />
-              <button
-                type="button"
-                onClick={() => onUpdate({ image_url: undefined })}
-                className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                title="Xóa ảnh"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {!isSpeaking && !isWriting ? (
