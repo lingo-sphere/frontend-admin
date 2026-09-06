@@ -3,7 +3,7 @@
  * @description Tiện ích xử lý hỗ trợ cho zip.exam.helper.ts
  */
 
-import type { ExamQuestionItem } from '@/components/exams/exam.question.editor.modal'
+import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import JSZip from 'jszip'

@@ -12,28 +12,23 @@ import { toast } from '@/store/toast.store'
 import { ExamStatsOverview } from '@/components/exams/exam.stats.overview'
 import { ExamListTable } from '@/components/exams/exam.list.table'
 import { CreateExamModal } from '@/components/exams/create.exam.modal'
-import { ExamQuestionEditorModal } from '@/components/exams/exam.question.editor.modal'
+import { useAdminStore } from '@/store/admin.store'
 
 export function ExamsPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+
+  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
   const [exams, setExams] = useState<ToeicExamItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedType, setSelectedType] = useState<string>('ALL')
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
-  const [showQuestionsModal, setShowQuestionsModal] = useState<boolean>(false)
-  const [selectedExamForQuestions, setSelectedExamForQuestions] = useState<ToeicExamItem | null>(null)
 
-  const handleExamQuestionsUpdated = (updated: ToeicExamItem) => {
-    const examId = updated._id || updated.id
-    setExams((prev) =>
-      prev.map((e) => ((e._id || e.id) === examId ? { ...e, ...updated } : e))
-    )
-    if (selectedExamForQuestions && (selectedExamForQuestions._id || selectedExamForQuestions.id) === examId) {
-      setSelectedExamForQuestions((prev) => (prev ? { ...prev, ...updated } : null))
-    }
+  const handleManageQuestions = (exam: ToeicExamItem) => {
+    sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(exam))
+    setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
   }
 
   const fetchExams = useCallback(async () => {
@@ -111,8 +106,8 @@ export function ExamsPage() {
       }
       setExams((prev) => [examItem, ...prev])
       setShowAddModal(false)
-      setSelectedExamForQuestions(examItem)
-      setShowQuestionsModal(true)
+      sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(examItem))
+      setActiveNavItem(`course-exam-questions:${examItem._id || examItem.id}`)
       toast.success(
         isVi
           ? 'Đã tạo khung đề thi! Chuyển sang bước soạn câu hỏi...'
@@ -132,8 +127,8 @@ export function ExamsPage() {
       }
       setExams((prev) => [fallbackExam, ...prev])
       setShowAddModal(false)
-      setSelectedExamForQuestions(fallbackExam)
-      setShowQuestionsModal(true)
+      sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(fallbackExam))
+      setActiveNavItem(`course-exam-questions:${fallbackExam._id || fallbackExam.id}`)
       toast.success(
         isVi
           ? 'Đã tạo đề thi mới (Local)! Mời bạn soạn câu hỏi.'
@@ -186,28 +181,13 @@ export function ExamsPage() {
         onTypeChange={setSelectedType}
         onTogglePublish={handleTogglePublish}
         onDeleteExam={handleDeleteExam}
-        onManageQuestions={(exam) => {
-          setSelectedExamForQuestions(exam)
-          setShowQuestionsModal(true)
-        }}
+        onManageQuestions={handleManageQuestions}
       />
 
-      
       <CreateExamModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreateExam}
-      />
-
-      
-      <ExamQuestionEditorModal
-        isOpen={showQuestionsModal}
-        onClose={() => {
-          setShowQuestionsModal(false)
-          setSelectedExamForQuestions(null)
-        }}
-        exam={selectedExamForQuestions}
-        onExamUpdated={handleExamQuestionsUpdated}
       />
     </div>
   )

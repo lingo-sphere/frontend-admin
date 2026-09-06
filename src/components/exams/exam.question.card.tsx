@@ -6,7 +6,7 @@
 import React from 'react'
 import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X } from 'lucide-react'
 import { Popconfirm } from '@/components/common/popconfirm'
-import type { ExamQuestionItem } from './exam.question.editor.modal'
+import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 const PART_OPTIONS = [
   { value: 1, label: 'Part 1: Mô tả hình ảnh (Photographs)' },
