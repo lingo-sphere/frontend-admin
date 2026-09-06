@@ -67,6 +67,17 @@ export const mediaAdminService = {
     }
   },
 
+  async cleanupTempMedia(fileUrls: string[]): Promise<{ deleted_count?: number }> {
+    if (!fileUrls || fileUrls.length === 0) return { deleted_count: 0 }
+    try {
+      return await api.post<{ deleted_count?: number }>('/media/cleanup-temp', {
+        file_urls: fileUrls.filter(Boolean),
+      })
+    } catch {
+      return { deleted_count: 0 }
+    }
+  },
+
   async generateTts(text: string, voice = 'alloy', speed = 1.0): Promise<TtsGenerateResponse> {
     return api.post<TtsGenerateResponse>(
       '/media/tts/generate',

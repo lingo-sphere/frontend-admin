@@ -1,7 +1,4 @@
-/**
- * @file use.exam.question.editor.ts
- * @description Custom hook quản lý trạng thái biên soạn ngân hàng câu hỏi đề thi, tải file âm thanh/hình ảnh và nạp gói ZIP
- */
+// Custom hook quan ly trang thai bien soan cau hoi va don dep media khi huy.
 
 import { useState, useEffect, useRef } from 'react'
 import type { ToeicExamItem } from '@/services/exam.service'
@@ -90,6 +87,7 @@ export function useExamQuestionEditor({
   const questionAudioInputRef = useRef<HTMLInputElement>(null)
   const questionImageInputRef = useRef<HTMLInputElement>(null)
   const activeQuestionIdxRef = useRef<number | null>(null)
+  const sessionUploadedUrlsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     if (isOpen && exam) {
@@ -225,6 +223,7 @@ export function useExamQuestionEditor({
       const res = await mediaAdminService.uploadFile(file, 'exam-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        sessionUploadedUrlsRef.current.add(uploadedUrl)
         setGlobalAudioUrl(uploadedUrl)
         toast.success(
           isVi ? `Đã tải file nghe đề thi: ${file.name}` : `Uploaded exam audio: ${file.name}`
@@ -291,6 +290,7 @@ export function useExamQuestionEditor({
       const res = await mediaAdminService.uploadFile(file, 'exam-question-audio')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        sessionUploadedUrlsRef.current.add(uploadedUrl)
         handleUpdateQuestion(qIdx, { media_url: uploadedUrl })
         toast.success(
           isVi ? `Đã gắn file nghe vào câu ${qIdx + 1}` : `Attached audio to question ${qIdx + 1}`
@@ -315,6 +315,7 @@ export function useExamQuestionEditor({
       const res = await mediaAdminService.uploadFile(file, 'exam-question-image')
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
+        sessionUploadedUrlsRef.current.add(uploadedUrl)
         handleUpdateQuestion(qIdx, { image_url: uploadedUrl })
         toast.success(
           isVi
@@ -346,9 +347,14 @@ export function useExamQuestionEditor({
       })
 
       setQuestions(result.questions)
-      if (result.globalAudioUrl && !globalAudioUrl) {
-        setGlobalAudioUrl(result.globalAudioUrl)
+      if (result.globalAudioUrl) {
+        sessionUploadedUrlsRef.current.add(result.globalAudioUrl)
+        if (!globalAudioUrl) setGlobalAudioUrl(result.globalAudioUrl)
       }
+      result.questions.forEach((q) => {
+        if (q.media_url) sessionUploadedUrlsRef.current.add(q.media_url)
+        if (q.image_url) sessionUploadedUrlsRef.current.add(q.image_url)
+      })
 
       toast.success(
         isVi
@@ -460,5 +466,13 @@ export function useExamQuestionEditor({
     handleUploadQuestionImage,
     handleZipFileSelected,
     handleSaveQuestions,
+    sessionUploadedUrlsRef,
+    cleanupSessionMedia: async () => {
+      const urls = Array.from(sessionUploadedUrlsRef.current)
+      if (urls.length > 0) {
+        await mediaAdminService.cleanupTempMedia(urls)
+        sessionUploadedUrlsRef.current.clear()
+      }
+    },
   }
 }

@@ -24,6 +24,7 @@ import {
 import { useAdminStore } from '@/store/admin.store'
 import { courseService } from '@/services/course.service'
 import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/services/exam.service'
+import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import { downloadSampleZip } from '@/components/exams/zip.exam.helper'
 import { ExamQuestionCard } from '@/components/exams/exam.question.card'
@@ -150,13 +151,28 @@ function CourseExamQuestionsEditor({
     handleUploadQuestionAudio,
     handleUploadQuestionImage,
     handleZipFileSelected,
+    cleanupSessionMedia,
+    sessionUploadedUrlsRef,
   } = useExamQuestionEditor({
     isOpen: true,
     exam: activeExamConfig,
     isVi,
     onExamUpdated: () => {},
-    onClose: onBack,
+    onClose: () => handleCancelExam(),
   })
+
+  const [isCanceling, setIsCanceling] = useState<boolean>(false)
+
+  const handleCancelExam = async () => {
+    setIsCanceling(true)
+    try {
+      await cleanupSessionMedia()
+    } finally {
+      setIsCanceling(false)
+      sessionStorage.removeItem('lingo_admin_active_exam')
+      onBack()
+    }
+  }
 
   const handleSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
     setFormPlacementSkills(skills)
@@ -210,11 +226,22 @@ function CourseExamQuestionsEditor({
         }
 
         await examAdminService.createExam(createPayload)
+
+        const allMediaUrls: string[] = []
+        if (globalAudioUrl) allMediaUrls.push(globalAudioUrl)
+        questions.forEach((q) => {
+          if (q.media_url) allMediaUrls.push(q.media_url)
+          if (q.image_url) allMediaUrls.push(q.image_url)
+        })
+        Array.from(sessionUploadedUrlsRef.current).forEach((u) => allMediaUrls.push(u))
+        await mediaAdminService.confirmMedia(allMediaUrls)
+
         toast.success(
           isVi
             ? `Đã tạo thành công bài thi "${trimmedTitle}" với ${questions.length} câu hỏi!`
             : `Created exam "${trimmedTitle}" with ${questions.length} questions!`
         )
+        onBack()
       } else {
         const examId = initialExam._id || initialExam.id || ''
         const isCourseTest = String(examId).startsWith('course_final_')
@@ -252,6 +279,15 @@ function CourseExamQuestionsEditor({
           })
           await examAdminService.saveExamQuestions(examId, questions, globalAudioUrl)
         }
+
+        const allMediaUrls: string[] = []
+        if (globalAudioUrl) allMediaUrls.push(globalAudioUrl)
+        questions.forEach((q) => {
+          if (q.media_url) allMediaUrls.push(q.media_url)
+          if (q.image_url) allMediaUrls.push(q.image_url)
+        })
+        Array.from(sessionUploadedUrlsRef.current).forEach((u) => allMediaUrls.push(u))
+        await mediaAdminService.confirmMedia(allMediaUrls)
 
         toast.success(
           isVi
@@ -309,8 +345,9 @@ function CourseExamQuestionsEditor({
         <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
           <button
             type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold transition-colors cursor-pointer"
+            onClick={handleCancelExam}
+            disabled={isCanceling}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold transition-colors cursor-pointer disabled:opacity-50"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{isVi ? 'Bài thi khóa học' : 'Course Exams'}</span>
@@ -605,7 +642,7 @@ function CourseExamQuestionsEditor({
           searchQuery={searchQuery}
           uploadingGlobalAudio={uploadingGlobalAudio}
           globalAudioUrl={globalAudioUrl}
-          onClose={onBack}
+          onClose={handleCancelExam}
           onSearchChange={setSearchQuery}
           onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
           onAddQuestion={handleAddQuestion}
@@ -721,10 +758,17 @@ function CourseExamQuestionsEditor({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={onBack}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              disabled={isSavingAll || isCanceling}
+              onClick={handleCancelExam}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
             >
-              {isVi ? 'Hủy' : 'Cancel'}
+              {isCanceling
+                ? isVi
+                  ? 'Đang hủy & xóa file tạm...'
+                  : 'Canceling...'
+                : isVi
+                ? 'Hủy'
+                : 'Cancel'}
             </button>
 
             <button
@@ -942,6 +986,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
   }, [examId, isCreateMode, isVi])
 
   const handleBack = () => {
+    sessionStorage.removeItem('lingo_admin_active_exam')
     setActiveNavItem('course-exams')
   }
 
