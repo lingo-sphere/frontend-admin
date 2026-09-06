@@ -351,6 +351,16 @@ export function useExamQuestionEditor({
             questions,
             globalAudioUrl
           )
+      const allMediaUrls: string[] = []
+      if (globalAudioUrl) allMediaUrls.push(globalAudioUrl)
+      questions.forEach((q) => {
+        if (q.media_url) allMediaUrls.push(q.media_url)
+        if (q.image_url) allMediaUrls.push(q.image_url)
+      })
+      if (allMediaUrls.length > 0) {
+        mediaAdminService.confirmMedia(allMediaUrls, examId).catch(() => {})
+      }
+
       const mergedExam: ToeicExamItem = {
         ...exam,
         ...(updated || {}),
