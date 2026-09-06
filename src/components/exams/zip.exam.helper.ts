@@ -615,8 +615,12 @@ export async function parseAndUploadZipExam(
       imageLinkedCount++
     }
 
-    const isSpeaking = skillType === 'SPEAKING' || String(partNum).toLowerCase() === 'speaking'
-    const isWriting = skillType === 'WRITING' || String(partNum).toLowerCase() === 'writing'
+    const areOptionsEmpty = !optA.trim() && !optB.trim() && !optC.trim() && !optD.trim()
+    const isSpeakingPrompt = /describe\s+a\s+time|speak\s+about|pronounce/i.test(questionText)
+    const isWritingPrompt = /write\s+an?\s+(email|essay|letter|paragraph)|at\s+least\s+\d+\s+words/i.test(questionText)
+
+    const isSpeaking = skillType === 'SPEAKING' || String(partNum).toLowerCase() === 'speaking' || (areOptionsEmpty && isSpeakingPrompt)
+    const isWriting = skillType === 'WRITING' || String(partNum).toLowerCase() === 'writing' || (areOptionsEmpty && isWritingPrompt)
     const isListening = skillType === 'LISTENING' || (typeof partNum === 'number' && partNum <= 4)
     const finalSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' =
       isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : isListening ? 'LISTENING' : 'READING'
