@@ -3,6 +3,7 @@
  * @description Header và thanh công cụ tìm kiếm, lọc part thi và các nút chức năng trong modal soạn ngân hàng câu hỏi đề thi
  */
 
+import { useMemo } from 'react'
 import {
   Archive,
   BookOpen,
@@ -16,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 
 interface ExamEditorHeaderProps {
   exam: ToeicExamItem
@@ -117,26 +119,29 @@ export function ExamEditorHeader({
               className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
-          <select
-            value={partFilter}
-            onChange={(e) => onPartFilterChange(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            <option value="ALL">{isVi ? 'Tất cả phần' : 'All Parts'}</option>
-            <option value="1">Part 1 (Ảnh)</option>
-            <option value="2">Part 2 (Hỏi đáp)</option>
-            <option value="3">Part 3 (Hội thoại)</option>
-            <option value="4">Part 4 (Bài nói)</option>
-            <option value="5">Part 5 (Điền câu)</option>
-            <option value="6">Part 6 (Điền đoạn)</option>
-            <option value="7">Part 7 (Đọc hiểu)</option>
-            {is4Skills && (
-              <>
-                <option value="speaking">Speaking (Nói)</option>
-                <option value="writing">Writing (Viết)</option>
-              </>
-            )}
-          </select>
+          <div className="w-44 shrink-0">
+            <CustomSelect
+              value={partFilter}
+              onChange={onPartFilterChange}
+              options={[
+                { value: 'ALL', label: isVi ? 'Tất cả các phần' : 'All Parts' },
+                { value: '1', label: 'Part 1 (Mô tả ảnh)' },
+                { value: '2', label: 'Part 2 (Hỏi đáp)' },
+                { value: '3', label: 'Part 3 (Hội thoại)' },
+                { value: '4', label: 'Part 4 (Bài nói)' },
+                { value: '5', label: 'Part 5 (Điền câu)' },
+                { value: '6', label: 'Part 6 (Điền đoạn)' },
+                { value: '7', label: 'Part 7 (Đọc hiểu)' },
+                ...(is4Skills
+                  ? [
+                      { value: 'speaking', label: isVi ? 'Speaking (Nói)' : 'Speaking' },
+                      { value: 'writing', label: isVi ? 'Writing (Viết)' : 'Writing' },
+                    ]
+                  : []),
+              ]}
+              size="sm"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 justify-end flex-wrap">

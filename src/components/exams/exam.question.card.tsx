@@ -6,16 +6,17 @@
 import React from 'react'
 import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X } from 'lucide-react'
 import { Popconfirm } from '@/components/common/popconfirm'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
-const PART_OPTIONS = [
-  { value: 1, label: 'Part 1: Mô tả hình ảnh (Photographs)' },
-  { value: 2, label: 'Part 2: Hỏi & Đáp (Question - Response)' },
-  { value: 3, label: 'Part 3: Đoạn hội thoại (Conversations)' },
-  { value: 4, label: 'Part 4: Bài nói ngắn (Short Talks)' },
-  { value: 5, label: 'Part 5: Hoàn thành câu (Incomplete Sentences)' },
-  { value: 6, label: 'Part 6: Hoàn thành đoạn văn (Text Completion)' },
-  { value: 7, label: 'Part 7: Đọc hiểu văn bản (Reading Comprehension)' },
+const PART_OPTIONS: SelectOption[] = [
+  { value: '1', label: 'Part 1: Mô tả hình ảnh (Photographs)' },
+  { value: '2', label: 'Part 2: Hỏi & Đáp (Question - Response)' },
+  { value: '3', label: 'Part 3: Đoạn hội thoại (Conversations)' },
+  { value: '4', label: 'Part 4: Bài nói ngắn (Short Talks)' },
+  { value: '5', label: 'Part 5: Hoàn thành câu (Incomplete Sentences)' },
+  { value: '6', label: 'Part 6: Hoàn thành đoạn văn (Text Completion)' },
+  { value: '7', label: 'Part 7: Đọc hiểu văn bản (Reading Comprehension)' },
   { value: 'speaking', label: 'Speaking: Bài thi Nói TOEIC (11 câu hỏi)' },
   { value: 'writing', label: 'Writing: Bài thi Viết TOEIC (8 câu hỏi)' },
 ]
@@ -60,26 +61,22 @@ export function ExamQuestionCard({
             {qIndex + 1}
           </span>
 
-          <select
-            value={q.part_number || (isSpeaking ? 'speaking' : isWriting ? 'writing' : 5)}
-            onChange={(e) => {
-              const val = e.target.value
-              const isSp = val === 'speaking'
-              const isWr = val === 'writing'
-              onUpdate({
-                part_number: isSp || isWr ? val : Number(val),
-                question_type: isSp ? 'SPEAKING' : isWr ? 'WRITING' : 'MULTIPLE_CHOICE',
-                options: isSp || isWr ? [] : q.options.length ? q.options : ['', '', '', ''],
-              })
-            }}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            {PART_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="w-72 max-w-full">
+            <CustomSelect
+              value={String(q.part_number || (isSpeaking ? 'speaking' : isWriting ? 'writing' : 5))}
+              onChange={(val) => {
+                const isSp = val === 'speaking'
+                const isWr = val === 'writing'
+                onUpdate({
+                  part_number: isSp || isWr ? val : Number(val),
+                  question_type: isSp ? 'SPEAKING' : isWr ? 'WRITING' : 'MULTIPLE_CHOICE',
+                  options: isSp || isWr ? [] : q.options.length ? q.options : ['', '', '', ''],
+                })
+              }}
+              options={PART_OPTIONS}
+              size="sm"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5">

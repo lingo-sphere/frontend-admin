@@ -3,8 +3,10 @@
  * @description Các thao tác hành động trên header bảng: chọn khóa học, làm mới dữ liệu và tạo bài thi mới
  */
 
-import { BookOpen, RotateCcw, Plus } from 'lucide-react'
+import { useMemo } from 'react'
+import { RotateCcw, Plus } from 'lucide-react'
 import type { ToeicExamItem } from '@/services/exam.service'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 
 export interface CourseSelectItem {
   id: string
@@ -34,36 +36,47 @@ export function CourseExamHeaderActions({
   onRefresh,
   onOpenCreateModal,
 }: CourseExamHeaderActionsProps) {
+  const courseOptions: SelectOption[] = useMemo(() => {
+    const list: SelectOption[] = [
+      {
+        value: 'ALL',
+        label: isVi
+          ? `Tất cả bài thi (Khóa học & Hệ thống)`
+          : `All Exams (${exams.length})`,
+        badge: String(exams.length),
+        badgeClass: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
+      },
+      {
+        value: 'GLOBAL_SYSTEM',
+        label: isVi ? 'Bài Test Năng Lực Đầu Vào' : 'System Placement Tests',
+        badge: isVi ? 'Hệ thống' : 'System',
+        badgeClass: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+      },
+    ]
+
+    courses.forEach((c) => {
+      const count = exams.filter((e) => e.course_id === c.id).length
+      list.push({
+        value: c.id,
+        label: c.title,
+        badge: isVi ? `${count} bài` : `${count}`,
+      })
+    })
+
+    return list
+  }, [courses, exams, isVi])
+
   return (
     <>
-      <div className="flex items-center gap-2 min-w-[280px]">
-        <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-        <select
+      <div className="w-64 sm:w-72">
+        <CustomSelect
           value={selectedCourseId}
-          onChange={(e) => onSelectCourseId(e.target.value)}
-          className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-        >
-          <option value="ALL">
-            {isVi
-              ? `Tất cả bài thi (Khóa học & Toàn hệ thống - ${exams.length})`
-              : `All Exams (${exams.length})`}
-          </option>
-          <option value="GLOBAL_SYSTEM">
-            ⭐ {isVi ? 'Bài Test Năng Lực Đầu Vào Toàn Hệ Thống' : 'System Placement Tests'}
-          </option>
-          {courses.length > 0 && (
-            <optgroup label={isVi ? 'Theo từng Khóa học' : 'By Course'}>
-              {courses.map((c) => {
-                const count = exams.filter((e) => e.course_id === c.id).length
-                return (
-                  <option key={c.id} value={c.id}>
-                    {c.title} ({count} bài thi)
-                  </option>
-                )
-              })}
-            </optgroup>
-          )}
-        </select>
+          onChange={onSelectCourseId}
+          options={courseOptions}
+          size="md"
+          showSearch={courses.length > 5}
+          placeholder={isVi ? 'Chọn khóa học / bài thi...' : 'Select course...'}
+        />
       </div>
 
       <button

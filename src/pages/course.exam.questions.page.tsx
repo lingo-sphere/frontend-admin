@@ -34,6 +34,7 @@ import { ExamZipDropzone } from '@/components/exams/exam.zip.dropzone'
 import { ExamEditorHeader } from '@/components/exams/editor/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/components/exams/editor/exam.editor.global.audio'
 import { useExamQuestionEditor } from '@/hooks/use.exam.question.editor'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { Course } from '@/types/api.types'
 
 interface CourseExamQuestionsPageProps {
@@ -529,10 +530,10 @@ function CourseExamQuestionsEditor({
                     <span>{isVi ? 'Trạng thái phát hành:' : 'Publish Status:'}</span>
                   </div>
                 </label>
-                <select
+                <CustomSelect
                   value={formIsPublished ? 'PUBLISHED' : 'DRAFT'}
-                  onChange={(e) => {
-                    const isPub = e.target.value === 'PUBLISHED'
+                  onChange={(val) => {
+                    const isPub = val === 'PUBLISHED'
                     if (isPub && currentActiveConflict) {
                       toast.error(
                         isVi
@@ -543,11 +544,22 @@ function CourseExamQuestionsEditor({
                     }
                     setFormIsPublished(isPub)
                   }}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-                >
-                  <option value="PUBLISHED">{isVi ? '🟢 Public (Công khai)' : '🟢 Public'}</option>
-                  <option value="DRAFT">{isVi ? '🟡 Private (Bản nháp)' : '🟡 Private Draft'}</option>
-                </select>
+                  options={[
+                    {
+                      value: 'PUBLISHED',
+                      label: isVi ? 'Public (Công khai)' : 'Public',
+                      badge: isVi ? 'Hiển thị' : 'Visible',
+                      badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+                    },
+                    {
+                      value: 'DRAFT',
+                      label: isVi ? 'Private (Bản nháp)' : 'Private Draft',
+                      badge: isVi ? 'Ẩn' : 'Hidden',
+                      badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
+                    },
+                  ]}
+                  size="md"
+                />
               </div>
             </div>
 
