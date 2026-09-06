@@ -53,6 +53,7 @@ interface RawExamQuestion {
 interface UseExamQuestionEditorParams {
   isOpen: boolean
   exam?: ToeicExamItem | null
+  is4Skills?: boolean
   initialQuestions?: ExamQuestionItem[]
   initialGlobalAudioUrl?: string
   isVi: boolean
@@ -64,6 +65,7 @@ interface UseExamQuestionEditorParams {
 export function useExamQuestionEditor({
   isOpen,
   exam,
+  is4Skills,
   initialQuestions,
   initialGlobalAudioUrl,
   isVi,
@@ -71,6 +73,13 @@ export function useExamQuestionEditor({
   onSave,
   onClose,
 }: UseExamQuestionEditorParams) {
+  const effectiveIs4Skills =
+    is4Skills !== undefined
+      ? is4Skills
+      : exam?.placement_type === '4SKILLS' ||
+        exam?.skills_enabled === 'ALL' ||
+        exam?.skills_enabled === 'FULL' ||
+        false
   const [questions, setQuestions] = useState<ExamQuestionItem[]>([])
   const [globalAudioUrl, setGlobalAudioUrl] = useState<string>('')
   const [globalAudioFile, setGlobalAudioFile] = useState<File | null>(null)
@@ -409,12 +418,17 @@ export function useExamQuestionEditor({
     setZipProgress(null)
 
     try {
-      const result = await parseAndUploadZipExam(file, isVi, (status, current, total) => {
-        setZipProcessStatus(status)
-        if (current !== undefined && total !== undefined) {
-          setZipProgress({ current, total })
-        }
-      })
+      const result = await parseAndUploadZipExam(
+        file,
+        isVi,
+        (status, current, total) => {
+          setZipProcessStatus(status)
+          if (current !== undefined && total !== undefined) {
+            setZipProgress({ current, total })
+          }
+        },
+        effectiveIs4Skills
+      )
 
       setQuestions(result.questions)
       if (result.globalAudioUrl) {

@@ -60,6 +60,7 @@ function CourseExamQuestionsEditor({
     (initialExam.placement_type as '2SKILLS' | '4SKILLS') ||
       (initialExam.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS')
   )
+  const is4Skills = formPlacementSkills === '4SKILLS'
   const [formDuration, setFormDuration] = useState<number>(initialExam.duration_minutes || 60)
   const [formPassingScore, setFormPassingScore] = useState<number>(initialExam.passing_score || 500)
   const [formDescription, setFormDescription] = useState<string>(initialExam.description || '')
@@ -157,6 +158,7 @@ function CourseExamQuestionsEditor({
   } = useExamQuestionEditor({
     isOpen: true,
     exam: activeExamConfig,
+    is4Skills,
     isVi,
     onExamUpdated: () => {},
     onClose: () => handleCancelExam(),
@@ -305,8 +307,6 @@ function CourseExamQuestionsEditor({
       setIsSavingAll(false)
     }
   }
-
-  const is4Skills = formPlacementSkills === '4SKILLS'
 
   return (
     <div className="space-y-4 w-full pb-16 animate-in fade-in duration-200">
@@ -660,6 +660,7 @@ function CourseExamQuestionsEditor({
             isSystemPlacement || isProcessingZip ? (
               <ExamZipDropzone
                 isVi={isVi}
+                is4Skills={is4Skills}
                 isProcessingZip={isProcessingZip}
                 zipProcessStatus={zipProcessStatus}
                 zipProgress={zipProgress}
@@ -676,7 +677,7 @@ function CourseExamQuestionsEditor({
                   if (file) handleZipFileSelected(file)
                 }}
                 onOpenZipPicker={() => zipFileInputRef.current?.click()}
-                onDownloadSampleZip={() => downloadSampleZip(isVi)}
+                onDownloadSampleZip={() => downloadSampleZip(isVi, is4Skills)}
               />
             ) : (
               <div className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">

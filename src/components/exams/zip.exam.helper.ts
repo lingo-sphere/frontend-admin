@@ -85,11 +85,65 @@ export interface ParseZipResult {
   imageCount: number
 }
 
-export async function downloadSampleZip(isVi = true): Promise<void> {
+function classifySkill(strVal: string): 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'UNKNOWN' {
+  const norm = normalizeKey(strVal)
+  const lower = strVal.toLowerCase().trim()
+
+  if (
+    norm.includes('noi') ||
+    lower.includes('speaking') ||
+    lower.includes('speak') ||
+    norm === 's'
+  ) {
+    return 'SPEAKING'
+  }
+  if (
+    norm.includes('viet') ||
+    lower.includes('writing') ||
+    lower.includes('write') ||
+    norm === 'w'
+  ) {
+    return 'WRITING'
+  }
+  if (
+    norm.includes('nghe') ||
+    lower.includes('listen') ||
+    norm === 'l' ||
+    lower.includes('part 1') ||
+    lower.includes('part 2') ||
+    lower.includes('part 3') ||
+    lower.includes('part 4') ||
+    lower.includes('part1') ||
+    lower.includes('part2') ||
+    lower.includes('part3') ||
+    lower.includes('part4') ||
+    ['1', '2', '3', '4'].includes(lower)
+  ) {
+    return 'LISTENING'
+  }
+  if (
+    norm.includes('doc') ||
+    lower.includes('read') ||
+    norm === 'r' ||
+    lower.includes('part 5') ||
+    lower.includes('part 6') ||
+    lower.includes('part 7') ||
+    lower.includes('part5') ||
+    lower.includes('part6') ||
+    lower.includes('part7') ||
+    ['5', '6', '7'].includes(lower)
+  ) {
+    return 'READING'
+  }
+
+  return 'UNKNOWN'
+}
+
+export async function downloadSampleZip(isVi = true, is4Skills = false): Promise<void> {
   try {
     const zip = new JSZip()
 
-    const sampleQuestions = [
+    const allSampleQuestions = [
       {
         STT: 1,
         'Kỹ năng': 'Nghe',
@@ -176,17 +230,22 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
       },
     ]
 
+    const sampleQuestions = is4Skills ? allSampleQuestions : allSampleQuestions.slice(0, 4)
+
     const worksheet = XLSX.utils.json_to_sheet(sampleQuestions)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     zip.file('questions.xlsx', excelBuffer)
 
+    const skillGuideline = is4Skills
+      ? '   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)\n   - Cot "Part": Part 1 - 7 hoac Speaking, Writing'
+      : '   - Cot "Ky nang": Nghe hoac Doc (Listening hoac Reading)\n   - Cot "Part": Part 1 - 7 (Part 1-4: Nghe, Part 5-7: Doc)\n   - LUU Y: De thi 2 ky nang TUYET DOI KHONG chua ky nang Noi (Speaking) va Viet (Writing)!'
+
     const readmeText = `=== HUONG DAN SOAN DE THI GOI ZIP CHO LINGOSPHERE ===
 1. File questions.xlsx:
    - Cot "STT": So thu tu cau hoi (1, 2, 3...)
-   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)
-   - Cot "Part": Part 1, Part 2, Part 3, Part 4, Part 5, Part 6, Part 7 hoac Speaking, Writing
+${skillGuideline}
    - Cot "Cau hoi": Noi dung cau hoi hoac de bai
    - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
    - Cot "Dap an dung": A, B, C hoac D
@@ -215,7 +274,9 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     const downloadUrl = URL.createObjectURL(zipBlob)
     const a = document.createElement('a')
     a.href = downloadUrl
-    a.download = 'GOI_DE_THI_MAU_TOEIC_LINGOSPHERE.zip'
+    a.download = is4Skills
+      ? 'GOI_DE_THI_MAU_TOEIC_4_KY_NANG.zip'
+      : 'GOI_DE_THI_MAU_TOEIC_2_KY_NANG.zip'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -230,7 +291,8 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
 export async function parseAndUploadZipExam(
   file: File,
   isVi: boolean,
-  onProgress?: (status: string, current?: number, total?: number) => void
+  onProgress?: (status: string, current?: number, total?: number) => void,
+  is4Skills = false
 ): Promise<ParseZipResult> {
   const isDirectExcel = /\.(xlsx|xls|csv)$/i.test(file.name)
   const isZip = /\.(zip)$/i.test(file.name)
@@ -307,6 +369,69 @@ export async function parseAndUploadZipExam(
     throw new Error(isVi ? 'File Excel câu hỏi không có dòng dữ liệu nào!' : 'Question sheet is empty!')
   }
 
+  onProgress?.(isVi ? 'Đang kiểm tra tính tương thích cột kỹ năng...' : 'Validating skills compatibility...')
+
+  const invalidSkillDetails: string[] = []
+
+  for (let idx = 0; idx < rawRows.length; idx++) {
+    const row = rawRows[idx]
+    let rowStt: string | number = idx + 1
+    let explicitSkillStr = ''
+    let explicitPartStr = ''
+
+    for (const [colName, val] of Object.entries(row)) {
+      const norm = normalizeKey(colName)
+      const strVal = String(val ?? '').trim()
+      if (!strVal) continue
+
+      if (norm.includes('stt') || norm === 'no' || norm === 'number') {
+        rowStt = strVal
+      } else if (norm.includes('kynang') || norm.includes('skill')) {
+        explicitSkillStr = strVal
+      } else if (norm.includes('part') || norm.includes('phan') || norm.includes('loai') || norm.includes('type')) {
+        explicitPartStr = strVal
+      }
+    }
+
+    const testValues = [explicitSkillStr, explicitPartStr].filter(Boolean)
+    for (const val of testValues) {
+      const classified = classifySkill(val)
+      if (!is4Skills) {
+        if (classified === 'SPEAKING' || classified === 'WRITING' || classified === 'UNKNOWN') {
+          const excelLine = idx + 2
+          invalidSkillDetails.push(
+            isVi
+              ? `Dòng ${excelLine} (STT ${rowStt}: "${val}")`
+              : `Row ${excelLine} (No. ${rowStt}: "${val}")`
+          )
+          break
+        }
+      } else {
+        if (classified === 'UNKNOWN') {
+          const excelLine = idx + 2
+          invalidSkillDetails.push(
+            isVi
+              ? `Dòng ${excelLine} (STT ${rowStt}: "${val}")`
+              : `Row ${excelLine} (No. ${rowStt}: "${val}")`
+          )
+          break
+        }
+      }
+    }
+  }
+
+  if (invalidSkillDetails.length > 0) {
+    const errorMsg = !is4Skills
+      ? isVi
+        ? `Khóa học / Đề thi này áp dụng TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe và Đọc). File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Hệ thống đã từ chối tải lên và không lưu media lên hệ thống lưu trữ R2. Vui lòng chỉnh sửa file chỉ gồm kỹ năng Nghe và Đọc!`
+        : `This course / exam is configured for TOEIC 2 Skills (Listening & Reading only). Uploaded file contains unsupported skills: ${invalidSkillDetails.join(', ')}. No media was uploaded to R2. Please ensure the file only contains Listening and Reading!`
+      : isVi
+        ? `File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Đề thi 4 Kỹ năng chỉ hỗ trợ các kỹ năng: Nghe, Đọc, Nói, Viết!`
+        : `Uploaded file contains invalid skills: ${invalidSkillDetails.join(', ')}. Only Listening, Reading, Speaking, and Writing are supported!`
+
+    throw new Error(errorMsg)
+  }
+
   const uploadedMap: Record<string, string> = {}
   let detectedGlobalAudioUrl: string | undefined = undefined
 
@@ -328,55 +453,53 @@ export async function parseAndUploadZipExam(
 
       try {
         const arrayBuffer = await entry.async('arraybuffer')
-        const fileObj = new File([arrayBuffer], name, { type: getMimeType(name) })
-        const uploadRes = await mediaAdminService.uploadFile(fileObj, 'exam-package')
-        const url = uploadRes.file_url || uploadRes.url || uploadRes.public_url || ''
-        if (url) {
-          uploadedMap[name] = url
-          uploadedMap[normalizeKey(name)] = url
-          const noExt = name.replace(/\.[^.]+$/, '')
-          uploadedMap[noExt] = url
-          uploadedMap[normalizeKey(noExt)] = url
+        const mimeType = getMimeType(name)
+        const isAudio = mimeType.startsWith('audio/')
+        const cleanExt = name.split('.').pop() || (isAudio ? 'mp3' : 'jpg')
+        const uploadFileObj = new File([arrayBuffer], `exam_asset_${Date.now()}_${i}.${cleanExt}`, {
+          type: mimeType,
+        })
+        const folder = isAudio ? 'exam-question-audio' : 'exam-question-image'
 
-          for (const [entryPath, zipEntry] of Object.entries(mediaEntries)) {
-            if (zipEntry === entry) {
-              uploadedMap[entryPath] = url
-              uploadedMap[normalizeKey(entryPath)] = url
-            }
-          }
+        const uploadRes = await mediaAdminService.uploadFile(uploadFileObj, folder)
+        const publicUrl = uploadRes.file_url || uploadRes.url || uploadRes.public_url
 
-          const isAudio = /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(name)
-          if (isAudio) {
-            const lowerNoExt = noExt.toLowerCase()
-            const isNamedGlobal =
-              lowerNoExt === 'full_exam' ||
-              lowerNoExt === 'full-exam' ||
-              lowerNoExt === 'fullexam' ||
-              lowerNoExt === 'toan_bai' ||
-              lowerNoExt === 'toanbai' ||
-              lowerNoExt === 'exam_audio'
+        if (publicUrl) {
+          uploadedMap[name.toLowerCase()] = publicUrl
+          const baseNameNoExt = name.replace(/\.[^.]+$/, '').toLowerCase()
+          uploadedMap[baseNameNoExt] = publicUrl
+          uploadedMap[normalizeKey(name)] = publicUrl
+          uploadedMap[normalizeKey(baseNameNoExt)] = publicUrl
 
-            if (isNamedGlobal && !detectedGlobalAudioUrl) {
-              detectedGlobalAudioUrl = url
-            }
+          if (
+            isAudio &&
+            !detectedGlobalAudioUrl &&
+            (name.includes('full') ||
+              name.includes('global') ||
+              name.includes('all') ||
+              name.includes('exam') ||
+              distinctMediaNames.filter((n) => getMimeType(n).startsWith('audio/')).length === 1)
+          ) {
+            detectedGlobalAudioUrl = publicUrl
           }
         }
-      } catch (uploadErr) {
-        const errorMsg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err)
         lastUploadError = errorMsg
       }
     }
 
-    if (distinctMediaNames.length > 0 && Object.keys(uploadedMap).length === 0 && lastUploadError) {
-      toast.error(
+    if (Object.keys(uploadedMap).length === 0 && distinctMediaNames.length > 0) {
+      throw new Error(
         isVi
-          ? `Lỗi khi tải media từ ZIP lên máy chủ: ${lastUploadError}`
-          : `Failed to upload ZIP media: ${lastUploadError}`
+          ? `Không thể tải lên bất kỳ file media nào lên hệ thống lưu trữ R2! Chi tiết lỗi: ${lastUploadError || 'Lỗi mạng hoặc giới hạn hạn mức'}`
+          : `Failed to upload any media files to R2 storage! Details: ${lastUploadError || 'Network or quota error'}`
       )
     }
   }
 
   const findMatchedMediaUrl = (inputVal: string): string => {
+    if (!inputVal) return ''
     const cleanVal = inputVal.trim()
     if (!cleanVal) return ''
     if (cleanVal.startsWith('http://') || cleanVal.startsWith('https://')) {
@@ -422,42 +545,25 @@ export async function parseAndUploadZipExam(
 
       if (norm.includes('cauhoi') || norm.includes('question') || norm.includes('debai') || norm.includes('prompt')) {
         questionText = strVal
-      } else if (
-        norm.includes('kynang') ||
-        norm.includes('skill') ||
-        norm.includes('loai') ||
-        norm.includes('type') ||
-        norm.includes('part') ||
-        norm.includes('phan')
-      ) {
-        const lower = strVal.toLowerCase()
-        if (lower.includes('speaking') || lower.includes('noi') || lower === 's') {
+      } else if (norm.includes('kynang') || norm.includes('skill')) {
+        const c = classifySkill(strVal)
+        if (c !== 'UNKNOWN') skillType = c
+      } else if (norm.includes('part') || norm.includes('phan') || norm.includes('loai') || norm.includes('type')) {
+        const c = classifySkill(strVal)
+        if (c === 'SPEAKING') {
           skillType = 'SPEAKING'
           partNum = 'speaking'
-        } else if (lower.includes('writing') || lower.includes('viet') || lower === 'w') {
+        } else if (c === 'WRITING') {
           skillType = 'WRITING'
           partNum = 'writing'
-        } else if (
-          lower.includes('nghe') ||
-          lower.includes('listen') ||
-          lower === 'l' ||
-          lower.includes('part 1') ||
-          lower.includes('part 2') ||
-          lower.includes('part 3') ||
-          lower.includes('part 4') ||
-          lower.includes('part1') ||
-          lower.includes('part2') ||
-          lower.includes('part3') ||
-          lower.includes('part4') ||
-          ['1', '2', '3', '4'].includes(lower)
-        ) {
-          skillType = 'LISTENING'
-          const numMatch = lower.match(/\d+/)
-          partNum = numMatch ? parseInt(numMatch[0], 10) : 1
         } else {
-          skillType = 'READING'
-          const numMatch = lower.match(/\d+/)
-          partNum = numMatch ? parseInt(numMatch[0], 10) : 5
+          const numMatch = strVal.match(/\d+/)
+          if (numMatch) {
+            const p = parseInt(numMatch[0], 10)
+            partNum = p
+            if (p <= 4) skillType = 'LISTENING'
+            else skillType = 'READING'
+          }
         }
       } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm.includes('dapana')) {
         optA = strVal
@@ -475,20 +581,18 @@ export async function parseAndUploadZipExam(
       } else if (
         norm.includes('audio') ||
         norm.includes('mp3') ||
-        norm.includes('nghe') ||
         norm.includes('sound') ||
         norm.includes('voice') ||
-        norm.includes('amthanh') ||
-        norm.includes('track')
+        norm === 'fileaudio'
       ) {
         audioFileName = strVal
       } else if (
-        norm.includes('anh') ||
         norm.includes('image') ||
         norm.includes('img') ||
-        norm.includes('pic') ||
+        norm.includes('anh') ||
         norm.includes('hinh') ||
-        norm.includes('photo')
+        norm.includes('photo') ||
+        norm === 'fileanh'
       ) {
         imageFileName = strVal
       }
@@ -496,20 +600,6 @@ export async function parseAndUploadZipExam(
 
     let matchedAudioUrl = findMatchedMediaUrl(audioFileName)
     const matchedImageUrl = findMatchedMediaUrl(imageFileName)
-
-    if (!matchedAudioUrl) {
-      const qNum = idx + 1
-      matchedAudioUrl =
-        findMatchedMediaUrl(`audio_q${qNum}`) ||
-        findMatchedMediaUrl(`audio_${qNum}`) ||
-        findMatchedMediaUrl(`q${qNum}`) ||
-        findMatchedMediaUrl(`cau${qNum}`) ||
-        findMatchedMediaUrl(`part1_q${qNum}`) ||
-        findMatchedMediaUrl(`part2_q${qNum}`) ||
-        findMatchedMediaUrl(`part3_q${qNum}`) ||
-        findMatchedMediaUrl(`part4_q${qNum}`) ||
-        ''
-    }
 
     if (matchedAudioUrl) {
       audioLinkedCount++

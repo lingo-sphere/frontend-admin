@@ -5,6 +5,7 @@ import { FolderArchive, Archive, Download, Loader2 } from 'lucide-react'
 
 interface ExamZipDropzoneProps {
   isVi: boolean
+  is4Skills?: boolean
   isProcessingZip: boolean
   zipProcessStatus: string
   zipProgress: { current: number; total: number } | null
@@ -18,6 +19,7 @@ interface ExamZipDropzoneProps {
 
 export function ExamZipDropzone({
   isVi,
+  is4Skills = false,
   isProcessingZip,
   zipProcessStatus,
   zipProgress,
@@ -68,14 +70,26 @@ export function ExamZipDropzone({
         <FolderArchive className="w-8 h-8" />
       </div>
 
-      <div className="max-w-md space-y-1.5">
+      <div className="max-w-md space-y-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+          <span>
+            {is4Skills
+              ? isVi ? 'Cấu hình: TOEIC 4 Kỹ năng (Nghe, Đọc, Nói, Viết)' : 'Scope: TOEIC 4 Skills (LRSW)'
+              : isVi ? 'Cấu hình: TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe & Đọc)' : 'Scope: TOEIC 2 Skills (Listening & Reading only)'}
+          </span>
+        </div>
+
         <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          {isVi ? 'Kéo thả hoặc chọn file ZIP đề thi' : 'Drag & drop or select Exam ZIP file'}
+          {isVi ? 'Kéo thả hoặc chọn file ZIP / Excel đề thi' : 'Drag & drop or select Exam ZIP / Excel file'}
         </h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
           {isVi
-            ? 'Gói ZIP gồm file questions.xlsx cùng các file âm thanh (.mp3) và ảnh (.jpg/.png). Nhấn nút bên dưới để chọn file và nạp ngay vào đề thi.'
-            : 'ZIP archive contains questions.xlsx spreadsheet and audio/image media files.'}
+            ? is4Skills
+              ? 'Gói ZIP gồm questions.xlsx (chứa các câu hỏi Nghe, Đọc, Nói, Viết) và thư mục media chứa audio/ảnh minh họa.'
+              : 'Gói ZIP gồm questions.xlsx (chỉ chấp nhận kỹ năng Nghe và Đọc) và thư mục media chứa audio/ảnh minh họa.'
+            : is4Skills
+              ? 'ZIP archive containing questions.xlsx (Listening, Reading, Speaking, Writing) and media files.'
+              : 'ZIP archive containing questions.xlsx (Listening & Reading only) and media files.'}
         </p>
       </div>
 
@@ -87,7 +101,7 @@ export function ExamZipDropzone({
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-purple-500/20"
         >
           <Archive className="w-4 h-4" />
-          <span>{isVi ? 'Chọn file ZIP từ máy tính' : 'Choose ZIP File'}</span>
+          <span>{isVi ? 'Chọn file từ máy tính' : 'Choose File'}</span>
         </button>
 
         <button
@@ -96,7 +110,11 @@ export function ExamZipDropzone({
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
         >
           <Download className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-          <span>{isVi ? 'Tải Gói ZIP Mẫu Chuẩn' : 'Download Sample ZIP'}</span>
+          <span>
+            {isVi
+              ? is4Skills ? 'Tải Gói ZIP Mẫu 4 Kỹ Năng' : 'Tải Gói ZIP Mẫu 2 Kỹ Năng'
+              : is4Skills ? 'Download 4-Skills Sample ZIP' : 'Download 2-Skills Sample ZIP'}
+          </span>
         </button>
       </div>
     </div>

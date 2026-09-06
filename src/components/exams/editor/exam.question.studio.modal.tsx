@@ -83,6 +83,7 @@ export function ExamQuestionStudioModal({
   } = useExamQuestionEditor({
     isOpen,
     exam: null,
+    is4Skills,
     initialQuestions,
     initialGlobalAudioUrl,
     isVi,
@@ -125,6 +126,7 @@ export function ExamQuestionStudioModal({
           {questions.length === 0 || isProcessingZip ? (
             <ExamZipDropzone
               isVi={isVi}
+              is4Skills={is4Skills}
               isProcessingZip={isProcessingZip}
               zipProcessStatus={zipProcessStatus}
               zipProgress={zipProgress}
@@ -139,17 +141,11 @@ export function ExamQuestionStudioModal({
                 setIsDragOverZip(false)
                 const droppedFile = e.dataTransfer.files?.[0]
                 if (droppedFile) {
-                  const input = zipFileInputRef.current
-                  if (input) {
-                    const dataTransfer = new DataTransfer()
-                    dataTransfer.items.add(droppedFile)
-                    input.files = dataTransfer.files
-                    input.dispatchEvent(new Event('change', { bubbles: true }))
-                  }
+                  handleZipFileSelected(droppedFile)
                 }
               }}
               onOpenZipPicker={() => zipFileInputRef.current?.click()}
-              onDownloadSampleZip={() => downloadSampleZip(isVi)}
+              onDownloadSampleZip={() => downloadSampleZip(isVi, is4Skills)}
             />
           ) : (
             <>
