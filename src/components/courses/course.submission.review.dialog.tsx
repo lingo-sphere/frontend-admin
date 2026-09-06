@@ -1,9 +1,7 @@
-/**
- * @file course.submission.review.dialog.tsx
- * @description Dialog chấm điểm và viết nhận xét phúc khảo cho bài nộp Speaking hoặc Writing của học viên
- */
+// Dialog cham diem va viet nhan xet phuc khao bai nop cua hoc vien.
 
 import { X, Volume2, FileText, Sparkles, CheckCircle2, Edit3, Bot, Save } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 import type { SkillSubmissionItem } from '@/services/progress.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
 
@@ -195,14 +193,12 @@ export function CourseSubmissionReviewDialog({
                 Điểm chính thức của Giáo Viên (Thang 0 - 100):
               </label>
               <div className="flex items-center gap-3">
-                <input
-                  type="number"
+                <NumberInput
                   min={0}
                   max={100}
+                  fallbackValue={0}
                   value={editScore}
-                  onChange={(e) =>
-                    onScoreChange(Math.min(100, Math.max(0, Number(e.target.value))))
-                  }
+                  onChange={onScoreChange}
                   className="w-24 px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-xl text-base font-black text-indigo-600 dark:text-indigo-400 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-2xs"
                 />
                 <div className="flex items-center gap-1.5 flex-wrap">

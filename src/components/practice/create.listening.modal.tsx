@@ -1,11 +1,9 @@
-/**
- * @file create.listening.modal.tsx
- * @description Component giao diện CreateListeningModal phục vụ khu vực Quản trị Admin
- */
+// Modal tao bai luyen nghe.
 
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 
 interface CreateListeningModalProps {
   isOpen: boolean
@@ -93,11 +91,11 @@ export function CreateListeningModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Số câu hỏi
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={totalQuestions}
-                onChange={(e) => onTotalQuestionsChange(Number(e.target.value))}
+                onChange={onTotalQuestionsChange}
                 min={1}
+                fallbackValue={10}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
               />
             </div>

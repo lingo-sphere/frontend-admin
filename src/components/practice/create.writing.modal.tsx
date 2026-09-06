@@ -1,11 +1,9 @@
-/**
- * @file create.writing.modal.tsx
- * @description Component giao diện CreateWritingModal phục vụ khu vực Quản trị Admin
- */
+// Modal tao bai luyen viet.
 
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 
 interface CreateWritingModalProps {
   isOpen: boolean
@@ -96,11 +94,11 @@ export function CreateWritingModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Tối thiểu (từ)
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={minWords}
-                onChange={(e) => onMinWordsChange(Number(e.target.value))}
+                onChange={onMinWordsChange}
                 min={10}
+                fallbackValue={50}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
               />
             </div>
@@ -109,11 +107,11 @@ export function CreateWritingModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Tối đa (từ)
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={maxWords}
-                onChange={(e) => onMaxWordsChange(Number(e.target.value))}
+                onChange={onMaxWordsChange}
                 min={20}
+                fallbackValue={200}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
               />
             </div>

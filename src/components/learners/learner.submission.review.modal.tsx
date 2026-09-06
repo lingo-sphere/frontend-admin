@@ -1,7 +1,4 @@
-/**
- * @file learner.submission.review.modal.tsx
- * @description Modal chấm điểm, nghe file ghi âm Speaking (kèm Whisper STT) hoặc đọc bài luận Writing và gửi nhận xét cho học viên
- */
+// Modal cham diem bai nop cua hoc vien.
 
 import { useState, useEffect } from 'react'
 import {
@@ -14,6 +11,7 @@ import {
   X,
   ExternalLink,
 } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 import { progressService, type SkillSubmissionItem } from '@/services/progress.service'
 import { toast } from '@/store/toast.store'
 import { resolveMediaUrl } from '@/utils/media.utils'
@@ -305,12 +303,12 @@ export function LearnerSubmissionReviewModal({
                 Điểm chính thức của Giáo Viên (Thang 0 - 100):
               </label>
               <div className="flex items-center gap-3">
-                <input
-                  type="number"
+                <NumberInput
                   min={0}
                   max={100}
+                  fallbackValue={0}
                   value={editScore}
-                  onChange={(e) => setEditScore(Math.min(100, Math.max(0, Number(e.target.value))))}
+                  onChange={setEditScore}
                   className="w-24 px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-xl text-base font-black text-indigo-600 dark:text-indigo-400 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-2xs"
                 />
                 <div className="flex items-center gap-1.5 flex-wrap">

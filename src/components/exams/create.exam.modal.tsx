@@ -1,12 +1,10 @@
-/**
- * @file create.exam.modal.tsx
- * @description Component giao diện CreateExamModal phục vụ khu vực Quản trị Admin
- */
+// Modal tao moi bai thi.
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 
 interface CreateExamModalProps {
   isOpen: boolean
@@ -102,11 +100,12 @@ export function CreateExamModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVi ? 'Thời lượng (phút)' : 'Duration (mins)'}
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
+                onChange={setDuration}
                 min={10}
+                max={240}
+                fallbackValue={60}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>

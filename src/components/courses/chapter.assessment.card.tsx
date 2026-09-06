@@ -1,10 +1,8 @@
-/**
- * @file chapter.assessment.card.tsx
- * @description Component quản lý bài kiểm tra đánh giá cột mốc kết thúc từng chương học
- */
+// Quan ly bai kiem tra danh gia ket thuc tung chuong hoc.
 
 import { useState, useRef } from 'react'
 import { Award, Clock } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import type { CourseModule } from './course.basic.info.tab'
@@ -219,13 +217,12 @@ export function ChapterAssessmentCard({
               {isVi ? 'Thời lượng:' : 'Duration:'}
             </span>
             <div className="flex items-center gap-1">
-              <input
-                type="number"
+              <NumberInput
                 min={5}
                 max={180}
+                fallbackValue={15}
                 value={module.challenge_duration_minutes ?? module.duration_minutes ?? 15}
-                onChange={(e) => {
-                  const val = Math.max(5, Math.min(180, Number(e.target.value) || 15))
+                onChange={(val) => {
                   onUpdateModule({
                     challenge_duration_minutes: val,
                     duration_minutes: val,
@@ -244,13 +241,12 @@ export function ChapterAssessmentCard({
               {isVi ? 'Điểm đạt tối thiểu:' : 'Passing score:'}
             </span>
             <div className="flex items-center gap-1">
-              <input
-                type="number"
+              <NumberInput
                 min={10}
                 max={100}
+                fallbackValue={70}
                 value={passingScore}
-                onChange={(e) => {
-                  const val = Math.max(10, Math.min(100, Number(e.target.value) || 70))
+                onChange={(val) => {
                   onUpdateModule({
                     passing_score: val,
                     challenge_passing_score: val,

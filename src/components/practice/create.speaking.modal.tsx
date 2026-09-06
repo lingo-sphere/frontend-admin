@@ -1,11 +1,9 @@
-/**
- * @file create.speaking.modal.tsx
- * @description Component giao diện CreateSpeakingModal phục vụ khu vực Quản trị Admin
- */
+// Modal tao bai luyen noi.
 
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 
 interface CreateSpeakingModalProps {
   isOpen: boolean
@@ -96,12 +94,12 @@ export function CreateSpeakingModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Độ chính xác chuẩn (% đạt)
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={accuracy}
-                onChange={(e) => onAccuracyChange(Number(e.target.value))}
+                onChange={onAccuracyChange}
                 min={50}
                 max={100}
+                fallbackValue={70}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
               />
             </div>

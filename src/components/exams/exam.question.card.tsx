@@ -1,12 +1,10 @@
-/**
- * @file exam.question.card.tsx
- * @description Card hiển thị và chỉnh sửa chi tiết một câu hỏi thi (Part, Audio, Hình ảnh, 4 lựa chọn hoặc cấu hình Nói/Viết, giải thích)
- */
+// Card hien thi va chinh sua chi tiet cau hoi de thi.
 
 import React from 'react'
 import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X } from 'lucide-react'
 import { Popconfirm } from '@/components/common/popconfirm'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 const SKILL_OPTIONS_2: SelectOption[] = [
@@ -265,12 +263,12 @@ export function ExamQuestionCard({
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                   Thời gian chuẩn bị (giây):
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={10}
                   max={120}
+                  fallbackValue={45}
                   value={q.prep_time_seconds || 45}
-                  onChange={(e) => onUpdate({ prep_time_seconds: Number(e.target.value) })}
+                  onChange={(val) => onUpdate({ prep_time_seconds: val })}
                   className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
                 />
               </div>
@@ -278,12 +276,12 @@ export function ExamQuestionCard({
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                   Thời gian trả lời / nói (giây):
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={15}
                   max={180}
+                  fallbackValue={60}
                   value={q.response_time_seconds || 60}
-                  onChange={(e) => onUpdate({ response_time_seconds: Number(e.target.value) })}
+                  onChange={(val) => onUpdate({ response_time_seconds: val })}
                   className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
                 />
               </div>
@@ -294,12 +292,12 @@ export function ExamQuestionCard({
               <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                 Số từ tối thiểu (words):
               </label>
-              <input
-                type="number"
+              <NumberInput
                 min={30}
                 max={600}
+                fallbackValue={100}
                 value={q.min_words || 100}
-                onChange={(e) => onUpdate({ min_words: Number(e.target.value) })}
+                onChange={(val) => onUpdate({ min_words: val })}
                 className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
               />
             </div>

@@ -1,9 +1,7 @@
-/**
- * @file roadmap.stages.list.section.tsx
- * @description Phần cấu hình danh sách các chặng học tập (Stages), khóa học liên kết và bài kiểm tra checkpoint của lộ trình
- */
+// Cau hinh danh sach cac chang hoc tap cua lo trinh.
 
 import { Layers, Plus, Trash2 } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 import type { Course as ApiCourse, LearningRoadmapStage } from '@/types/api.types'
 import type { ToeicExamItem } from '@/services/exam.service'
 
@@ -146,14 +144,12 @@ export function RoadmapStagesListSection({
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                   Điểm Đạt Checkpoint (%):
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={50}
                   max={100}
+                  fallbackValue={70}
                   value={stage.passing_score || 70}
-                  onChange={(e) =>
-                    onUpdateStage(index, 'passing_score', Number(e.target.value))
-                  }
+                  onChange={(val) => onUpdateStage(index, 'passing_score', val)}
                   className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
                 />
               </div>

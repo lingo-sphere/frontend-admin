@@ -1,9 +1,7 @@
-/**
- * @file roadmap.basic.info.section.tsx
- * @description Phần thông tin cơ bản của Lộ trình học tập (Tên, Slug, Mô tả, Kỹ năng, Điểm số mục tiêu, Giá bán)
- */
+// Thong tin co ban cua lo trinh hoc tap.
 
 import { TrendingUp } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 
 interface RoadmapBasicInfoSectionProps {
   formTitle: string
@@ -133,12 +131,12 @@ export function RoadmapBasicInfoSection({
           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             Mục Tiêu Điểm Số Đầu Ra (Target Score):
           </label>
-          <input
-            type="number"
+          <NumberInput
             min={10}
             max={990}
+            fallbackValue={450}
             value={formTargetScore}
-            onChange={(e) => onTargetScoreChange(Number(e.target.value))}
+            onChange={onTargetScoreChange}
             className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
@@ -154,12 +152,12 @@ export function RoadmapBasicInfoSection({
             <label className="block text-[11px] text-slate-500 mb-1">
               Điểm Tối Thiểu (Min Score):
             </label>
-            <input
-              type="number"
+            <NumberInput
               min={0}
               max={990}
+              fallbackValue={0}
               value={formMinEntryScore}
-              onChange={(e) => onMinEntryScoreChange(Number(e.target.value))}
+              onChange={onMinEntryScoreChange}
               className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
             />
           </div>
@@ -167,12 +165,12 @@ export function RoadmapBasicInfoSection({
             <label className="block text-[11px] text-slate-500 mb-1">
               Điểm Tối Đa (Max Score):
             </label>
-            <input
-              type="number"
+            <NumberInput
               min={0}
               max={990}
+              fallbackValue={990}
               value={formMaxEntryScore}
-              onChange={(e) => onMaxEntryScoreChange(Number(e.target.value))}
+              onChange={onMaxEntryScoreChange}
               className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
             />
           </div>
@@ -184,11 +182,12 @@ export function RoadmapBasicInfoSection({
           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             Giá Gốc Tổng Khóa (đ):
           </label>
-          <input
-            type="number"
+          <NumberInput
             step={50000}
+            min={0}
+            fallbackValue={0}
             value={formOriginalPrice}
-            onChange={(e) => onOriginalPriceChange(Number(e.target.value))}
+            onChange={onOriginalPriceChange}
             className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs"
           />
         </div>
@@ -196,11 +195,12 @@ export function RoadmapBasicInfoSection({
           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             Giá Ưu Đãi Trọn Gói (đ):
           </label>
-          <input
-            type="number"
+          <NumberInput
             step={50000}
+            min={0}
+            fallbackValue={0}
             value={formBundlePrice}
-            onChange={(e) => onBundlePriceChange(Number(e.target.value))}
+            onChange={onBundlePriceChange}
             className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400"
           />
         </div>

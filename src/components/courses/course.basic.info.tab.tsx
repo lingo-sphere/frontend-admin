@@ -1,9 +1,7 @@
-/**
- * @file course.basic.info.tab.tsx
- * @description Tab thông tin cơ bản của khóa học gồm danh mục, tiêu đề, học phí, mô tả, ảnh thumbnail, thông tin giảng viên và Final Test
- */
+// Tab thong tin co ban cua khoa hoc.
 
 import { useMemo, useEffect } from 'react'
+import { NumberInput } from '@/components/common/number.input'
 import { categoryLabels, levelLabels } from '@/data/courses.data'
 import { R2MediaUploader } from '@/components/admin/r2.media.uploader'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
@@ -215,16 +213,12 @@ export function CourseBasicInfoTab({
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Mục tiêu điểm' : 'Target Score'}
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={0}
                   max={990}
+                  fallbackValue={0}
                   value={formData.target_score}
-                  onChange={(e) =>
-                    onChange({
-                      target_score: Math.max(0, Math.min(990, Number(e.target.value) || 0)),
-                    })
-                  }
+                  onChange={(val) => onChange({ target_score: val })}
                   placeholder="VD: 750"
                   className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
                 />
@@ -234,11 +228,11 @@ export function CourseBasicInfoTab({
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Giá gốc (VNĐ)' : 'Price (VND)'}
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={0}
+                  fallbackValue={0}
                   value={formData.price}
-                  onChange={(e) => onChange({ price: Math.max(0, Number(e.target.value) || 0) })}
+                  onChange={(val) => onChange({ price: val })}
                   className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
                 />
               </div>
@@ -247,11 +241,11 @@ export function CourseBasicInfoTab({
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Giá khuyến mãi (VNĐ)' : 'Discount Price (VND)'}
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={0}
+                  fallbackValue={0}
                   value={formData.discount_price}
-                  onChange={(e) => onChange({ discount_price: Math.max(0, Number(e.target.value) || 0) })}
+                  onChange={(val) => onChange({ discount_price: val })}
                   className={`w-full h-11 rounded-xl border bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:bg-white dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold ${
                     formData.discount_price > 0 && formData.discount_price >= formData.price
                       ? 'border-rose-500 focus:border-rose-500 text-rose-600 dark:text-rose-400'

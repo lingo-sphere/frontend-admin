@@ -32,6 +32,7 @@ import { ExamEditorHeader } from '@/components/exams/editor/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/components/exams/editor/exam.editor.global.audio'
 import { useExamQuestionEditor } from '@/hooks/use.exam.question.editor'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 import type { Course } from '@/types/api.types'
 
 interface CourseExamQuestionsPageProps {
@@ -493,12 +494,12 @@ function CourseExamQuestionsEditor({
                     <span>{isVi ? 'Thời gian thi (phút):' : 'Duration (mins):'}</span>
                   </div>
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   min={5}
                   max={240}
+                  fallbackValue={60}
                   value={formDuration}
-                  onChange={(e) => setFormDuration(Number(e.target.value) || 60)}
+                  onChange={setFormDuration}
                   className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
@@ -511,12 +512,12 @@ function CourseExamQuestionsEditor({
                       <span>{isVi ? 'Điểm chuẩn đạt:' : 'Passing Score:'}</span>
                     </div>
                   </label>
-                  <input
-                    type="number"
+                  <NumberInput
                     min={0}
                     max={990}
+                    fallbackValue={0}
                     value={formPassingScore}
-                    onChange={(e) => setFormPassingScore(Number(e.target.value) || 0)}
+                    onChange={setFormPassingScore}
                     className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>

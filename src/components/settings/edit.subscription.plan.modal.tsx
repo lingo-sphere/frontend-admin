@@ -1,10 +1,8 @@
-/**
- * @file edit.subscription.plan.modal.tsx
- * @description Modal chỉnh sửa thông tin và giá bán gói dịch vụ thành viên, tự động tính ưu đãi và tối ưu giao diện
- */
+// Modal chinh sua goi dich vu thanh vien.
 
 import { useState, useEffect } from 'react'
 import { X, Crown, AlertCircle, Save, Tag } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 import type { SubscriptionPlan } from '@/types/api.types'
 
 interface EditSubscriptionPlanModalProps {
@@ -154,12 +152,12 @@ export function EditSubscriptionPlanModal({
                 <span>{isVietnamese ? 'Giá bán (VNĐ) *' : 'Selling Price (VND) *'}</span>
               </label>
               <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  step="1000"
+                <NumberInput
+                  min={0}
+                  step={1000}
+                  fallbackValue={0}
                   value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
+                  onChange={setPrice}
                   required
                   className="w-full h-10 px-3.5 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-indigo-300 dark:border-indigo-500/40 text-xs font-bold text-amber-600 dark:text-amber-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
@@ -177,12 +175,12 @@ export function EditSubscriptionPlanModal({
                 {isVietnamese ? 'Giá gốc niêm yết (VNĐ)' : 'Original Price (VND)'}
               </label>
               <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  step="1000"
+                <NumberInput
+                  min={0}
+                  step={1000}
+                  fallbackValue={0}
                   value={originalPrice}
-                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
+                  onChange={setOriginalPrice}
                   className="w-full h-10 px-3.5 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 dark:text-slate-500">
@@ -224,11 +222,11 @@ export function EditSubscriptionPlanModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVietnamese ? 'Thời hạn sử dụng (Số ngày)' : 'Duration (Days)'}
               </label>
-              <input
-                type="number"
-                min="1"
+              <NumberInput
+                min={1}
+                fallbackValue={30}
                 value={durationDays}
-                onChange={(e) => setDurationDays(Number(e.target.value))}
+                onChange={setDurationDays}
                 className="w-full h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
               <span className="text-[10px] text-slate-500">

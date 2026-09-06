@@ -1,9 +1,7 @@
-/**
- * @file settings.system.tab.tsx
- * @description Component giao diện SettingsSystemTab phục vụ khu vực Quản trị Admin
- */
+// Tab cai dat he thong.
 
 import { HardDrive, Save } from 'lucide-react'
+import { NumberInput } from '@/components/common/number.input'
 import type { StorageUsageReport } from '@/types/api.types'
 import type { SystemSetting } from '@/data/settings.data'
 
@@ -100,11 +98,10 @@ export function SettingsSystemTab({
                 </button>
               )}
               {setting.type === 'number' && (
-                <input
-                  type="number"
+                <NumberInput
                   className="w-24 h-9 px-3 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100"
                   value={setting.value as number}
-                  onChange={(e) => onUpdateSetting(setting.key, Number(e.target.value))}
+                  onChange={(val) => onUpdateSetting(setting.key, val)}
                 />
               )}
             </div>

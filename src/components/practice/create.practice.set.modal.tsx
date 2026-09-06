@@ -1,11 +1,9 @@
-/**
- * @file create.practice.set.modal.tsx
- * @description Component giao diện CreatePracticeSetModal phục vụ khu vực Quản trị Admin
- */
+// Modal tao bo luyen tap moi.
 
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
+import { NumberInput } from '@/components/common/number.input'
 
 interface CreatePracticeSetModalProps {
   isOpen: boolean
@@ -120,11 +118,11 @@ export function CreatePracticeSetModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVi ? 'Số câu hỏi' : 'Number of Questions'}
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={totalQuestions}
-                onChange={(e) => onTotalQuestionsChange(Number(e.target.value))}
+                onChange={onTotalQuestionsChange}
                 min={5}
+                fallbackValue={20}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
               />
             </div>
@@ -133,11 +131,12 @@ export function CreatePracticeSetModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isVi ? 'Thời lượng (phút)' : 'Duration (mins)'}
               </label>
-              <input
-                type="number"
+              <NumberInput
                 value={duration}
-                onChange={(e) => onDurationChange(Number(e.target.value))}
+                onChange={onDurationChange}
                 min={5}
+                max={240}
+                fallbackValue={30}
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
               />
             </div>
