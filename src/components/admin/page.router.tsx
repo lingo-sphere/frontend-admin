@@ -97,6 +97,7 @@ export function PageRouter() {
       activeNavItem === 'courses-list' ||
       activeNavItem === 'course-learners' ||
       activeNavItem === 'course-exams' ||
+      activeNavItem === 'course-exam-create' ||
       activeNavItem.startsWith('course-exam-questions:') ||
       activeNavItem === 'roadmaps' ||
       activeNavItem === 'roadmaps-list' ||
@@ -171,6 +172,10 @@ export function PageRouter() {
   if (activeNavItem.startsWith('course-submissions:')) {
     const courseId = activeNavItem.split(':')[1]
     return <CourseSubmissionsPage courseId={courseId} />
+  }
+
+  if (activeNavItem === 'course-exam-create') {
+    return <CourseExamQuestionsPage examId="new" />
   }
 
   if (activeNavItem.startsWith('course-exam-questions:')) {

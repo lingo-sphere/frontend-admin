@@ -10,7 +10,6 @@ import { CourseExamStatsOverview } from '@/components/course-exams/course.exam.s
 import { CourseExamFilterBar } from '@/components/course-exams/course.exam.filter.bar'
 import { CourseExamHeaderActions } from '@/components/course-exams/course.exam.header.actions'
 import { CourseExamGridCard } from '@/components/course-exams/course.exam.grid.card'
-import { CourseExamModal } from '@/components/course-exams/course.exam.modal'
 import { getCourseExamColumns } from '@/components/course-exams/course.exam.table.columns'
 import { useCourseExams } from '@/hooks/use.course.exams'
 import { useAdminStore } from '@/store/admin.store'
@@ -22,7 +21,6 @@ export function CourseExamsPage() {
   const {
     isVi,
     isTeacher,
-    currentUserId,
     courses,
     selectedCourseId,
     setSelectedCourseId,
@@ -47,16 +45,10 @@ export function CourseExamsPage() {
     sortOrder,
     setSortOrder,
     stats,
-    showModal,
-    setShowModal,
-    editingExam,
     loadData,
     handleResetFilters,
-    handleOpenCreateModal,
-    handleOpenEditModal,
     handleDeleteExam,
     handleTogglePublish,
-    handleSaveExam,
   } = useCourseExams()
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
@@ -69,11 +61,11 @@ export function CourseExamsPage() {
       getCourseExamColumns({
         isVi,
         onTogglePublish: handleTogglePublish,
-        onOpenEdit: handleOpenEditModal,
+        onOpenEdit: handleManageQuestions,
         onManageQuestions: handleManageQuestions,
         onDelete: handleDeleteExam,
       }),
-    [isVi, handleTogglePublish, handleOpenEditModal, handleDeleteExam, setActiveNavItem]
+    [isVi, handleTogglePublish, handleDeleteExam, setActiveNavItem]
   )
 
   return (
@@ -113,7 +105,7 @@ export function CourseExamsPage() {
             key={exam._id || ''}
             exam={exam}
             isVi={isVi}
-            onOpenEdit={handleOpenEditModal}
+            onOpenEdit={handleManageQuestions}
             onManageQuestions={handleManageQuestions}
             onDelete={handleDeleteExam}
           />
@@ -138,7 +130,7 @@ export function CourseExamsPage() {
               setCurrentPage(1)
             }}
             onRefresh={loadData}
-            onOpenCreateModal={handleOpenCreateModal}
+            onOpenCreateModal={() => setActiveNavItem('course-exam-create')}
           />
         }
         filterSlot={
@@ -171,19 +163,6 @@ export function CourseExamsPage() {
             setCurrentPage(1)
           },
         }}
-      />
-
-      <CourseExamModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSave={handleSaveExam}
-        editingExam={editingExam}
-        courses={courses}
-        exams={exams}
-        selectedCourseId={selectedCourseId}
-        isTeacher={isTeacher}
-        currentUserId={currentUserId}
-        isVi={isVi}
       />
     </div>
   )

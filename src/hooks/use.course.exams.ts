@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/services/exam.service'
+import { examAdminService, type ToeicExamItem } from '@/services/exam.service'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
@@ -36,9 +36,6 @@ export function useCourseExams() {
   const [pageSize, setPageSize] = useState<number>(10)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
-
-  const [showModal, setShowModal] = useState<boolean>(false)
-  const [editingExam, setEditingExam] = useState<ToeicExamItem | null>(null)
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
@@ -278,16 +275,6 @@ export function useCourseExams() {
     setCurrentPage(1)
   }
 
-  const handleOpenCreateModal = () => {
-    setEditingExam(null)
-    setShowModal(true)
-  }
-
-  const handleOpenEditModal = (exam: ToeicExamItem) => {
-    setEditingExam(exam)
-    setShowModal(true)
-  }
-
   const handleDeleteExam = async (examId?: string) => {
     if (!examId) return
     try {
@@ -357,71 +344,6 @@ export function useCourseExams() {
     }
   }
 
-  const handleSaveExam = async (payload: CreateExamDto, isEdit: boolean, editingExamId?: string) => {
-    try {
-      if (isEdit && editingExamId) {
-        if (String(editingExamId).startsWith('course_final_') && payload.course_id) {
-          await courseService.updateCourse(payload.course_id, {
-            title: payload.title,
-            final_test_passing_score: payload.passing_score,
-            final_test_audio_url: payload.audio_url || undefined,
-          })
-        } else if (String(editingExamId).startsWith('mod_challenge_') && editingExam?.module_id) {
-          await courseService.updateModule(editingExam.module_id, {
-            title: payload.title,
-            challenge_passing_score: payload.passing_score,
-            challenge_audio_url: payload.audio_url || undefined,
-          })
-        } else {
-          await examAdminService.updateExam(editingExamId, payload)
-        }
-        setExams((prev) =>
-          prev.map((e) =>
-            (e._id || e.id) === editingExamId
-              ? {
-                  ...e,
-                  ...payload,
-                }
-              : e
-          )
-        )
-        toast.success(isVi ? 'Đã cập nhật thông tin bài thi thành công!' : 'Exam metadata updated successfully!')
-      } else {
-        const created = await examAdminService.createExam(payload)
-        const newExam: ToeicExamItem = {
-          _id: created?._id || created?.id || `exam_${Date.now()}`,
-          id: created?._id || created?.id || `exam_${Date.now()}`,
-          title: payload.title,
-          course_id: payload.course_id,
-          course_title: payload.course_title,
-          type: payload.type,
-          is_system_placement: payload.is_system_placement,
-          skills_enabled: payload.skills_enabled,
-          placement_type: payload.placement_type,
-          duration_minutes: payload.duration_minutes,
-          total_questions: payload.total_questions,
-          passing_score: payload.passing_score,
-          total_attempts: 0,
-          avg_score: 0,
-          is_published: payload.is_published,
-          created_at: new Date().toISOString(),
-          questions: created?.questions || [],
-        }
-        setExams((prev) => [newExam, ...prev])
-        sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(newExam))
-        useAdminStore.getState().setActiveNavItem(`course-exam-questions:${newExam._id || newExam.id}`)
-        toast.success(
-          isVi
-            ? 'Đã tạo khung bài thi! Mời bạn soạn thảo ngân hàng câu hỏi.'
-            : 'Created exam shell! Opening question bank editor...'
-        )
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể lưu bài thi. Vui lòng thử lại.'
-      toast.error(msg)
-    }
-  }
-
   return {
     isVi,
     isTeacher,
@@ -450,15 +372,9 @@ export function useCourseExams() {
     sortOrder,
     setSortOrder,
     stats,
-    showModal,
-    setShowModal,
-    editingExam,
     loadData,
     handleResetFilters,
-    handleOpenCreateModal,
-    handleOpenEditModal,
     handleDeleteExam,
     handleTogglePublish,
-    handleSaveExam,
   }
 }
