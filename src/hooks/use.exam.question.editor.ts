@@ -349,7 +349,7 @@ export function useExamQuestionEditor({
       setQuestions(result.questions)
       if (result.globalAudioUrl) {
         sessionUploadedUrlsRef.current.add(result.globalAudioUrl)
-        if (!globalAudioUrl) setGlobalAudioUrl(result.globalAudioUrl)
+        setGlobalAudioUrl(result.globalAudioUrl)
       }
       result.questions.forEach((q) => {
         if (q.media_url) sessionUploadedUrlsRef.current.add(q.media_url)

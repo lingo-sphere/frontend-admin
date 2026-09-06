@@ -147,7 +147,7 @@ export function ExamQuestionCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-1">
-        {isListening && (
+        {(isListening || Boolean(q.media_url)) && (
           <div className="flex items-center gap-2">
             <button
               type="button"

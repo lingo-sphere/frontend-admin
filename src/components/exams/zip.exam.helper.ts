@@ -1,7 +1,4 @@
-/**
- * @file zip.exam.helper.ts
- * @description Tiện ích xử lý hỗ trợ cho zip.exam.helper.ts
- */
+// Tien ich phan tich giai nen goi zip de thi va tai len media len he thong luu tru.
 
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 import { mediaAdminService } from '@/services/media.service'
@@ -29,6 +26,10 @@ function getMimeType(fileName: string): string {
       return 'audio/mp4'
     case 'ogg':
       return 'audio/ogg'
+    case 'aac':
+      return 'audio/aac'
+    case 'flac':
+      return 'audio/flac'
     case 'jpg':
     case 'jpeg':
       return 'image/jpeg'
@@ -38,9 +39,42 @@ function getMimeType(fileName: string): string {
       return 'image/webp'
     case 'gif':
       return 'image/gif'
+    case 'svg':
+      return 'image/svg+xml'
     default:
       return 'application/octet-stream'
   }
+}
+
+function createSampleAudioBytes(durationSec = 2, freq = 440): Uint8Array {
+  const sampleRate = 8000
+  const numSamples = sampleRate * durationSec
+  const buffer = new ArrayBuffer(44 + numSamples)
+  const view = new DataView(buffer)
+
+  view.setUint32(0, 0x52494646, false)
+  view.setUint32(4, 36 + numSamples, true)
+  view.setUint32(8, 0x57415645, false)
+
+  view.setUint32(12, 0x666d7420, false)
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate, true)
+  view.setUint16(32, 1, true)
+  view.setUint16(34, 8, true)
+
+  view.setUint32(36, 0x64617461, false)
+  view.setUint32(40, numSamples, true)
+
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate
+    const envelope = Math.min(1, Math.min(i / 800, (numSamples - i) / 800))
+    const sample = Math.sin(2 * Math.PI * freq * t) * envelope * 60 + 128
+    view.setUint8(44 + i, Math.floor(sample))
+  }
+  return new Uint8Array(buffer)
 }
 
 export interface ParseZipResult {
@@ -59,32 +93,35 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
       {
         STT: 1,
         'Kỹ năng': 'Nghe',
-        'Câu hỏi': 'Look at the picture and listen to the four statements. Select the one that best describes what you see.',
+        'Part': 'Part 1',
+        'Câu hỏi': 'Look at the picture and listen to the statements. Select the one that best describes what you see.',
         'Lựa chọn A': 'The woman is reading a document at the library.',
         'Lựa chọn B': 'The woman is typing on a laptop computer.',
         'Lựa chọn C': 'The woman is pouring a cup of coffee.',
         'Lựa chọn D': 'The woman is leaving the conference room.',
         'Đáp án đúng': 'B',
-        'File Audio': 'audio_q1.mp3',
+        'File Audio': 'audio_q1.wav',
         'File Ảnh': 'part1_q1.jpg',
         'Lời giải': 'Trong hình ảnh người phụ nữ đang thao tác gõ bàn phím trên laptop (typing on a laptop).',
       },
       {
         STT: 2,
         'Kỹ năng': 'Nghe',
+        'Part': 'Part 2',
         'Câu hỏi': 'Where should I submit the monthly expense report?',
         'Lựa chọn A': 'To Ms. Johnson in the accounting department on the 4th floor.',
         'Lựa chọn B': 'At about 4:30 PM yesterday afternoon.',
         'Lựa chọn C': 'Yes, I received your email already.',
         'Lựa chọn D': '',
         'Đáp án đúng': 'A',
-        'File Audio': 'audio_q2.mp3',
+        'File Audio': 'audio_q2.wav',
         'File Ảnh': '',
         'Lời giải': 'Câu hỏi "Where" (Ở đâu), câu trả lời A chỉ rõ người và phòng ban nhận báo cáo.',
       },
       {
         STT: 3,
         'Kỹ năng': 'Đọc',
+        'Part': 'Part 5',
         'Câu hỏi': 'All international passengers must _____ their boarding pass and passport at Gate 12.',
         'Lựa chọn A': 'present',
         'Lựa chọn B': 'presents',
@@ -98,6 +135,7 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
       {
         STT: 4,
         'Kỹ năng': 'Đọc',
+        'Part': 'Part 7',
         'Câu hỏi': 'What is the primary topic of this internal announcement?',
         'Lựa chọn A': 'The upcoming office maintenance schedule next Monday.',
         'Lựa chọn B': 'The introduction of a new marketing manager.',
@@ -111,6 +149,7 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
       {
         STT: 5,
         'Kỹ năng': 'Nói',
+        'Part': 'Speaking',
         'Câu hỏi': 'Describe a time you solved a difficult problem at work or school in detail.',
         'Lựa chọn A': '',
         'Lựa chọn B': '',
@@ -124,6 +163,7 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
       {
         STT: 6,
         'Kỹ năng': 'Viết',
+        'Part': 'Writing',
         'Câu hỏi': 'Write an email (at least 100 words) requesting a 3-day extension on your project deadline.',
         'Lựa chọn A': '',
         'Lựa chọn B': '',
@@ -142,20 +182,21 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     zip.file('questions.xlsx', excelBuffer)
 
-    const readmeText = `=== HƯỚNG DẪN SOẠN ĐỀ THI GÓI ZIP CHO LINGOSPHERE ===
+    const readmeText = `=== HUONG DAN SOAN DE THI GOI ZIP CHO LINGOSPHERE ===
 1. File questions.xlsx:
-   - Cột "STT": Số thứ tự câu hỏi (1, 2, 3...)
-   - Cột "Kỹ năng": Nghe, Đọc, Nói, hoặc Viết (hoặc Listening, Reading, Speaking, Writing)
-   - Cột "Câu hỏi": Nội dung câu hỏi hoặc đề bài Nói / Viết
-   - Cột "Lựa chọn A/B/C/D": Các phương án trắc nghiệm (để trống với Nói/Viết)
-   - Cột "Đáp án đúng": A, B, C hoặc D (để trống với Nói/Viết)
-   - Cột "File Audio": Tên file audio trong gói zip (dành cho câu Nghe, ví dụ: audio_q1.mp3)
-   - Cột "File Ảnh": Tên file hình ảnh trong gói zip (nếu có ảnh câu hỏi / bài đọc)
-   - Cột "Lời giải": Giải thích chi tiết đáp án
+   - Cot "STT": So thu tu cau hoi (1, 2, 3...)
+   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)
+   - Cot "Part": Part 1, Part 2, Part 3, Part 4, Part 5, Part 6, Part 7 hoac Speaking, Writing
+   - Cot "Cau hoi": Noi dung cau hoi hoac de bai
+   - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
+   - Cot "Dap an dung": A, B, C hoac D
+   - Cot "File Audio": Ten file audio trong goi zip (audio_q1.wav, audio_q1.mp3...)
+   - Cot "File Anh": Ten file hinh anh trong goi zip (part1_q1.jpg, part7_email.png...)
+   - Cot "Loi giai": Giai thich chi tiet dap an
 
-2. Thư mục hoặc file Media:
-   - Bạn có thể để các file mp3 và jpg/png vào thư mục "audios/" và "images/" hoặc để trực tiếp trong file zip.
-   - Nếu có 1 file audio dài cho cả bài thi, đặt tên là "full_exam.mp3".
+2. Thu muc media:
+   - Dat cac file audio (mp3, wav, m4a, ogg) va hinh anh (jpg, png, webp) vao thu muc "audios/" va "images/" hoac ngay thu muc goc.
+   - File nghe chung toan bai co the dat ten: "full_exam.wav", "full_exam.mp3", "exam_audio.mp3", "audio.mp3" hoac chi can 1 file audio duy nhat trong goi zip.
 `
     zip.file('HUONG_DAN_SU_DUNG.txt', readmeText)
 
@@ -164,11 +205,13 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
     zip.file('images/part1_q1.jpg', dummyPngBase64, { base64: true })
     zip.file('images/part7_email.png', dummyPngBase64, { base64: true })
 
-    const dummyMp3Bytes = new Uint8Array([
-      0xff, 0xfb, 0x90, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    ])
-    zip.file('audios/audio_q1.mp3', dummyMp3Bytes)
-    zip.file('audios/audio_q2.mp3', dummyMp3Bytes)
+    const sampleQ1Audio = createSampleAudioBytes(2, 440)
+    const sampleQ2Audio = createSampleAudioBytes(2, 554)
+    const sampleFullAudio = createSampleAudioBytes(4, 330)
+
+    zip.file('audios/audio_q1.wav', sampleQ1Audio)
+    zip.file('audios/audio_q2.wav', sampleQ2Audio)
+    zip.file('full_exam.wav', sampleFullAudio)
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     const downloadUrl = URL.createObjectURL(zipBlob)
@@ -186,9 +229,6 @@ export async function downloadSampleZip(isVi = true): Promise<void> {
   }
 }
 
-/**
- * Unpack, parse questions spreadsheet and upload media assets from a ZIP file
- */
 export async function parseAndUploadZipExam(
   file: File,
   isVi: boolean,
@@ -226,75 +266,124 @@ export async function parseAndUploadZipExam(
   const workbook = XLSX.read(excelBuffer, { type: 'array' })
   const firstSheetName = workbook.SheetNames[0]
   const worksheet = workbook.Sheets[firstSheetName]
-  const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { defval: '' })
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
 
   if (!rawRows || rawRows.length === 0) {
     throw new Error(isVi ? 'File Excel câu hỏi không có dòng dữ liệu nào!' : 'Question sheet is empty!')
   }
 
   const mediaEntries: Record<string, JSZip.JSZipObject> = {}
-  let detectedGlobalAudioUrl: string | undefined = undefined
+  const distinctMediaNames: string[] = []
 
   for (const [path, entry] of Object.entries(zip.files)) {
     if (entry.dir || path.includes('__MACOSX')) continue
-    const filename = path.split('/').pop() || path
+    const cleanPath = path.replace(/\\/g, '/')
+    const filename = cleanPath.split('/').pop() || cleanPath
     const lowerName = filename.toLowerCase().trim()
 
-    if (/\.(mp3|wav|m4a|ogg|jpg|jpeg|png|webp|gif)$/i.test(lowerName)) {
+    if (/\.(mp3|wav|m4a|ogg|aac|flac|jpg|jpeg|png|webp|gif|svg)$/i.test(lowerName)) {
+      mediaEntries[cleanPath.toLowerCase()] = entry
       mediaEntries[lowerName] = entry
-    }
-  }
-
-  const neededMediaNames = new Set<string>()
-  rawRows.forEach((row) => {
-    Object.entries(row).forEach(([k, v]) => {
-      const norm = normalizeKey(k)
-      if (
-        (norm.includes('audio') || norm.includes('mp3') || norm.includes('anh') || norm.includes('image')) &&
-        typeof v === 'string'
-      ) {
-        const clean = v.trim().toLowerCase()
-        if (clean) neededMediaNames.add(clean)
+      if (!distinctMediaNames.includes(lowerName)) {
+        distinctMediaNames.push(lowerName)
       }
-    })
-  })
-
-  for (const name of Object.keys(mediaEntries)) {
-    if (name.includes('full') || name.includes('exam_audio') || name.includes('toan_bai')) {
-      neededMediaNames.add(name)
     }
   }
 
-  const filesToUpload = Array.from(neededMediaNames).filter((name) => mediaEntries[name])
   const uploadedMap: Record<string, string> = {}
+  let detectedGlobalAudioUrl: string | undefined = undefined
 
-  if (filesToUpload.length > 0) {
-    for (let i = 0; i < filesToUpload.length; i++) {
-      const name = filesToUpload[i]
+  if (distinctMediaNames.length > 0) {
+    let lastUploadError: string | null = null
+
+    for (let i = 0; i < distinctMediaNames.length; i++) {
+      const name = distinctMediaNames[i]
       const entry = mediaEntries[name]
+      if (!entry) continue
+
       onProgress?.(
         isVi
-          ? `Đang tải lên media (${i + 1}/${filesToUpload.length}): ${name}...`
-          : `Uploading asset (${i + 1}/${filesToUpload.length}): ${name}...`,
+          ? `Đang tải lên media (${i + 1}/${distinctMediaNames.length}): ${name}...`
+          : `Uploading asset (${i + 1}/${distinctMediaNames.length}): ${name}...`,
         i + 1,
-        filesToUpload.length
+        distinctMediaNames.length
       )
 
       try {
-        const blob = await entry.async('blob')
-        const fileObj = new File([blob], name, { type: getMimeType(name) })
+        const arrayBuffer = await entry.async('arraybuffer')
+        const fileObj = new File([arrayBuffer], name, { type: getMimeType(name) })
         const uploadRes = await mediaAdminService.uploadFile(fileObj, 'exam-package')
         const url = uploadRes.file_url || uploadRes.url || uploadRes.public_url || ''
         if (url) {
           uploadedMap[name] = url
-          if (name.includes('full') || name.includes('exam_audio') || name.includes('toan_bai')) {
-            detectedGlobalAudioUrl = url
+          uploadedMap[normalizeKey(name)] = url
+          const noExt = name.replace(/\.[^.]+$/, '')
+          uploadedMap[noExt] = url
+          uploadedMap[normalizeKey(noExt)] = url
+
+          for (const [entryPath, zipEntry] of Object.entries(mediaEntries)) {
+            if (zipEntry === entry) {
+              uploadedMap[entryPath] = url
+              uploadedMap[normalizeKey(entryPath)] = url
+            }
+          }
+
+          const isAudio = /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(name)
+          if (isAudio) {
+            const lowerNoExt = noExt.toLowerCase()
+            const isNamedGlobal =
+              lowerNoExt.includes('full') ||
+              lowerNoExt.includes('exam') ||
+              lowerNoExt.includes('toan_bai') ||
+              lowerNoExt.includes('toanbai') ||
+              lowerNoExt.includes('global') ||
+              lowerNoExt.includes('chung') ||
+              lowerNoExt.includes('test') ||
+              lowerNoExt.includes('listening') ||
+              lowerNoExt.includes('audio') ||
+              distinctMediaNames.filter((f) => /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(f)).length === 1
+
+            if (isNamedGlobal && !detectedGlobalAudioUrl) {
+              detectedGlobalAudioUrl = url
+            }
           }
         }
       } catch (uploadErr) {
-        console.warn(`Failed to upload ${name}:`, uploadErr)
+        const errorMsg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
+        lastUploadError = errorMsg
       }
     }
+
+    if (distinctMediaNames.length > 0 && Object.keys(uploadedMap).length === 0 && lastUploadError) {
+      toast.error(
+        isVi
+          ? `Lỗi khi tải media từ ZIP lên máy chủ: ${lastUploadError}`
+          : `Failed to upload ZIP media: ${lastUploadError}`
+      )
+    }
+  }
+
+  const findMatchedMediaUrl = (inputVal: string): string => {
+    const cleanVal = inputVal.trim()
+    if (!cleanVal) return ''
+    if (cleanVal.startsWith('http://') || cleanVal.startsWith('https://')) {
+      return cleanVal
+    }
+    const lowerVal = cleanVal.toLowerCase()
+    const cleanPath = lowerVal.replace(/\\/g, '/')
+    const basename = cleanPath.split('/').pop() || lowerVal
+    const noExt = basename.replace(/\.[^.]+$/, '')
+
+    return (
+      uploadedMap[lowerVal] ||
+      uploadedMap[cleanPath] ||
+      uploadedMap[basename] ||
+      uploadedMap[normalizeKey(cleanVal)] ||
+      uploadedMap[normalizeKey(basename)] ||
+      uploadedMap[noExt] ||
+      uploadedMap[normalizeKey(noExt)] ||
+      ''
+    )
   }
 
   onProgress?.(isVi ? 'Đang tổng hợp câu hỏi và hoàn tất nạp...' : 'Compiling questions...')
@@ -316,7 +405,7 @@ export async function parseAndUploadZipExam(
 
     for (const [colName, val] of Object.entries(row)) {
       const norm = normalizeKey(colName)
-      const strVal = String(val || '').trim()
+      const strVal = String(val ?? '').trim()
 
       if (norm.includes('cauhoi') || norm.includes('question') || norm.includes('debai') || norm.includes('prompt')) {
         questionText = strVal
@@ -325,9 +414,8 @@ export async function parseAndUploadZipExam(
         norm.includes('skill') ||
         norm.includes('loai') ||
         norm.includes('type') ||
-        norm === 'part' ||
-        norm === 'phan' ||
-        norm.includes('partnumber')
+        norm.includes('part') ||
+        norm.includes('phan')
       ) {
         const lower = strVal.toLowerCase()
         if (lower.includes('speaking') || lower.includes('noi') || lower === 's') {
@@ -340,13 +428,23 @@ export async function parseAndUploadZipExam(
           lower.includes('nghe') ||
           lower.includes('listen') ||
           lower === 'l' ||
+          lower.includes('part 1') ||
+          lower.includes('part 2') ||
+          lower.includes('part 3') ||
+          lower.includes('part 4') ||
+          lower.includes('part1') ||
+          lower.includes('part2') ||
+          lower.includes('part3') ||
+          lower.includes('part4') ||
           ['1', '2', '3', '4'].includes(lower)
         ) {
           skillType = 'LISTENING'
-          partNum = 1
+          const numMatch = lower.match(/\d+/)
+          partNum = numMatch ? parseInt(numMatch[0], 10) : 1
         } else {
           skillType = 'READING'
-          partNum = 5
+          const numMatch = lower.match(/\d+/)
+          partNum = numMatch ? parseInt(numMatch[0], 10) : 5
         }
       } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm.includes('dapana')) {
         optA = strVal
@@ -361,18 +459,57 @@ export async function parseAndUploadZipExam(
         if (cleaned) correctLetter = cleaned[0]
       } else if (norm.includes('loigiai') || norm.includes('giaithich') || norm.includes('explain')) {
         explanation = strVal
-      } else if (norm.includes('audio') || norm.includes('mp3') || norm.includes('nghe')) {
-        audioFileName = strVal.toLowerCase()
-      } else if (norm.includes('anh') || norm.includes('image') || norm.includes('hinh') || norm.includes('picture')) {
-        imageFileName = strVal.toLowerCase()
+      } else if (
+        norm.includes('audio') ||
+        norm.includes('mp3') ||
+        norm.includes('nghe') ||
+        norm.includes('sound') ||
+        norm.includes('voice') ||
+        norm.includes('amthanh') ||
+        norm.includes('track')
+      ) {
+        audioFileName = strVal
+      } else if (
+        norm.includes('anh') ||
+        norm.includes('image') ||
+        norm.includes('img') ||
+        norm.includes('pic') ||
+        norm.includes('hinh') ||
+        norm.includes('photo')
+      ) {
+        imageFileName = strVal
       }
     }
 
-    const matchedAudioUrl = uploadedMap[audioFileName] || ''
-    const matchedImageUrl = uploadedMap[imageFileName] || ''
+    let matchedAudioUrl = findMatchedMediaUrl(audioFileName)
+    const matchedImageUrl = findMatchedMediaUrl(imageFileName)
 
-    if (matchedAudioUrl) audioLinkedCount++
-    if (matchedImageUrl) imageLinkedCount++
+    if (!matchedAudioUrl) {
+      const qNum = idx + 1
+      matchedAudioUrl =
+        findMatchedMediaUrl(`audio_q${qNum}`) ||
+        findMatchedMediaUrl(`audio_${qNum}`) ||
+        findMatchedMediaUrl(`q${qNum}`) ||
+        findMatchedMediaUrl(`cau${qNum}`) ||
+        findMatchedMediaUrl(`part1_q${qNum}`) ||
+        findMatchedMediaUrl(`part2_q${qNum}`) ||
+        findMatchedMediaUrl(`part3_q${qNum}`) ||
+        findMatchedMediaUrl(`part4_q${qNum}`) ||
+        ''
+    }
+
+    if (matchedAudioUrl) {
+      audioLinkedCount++
+      if (skillType === 'READING') {
+        skillType = 'LISTENING'
+        if (typeof partNum !== 'number' || partNum > 4) {
+          partNum = 1
+        }
+      }
+    }
+    if (matchedImageUrl) {
+      imageLinkedCount++
+    }
 
     const isSpeaking = skillType === 'SPEAKING' || String(partNum).toLowerCase() === 'speaking'
     const isWriting = skillType === 'WRITING' || String(partNum).toLowerCase() === 'writing'
@@ -383,7 +520,7 @@ export async function parseAndUploadZipExam(
     return {
       id: `q_zip_${Date.now()}_${idx}`,
       skill_type: finalSkill,
-      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : isListening ? 1 : 5,
+      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : isListening ? partNum : 5,
       question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
       question_text: questionText || `Question ${idx + 1}`,
       options: isSpeaking || isWriting ? [] : [optA, optB, optC, optD],
