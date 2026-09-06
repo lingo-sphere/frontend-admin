@@ -3,7 +3,7 @@
  * @description Trang quản trị hiển thị toàn màn hình chi tiết tiến độ các chương học và bài nộp kỹ năng của một học viên cụ thể
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   BarChart3,
   ArrowLeft,
@@ -33,11 +33,37 @@ interface LearnerProgressDetailPageProps {
 export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressDetailPageProps) {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
-  const [student, setStudent] = useState<StudentProgressItem | null>(null)
+  const [student, setStudent] = useState<StudentProgressItem | null>(() => {
+    const cachedStr = sessionStorage.getItem('lingo_admin_active_student_progress')
+    if (cachedStr) {
+      try {
+        const cached = JSON.parse(cachedStr) as StudentProgressItem
+        if (cached && cached.user_id === userId) {
+          return cached
+        }
+      } catch {}
+    }
+    return null
+  })
+
+  const studentRef = useRef(student)
+  studentRef.current = student
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
   const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    const cachedStr = sessionStorage.getItem('lingo_admin_active_student_progress')
+    if (cachedStr) {
+      try {
+        const cached = JSON.parse(cachedStr) as StudentProgressItem
+        if (cached && cached.user_id === userId) {
+          return false
+        }
+      } catch {}
+    }
+    return true
+  })
 
   const [selectedSubmission, setSelectedSubmission] = useState<SkillSubmissionItem | null>(null)
   const [editScore, setEditScore] = useState<number>(0)
@@ -46,37 +72,69 @@ export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressD
 
   const loadData = useCallback(async () => {
     if (!courseId || !userId) return
-    setIsLoading(true)
+    const hasInitialData = !!studentRef.current
+    if (!hasInitialData) {
+      setIsLoading(true)
+    }
+
     try {
-      const [progressRes, submissionsRes, courseRes, usersRes] = await Promise.all([
-        progressService.getCourseStudentsProgress(courseId).catch(() => null),
-        progressService.getCourseSubmissions(courseId).catch(() => []),
-        courseService.getCourseById(courseId).catch(() => null),
-        userService.getAllUsers({ limit: 100 }).catch(() => null),
+      const isAllCourse = courseId === 'all'
+      const [detailRes, submissionsRes, courseRes, userProfileRes] = await Promise.all([
+        !isAllCourse
+          ? progressService.getStudentCourseProgressDetail(courseId, userId).catch(() => null)
+          : null,
+        !isAllCourse
+          ? progressService.getCourseSubmissions(courseId, undefined, userId).catch(() => [])
+          : [],
+        !isAllCourse
+          ? courseService.getCourseById(courseId).catch(() => null)
+          : null,
+        userService.getProfileById(userId).catch(() => null),
       ])
 
-      if (progressRes?.students) {
-        const found = progressRes.students.find((s) => s.user_id === userId)
-        if (found) setStudent(found)
+      if (detailRes?.course_progress) {
+        const cp = detailRes.course_progress
+        const currentStudent = studentRef.current
+        const mergedStudent: StudentProgressItem = {
+          user_id: userId,
+          full_name: userProfileRes?.full_name || currentStudent?.full_name,
+          email: userProfileRes?.email || currentStudent?.email,
+          avatar_url: userProfileRes?.avatar_url || currentStudent?.avatar_url,
+          course_id: courseId,
+          course_title: courseRes?.title || currentStudent?.course_title,
+          progress_percentage: cp.progress_percentage ?? currentStudent?.progress_percentage ?? 0,
+          completed_lessons: cp.completed_lessons_count ?? currentStudent?.completed_lessons ?? 0,
+          total_lessons: cp.total_lessons_count ?? currentStudent?.total_lessons ?? 1,
+          baseline_score: cp.baseline_score ?? currentStudent?.baseline_score,
+          baseline_source: cp.baseline_source ?? currentStudent?.baseline_source,
+          final_test_score: cp.final_test_score ?? currentStudent?.final_test_score,
+          total_score_growth: cp.total_score_growth ?? currentStudent?.total_score_growth,
+          modules_progress: detailRes.modules_progress || currentStudent?.modules_progress || [],
+          status: cp.status ?? currentStudent?.status,
+        }
+        setStudent(mergedStudent)
+        sessionStorage.setItem('lingo_admin_active_student_progress', JSON.stringify(mergedStudent))
+      } else if (isAllCourse && !studentRef.current) {
+        const allProg = await progressService.getCourseStudentsProgress('all').catch(() => null)
+        if (allProg?.students) {
+          const found = allProg.students.find((s) => s.user_id === userId)
+          if (found) {
+            setStudent(found)
+            sessionStorage.setItem('lingo_admin_active_student_progress', JSON.stringify(found))
+          }
+        }
       }
 
       if (Array.isArray(submissionsRes)) {
-        const userSubs = submissionsRes.filter((s) => s.user_id === userId)
-        setSubmissions(userSubs)
+        setSubmissions(submissionsRes)
       }
 
       if (courseRes) {
         setCourseInfo(courseRes)
       }
 
-      if (usersRes) {
-        const uList: UserProfile[] = Array.isArray(usersRes)
-          ? usersRes
-          : Array.isArray(usersRes.result)
-          ? usersRes.result
-          : []
-        const foundUser = uList.find((u) => u.user_id === userId)
-        if (foundUser) setUserProfile(foundUser)
+      if (userProfileRes) {
+        setUserProfile(userProfileRes)
       }
     } catch {
       toast.error('Không thể tải chi tiết tiến độ học viên.')

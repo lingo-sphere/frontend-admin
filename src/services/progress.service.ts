@@ -45,8 +45,32 @@ export const progressService = {
     return api.get<unknown[]>(API_CONFIG.ENDPOINTS.PROGRESS.MY_COURSES)
   },
 
-  async getCourseSubmissions(courseId: string, moduleId?: string): Promise<SkillSubmissionItem[]> {
-    const qs = moduleId ? `?moduleId=${moduleId}` : ''
+  async getStudentCourseProgressDetail(courseId: string, userId: string): Promise<{
+    course_progress: {
+      user_id: string
+      course_id: string
+      progress_percentage: number
+      completed_lessons_count: number
+      total_lessons_count: number
+      completed_modules_count: number
+      total_modules_count: number
+      baseline_score?: number
+      baseline_source?: string
+      final_test_score?: number
+      total_score_growth?: number
+      status?: string
+    } | null
+    modules_progress: StudentModuleProgress[]
+    completed_lesson_ids: string[]
+  }> {
+    return api.get(`/progress/teacher/courses/${courseId}/students/${userId}/detail`)
+  },
+
+  async getCourseSubmissions(courseId: string, moduleId?: string, userId?: string): Promise<SkillSubmissionItem[]> {
+    const params = new URLSearchParams()
+    if (moduleId) params.append('moduleId', moduleId)
+    if (userId) params.append('userId', userId)
+    const qs = params.toString() ? `?${params.toString()}` : ''
     return api.get<SkillSubmissionItem[]>(
       `/progress/teacher/courses/${courseId}/submissions${qs}`,
       undefined,

@@ -147,6 +147,7 @@ export function CourseLearnersPage() {
   const handleSelectStudentDetail = useCallback(
     (st: StudentProgressItem) => {
       const targetCourseId = st.course_id || (selectedCourseId !== 'ALL' ? selectedCourseId : 'all')
+      sessionStorage.setItem('lingo_admin_active_student_progress', JSON.stringify(st))
       setActiveNavItem(`learner-progress:${targetCourseId}:${st.user_id}`)
     },
     [selectedCourseId, setActiveNavItem]
