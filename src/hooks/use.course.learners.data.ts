@@ -1,7 +1,4 @@
-/**
- * @file use.course.learners.data.ts
- * @description Custom hook fetching and managing courses, student progress records, submissions, and usersMap
- */
+// Hook quản lý dữ liệu học viên, tiến độ học tập và bài nộp khóa học.
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { courseService } from '@/services/course.service'
@@ -64,7 +61,7 @@ export function useCourseLearnersData() {
 
         if (loadedCourses.length === 0) {
           const allRes = await courseService.getAllCourses({ pageSize: 100 })
-          const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || [])
+          const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : allRes?.result || []
           loadedCourses = rawList
             .filter((c: ApiCourse) => c.author_id === currentUserId)
             .map((c: ApiCourse) => ({
@@ -77,7 +74,7 @@ export function useCourseLearnersData() {
         }
       } else {
         const allRes = await courseService.getAllCourses({ pageSize: 100 })
-        const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : ((allRes as any)?.result || [])
+        const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : allRes?.result || []
         loadedCourses = rawList.map((c: ApiCourse) => ({
           id: c._id || '',
           title: c.title || '',

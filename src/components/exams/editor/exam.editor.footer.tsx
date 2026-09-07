@@ -1,7 +1,4 @@
-/**
- * @file exam.editor.footer.tsx
- * @description Footer điều khiển lưu bộ câu hỏi hoặc hủy bỏ trong modal soạn đề thi
- */
+// Footer điều khiển lưu bộ câu hỏi hoặc hủy bỏ trong giao diện soạn đề thi.
 
 import { Loader2, Save } from 'lucide-react'
 
@@ -9,6 +6,8 @@ interface ExamEditorFooterProps {
   questionsCount: number
   isVi: boolean
   isSaving: boolean
+  isCanceling?: boolean
+  isCreateMode?: boolean
   onClose: () => void
   onSave: () => void
 }
@@ -17,6 +16,8 @@ export function ExamEditorFooter({
   questionsCount,
   isVi,
   isSaving,
+  isCanceling = false,
+  isCreateMode = false,
   onClose,
   onSave,
 }: ExamEditorFooterProps) {
@@ -33,9 +34,16 @@ export function ExamEditorFooter({
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          disabled={isCanceling}
+          className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
         >
-          {isVi ? 'Hủy' : 'Cancel'}
+          {isCanceling
+            ? isVi
+              ? 'Đang hủy...'
+              : 'Canceling...'
+            : isVi
+            ? 'Hủy'
+            : 'Cancel'}
         </button>
 
         <button
@@ -47,12 +55,20 @@ export function ExamEditorFooter({
           {isSaving ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{isVi ? 'Đang lưu...' : 'Saving...'}</span>
+              <span>{isVi ? 'Đang lưu bài thi...' : 'Saving...'}</span>
             </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              <span>{isVi ? 'Lưu bộ câu hỏi đề thi' : 'Save Question Bank'}</span>
+              <span>
+                {isCreateMode
+                  ? isVi
+                    ? 'Tạo Bài Thi & Lưu Câu Hỏi'
+                    : 'Create Exam & Save Questions'
+                  : isVi
+                  ? 'Lưu Bài Thi & Ngân Hàng Câu Hỏi'
+                  : 'Save Exam & Question Bank'}
+              </span>
             </>
           )}
         </button>

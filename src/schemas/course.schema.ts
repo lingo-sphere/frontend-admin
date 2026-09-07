@@ -96,6 +96,7 @@ export const CourseBaseSchema = z.object({
   pre_test_exam_id: z.string().optional(),
   final_test_exam_id: z.string().optional(),
   final_test_passing_score: z.number().optional(),
+  final_test_duration_minutes: z.number().optional(),
   final_test_questions: z.array(QuizQuestionItemSchema).optional(),
   final_test_audio_url: z.string().optional(),
   final_test_speaking_prompt: z.string().optional(),

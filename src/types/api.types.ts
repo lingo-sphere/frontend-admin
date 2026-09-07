@@ -213,6 +213,7 @@ export interface Course {
   pre_test_exam_id?: string
   final_test_exam_id?: string
   final_test_passing_score?: number
+  final_test_duration_minutes?: number
   final_test_questions?: QuizQuestionItem[]
   final_test_audio_url?: string
   final_test_speaking_prompt?: string
