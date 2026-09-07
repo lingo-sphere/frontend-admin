@@ -30,7 +30,22 @@ export function CoursesPage() {
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('ALL')
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid')
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lingo_admin_courses_view_mode')
+      if (saved === 'grid' || saved === 'table') {
+        return saved
+      }
+    }
+    return 'table'
+  })
+
+  const handleViewModeChange = useCallback((mode: 'table' | 'grid') => {
+    setViewMode(mode)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lingo_admin_courses_view_mode', mode)
+    }
+  }, [])
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
@@ -197,7 +212,7 @@ export function CoursesPage() {
         data={paginatedCourses}
         rowKey={(c) => c.id}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={handleViewModeChange}
         renderGridItem={(course) => (
           <CourseGridCard
             course={course}

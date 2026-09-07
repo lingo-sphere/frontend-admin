@@ -27,7 +27,22 @@ export function useCourseExams() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid')
+  const [viewMode, setViewModeState] = useState<'table' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lingo_admin_course_exams_view_mode')
+      if (saved === 'grid' || saved === 'table') {
+        return saved
+      }
+    }
+    return 'table'
+  })
+
+  const setViewMode = useCallback((mode: 'table' | 'grid') => {
+    setViewModeState(mode)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lingo_admin_course_exams_view_mode', mode)
+    }
+  }, [])
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
