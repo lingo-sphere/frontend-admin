@@ -222,7 +222,7 @@ export function CourseGridCard({
               onConfirm={() => onDelete(course.id)}
             >
               <button
-                className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer shadow-2xs"
                 title={isVi ? 'Xóa khóa học' : 'Delete Course'}
                 type="button"
               >

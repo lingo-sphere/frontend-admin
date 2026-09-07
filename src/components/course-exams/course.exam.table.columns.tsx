@@ -211,7 +211,7 @@ export function getCourseExamColumns({
               <button
                 type="button"
                 title={isVi ? 'Xóa bài thi' : 'Delete exam'}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-transparent hover:border-rose-200 dark:hover:border-rose-800/80 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer shadow-2xs"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
