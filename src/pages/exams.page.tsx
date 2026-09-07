@@ -114,25 +114,10 @@ export function ExamsPage() {
           : 'Created exam shell! Opening question bank editor...'
       )
     } catch {
-      const fallbackExam: ToeicExamItem = {
-        id: `exam_${Date.now()}`,
-        title,
-        type: type as ToeicExamItem['type'],
-        duration_minutes: duration,
-        total_questions: type === 'FULL_TEST' ? 200 : 50,
-        total_attempts: 0,
-        avg_score: 0,
-        is_published: true,
-        created_at: new Date().toISOString().split('T')[0],
-      }
-      setExams((prev) => [fallbackExam, ...prev])
-      setShowAddModal(false)
-      sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(fallbackExam))
-      setActiveNavItem(`course-exam-questions:${fallbackExam._id || fallbackExam.id}`)
-      toast.success(
+      toast.error(
         isVi
-          ? 'Đã tạo đề thi mới (Local)! Mời bạn soạn câu hỏi.'
-          : 'Created new exam (Local)! Opening question editor.'
+          ? 'Không thể tạo đề thi lúc này. Vui lòng kiểm tra lại kết nối và thử lại.'
+          : 'Failed to create exam. Please check your connection and try again.'
       )
     }
   }
