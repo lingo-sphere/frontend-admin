@@ -108,11 +108,12 @@ export function useExamQuestionEditor({
     if (isOpen && exam) {
       const existingQs: ExamQuestionItem[] = Array.isArray(exam.questions)
         ? (exam.questions as unknown as RawExamQuestion[]).map((q: RawExamQuestion, idx: number) => {
-            const rawPart = q.part_number ?? q.part ?? 5
+            const rawPart = q.part_number ?? q.part
             const isSpk = rawPart === 'speaking' || q.question_type === 'SPEAKING' || q.skill_type === 'SPEAKING' || q.skillType === 'SPEAKING'
             const isWrt = rawPart === 'writing' || q.question_type === 'WRITING' || q.skill_type === 'WRITING' || q.skillType === 'WRITING'
             const numPart = typeof rawPart === 'number' ? rawPart : parseInt(String(rawPart), 10)
-            const isListen = q.skill_type === 'LISTENING' || q.skillType === 'LISTENING' || (!isNaN(numPart) && numPart <= 4)
+            const hasExplicitPart = !isNaN(numPart) && numPart >= 1 && numPart <= 7
+            const isListen = q.skill_type === 'LISTENING' || q.skillType === 'LISTENING' || (!isSpk && !isWrt && Boolean(q.media_url || q.audio_url)) || (hasExplicitPart && numPart <= 4)
 
             const derivedSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isSpk
               ? 'SPEAKING'
@@ -125,7 +126,7 @@ export function useExamQuestionEditor({
             return {
               id: q.id || `q_${idx}_${Date.now()}`,
               skill_type: derivedSkill,
-              part_number: isSpk ? 'speaking' : isWrt ? 'writing' : isListen ? 1 : 5,
+              part_number: isSpk ? 'speaking' : isWrt ? 'writing' : hasExplicitPart ? numPart : undefined,
               part_name: q.part_name || '',
               question_type: isSpk ? 'SPEAKING' : isWrt ? 'WRITING' : 'MULTIPLE_CHOICE',
               question_text: q.question_text || q.questionTextEn || q.question_text_en || '',
@@ -209,7 +210,7 @@ export function useExamQuestionEditor({
     const newQuestion: ExamQuestionItem = {
       id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       skill_type: skill,
-      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : isListening ? 1 : 5,
+      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : undefined,
       question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
       question_text: isSpeaking
         ? 'Describe the picture in detail using as much vocabulary as possible.'

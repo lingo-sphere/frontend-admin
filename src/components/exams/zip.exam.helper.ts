@@ -536,7 +536,7 @@ export async function parseAndUploadZipExam(
     let correctLetter = 'A'
     let explanation = ''
     let skillType: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = 'READING'
-    let partNum: number | string = 5
+    let explicitPart: number | undefined = undefined
     let audioFileName = ''
     let imageFileName = ''
 
@@ -549,21 +549,21 @@ export async function parseAndUploadZipExam(
       } else if (norm.includes('kynang') || norm.includes('skill')) {
         const c = classifySkill(strVal)
         if (c !== 'UNKNOWN') skillType = c
-      } else if (norm.includes('part') || norm.includes('phan') || norm.includes('loai') || norm.includes('type')) {
+      } else if (norm.includes('part') || norm.includes('phan')) {
         const c = classifySkill(strVal)
         if (c === 'SPEAKING') {
           skillType = 'SPEAKING'
-          partNum = 'speaking'
         } else if (c === 'WRITING') {
           skillType = 'WRITING'
-          partNum = 'writing'
         } else {
           const numMatch = strVal.match(/\d+/)
           if (numMatch) {
             const p = parseInt(numMatch[0], 10)
-            partNum = p
-            if (p <= 4) skillType = 'LISTENING'
-            else skillType = 'READING'
+            if (p >= 1 && p <= 7) {
+              explicitPart = p
+              if (p <= 4) skillType = 'LISTENING'
+              else skillType = 'READING'
+            }
           }
         }
       } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm.includes('dapana')) {
@@ -606,9 +606,6 @@ export async function parseAndUploadZipExam(
       audioLinkedCount++
       if (skillType === 'READING') {
         skillType = 'LISTENING'
-        if (typeof partNum !== 'number' || partNum > 4) {
-          partNum = 1
-        }
       }
     }
     if (matchedImageUrl) {
@@ -619,16 +616,16 @@ export async function parseAndUploadZipExam(
     const isSpeakingPrompt = /describe\s+a\s+time|speak\s+about|pronounce/i.test(questionText)
     const isWritingPrompt = /write\s+an?\s+(email|essay|letter|paragraph)|at\s+least\s+\d+\s+words/i.test(questionText)
 
-    const isSpeaking = skillType === 'SPEAKING' || String(partNum).toLowerCase() === 'speaking' || (areOptionsEmpty && isSpeakingPrompt)
-    const isWriting = skillType === 'WRITING' || String(partNum).toLowerCase() === 'writing' || (areOptionsEmpty && isWritingPrompt)
-    const isListening = skillType === 'LISTENING' || (typeof partNum === 'number' && partNum <= 4)
+    const isSpeaking = skillType === 'SPEAKING' || (areOptionsEmpty && isSpeakingPrompt)
+    const isWriting = skillType === 'WRITING' || (areOptionsEmpty && isWritingPrompt)
+    const isListening = skillType === 'LISTENING' || (explicitPart !== undefined && explicitPart <= 4)
     const finalSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' =
       isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : isListening ? 'LISTENING' : 'READING'
 
     return {
       id: `q_zip_${Date.now()}_${idx}`,
       skill_type: finalSkill,
-      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : isListening ? partNum : 5,
+      part_number: isSpeaking ? 'speaking' : isWriting ? 'writing' : explicitPart,
       question_type: isSpeaking ? 'SPEAKING' : isWriting ? 'WRITING' : 'MULTIPLE_CHOICE',
       question_text: questionText || `Question ${idx + 1}`,
       options: isSpeaking || isWriting ? [] : [optA, optB, optC, optD],

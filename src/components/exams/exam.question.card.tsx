@@ -83,7 +83,7 @@ export function ExamQuestionCard({
                 const isLs = skill === 'LISTENING'
                 onUpdate({
                   skill_type: skill,
-                  part_number: isSp ? 'speaking' : isWr ? 'writing' : isLs ? 1 : 5,
+                  part_number: isSp ? 'speaking' : isWr ? 'writing' : undefined,
                   question_type: isSp ? 'SPEAKING' : isWr ? 'WRITING' : 'MULTIPLE_CHOICE',
                   options: isSp || isWr ? [] : q.options.length ? q.options : ['', '', '', ''],
                 })
