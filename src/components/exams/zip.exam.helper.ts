@@ -148,7 +148,6 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
       {
         STT: 1,
         'Kỹ năng': 'Nghe',
-        'Part': 'Part 1',
         'Câu hỏi': 'Look at the picture and listen to the statements. Select the one that best describes what you see.',
         'Lựa chọn A': 'The woman is reading a document at the library.',
         'Lựa chọn B': 'The woman is typing on a laptop computer.',
@@ -156,13 +155,12 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
         'Lựa chọn D': 'The woman is leaving the conference room.',
         'Đáp án đúng': 'B',
         'File Audio': 'audio_q1.wav',
-        'File Ảnh': 'part1_q1.jpg',
+        'File Ảnh': 'image_q1.jpg',
         'Lời giải': 'Trong hình ảnh người phụ nữ đang thao tác gõ bàn phím trên laptop (typing on a laptop).',
       },
       {
         STT: 2,
         'Kỹ năng': 'Nghe',
-        'Part': 'Part 2',
         'Câu hỏi': 'Where should I submit the monthly expense report?',
         'Lựa chọn A': 'To Ms. Johnson in the accounting department on the 4th floor.',
         'Lựa chọn B': 'At about 4:30 PM yesterday afternoon.',
@@ -176,7 +174,6 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
       {
         STT: 3,
         'Kỹ năng': 'Đọc',
-        'Part': 'Part 5',
         'Câu hỏi': 'All international passengers must _____ their boarding pass and passport at Gate 12.',
         'Lựa chọn A': 'present',
         'Lựa chọn B': 'presents',
@@ -190,7 +187,6 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
       {
         STT: 4,
         'Kỹ năng': 'Đọc',
-        'Part': 'Part 7',
         'Câu hỏi': 'What is the primary topic of this internal announcement?',
         'Lựa chọn A': 'The upcoming office maintenance schedule next Monday.',
         'Lựa chọn B': 'The introduction of a new marketing manager.',
@@ -198,13 +194,12 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
         'Lựa chọn D': 'The annual company banquet ticket registration.',
         'Đáp án đúng': 'A',
         'File Audio': '',
-        'File Ảnh': 'part7_email.png',
+        'File Ảnh': 'image_q4.png',
         'Lời giải': 'Đoạn đầu thông báo ghi rõ mục đích: "Please be advised that the main elevator will undergo maintenance on Monday."',
       },
       {
         STT: 5,
         'Kỹ năng': 'Nói',
-        'Part': 'Speaking',
         'Câu hỏi': 'Describe a time you solved a difficult problem at work or school in detail.',
         'Lựa chọn A': '',
         'Lựa chọn B': '',
@@ -218,7 +213,6 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
       {
         STT: 6,
         'Kỹ năng': 'Viết',
-        'Part': 'Writing',
         'Câu hỏi': 'Write an email (at least 100 words) requesting a 3-day extension on your project deadline.',
         'Lựa chọn A': '',
         'Lựa chọn B': '',
@@ -240,8 +234,8 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
     zip.file('questions.xlsx', excelBuffer)
 
     const skillGuideline = is4Skills
-      ? '   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)\n   - Cot "Part": Part 1 - 7 hoac Speaking, Writing'
-      : '   - Cot "Ky nang": Nghe hoac Doc (Listening hoac Reading)\n   - Cot "Part": Part 1 - 7 (Part 1-4: Nghe, Part 5-7: Doc)\n   - LUU Y: De thi 2 ky nang TUYET DOI KHONG chua ky nang Noi (Speaking) va Viet (Writing)!'
+      ? '   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)'
+      : '   - Cot "Ky nang": Nghe hoac Doc (Listening hoac Reading)\n   - LUU Y: De thi 2 ky nang TUYET DOI KHONG chua ky nang Noi (Speaking) va Viet (Writing)!'
 
     const readmeText = `=== HUONG DAN SOAN DE THI GOI ZIP CHO LINGOSPHERE ===
 1. File questions.xlsx:
@@ -250,8 +244,8 @@ ${skillGuideline}
    - Cot "Cau hoi": Noi dung cau hoi hoac de bai
    - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
    - Cot "Dap an dung": A, B, C hoac D
-   - Cot "File Audio": Ten file audio trong goi zip (audio_q1.wav, audio_q1.mp3...)
-   - Cot "File Anh": Ten file hinh anh trong goi zip (part1_q1.jpg, part7_email.png...)
+   - Cot "File Audio": Ten file audio trong goi zip (audio_q1.wav, audio_q2.wav...)
+   - Cot "File Anh": Ten file hinh anh trong goi zip (image_q1.jpg, image_q4.png...)
    - Cot "Loi giai": Giai thich chi tiet dap an
 
 2. Thu muc media:
@@ -262,8 +256,8 @@ ${skillGuideline}
 
     const dummyPngBase64 =
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-    zip.file('images/part1_q1.jpg', dummyPngBase64, { base64: true })
-    zip.file('images/part7_email.png', dummyPngBase64, { base64: true })
+    zip.file('images/image_q1.jpg', dummyPngBase64, { base64: true })
+    zip.file('images/image_q4.png', dummyPngBase64, { base64: true })
 
     const sampleQ1Audio = createSampleAudioBytes(2, 440)
     const sampleQ2Audio = createSampleAudioBytes(2, 554)
