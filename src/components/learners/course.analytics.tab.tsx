@@ -1,11 +1,10 @@
-/**
- * @file course.analytics.tab.tsx
- * @description Tab phân tích báo cáo học tập chuyên sâu dành cho Giảng viên và Quản trị viên (Drop-off Rate, Funnel, Độ khó bài thi & Gợi ý sư phạm AI)
- */
+// Tab phân tích báo cáo học tập chuyên sâu, drop-off rate và đề xuất tối ưu.
 
-import { BarChart2, BookOpen } from 'lucide-react'
+import { useMemo } from 'react'
+import { BarChart2 } from 'lucide-react'
 import type { StudentProgressItem } from '@/services/progress.service'
 import { useCourseAnalytics, type CourseSimple } from '@/hooks/use.course.analytics'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import { AnalyticsKpiCards } from '@/components/learners/analytics/analytics.kpi.cards'
 import { AnalyticsFunnelView } from '@/components/learners/analytics/analytics.funnel.view'
 import { AnalyticsRecommendationsView } from '@/components/learners/analytics/analytics.recommendations.view'
@@ -34,6 +33,21 @@ export function CourseAnalyticsTab({
     courses,
     selectedCourseId
   )
+
+  const courseOptions: SelectOption[] = useMemo(() => [
+    {
+      value: 'ALL',
+      label: isTeacher
+        ? (isVi ? `Tất cả khóa học của tôi` : `My Courses`)
+        : (isVi ? `Tất cả khóa học` : `All Courses`),
+      badge: courses.length > 0 ? String(courses.length) : undefined,
+    },
+    ...courses.map((c) => ({
+      value: c.id,
+      label: c.title,
+      badge: typeof c.students_count === 'number' && c.students_count > 0 ? `${c.students_count} HV` : undefined,
+    })),
+  ], [courses, isTeacher, isVi])
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -65,24 +79,14 @@ export function CourseAnalyticsTab({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 min-w-[260px]">
-          <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-          <select
+        <div className="w-64 sm:w-72">
+          <CustomSelect
             value={selectedCourseId}
-            onChange={(e) => onSelectCourseId(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            <option value="ALL">
-              {isTeacher
-                ? `Tất cả khóa học của tôi (${courses.length})`
-                : `Tất cả khóa học (${courses.length})`}
-            </option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
+            onChange={onSelectCourseId}
+            options={courseOptions}
+            placeholder={isVi ? 'Chọn khóa học...' : 'Select course...'}
+            showSearch={courses.length > 5}
+          />
         </div>
       </div>
 

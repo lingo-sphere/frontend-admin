@@ -1,10 +1,9 @@
-/**
- * @file course.progress.table.tab.tsx
- * @description Bảng dữ liệu tiến độ học tập của học viên, bộ lọc theo khóa học, trạng thái hoàn thành và tìm kiếm
- */
+// Bảng dữ liệu tiến độ học tập của học viên, bộ lọc theo khóa học và trạng thái.
 
+import { useMemo } from 'react'
 import { Search, RotateCcw } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/data.table'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { StudentProgressItem } from '@/services/progress.service'
 
 interface CourseSimple {
@@ -62,6 +61,19 @@ export function CourseProgressTableTab({
   progressSortOrder,
   onSort,
 }: CourseProgressTableTabProps) {
+  const courseOptions: SelectOption[] = useMemo(() => [
+    {
+      value: 'ALL',
+      label: isVi ? 'Tất cả khóa học' : 'All Courses',
+      badge: courses.length > 0 ? String(courses.length) : undefined,
+    },
+    ...courses.map((c) => ({
+      value: c.id,
+      label: c.title,
+      badge: typeof c.students_count === 'number' && c.students_count > 0 ? `${c.students_count} HV` : undefined,
+    })),
+  ], [courses, isVi])
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs">
@@ -77,19 +89,14 @@ export function CourseProgressTableTab({
             />
           </div>
 
-          <div className="relative">
-            <select
+          <div className="w-56 sm:w-64">
+            <CustomSelect
               value={selectedCourseId}
-              onChange={(e) => onSelectCourseId(e.target.value)}
-              className="py-2 pl-3 pr-8 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer max-w-[220px] truncate"
-            >
-              <option value="ALL">{isVi ? 'Tất cả khóa học' : 'All Courses'}</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
+              onChange={onSelectCourseId}
+              options={courseOptions}
+              placeholder={isVi ? 'Chọn khóa học...' : 'Select course...'}
+              showSearch={courses.length > 5}
+            />
           </div>
 
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">

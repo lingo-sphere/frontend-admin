@@ -1,7 +1,4 @@
-/**
- * @file learner.submissions.tab.tsx
- * @description Speaking and Writing submissions management tab with Table and Grid views
- */
+// Quản lý và chấm điểm bài nộp kỹ năng Speaking và Writing của học viên.
 
 import { useState, useMemo } from 'react'
 import {
@@ -13,6 +10,7 @@ import {
   Edit3,
 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/data.table'
+import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { SkillSubmissionItem } from '@/services/progress.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
 import { LearnerSubmissionCard } from './learner.submission.card'
@@ -59,6 +57,21 @@ export function LearnerSubmissionsTab({
   const [subPageSize, setSubPageSize] = useState<number>(10)
   const [subSortKey, setSubSortKey] = useState<string | null>(null)
   const [subSortOrder, setSubSortOrder] = useState<'asc' | 'desc' | null>(null)
+
+  const courseOptions: SelectOption[] = useMemo(() => [
+    {
+      value: 'ALL',
+      label: isTeacher
+        ? (isVi ? `Tất cả khóa học của tôi` : `My Courses`)
+        : (isVi ? `Tất cả khóa học` : `All Courses`),
+      badge: courses.length > 0 ? String(courses.length) : undefined,
+    },
+    ...courses.map((c) => ({
+      value: c.id,
+      label: c.title,
+      badge: typeof c.students_count === 'number' && c.students_count > 0 ? `${c.students_count} HV` : undefined,
+    })),
+  ], [courses, isTeacher, isVi])
 
   const filteredSubmissions = useMemo(() => {
     let list = submissions
@@ -311,28 +324,18 @@ export function LearnerSubmissionsTab({
       onResetFilters={handleResetFilters}
       extraActions={
         <>
-          <div className="flex items-center gap-2 min-w-[220px]">
-            <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-            <select
+          <div className="w-64 sm:w-72">
+            <CustomSelect
               value={selectedCourseId}
-              onChange={(e) => {
-                onSelectCourseId(e.target.value)
+              onChange={(val) => {
+                onSelectCourseId(val)
                 setSubCurrentPage(1)
               }}
+              options={courseOptions}
               disabled={isLoading || courses.length === 0}
-              className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-            >
-              <option value="ALL">
-                {isTeacher
-                  ? `Tất cả khóa học của tôi (${courses.length})`
-                  : `Tất cả khóa học (${courses.length})`}
-              </option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
+              placeholder={isVi ? 'Chọn khóa học...' : 'Select course...'}
+              showSearch={courses.length > 5}
+            />
           </div>
 
           <button
