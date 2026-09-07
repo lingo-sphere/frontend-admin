@@ -1,7 +1,4 @@
-/**
- * @file course.exam.table.columns.tsx
- * @description Định nghĩa các cột hiển thị cho DataTable quản lý bài thi
- */
+// Định nghĩa các cột hiển thị cho DataTable quản lý bài thi.
 
 import { BookOpen, Clock, AlertCircle, Check, HelpCircle, Edit3, Trash2, Sparkles } from 'lucide-react'
 import type { DataTableColumn } from '@/components/common/data.table'
@@ -28,6 +25,7 @@ export function getCourseExamColumns({
     {
       key: 'exam_info',
       title: isVi ? 'Tên Bài Thi & Đánh Giá' : 'Exam Title & Details',
+      width: '260px',
       sortable: true,
       render: (exam) => {
         const examId = exam._id
@@ -51,6 +49,7 @@ export function getCourseExamColumns({
     {
       key: 'course',
       title: isVi ? 'Khóa Học Áp Dụng' : 'Applied Course',
+      width: '190px',
       sortable: true,
       render: (exam) =>
         exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || (!exam.course_id && !exam.course_title) ? (
@@ -70,6 +69,7 @@ export function getCourseExamColumns({
     {
       key: 'type',
       title: isVi ? 'Loại Bài Thi' : 'Exam Type',
+      width: '140px',
       render: (exam) => {
         const badge = getExamTypeBadge(exam.type, exam)
         return (
@@ -84,6 +84,7 @@ export function getCourseExamColumns({
     {
       key: 'duration',
       title: isVi ? 'Thời Lượng' : 'Duration',
+      width: '115px',
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -96,6 +97,7 @@ export function getCourseExamColumns({
     {
       key: 'questions',
       title: isVi ? 'Số Câu / Đánh Giá' : 'Questions / Evaluation',
+      width: '150px',
       align: 'center',
       sortable: true,
       render: (exam) => {
@@ -134,6 +136,7 @@ export function getCourseExamColumns({
     {
       key: 'attempts',
       title: isVi ? 'Lượt Thi' : 'Attempts',
+      width: '95px',
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -145,6 +148,7 @@ export function getCourseExamColumns({
     {
       key: 'score',
       title: isVi ? 'Điểm TB' : 'Avg Score',
+      width: '95px',
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -156,6 +160,7 @@ export function getCourseExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng Thái' : 'Status',
+      width: '125px',
       align: 'center',
       render: (exam) => (
         <button
@@ -185,6 +190,7 @@ export function getCourseExamColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
+      width: '140px',
       align: 'right',
       render: (exam) => {
         const examId = exam._id

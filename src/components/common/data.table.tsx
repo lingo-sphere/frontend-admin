@@ -1,7 +1,4 @@
-/**
- * @file data.table.tsx
- * @description Component giao diện DataTable phục vụ khu vực Quản trị Admin
- */
+// Component giao diện DataTable phục vụ khu vực Quản trị Admin.
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -245,7 +242,7 @@ export function DataTable<T extends object>({
                       key={col.key}
                       style={{ width: col.width }}
                       onClick={() => handleHeaderClick(col.key, col.sortable)}
-                      className={`py-3.5 px-4 ${
+                      className={`py-3.5 px-4 whitespace-nowrap ${
                         col.align === 'right'
                           ? 'text-right'
                           : col.align === 'center'
@@ -258,7 +255,7 @@ export function DataTable<T extends object>({
                       }`}
                     >
                       <div
-                        className={`inline-flex items-center gap-2 text-[13.5px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 ${
+                        className={`inline-flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
                           col.align === 'right'
                             ? 'justify-end'
                             : col.align === 'center'
@@ -266,7 +263,7 @@ export function DataTable<T extends object>({
                             : 'justify-start'
                         }`}
                       >
-                        <span className="tracking-tight">{col.title}</span>
+                        <span className="tracking-tight whitespace-nowrap">{col.title}</span>
                         {col.sortable && (
                           <span className="shrink-0 transition-colors">
                             {activeSortKey === col.key && activeSortOrder === 'asc' ? (
@@ -317,6 +314,7 @@ export function DataTable<T extends object>({
                       {visibleColumns.map((col) => (
                         <td
                           key={col.key}
+                          style={{ width: col.width }}
                           className={`${getCellPadding()} ${
                             col.align === 'right'
                               ? 'text-right'
