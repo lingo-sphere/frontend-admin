@@ -1,19 +1,15 @@
-/**
- * @file courses.page.tsx
- * @description Trang quản trị CoursesPage trong giao diện Admin
- */
+// Trang quản trị danh mục khóa học và giáo trình học tập.
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, GraduationCap, FileCheck2 } from 'lucide-react'
 import type { Course } from '@/data/courses.data'
-import type { Course as ApiCourse, CourseModule as ApiCourseModule } from '@/types/api.types'
+import type { Course as ApiCourse } from '@/types/api.types'
 import { DataTable } from '@/components/common/data.table'
 import { useAdminStore } from '@/store/admin.store'
 import { usePermission } from '@/hooks/use.permission'
 import { Can } from '@/components/common/can'
 import { courseService } from '@/services/course.service'
-import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast.store'
 
 import { CourseStatsOverview } from '@/components/courses/course.stats.overview'
@@ -34,7 +30,7 @@ export function CoursesPage() {
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('ALL')
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid')
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)

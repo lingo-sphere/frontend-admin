@@ -1,12 +1,10 @@
-/**
- * @file use.course.exams.ts
- * @description Hook quản lý state, nạp dữ liệu và các tác vụ nghiệp vụ cho trang Quản lý bài thi
- */
+// Hook quản lý dữ liệu bài thi, tiến độ học viên và phân loại đề thi.
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { examAdminService, type ToeicExamItem } from '@/services/exam.service'
 import { courseService } from '@/services/course.service'
+import { progressService, type StudentProgressItem } from '@/services/progress.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
 import type { CourseSelectItem } from '@/components/course-exams/course.exam.header.actions'
@@ -29,7 +27,7 @@ export function useCourseExams() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid')
 
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
@@ -91,11 +89,31 @@ export function useCourseExams() {
         allowedCourses.map(async (c) => {
           const rawCourse = rawCourses.find((rc) => rc._id === c.id) || (c as unknown as Course)
 
+          let studentsProgressList: StudentProgressItem[] = []
+          try {
+            const prog = await progressService.getCourseStudentsProgress(c.id)
+            if (prog && Array.isArray(prog.students)) {
+              studentsProgressList = prog.students
+            }
+          } catch {}
+
           if (
             rawCourse.final_test_questions &&
             Array.isArray(rawCourse.final_test_questions) &&
             rawCourse.final_test_questions.length > 0
           ) {
+            const finalCompleted = studentsProgressList.filter(
+              (s) => typeof s.final_test_score === 'number' && s.final_test_score >= 0
+            )
+            const finalAttempts = finalCompleted.length
+            const finalAvg =
+              finalAttempts > 0
+                ? Math.round(
+                    finalCompleted.reduce((acc, s) => acc + (s.final_test_score || 0), 0) /
+                      finalAttempts
+                  )
+                : 0
+
             courseExamsList.push({
               id: rawCourse.final_test_exam_id || `course_final_${c.id}`,
               _id: rawCourse.final_test_exam_id || `course_final_${c.id}`,
@@ -104,9 +122,11 @@ export function useCourseExams() {
               course_title: c.title,
               type: 'FULL_TEST',
               total_questions: rawCourse.final_test_questions.length,
-              duration_minutes: 60,
+              duration_minutes: rawCourse.final_test_duration_minutes || 60,
               passing_score: rawCourse.final_test_passing_score || 70,
               is_published: rawCourse.is_published ?? true,
+              total_attempts: finalAttempts,
+              avg_score: finalAvg,
               questions: rawCourse.final_test_questions,
               audio_url: rawCourse.final_test_audio_url || '',
               author_id: c.author_id,
@@ -124,28 +144,53 @@ export function useCourseExams() {
                   : []
 
               if (qList.length > 0) {
+                const targetModId = mod._id || mod.id
+                const modAttemptsList = studentsProgressList
+                  .map((s) =>
+                    (s.modules_progress || []).find(
+                      (m) =>
+                        m.module_id === targetModId ||
+                        (typeof m.order_index === 'number' && m.order_index === mod.order_index)
+                    )
+                  )
+                  .filter(
+                    (m) =>
+                      Boolean(m && (m.challenge_taken || (typeof m.challenge_score === 'number' && m.challenge_score >= 0)))
+                  )
+
+                const challengeAttempts = modAttemptsList.length
+                const challengeAvg =
+                  challengeAttempts > 0
+                    ? Math.round(
+                        modAttemptsList.reduce(
+                          (acc, m) => acc + (typeof m?.challenge_score === 'number' ? m.challenge_score : 0),
+                          0
+                        ) / challengeAttempts
+                      )
+                    : 0
+
                 courseExamsList.push({
-                  id: mod.challenge_test_exam_id || mod.post_mini_test_exam_id || `mod_challenge_${mod._id || mod.id}`,
-                  _id: mod.challenge_test_exam_id || mod.post_mini_test_exam_id || `mod_challenge_${mod._id || mod.id}`,
+                  id: mod.challenge_test_exam_id || mod.post_mini_test_exam_id || `mod_challenge_${targetModId}`,
+                  _id: mod.challenge_test_exam_id || mod.post_mini_test_exam_id || `mod_challenge_${targetModId}`,
                   title: `Challenge Test: ${mod.title}`,
                   course_id: c.id,
                   course_title: c.title,
-                  module_id: mod._id || mod.id,
+                  module_id: targetModId,
                   module_title: mod.title,
                   type: 'CHALLENGE_TEST',
                   total_questions: qList.length,
                   duration_minutes: mod.challenge_duration_minutes || mod.post_mini_duration_minutes || 15,
                   passing_score: mod.challenge_passing_score || mod.post_mini_passing_score || 80,
                   is_published: true,
+                  total_attempts: challengeAttempts,
+                  avg_score: challengeAvg,
                   questions: qList,
                   audio_url: mod.challenge_audio_url || mod.test_audio_url || mod.audio_url || '',
                   author_id: c.author_id,
                 })
               }
             }
-          } catch {
-
-          }
+          } catch {}
         })
       )
 
@@ -156,12 +201,46 @@ export function useCourseExams() {
         const eid = e._id || e.id || ''
         if (eid && !seenIds.has(eid)) {
           seenIds.add(eid)
+          const rawExam = e as Record<string, unknown>
+          const resolvedType =
+            (rawExam.exam_type as string) ||
+            e.type ||
+            (e.is_system_placement ? 'DIAGNOSTIC_TEST' : 'FULL_TEST')
+
+          let courseTitle = 'Toàn Hệ Thống'
+          if (!e.is_system_placement && resolvedType !== 'DIAGNOSTIC_TEST' && e.course_id) {
+            const matched = allowedCourses.find(
+              (c) => c.id === e.course_id || (c as unknown as { _id?: string })._id === e.course_id
+            )
+            courseTitle = matched?.title || e.course_title || 'Khóa học'
+          } else if (e.course_title) {
+            courseTitle = e.course_title
+          }
+
+          const qCount =
+            Array.isArray(e.questions) && e.questions.length > 0
+              ? e.questions.length
+              : (e.total_questions || (resolvedType === 'FULL_TEST' ? 200 : 30))
+
+          const duration =
+            e.duration_minutes ||
+            (typeof rawExam.listening_duration_minutes === 'number' &&
+            typeof rawExam.reading_duration_minutes === 'number'
+              ? rawExam.listening_duration_minutes + rawExam.reading_duration_minutes
+              : resolvedType === 'FULL_TEST'
+              ? 120
+              : 45)
+
           combined.push({
             ...e,
             id: eid,
             _id: eid,
-            type: e.type || (e.is_system_placement ? 'DIAGNOSTIC_TEST' : 'CHALLENGE_TEST'),
-            course_title: e.is_system_placement || !e.course_id ? 'Toàn Hệ Thống' : (e.course_title || 'Khóa học'),
+            type: resolvedType,
+            course_title: courseTitle,
+            total_questions: qCount,
+            duration_minutes: duration,
+            total_attempts: typeof e.total_attempts === 'number' ? e.total_attempts : 0,
+            avg_score: typeof e.avg_score === 'number' ? e.avg_score : 0,
           })
         }
       })

@@ -1,6 +1,6 @@
 // Định nghĩa các cột hiển thị cho DataTable quản lý bài thi.
 
-import { BookOpen, Clock, AlertCircle, Check, HelpCircle, Edit3, Trash2, Sparkles } from 'lucide-react'
+import { BookOpen, Clock, AlertCircle, Check, Edit3, Trash2, Sparkles } from 'lucide-react'
 import type { DataTableColumn } from '@/components/common/data.table'
 import { Popconfirm } from '@/components/common/popconfirm'
 import type { ToeicExamItem } from '@/services/exam.service'
@@ -10,7 +10,6 @@ interface GetCourseExamColumnsProps {
   isVi: boolean
   onTogglePublish: (exam: ToeicExamItem) => void
   onOpenEdit: (exam: ToeicExamItem) => void
-  onManageQuestions: (exam: ToeicExamItem) => void
   onDelete: (examId?: string) => void
 }
 
@@ -18,7 +17,6 @@ export function getCourseExamColumns({
   isVi,
   onTogglePublish,
   onOpenEdit,
-  onManageQuestions,
   onDelete,
 }: GetCourseExamColumnsProps): DataTableColumn<ToeicExamItem>[] {
   return [
@@ -106,7 +104,7 @@ export function getCourseExamColumns({
           exam.type === 'DIAGNOSTIC_TEST' ||
           !exam.course_id
         )
-        const qCount = Array.isArray(exam.questions) ? exam.questions.length : (exam.total_questions || 0)
+        const qCount = Array.isArray(exam.questions) && exam.questions.length > 0 ? exam.questions.length : (exam.total_questions || 0)
         const isZero = qCount === 0
         return (
           <div className="space-y-0.5 whitespace-nowrap text-center">
@@ -195,23 +193,15 @@ export function getCourseExamColumns({
       render: (exam) => {
         const examId = exam._id
         return (
-          <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-            <button
-              type="button"
-              onClick={() => onManageQuestions(exam)}
-              title={isVi ? 'Soạn / Quản lý câu hỏi đề thi' : 'Manage Question Bank'}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
-            >
-              <HelpCircle className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span className="hidden xl:inline">{isVi ? 'Soạn câu hỏi' : 'Questions'}</span>
-            </button>
+          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
             <button
               type="button"
               onClick={() => onOpenEdit(exam)}
-              title={isVi ? 'Chỉnh sửa thông tin bài thi' : 'Edit Exam'}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
+              title={isVi ? 'Chỉnh sửa cấu hình & câu hỏi đề thi' : 'Edit Exam & Questions'}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-3.5 h-3.5 shrink-0" />
+              <span>{isVi ? 'Chỉnh sửa' : 'Edit'}</span>
             </button>
             <Popconfirm
               title={isVi ? 'Xóa bài thi này?' : 'Delete this exam?'}
@@ -221,7 +211,7 @@ export function getCourseExamColumns({
               <button
                 type="button"
                 title={isVi ? 'Xóa bài thi' : 'Delete exam'}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-transparent hover:border-rose-200 dark:hover:border-rose-800/80 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

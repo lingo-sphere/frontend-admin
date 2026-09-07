@@ -1,7 +1,4 @@
-/**
- * @file course.exams.page.tsx
- * @description Trang quản lý bài thi và bài kiểm tra theo từng khóa học sử dụng chuẩn DataTable và UI/UX hệ thống Admin
- */
+// Trang quản lý bài thi và đánh giá năng lực khóa học.
 
 import { useMemo } from 'react'
 import { UserCheck, ShieldCheck } from 'lucide-react'
@@ -62,7 +59,6 @@ export function CourseExamsPage() {
         isVi,
         onTogglePublish: handleTogglePublish,
         onOpenEdit: handleManageQuestions,
-        onManageQuestions: handleManageQuestions,
         onDelete: handleDeleteExam,
       }),
     [isVi, handleTogglePublish, handleDeleteExam, setActiveNavItem]
@@ -106,7 +102,7 @@ export function CourseExamsPage() {
             exam={exam}
             isVi={isVi}
             onOpenEdit={handleManageQuestions}
-            onManageQuestions={handleManageQuestions}
+            onTogglePublish={handleTogglePublish}
             onDelete={handleDeleteExam}
           />
         )}
