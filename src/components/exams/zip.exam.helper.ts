@@ -560,17 +560,32 @@ export async function parseAndUploadZipExam(
             }
           }
         }
-      } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm.includes('dapana')) {
-        optA = strVal
-      } else if (norm.includes('luachonb') || norm.includes('optionb') || norm === 'b' || norm.includes('dapanb')) {
-        optB = strVal
-      } else if (norm.includes('luachonc') || norm.includes('optionc') || norm === 'c' || norm.includes('dapanc')) {
-        optC = strVal
-      } else if (norm.includes('luachond') || norm.includes('optiond') || norm === 'd' || norm.includes('dapand')) {
-        optD = strVal
-      } else if (norm.includes('dapandung') || norm.includes('correct') || norm.includes('answer') || norm === 'key') {
+      } else if (
+        norm.includes('dapandung') ||
+        norm.includes('correct') ||
+        norm.includes('key') ||
+        norm === 'dapan' ||
+        (norm.includes('answer') &&
+          !norm.includes('answera') &&
+          !norm.includes('answerb') &&
+          !norm.includes('answerc') &&
+          !norm.includes('answerd'))
+      ) {
         const cleaned = strVal.toUpperCase().replace(/[^ABCD]/g, '')
         if (cleaned) correctLetter = cleaned[0]
+      } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm === 'dapana') {
+        optA = strVal
+      } else if (norm.includes('luachonb') || norm.includes('optionb') || norm === 'b' || norm === 'dapanb') {
+        optB = strVal
+      } else if (norm.includes('luachonc') || norm.includes('optionc') || norm === 'c' || norm === 'dapanc') {
+        optC = strVal
+      } else if (
+        norm.includes('luachond') ||
+        norm.includes('optiond') ||
+        norm === 'd' ||
+        (norm.includes('dapand') && !norm.includes('dung'))
+      ) {
+        optD = strVal
       } else if (norm.includes('loigiai') || norm.includes('giaithich') || norm.includes('explain')) {
         explanation = strVal
       } else if (
