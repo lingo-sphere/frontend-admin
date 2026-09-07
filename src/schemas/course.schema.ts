@@ -13,9 +13,19 @@ export const QuizQuestionItemSchema = z.object({
   correct_answer: z.string(),
   explanation: z.string().optional(),
   media_url: z.string().optional(),
+  audio_url: z.string().optional(),
+  image_url: z.string().optional(),
+  image_media_id: z.string().optional(),
+  audio_media_id: z.string().optional(),
+  skill_type: z.string().optional(),
+  question_type: z.string().optional(),
   score_weight: z.number().optional(),
   part_number: z.union([z.number(), z.string()]).optional(),
+  part_name: z.string().optional(),
   order_index: z.number().optional(),
+  prep_time_seconds: z.number().optional(),
+  response_time_seconds: z.number().optional(),
+  min_words: z.number().optional(),
 })
 
 export const LessonSchema = z.object({

@@ -278,9 +278,9 @@ function CourseExamQuestionsEditor({
             skills_enabled: formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR',
             placement_type: formPlacementSkills,
             audio_url: globalAudioUrl,
+            questions,
             total_questions: questions.length,
           })
-          await examAdminService.saveExamQuestions(examId, questions, globalAudioUrl)
         }
 
         const allMediaUrls: string[] = []
@@ -886,7 +886,6 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
         if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
           setExam(cached)
           setIsLoading(false)
-          return
         }
       } catch {}
     }
@@ -960,11 +959,10 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
             toast.error(isVi ? 'Không tìm thấy bài thi chương học.' : 'Module exam not found.')
           }
         } else {
-          const apiExams = await examAdminService.getExams().catch(() => [])
-          const match = apiExams.find((e) => (e._id || e.id) === examId)
-          if (match && isMounted) {
-            setExam(match)
-            sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(match))
+          const freshExam = await examAdminService.getExamById(examId)
+          if (freshExam && isMounted) {
+            setExam(freshExam)
+            sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(freshExam))
           } else if (isMounted) {
             toast.error(isVi ? 'Không tìm thấy bài thi chỉ định.' : 'Exam not found.')
           }

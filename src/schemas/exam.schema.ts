@@ -30,7 +30,7 @@ export const ToeicExamItemSchema = z.object({
   created_at: z.string().optional(),
   questions: z.array(QuizQuestionItemSchema).optional(),
   audio_url: z.string().optional(),
-})
+}).passthrough()
 
 export const ToeicExamListSchema = z.array(ToeicExamItemSchema)
 
@@ -62,3 +62,4 @@ export const CreateExamDtoSchema = z.object({
 
 export type ToeicExamItem = z.infer<typeof ToeicExamItemSchema>
 export type CreateExamDto = z.infer<typeof CreateExamDtoSchema>
+

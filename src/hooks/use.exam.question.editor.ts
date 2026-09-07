@@ -45,6 +45,9 @@ interface RawExamQuestion {
   media_url?: string
   audio_url?: string
   image_url?: string
+  image_media_id?: string
+  imageMediaId?: string
+  imageUrl?: string
   prep_time_seconds?: number
   response_time_seconds?: number
   min_words?: number
@@ -145,7 +148,7 @@ export function useExamQuestionEditor({
                 .toUpperCase(),
               explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
               media_url: q.media_url || q.audio_url || '',
-              image_url: q.image_url || '',
+              image_url: q.image_url || q.image_media_id || q.imageMediaId || q.imageUrl || '',
               prep_time_seconds: q.prep_time_seconds,
               response_time_seconds: q.response_time_seconds,
               min_words: q.min_words,

@@ -132,6 +132,8 @@ export interface QuizQuestionItem {
   correct_answer: string
   explanation?: string
   media_url?: string
+  audio_url?: string
+  image_url?: string
 }
 
 export interface LessonQuestion {
