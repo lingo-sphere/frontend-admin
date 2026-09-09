@@ -11,6 +11,7 @@ import { usePermission } from '@/hooks/use.permission'
 import { Can } from '@/components/common/can'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 import { CourseStatsOverview } from '@/components/courses/course.stats.overview'
 import { CourseFilterBar } from '@/components/courses/course.filter.bar'
@@ -31,20 +32,13 @@ export function CoursesPage() {
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lingo_admin_courses_view_mode')
-      if (saved === 'grid' || saved === 'table') {
-        return saved
-      }
-    }
-    return 'table'
+    const saved = storage.get<'table' | 'grid'>(STORAGE_KEYS.COURSES_VIEW_MODE)
+    return saved === 'grid' || saved === 'table' ? saved : 'table'
   })
 
   const handleViewModeChange = useCallback((mode: 'table' | 'grid') => {
     setViewMode(mode)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lingo_admin_courses_view_mode', mode)
-    }
+    storage.set(STORAGE_KEYS.COURSES_VIEW_MODE, mode)
   }, [])
 
   const [currentPage, setCurrentPage] = useState<number>(1)

@@ -7,6 +7,7 @@ import { courseService } from '@/services/course.service'
 import { courseExamAggregatorService } from '@/services/course.exam.aggregator.service'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from '@/store/toast.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { CourseSelectItem } from '@/components/course-exams/course.exam.header.actions'
 
 export function useCourseExams() {
@@ -27,20 +28,13 @@ export function useCourseExams() {
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [viewMode, setViewModeState] = useState<'table' | 'grid'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lingo_admin_course_exams_view_mode')
-      if (saved === 'grid' || saved === 'table') {
-        return saved
-      }
-    }
-    return 'table'
+    const saved = storage.get<'table' | 'grid'>(STORAGE_KEYS.COURSE_EXAMS_VIEW_MODE)
+    return saved === 'grid' || saved === 'table' ? saved : 'table'
   })
 
   const setViewMode = useCallback((mode: 'table' | 'grid') => {
     setViewModeState(mode)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lingo_admin_course_exams_view_mode', mode)
-    }
+    storage.set(STORAGE_KEYS.COURSE_EXAMS_VIEW_MODE, mode)
   }, [])
 
   const [currentPage, setCurrentPage] = useState<number>(1)

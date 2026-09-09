@@ -1,8 +1,4 @@
-/**
- * @file course.learners.page.tsx
- * @description Course learners management page featuring progress table, submissions review, and analytics
- */
-
+// Trang quản trị tiến độ học tập, bài nộp kỹ năng và thống kê học viên theo khóa học
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -21,6 +17,7 @@ import {
   useCourseLearnersData,
 } from '@/hooks/use.course.learners.data'
 import type { StudentProgressItem, SkillSubmissionItem } from '@/services/progress.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function CourseLearnersPage() {
   const { i18n } = useTranslation()
@@ -147,7 +144,7 @@ export function CourseLearnersPage() {
   const handleSelectStudentDetail = useCallback(
     (st: StudentProgressItem) => {
       const targetCourseId = st.course_id || (selectedCourseId !== 'ALL' ? selectedCourseId : 'all')
-      sessionStorage.setItem('lingo_admin_active_student_progress', JSON.stringify(st))
+      storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, st)
       setActiveNavItem(`learner-progress:${targetCourseId}:${st.user_id}`)
     },
     [selectedCourseId, setActiveNavItem]

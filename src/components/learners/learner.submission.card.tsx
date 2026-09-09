@@ -1,8 +1,4 @@
-/**
- * @file learner.submission.card.tsx
- * @description Card item rendering a single learner speaking or writing submission in grid view
- */
-
+// Thẻ hiển thị bài nộp Speaking hoặc Writing của học viên.
 import {
   BookOpen,
   Sparkles,
@@ -12,6 +8,8 @@ import {
   Edit3,
   ExternalLink,
   CheckCircle2,
+  Clock,
+  Headphones,
 } from 'lucide-react'
 import type { SkillSubmissionItem } from '@/services/progress.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
@@ -51,17 +49,25 @@ export function LearnerSubmissionCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
             <span
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                 isReviewed
                   ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200'
                   : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200'
               }`}
             >
-              {isReviewed ? (isVi ? '✅ Đã duyệt' : '✅ Reviewed') : (isVi ? '⏳ Chờ chấm' : '⏳ Pending')}
+              {isReviewed ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3 text-teal-600 dark:text-teal-400" />
+                  <span>{isVi ? 'Đã duyệt' : 'Reviewed'}</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>{isVi ? 'Chờ chấm' : 'Pending'}</span>
+                </>
+              )}
             </span>
-          </div>
         </div>
 
         {sub.course_title && (
@@ -74,7 +80,10 @@ export function LearnerSubmissionCard({
         {sub.skill === 'SPEAKING' && sub.audio_url && (
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <span>{isVi ? '🎧 Bản ghi âm học viên:' : '🎧 Learner Audio:'}</span>
+              <span className="flex items-center gap-1">
+                <Headphones className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{isVi ? 'Bản ghi âm học viên:' : 'Learner Audio:'}</span>
+              </span>
               <a
                 href={resolveMediaUrl(sub.audio_url)}
                 target="_blank"

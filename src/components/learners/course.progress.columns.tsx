@@ -1,15 +1,11 @@
-/**
- * @file course.progress.columns.tsx
- * @description Định nghĩa các cột hiển thị bảng tiến độ học viên trong trang quản trị tiến độ khóa học
- */
-
-import { BookOpen, Zap, BarChart3 } from 'lucide-react'
+// Định nghĩa các cột hiển thị bảng tiến độ học viên trong trang quản trị tiến độ khóa học
+import { BookOpen, TrendingUp, BarChart3 } from 'lucide-react'
 import type { DataTableColumn } from '@/components/common/data.table'
 import type { StudentProgressItem } from '@/services/progress.service'
 
 interface CreateCourseProgressColumnsParams {
   isVi: boolean
-  usersMap: Map<string, any>
+  usersMap: Map<string, { full_name?: string; email?: string; avatar_url?: string }>
   onSelectStudentDetail: (st: StudentProgressItem) => void
 }
 
@@ -164,7 +160,7 @@ export function createCourseProgressColumns({
         const growth = st.total_score_growth ?? ((st.final_test_score || 0) - (st.baseline_score || 0))
         return growth > 0 ? (
           <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-            <Zap className="w-3.5 h-3.5" />+{growth}
+            <TrendingUp className="w-3.5 h-3.5" />+{growth}
           </span>
         ) : growth < 0 ? (
           <span className="text-xs font-bold text-rose-500 whitespace-nowrap">{growth}</span>

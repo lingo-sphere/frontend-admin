@@ -1,9 +1,5 @@
-/**
- * @file monitoring.services.grid.tsx
- * @description Lưới hiển thị trạng thái sức khỏe, độ trễ và uptime block của 15 vi dịch vụ backend
- */
-
-import { Cpu, Database, Globe, Layers, Radio, Server, ShieldCheck, Zap } from 'lucide-react'
+// Lưới hiển thị trạng thái sức khỏe, độ trễ và uptime của các vi dịch vụ backend.
+import { Activity, Cpu, Database, Globe, Layers, Radio, Server, ShieldCheck } from 'lucide-react'
 import { Pagination } from '@/components/common/pagination'
 import type { ServiceHealthItem } from '@/types/api.types'
 
@@ -128,7 +124,7 @@ export function MonitoringServicesGrid({
 
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <Activity className="w-3.5 h-3.5 text-amber-500" />
                   <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                     {service.latency_ms} ms
                   </span>

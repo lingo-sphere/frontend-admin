@@ -1,13 +1,9 @@
-/**
- * @file auth.store.ts
- * @description Mã nguồn thành phần auth-store.ts
- */
-
+// Store quản lý trạng thái phiên đăng nhập, quyền hạn và thông tin quản trị viên
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'
 import { authService, type LoginCredentials } from '@/services/auth.service'
 import { userService } from '@/services/user.service'
-import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { AuthUser, PermissionItem, UserProfile } from '@/types/api.types'
 
 interface AuthState {
@@ -40,19 +36,11 @@ const matchRoutePattern = (pattern: string, path: string): boolean => {
 }
 
 const getStoredToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN) || sessionStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+  return storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
 }
 
 const getStoredUser = (): AuthUser | null => {
-  if (typeof window === 'undefined') return null
-  const saved = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER) || sessionStorage.getItem(API_CONFIG.STORAGE_KEYS.USER)
-  if (!saved) return null
-  try {
-    return JSON.parse(saved)
-  } catch {
-    return null
-  }
+  return storage.get<AuthUser>(STORAGE_KEYS.USER) || storage.session.get<AuthUser>(STORAGE_KEYS.USER)
 }
 
 export const authStore = createStore<AuthState>()((set, get) => ({
@@ -103,17 +91,15 @@ export const authStore = createStore<AuthState>()((set, get) => ({
 
       const updatedUser: AuthUser = { ...user, permissions }
 
-      if (typeof window !== 'undefined') {
-        const isRemember = credentials.rememberMe !== false
-        const primaryStorage = isRemember ? localStorage : sessionStorage
-        const secondaryStorage = isRemember ? sessionStorage : localStorage
+      const isRemember = credentials.rememberMe !== false
+      const primaryStorage = isRemember ? storage : storage.session
+      const secondaryStorage = isRemember ? storage.session : storage
 
-        secondaryStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        secondaryStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
+      secondaryStorage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.USER)
 
-        primaryStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, access_token)
-        primaryStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser))
-      }
+      primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, access_token)
+      primaryStorage.set(STORAGE_KEYS.USER, updatedUser)
 
       set({
         user: updatedUser,
@@ -146,12 +132,10 @@ export const authStore = createStore<AuthState>()((set, get) => ({
     } catch (err) {
       console.warn('Logout error (clearing local session anyway):', err)
     } finally {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
-        sessionStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        sessionStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
-      }
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.USER)
+      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.USER)
       set({
         user: null,
         profile: null,
@@ -202,8 +186,10 @@ export const authStore = createStore<AuthState>()((set, get) => ({
 
       const updatedUser: AuthUser = { ...user, permissions }
 
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser))
+      if (storage.has(STORAGE_KEYS.USER)) {
+        storage.set(STORAGE_KEYS.USER, updatedUser)
+      } else {
+        storage.session.set(STORAGE_KEYS.USER, updatedUser)
       }
 
       set({

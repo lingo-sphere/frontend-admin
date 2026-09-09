@@ -1,9 +1,5 @@
-/**
- * @file learner.submissions.filter.bar.tsx
- * @description Search input, skill filter tabs, and review status tabs for submissions
- */
-
-import { Search } from 'lucide-react'
+// Thanh tìm kiếm và bộ lọc bài nộp kỹ năng của học viên.
+import { Search, Mic, PenLine, Clock, CheckCircle2 } from 'lucide-react'
 
 interface LearnerSubmissionsFilterBarProps {
   submissionSearch: string
@@ -53,13 +49,19 @@ export function LearnerSubmissionsFilterBar({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
             }`}
           >
-            {s === 'ALL'
-              ? isVi
-                ? 'Tất cả kỹ năng'
-                : 'All Skills'
-              : s === 'SPEAKING'
-              ? '🎙️ Speaking'
-              : '✍️ Writing'}
+            {s === 'ALL' ? (
+              isVi ? 'Tất cả kỹ năng' : 'All Skills'
+            ) : s === 'SPEAKING' ? (
+              <span className="flex items-center gap-1">
+                <Mic className="w-3 h-3" />
+                <span>Speaking</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <PenLine className="w-3 h-3" />
+                <span>Writing</span>
+              </span>
+            )}
           </button>
         ))}
 
@@ -76,17 +78,19 @@ export function LearnerSubmissionsFilterBar({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
             }`}
           >
-            {r === 'ALL'
-              ? isVi
-                ? 'Tất cả trạng thái'
-                : 'All Statuses'
-              : r === 'PENDING'
-              ? isVi
-                ? '⏳ Chờ chấm'
-                : '⏳ Pending'
-              : isVi
-              ? '✅ Đã duyệt'
-              : '✅ Reviewed'}
+            {r === 'ALL' ? (
+              isVi ? 'Tất cả trạng thái' : 'All Statuses'
+            ) : r === 'PENDING' ? (
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>{isVi ? 'Chờ chấm' : 'Pending'}</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>{isVi ? 'Đã duyệt' : 'Reviewed'}</span>
+              </span>
+            )}
           </button>
         ))}
       </div>

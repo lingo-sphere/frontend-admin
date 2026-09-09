@@ -11,6 +11,7 @@ import { getCourseExamColumns } from '@/components/course-exams/course.exam.tabl
 import { useCourseExams } from '@/hooks/use.course.exams'
 import { useAdminStore } from '@/store/admin.store'
 import type { ToeicExamItem } from '@/services/exam.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function CourseExamsPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
@@ -49,7 +50,7 @@ export function CourseExamsPage() {
   } = useCourseExams()
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
-    sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(exam))
+    storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
     setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
   }
 

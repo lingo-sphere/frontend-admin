@@ -1,9 +1,5 @@
-/**
- * @file student.scores.table.row.tsx
- * @description Từng hàng trong bảng điểm học viên hiển thị avatar, tiến độ, điểm các chương, điểm thi kết khóa
- */
-
-import { Zap, FileCheck2, Award, CheckCircle2, Clock } from 'lucide-react'
+// Từng hàng trong bảng điểm học viên hiển thị avatar, tiến độ, điểm các chương, điểm thi kết khóa
+import { Target, FileCheck2, Award, CheckCircle2, Clock } from 'lucide-react'
 import type { StudentProgressItem } from '@/services/progress.service'
 import type { UserProfile } from '@/types/api.types'
 
@@ -107,7 +103,7 @@ export function StudentScoresTableRow({
                       }`}
                       title={`Thử thách đầu chương: ${m.challenge_score || 0}%`}
                     >
-                      <Zap className="w-2.5 h-2.5" />
+                      <Target className="w-2.5 h-2.5" />
                       <span>{m.challenge_score || 0}%</span>
                     </span>
                   )}

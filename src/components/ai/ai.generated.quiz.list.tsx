@@ -1,9 +1,5 @@
-/**
- * @file ai.generated.quiz.list.tsx
- * @description Component giao diện AiGeneratedQuizList phục vụ khu vực Quản trị Admin
- */
-
-import { CheckCircle2, Copy, BookOpen } from 'lucide-react'
+// Danh sách câu hỏi trắc nghiệm được sinh bởi AI trong quản trị.
+import { CheckCircle2, Copy, BookOpen, Lightbulb } from 'lucide-react'
 import type { GenerateQuizItem } from '@/services/ai.service'
 
 interface AiGeneratedQuizListProps {
@@ -96,8 +92,9 @@ export function AiGeneratedQuizList({
 
             {q.explanation_vi && (
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-                <strong className="text-slate-800 dark:text-slate-200">
-                  💡 Giải thích chi tiết:{' '}
+                <strong className="text-slate-800 dark:text-slate-200 inline-flex items-center gap-1 mr-1">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Giải thích chi tiết:</span>
                 </strong>
                 {q.explanation_vi}
               </div>

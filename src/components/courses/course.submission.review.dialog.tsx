@@ -1,6 +1,6 @@
-// Dialog cham diem va viet nhan xet phuc khao bai nop cua hoc vien.
+// Dialog chấm điểm và viết nhận xét phúc khảo bài nộp của học viên.
 
-import { X, Volume2, FileText, Sparkles, CheckCircle2, Edit3, Bot, Save } from 'lucide-react'
+import { X, Volume2, FileText, Sparkles, CheckCircle2, Edit3, Bot, Save, Headphones, PenLine, MessageSquare, Lightbulb } from 'lucide-react'
 import { NumberInput } from '@/components/common/number.input'
 import type { SkillSubmissionItem } from '@/services/progress.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
@@ -84,7 +84,10 @@ export function CourseSubmissionReviewDialog({
               {submission.audio_url ? (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    <span>🎧 Bản ghi âm bài nói:</span>
+                    <span className="flex items-center gap-1.5">
+                      <Headphones className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Bản ghi âm bài nói:</span>
+                    </span>
                   </div>
                   <audio
                     controls
@@ -116,7 +119,10 @@ export function CourseSubmissionReviewDialog({
           {!isSpeaking && (
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
-                <span>✍️ Toàn văn bài luận:</span>
+                <span className="flex items-center gap-1.5">
+                  <PenLine className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Toàn văn bài luận:</span>
+                </span>
                 <span className="text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   {submission.essay_text?.trim().split(/\s+/).filter(Boolean).length || 0} từ
                 </span>
@@ -156,8 +162,9 @@ export function CourseSubmissionReviewDialog({
 
             {submission.ai_feedback?.detailed_comment && (
               <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/30 text-xs space-y-1">
-                <span className="font-bold text-purple-900 dark:text-purple-200 block">
-                  💬 Nhận xét chi tiết của AI:
+                <span className="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Nhận xét chi tiết của AI:</span>
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
                   {submission.ai_feedback.detailed_comment}
@@ -168,8 +175,9 @@ export function CourseSubmissionReviewDialog({
             {Array.isArray(submission.ai_feedback?.improvement_tips) &&
               submission.ai_feedback.improvement_tips.length > 0 && (
                 <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/30 text-xs space-y-1">
-                  <span className="font-bold text-purple-900 dark:text-purple-200 block">
-                    💡 Gợi ý cải thiện:
+                  <span className="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Gợi ý cải thiện:</span>
                   </span>
                   <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300">
                     {submission.ai_feedback.improvement_tips.map((tip, tIdx) => (

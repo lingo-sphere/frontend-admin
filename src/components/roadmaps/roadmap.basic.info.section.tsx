@@ -1,6 +1,6 @@
-// Thong tin co ban cua lo trinh hoc tap.
+// Thông tin cơ bản của lộ trình học tập trong quản trị.
 
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Headphones, Layers } from 'lucide-react'
 import { NumberInput } from '@/components/common/number.input'
 
 interface RoadmapBasicInfoSectionProps {
@@ -105,7 +105,10 @@ export function RoadmapBasicInfoSection({
                   : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
               }`}
             >
-              <div className="text-xs">🎧 📖 2 Kỹ Năng</div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <Headphones className="w-3.5 h-3.5 text-indigo-600" />
+                <span>2 Kỹ Năng</span>
+              </div>
               <div className="text-[10px] font-normal opacity-80 mt-0.5">
                 Listening & Reading
               </div>
@@ -119,7 +122,10 @@ export function RoadmapBasicInfoSection({
                   : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
               }`}
             >
-              <div className="text-xs">🗣️ ✍️ 4 Kỹ Năng</div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <Layers className="w-3.5 h-3.5 text-teal-600" />
+                <span>4 Kỹ Năng</span>
+              </div>
               <div className="text-[10px] font-normal opacity-80 mt-0.5">
                 LR + Speaking & Writing
               </div>

@@ -15,6 +15,7 @@ import { ExamEditorFooter } from '@/components/exams/editor/exam.editor.footer'
 import { ExamConfigForm } from '@/components/exams/editor/exam.config.form'
 import { ConfirmModal } from '@/components/common/confirm.modal'
 import { useExamQuestionEditor } from '@/hooks/use.exam.question.editor'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export interface CourseExamQuestionsEditorProps {
   initialExam: ToeicExamItem
@@ -174,7 +175,7 @@ export function CourseExamQuestionsEditor({
       await cleanupSessionMedia()
     } finally {
       setIsCanceling(false)
-      sessionStorage.removeItem('lingo_admin_active_exam')
+      storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
       onBack()
     }
   }
@@ -305,7 +306,7 @@ export function CourseExamQuestionsEditor({
             ? `Đã lưu thành công bài thi "${trimmedTitle}" với ${questions.length} câu hỏi!`
             : `Saved exam "${trimmedTitle}" with ${questions.length} questions!`
         )
-        sessionStorage.removeItem('lingo_admin_active_exam')
+        storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
         onBack()
       }
     } catch (err: unknown) {

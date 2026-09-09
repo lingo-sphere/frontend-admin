@@ -1,9 +1,5 @@
-/**
- * @file progress.ai.metrics.tab.tsx
- * @description Component giao diện ProgressAiMetricsTab hiển thị chỉ số sử dụng mô hình AI và đánh giá chất lượng từ Backend API
- */
-
-import { BrainCircuit, Cpu, RefreshCw, Zap } from 'lucide-react'
+// Tab chỉ số sử dụng mô hình AI và đánh giá chất lượng hệ thống.
+import { BrainCircuit, Cpu, RefreshCw, Star } from 'lucide-react'
 import { usePlatformAnalytics } from '@/hooks/use.platform.analytics'
 
 export function ProgressAiMetricsTab() {
@@ -54,7 +50,7 @@ export function ProgressAiMetricsTab() {
                     </span>
                     {m.isPrimary && (
                       <span className="flex items-center gap-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-md">
-                        <Zap size={10} />
+                        <Star size={10} className="fill-current" />
                         Primary
                       </span>
                     )}

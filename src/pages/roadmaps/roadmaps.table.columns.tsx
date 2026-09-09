@@ -1,9 +1,5 @@
-/**
- * @file roadmaps.table.columns.tsx
- * @description Định nghĩa các cột hiển thị và nút thao tác trên bảng Lộ trình học tập
- */
-
-import { Compass, BookOpen, CheckCircle2, Edit3, Trash2 } from 'lucide-react'
+// Cột hiển thị và thao tác bảng lộ trình học tập admin.
+import { Compass, BookOpen, CheckCircle2, Edit3, Trash2, Layers, Headphones } from 'lucide-react'
 import type { DataTableColumn } from '@/components/common/data.table'
 import { Popconfirm } from '@/components/common/popconfirm'
 import type { LearningRoadmap } from '@/types/api.types'
@@ -57,7 +53,17 @@ export function createRoadmapColumns({
               : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200'
           }`}
         >
-          {record.skills_focus === '4SKILLS' ? '🗣️ 4 Kỹ Năng' : '🎧 2 Kỹ Năng'}
+          {record.skills_focus === '4SKILLS' ? (
+            <>
+              <Layers className="w-3 h-3 text-teal-600" />
+              <span>4 Kỹ Năng</span>
+            </>
+          ) : (
+            <>
+              <Headphones className="w-3 h-3 text-indigo-600" />
+              <span>2 Kỹ Năng</span>
+            </>
+          )}
         </span>
       ),
     },

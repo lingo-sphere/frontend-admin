@@ -1,8 +1,4 @@
-/**
- * @file exams.page.tsx
- * @description Trang quản trị ExamsPage trong giao diện Admin
- */
-
+// Trang quản trị ngân hàng đề thi toàn hệ thống
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'
@@ -13,6 +9,7 @@ import { ExamStatsOverview } from '@/components/exams/exam.stats.overview'
 import { ExamListTable } from '@/components/exams/exam.list.table'
 import { CreateExamModal } from '@/components/exams/create.exam.modal'
 import { useAdminStore } from '@/store/admin.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function ExamsPage() {
   const { i18n } = useTranslation()
@@ -27,7 +24,7 @@ export function ExamsPage() {
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
-    sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(exam))
+    storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
     setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
   }
 
@@ -106,7 +103,7 @@ export function ExamsPage() {
       }
       setExams((prev) => [examItem, ...prev])
       setShowAddModal(false)
-      sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(examItem))
+      storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, examItem)
       setActiveNavItem(`course-exam-questions:${examItem._id || examItem.id}`)
       toast.success(
         isVi

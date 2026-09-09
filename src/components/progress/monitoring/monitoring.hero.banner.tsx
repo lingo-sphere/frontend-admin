@@ -1,9 +1,5 @@
-/**
- * @file monitoring.hero.banner.tsx
- * @description Hero banner hiển thị chỉ số SLA uptime, độ trễ trung bình, trạng thái hệ thống và nút điều khiển làm mới tự động
- */
-
-import { CheckCircle2, ExternalLink, Radio, RefreshCw, ShieldCheck, Terminal, Zap } from 'lucide-react'
+// Banner hiển thị chỉ số SLA uptime, độ trễ và trạng thái hệ thống.
+import { Activity, CheckCircle2, ExternalLink, Radio, RefreshCw, ShieldCheck, Terminal } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
 import type { BetterStackMonitoringData } from '@/types/api.types'
 
@@ -122,7 +118,7 @@ export function MonitoringHeroBanner({
 
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
           <div className="flex items-center gap-2 text-emerald-200 text-xs font-semibold">
-            <Zap className="w-4 h-4" />
+            <Activity className="w-4 h-4" />
             <span>{isVi ? 'Độ trễ trung bình' : 'Avg Latency'}</span>
           </div>
           <p className="text-lg sm:text-xl font-black text-white mt-1">

@@ -1,4 +1,4 @@
-// Card hien thi va chinh sua chi tiet cau hoi de thi.
+// Card hiển thị và chỉnh sửa chi tiết câu hỏi đề thi trong quản trị.
 
 import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X, Maximize2 } from 'lucide-react'
 import { Popconfirm } from '@/components/common/popconfirm'
@@ -8,15 +8,15 @@ import { Image } from 'antd'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 const SKILL_OPTIONS_2: SelectOption[] = [
-  { value: 'LISTENING', label: '🎧 Nghe (Listening)' },
-  { value: 'READING', label: '📖 Đọc (Reading)' },
+  { value: 'LISTENING', label: 'Nghe (Listening)' },
+  { value: 'READING', label: 'Đọc (Reading)' },
 ]
 
 const SKILL_OPTIONS_4: SelectOption[] = [
-  { value: 'LISTENING', label: '🎧 Nghe (Listening)' },
-  { value: 'READING', label: '📖 Đọc (Reading)' },
-  { value: 'SPEAKING', label: '🎙️ Nói (Speaking)' },
-  { value: 'WRITING', label: '✍️ Viết (Writing)' },
+  { value: 'LISTENING', label: 'Nghe (Listening)' },
+  { value: 'READING', label: 'Đọc (Reading)' },
+  { value: 'SPEAKING', label: 'Nói (Speaking)' },
+  { value: 'WRITING', label: 'Viết (Writing)' },
 ]
 
 const LETTERS = ['A', 'B', 'C', 'D']

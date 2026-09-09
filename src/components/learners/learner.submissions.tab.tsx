@@ -8,13 +8,15 @@ import {
   Volume2,
   FileText,
   Edit3,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/common/data.table'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import type { SkillSubmissionItem } from '@/services/progress.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
-import { LearnerSubmissionCard } from './learner.submission.card'
-import { LearnerSubmissionsFilterBar } from './learner.submissions.filter.bar'
+import { LearnerSubmissionCard } from '@/components/learners/learner.submission.card'
+import { LearnerSubmissionsFilterBar } from '@/components/learners/learner.submissions.filter.bar'
 
 interface CourseSimple {
   id: string
@@ -250,13 +252,23 @@ export function LearnerSubmissionsTab({
           const isReviewed = sub.is_teacher_reviewed || sub.status === 'TEACHER_REVIEWED'
           return (
             <span
-              className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${
+              className={`inline-flex items-center gap-1 justify-center px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${
                 isReviewed
                   ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800'
                   : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
               }`}
             >
-              {isReviewed ? (isVi ? '✅ Đã duyệt' : '✅ Reviewed') : (isVi ? '⏳ Chờ chấm' : '⏳ Pending')}
+              {isReviewed ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3 text-teal-600 dark:text-teal-400" />
+                  <span>{isVi ? 'Đã duyệt' : 'Reviewed'}</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>{isVi ? 'Chờ chấm' : 'Pending'}</span>
+                </>
+              )}
             </span>
           )
         },

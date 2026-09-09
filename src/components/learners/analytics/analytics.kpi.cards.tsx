@@ -1,13 +1,9 @@
-/**
- * @file analytics.kpi.cards.tsx
- * @description 4 Thẻ hiển thị chỉ số đo lường hiệu suất học tập (KPI Cards) trong tab phân tích học viên
- */
-
+// Thẻ chỉ số đo lường hiệu suất học tập (KPI Cards) trong tab phân tích học viên.
 import {
   CheckCircle2,
   AlertTriangle,
   Award,
-  Zap,
+  TrendingUp,
 } from 'lucide-react'
 import type { AnalyticsSummary } from '@/hooks/use.course.analytics'
 
@@ -82,7 +78,7 @@ export function AnalyticsKpiCards({ analyticsSummary }: AnalyticsKpiCardsProps) 
       <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-2">
         <div className="flex items-center justify-between text-xs font-bold text-slate-400">
           <span>MỨC TĂNG ĐIỂM TB</span>
-          <Zap className="w-4 h-4 text-violet-500" />
+          <TrendingUp className="w-4 h-4 text-violet-500" />
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-black text-violet-600 dark:text-violet-400">

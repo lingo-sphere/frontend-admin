@@ -5,6 +5,7 @@ import { progressService, type StudentProgressItem, type SkillSubmissionItem } f
 import { courseService } from '@/services/course.service'
 import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
 
 interface UseLearnerProgressDetailProps {
@@ -14,16 +15,9 @@ interface UseLearnerProgressDetailProps {
 
 export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgressDetailProps) {
   const [student, setStudent] = useState<StudentProgressItem | null>(() => {
-    if (typeof window !== 'undefined') {
-      const cachedStr = sessionStorage.getItem('lingo_admin_active_student_progress')
-      if (cachedStr) {
-        try {
-          const cached = JSON.parse(cachedStr) as StudentProgressItem
-          if (cached && cached.user_id === userId) {
-            return cached
-          }
-        } catch {}
-      }
+    const cached = storage.session.get<StudentProgressItem>(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS)
+    if (cached && cached.user_id === userId) {
+      return cached
     }
     return null
   })
@@ -35,16 +29,9 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
   const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
   const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const cachedStr = sessionStorage.getItem('lingo_admin_active_student_progress')
-      if (cachedStr) {
-        try {
-          const cached = JSON.parse(cachedStr) as StudentProgressItem
-          if (cached && cached.user_id === userId) {
-            return false
-          }
-        } catch {}
-      }
+    const cached = storage.session.get<StudentProgressItem>(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS)
+    if (cached && cached.user_id === userId) {
+      return false
     }
     return true
   })
@@ -97,18 +84,14 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
           status: cp.status ?? currentStudent?.status,
         }
         setStudent(mergedStudent)
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('lingo_admin_active_student_progress', JSON.stringify(mergedStudent))
-        }
+        storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, mergedStudent)
       } else if (isAllCourse && !studentRef.current) {
         const allProg = await progressService.getCourseStudentsProgress('all').catch(() => null)
         if (allProg?.students) {
           const found = allProg.students.find((s) => s.user_id === userId)
           if (found) {
             setStudent(found)
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('lingo_admin_active_student_progress', JSON.stringify(found))
-            }
+            storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, found)
           }
         }
       }

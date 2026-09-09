@@ -8,6 +8,7 @@ import { courseService } from '@/services/course.service'
 import { examAdminService, type ToeicExamItem } from '@/services/exam.service'
 import { toast } from '@/store/toast.store'
 import { CourseExamQuestionsEditor } from '@/components/exams/editor/course.exam.questions.editor'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { Course } from '@/types/api.types'
 
 interface CourseExamQuestionsPageProps {
@@ -42,14 +43,9 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
         audio_url: '',
       }
     }
-    const cachedStr = sessionStorage.getItem('lingo_admin_active_exam')
-    if (cachedStr) {
-      try {
-        const cached = JSON.parse(cachedStr) as ToeicExamItem
-        if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
-          return cached
-        }
-      } catch {}
+    const cached = storage.session.get<ToeicExamItem>(STORAGE_KEYS.ACTIVE_EXAM)
+    if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
+      return cached
     }
     return null
   })
@@ -57,14 +53,9 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
   const [existingExams, setExistingExams] = useState<ToeicExamItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (isCreateMode) return false
-    const cachedStr = sessionStorage.getItem('lingo_admin_active_exam')
-    if (cachedStr) {
-      try {
-        const cached = JSON.parse(cachedStr) as ToeicExamItem
-        if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
-          return false
-        }
-      } catch {}
+    const cached = storage.session.get<ToeicExamItem>(STORAGE_KEYS.ACTIVE_EXAM)
+    if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
+      return false
     }
     return true
   })
@@ -87,15 +78,10 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       }
     }
 
-    const cachedStr = sessionStorage.getItem('lingo_admin_active_exam')
-    if (cachedStr) {
-      try {
-        const cached = JSON.parse(cachedStr) as ToeicExamItem
-        if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
-          setExam(cached)
-          setIsLoading(false)
-        }
-      } catch {}
+    const cached = storage.session.get<ToeicExamItem>(STORAGE_KEYS.ACTIVE_EXAM)
+    if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
+      setExam(cached)
+      setIsLoading(false)
     }
 
     const loadData = async () => {
@@ -121,7 +107,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
               author_id: rawCourse.author_id,
             }
             setExam(courseExam)
-            sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(courseExam))
+            storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, courseExam)
           }
         } else if (examId.startsWith('mod_challenge_')) {
           const modId = examId.replace('mod_challenge_', '')
@@ -160,7 +146,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
                   author_id: c.author_id,
                 }
                 setExam(challengeExam)
-                sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(challengeExam))
+                storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, challengeExam)
                 found = true
                 break
               }
@@ -173,7 +159,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
           const freshExam = await examAdminService.getExamById(examId)
           if (freshExam && isMounted) {
             setExam(freshExam)
-            sessionStorage.setItem('lingo_admin_active_exam', JSON.stringify(freshExam))
+            storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, freshExam)
           } else if (isMounted) {
             toast.error(isVi ? 'Không tìm thấy bài thi chỉ định.' : 'Exam not found.')
           }
@@ -197,7 +183,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
   }, [examId, isCreateMode, isVi])
 
   const handleBack = () => {
-    sessionStorage.removeItem('lingo_admin_active_exam')
+    storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
     setActiveNavItem('course-exams')
   }
 

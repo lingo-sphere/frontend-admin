@@ -1,9 +1,5 @@
-/**
- * @file learner.table.columns.tsx
- * @description Component giao diện learner-table-columns phục vụ khu vực Quản trị Admin
- */
-
-import { Target, Zap, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
+// Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
+import { Target, Sparkles, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
 import type { User } from '@/data/users.data'
 import type { DataTableColumn } from '@/components/common/data.table'
 import { Popconfirm } from '@/components/common/popconfirm'
@@ -76,7 +72,7 @@ export function getLearnerColumns({
       render: (u) => (
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-            <Zap className="w-3.5 h-3.5 fill-amber-500" />
+            <Sparkles className="w-3.5 h-3.5 fill-amber-500" />
             {(u.total_xp || 0).toLocaleString()} XP
           </span>
           <span className="flex items-center gap-1 text-xs font-semibold text-rose-500">

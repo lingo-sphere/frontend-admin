@@ -163,9 +163,9 @@ export function ExamConfigForm({
               </label>
               <div className="flex items-center justify-between px-4 py-2.5 bg-violet-50/80 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-bold text-violet-800 dark:text-violet-300">
                 <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-violet-600" />
+                  <Globe className="w-4 h-4 text-violet-600 shrink-0" />
                   <span>
-                    🌐 {isVi ? '[TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)' : '[SYSTEM WIDE] - Placement Test'}
+                    {isVi ? '[TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)' : '[SYSTEM WIDE] - Placement Test'}
                   </span>
                 </div>
                 <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700">

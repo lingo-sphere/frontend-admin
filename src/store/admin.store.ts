@@ -1,10 +1,7 @@
-/**
- * @file admin.store.ts
- * @description Mã nguồn thành phần admin-store.ts
- */
-
+// Store quản lý trạng thái giao diện, thanh điều hướng và giao diện nền của trang quản trị
 import { create } from 'zustand'
 import { navItemToPath, pathToNavItem } from '@/utils/navigation'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 type ThemeMode = 'light' | 'dark'
 
@@ -33,8 +30,7 @@ const applyThemeToDOM = (theme: ThemeMode) => {
 }
 
 const getInitialTheme = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'dark'
-  const savedTheme = window.localStorage.getItem('lingosphere-admin-theme')
+  const savedTheme = storage.get<ThemeMode>(STORAGE_KEYS.THEME)
   const theme = savedTheme === 'light' ? 'light' : 'dark'
   applyThemeToDOM(theme)
   return theme
@@ -51,19 +47,15 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   sidebarCollapsed: false,
   mobileSidebarOpen: false,
   setTheme: (theme) => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('lingosphere-admin-theme', theme)
-      applyThemeToDOM(theme)
-    }
+    storage.set(STORAGE_KEYS.THEME, theme)
+    applyThemeToDOM(theme)
     set({ theme })
   },
   toggleTheme: () => {
     const current = get().theme
     const nextTheme: ThemeMode = current === 'dark' ? 'light' : 'dark'
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('lingosphere-admin-theme', nextTheme)
-      applyThemeToDOM(nextTheme)
-    }
+    storage.set(STORAGE_KEYS.THEME, nextTheme)
+    applyThemeToDOM(nextTheme)
     set({ theme: nextTheme })
   },
   setActiveNavItem: (activeNavItem) => {

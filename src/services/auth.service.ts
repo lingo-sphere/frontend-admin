@@ -1,10 +1,7 @@
-/**
- * @file auth.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ auth
- */
-
+// Service xử lý các logic nghiệp vụ xác thực tài khoản quản trị viên
 import { api, apiClient } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import {
   AuthUserSchema,
   LoginResponseSchema,
@@ -59,8 +56,10 @@ export const authService = {
     } catch {
       return { message: 'Logged out successfully' }
     } finally {
-      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.USER)
+      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.USER)
     }
   },
 

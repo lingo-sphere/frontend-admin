@@ -1,9 +1,5 @@
-/**
- * @file ai.architecture.cards.tsx
- * @description Component giao diện AiArchitectureCards phục vụ khu vực Quản trị Admin
- */
-
-import { Zap, Sparkles } from 'lucide-react'
+// Thẻ kiến trúc các mô hình AI hạ tầng phục vụ quản trị.
+import { Cpu, Sparkles } from 'lucide-react'
 
 export function AiArchitectureCards() {
   return (
@@ -20,7 +16,7 @@ export function AiArchitectureCards() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+            <Cpu className="w-5 h-5 text-amber-400" />
             Groq Cloud LPU (qwen/qwen3.8-27b)
           </h3>
           <p className="text-xs text-slate-400 mt-1">
