@@ -1,6 +1,6 @@
 // Custom hook quan ly trang thai bien soan cau hoi va don dep media khi huy.
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import type { ToeicExamItem } from '@/services/exam.service'
 import { examAdminService } from '@/services/exam.service'
 import { mediaAdminService } from '@/services/media.service'
@@ -9,6 +9,7 @@ import { toast } from '@/store/toast.store'
 
 export interface ExamQuestionItem {
   id?: string
+  _id?: string
   skill_type?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
   part_number?: number | string
   part_name?: string
@@ -18,6 +19,7 @@ export interface ExamQuestionItem {
   correct_answer: string
   explanation?: string
   media_url?: string
+  audio_url?: string
   image_url?: string
   prep_time_seconds?: number
   response_time_seconds?: number
@@ -26,12 +28,13 @@ export interface ExamQuestionItem {
 
 interface RawExamQuestion {
   id?: string
-  skill_type?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
-  skillType?: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
+  _id?: string
+  skill_type?: string
+  skillType?: string
   part_number?: number | string
   part?: number | string
   part_name?: string
-  question_type?: 'MULTIPLE_CHOICE' | 'SPEAKING' | 'WRITING'
+  question_type?: string
   question_text?: string
   questionTextEn?: string
   question_text_en?: string
@@ -65,6 +68,103 @@ interface UseExamQuestionEditorParams {
   onClose: () => void
 }
 
+function normalizeQuestions(rawList: Array<ExamQuestionItem | RawExamQuestion>): ExamQuestionItem[] {
+  return rawList.map((q, idx) => {
+    const raw = q as RawExamQuestion
+    const rawPart = raw.part_number ?? raw.part
+    const isSpk =
+      rawPart === 'speaking' ||
+      raw.question_type === 'SPEAKING' ||
+      raw.skill_type === 'SPEAKING' ||
+      raw.skillType === 'SPEAKING'
+    const isWrt =
+      rawPart === 'writing' ||
+      raw.question_type === 'WRITING' ||
+      raw.skill_type === 'WRITING' ||
+      raw.skillType === 'WRITING'
+    const numPart = typeof rawPart === 'number' ? rawPart : parseInt(String(rawPart), 10)
+    const hasExplicitPart = !isNaN(numPart) && numPart >= 1 && numPart <= 7
+    const isListen =
+      raw.skill_type === 'LISTENING' ||
+      raw.skillType === 'LISTENING' ||
+      (!isSpk && !isWrt && Boolean(raw.media_url || raw.audio_url)) ||
+      (hasExplicitPart && numPart <= 4)
+
+    const derivedSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isSpk
+      ? 'SPEAKING'
+      : isWrt
+        ? 'WRITING'
+        : isListen
+          ? 'LISTENING'
+          : 'READING'
+
+    return {
+      id: raw.id || raw._id || `q_${idx}`,
+      skill_type: derivedSkill,
+      part_number: isSpk ? 'speaking' : isWrt ? 'writing' : hasExplicitPart ? numPart : undefined,
+      part_name: raw.part_name || '',
+      question_type: isSpk ? 'SPEAKING' : isWrt ? 'WRITING' : 'MULTIPLE_CHOICE',
+      question_text: raw.question_text || raw.questionTextEn || raw.question_text_en || '',
+      options: Array.isArray(raw.options)
+        ? raw.options.map((opt) => (typeof opt === 'string' ? opt : opt.textEn || opt.text || ''))
+        : ['', '', '', ''],
+      correct_answer: (
+        raw.correct_answer ||
+        raw.correctOption ||
+        raw.correct_option ||
+        'A'
+      )
+        .toString()
+        .toUpperCase(),
+      explanation: raw.explanation || raw.explanation_vi || raw.explanation_en || '',
+      media_url: raw.media_url || raw.audio_url || '',
+      image_url: raw.image_url || raw.image_media_id || raw.imageMediaId || raw.imageUrl || '',
+      prep_time_seconds: raw.prep_time_seconds,
+      response_time_seconds: raw.response_time_seconds,
+      min_words: raw.min_words,
+    }
+  })
+}
+
+function getQuestionsSnapshot(qs: ExamQuestionItem[], audio: string): string {
+  return JSON.stringify({
+    audio: (audio || '').trim(),
+    qs: (qs || []).map((q) => ({
+      skill_type: q.skill_type || 'READING',
+      part_number: q.part_number !== undefined ? String(q.part_number) : '',
+      question_type: q.question_type || 'MULTIPLE_CHOICE',
+      question_text: (q.question_text || '').trim(),
+      options: Array.isArray(q.options) ? q.options.map((opt) => (opt || '').trim()) : [],
+      correct_answer: (q.correct_answer || 'A').toString().trim().toUpperCase(),
+      explanation: (q.explanation || '').trim(),
+      media_url: (q.media_url || q.audio_url || '').trim(),
+      image_url: (q.image_url || '').trim(),
+      prep_time_seconds: q.prep_time_seconds ?? null,
+      response_time_seconds: q.response_time_seconds ?? null,
+      min_words: q.min_words ?? null,
+    })),
+  })
+}
+
+function computeInitialBundle(
+  exam: ToeicExamItem | null | undefined,
+  initialQuestions: ExamQuestionItem[] | undefined,
+  initialGlobalAudioUrl: string | undefined
+) {
+  const rawQs = exam?.questions || initialQuestions || []
+  const qs = normalizeQuestions(Array.isArray(rawQs) ? rawQs : [])
+  const audio = (exam?.audio_url || initialGlobalAudioUrl || '').trim()
+  const snap = getQuestionsSnapshot(qs, audio)
+  const initialMedia = new Set<string>()
+  if (audio) initialMedia.add(audio)
+  qs.forEach((q) => {
+    if (q.media_url) initialMedia.add(q.media_url)
+    if (q.audio_url) initialMedia.add(q.audio_url)
+    if (q.image_url) initialMedia.add(q.image_url)
+  })
+  return { qs, audio, snap, initialMedia }
+}
+
 export function useExamQuestionEditor({
   isOpen,
   exam,
@@ -83,8 +183,14 @@ export function useExamQuestionEditor({
         exam?.skills_enabled === 'ALL' ||
         exam?.skills_enabled === 'FULL' ||
         false
-  const [questions, setQuestions] = useState<ExamQuestionItem[]>([])
-  const [globalAudioUrl, setGlobalAudioUrl] = useState<string>('')
+
+  const initialBundle = useMemo(
+    () => computeInitialBundle(exam, initialQuestions, initialGlobalAudioUrl),
+    [exam, initialQuestions, initialGlobalAudioUrl]
+  )
+
+  const [questions, setQuestions] = useState<ExamQuestionItem[]>(() => initialBundle.qs)
+  const [globalAudioUrl, setGlobalAudioUrl] = useState<string>(() => initialBundle.audio)
   const [globalAudioFile, setGlobalAudioFile] = useState<File | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
@@ -106,72 +212,52 @@ export function useExamQuestionEditor({
   const questionImageInputRef = useRef<HTMLInputElement>(null)
   const activeQuestionIdxRef = useRef<number | null>(null)
   const sessionUploadedUrlsRef = useRef<Set<string>>(new Set())
+  const initialMediaUrlsRef = useRef<Set<string>>(new Set(initialBundle.initialMedia))
+  const initialSnapshotRef = useRef<string | null>(initialBundle.snap)
+  const [initialSnapshot, setInitialSnapshot] = useState<string | null>(() => initialBundle.snap)
+
+  const safeCleanupTempMedia = (url: string | undefined | null) => {
+    if (!url) return
+    if (sessionUploadedUrlsRef.current.has(url) && !initialMediaUrlsRef.current.has(url)) {
+      mediaAdminService.cleanupTempMedia([url]).catch(() => {})
+      sessionUploadedUrlsRef.current.delete(url)
+    }
+  }
+
+  const syncSavedState = (qs: ExamQuestionItem[], audio: string) => {
+    const snap = getQuestionsSnapshot(qs, audio)
+    initialSnapshotRef.current = snap
+    setInitialSnapshot(snap)
+    sessionUploadedUrlsRef.current.clear()
+    if (audio) initialMediaUrlsRef.current.add(audio)
+    qs.forEach((q) => {
+      if (q.media_url) initialMediaUrlsRef.current.add(q.media_url)
+      if (q.audio_url) initialMediaUrlsRef.current.add(q.audio_url)
+      if (q.image_url) initialMediaUrlsRef.current.add(q.image_url)
+    })
+  }
 
   useEffect(() => {
-    if (isOpen && exam) {
-      const existingQs: ExamQuestionItem[] = Array.isArray(exam.questions)
-        ? (exam.questions as unknown as RawExamQuestion[]).map((q: RawExamQuestion, idx: number) => {
-            const rawPart = q.part_number ?? q.part
-            const isSpk = rawPart === 'speaking' || q.question_type === 'SPEAKING' || q.skill_type === 'SPEAKING' || q.skillType === 'SPEAKING'
-            const isWrt = rawPart === 'writing' || q.question_type === 'WRITING' || q.skill_type === 'WRITING' || q.skillType === 'WRITING'
-            const numPart = typeof rawPart === 'number' ? rawPart : parseInt(String(rawPart), 10)
-            const hasExplicitPart = !isNaN(numPart) && numPart >= 1 && numPart <= 7
-            const isListen = q.skill_type === 'LISTENING' || q.skillType === 'LISTENING' || (!isSpk && !isWrt && Boolean(q.media_url || q.audio_url)) || (hasExplicitPart && numPart <= 4)
-
-            const derivedSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isSpk
-              ? 'SPEAKING'
-              : isWrt
-                ? 'WRITING'
-                : isListen
-                  ? 'LISTENING'
-                  : 'READING'
-
-            return {
-              id: q.id || `q_${idx}_${Date.now()}`,
-              skill_type: derivedSkill,
-              part_number: isSpk ? 'speaking' : isWrt ? 'writing' : hasExplicitPart ? numPart : undefined,
-              part_name: q.part_name || '',
-              question_type: isSpk ? 'SPEAKING' : isWrt ? 'WRITING' : 'MULTIPLE_CHOICE',
-              question_text: q.question_text || q.questionTextEn || q.question_text_en || '',
-              options: Array.isArray(q.options)
-                ? q.options.map((opt: string | { textEn?: string; text?: string }) =>
-                    typeof opt === 'string' ? opt : opt.textEn || opt.text || ''
-                  )
-                : ['', '', '', ''],
-              correct_answer: (
-                q.correct_answer ||
-                q.correctOption ||
-                q.correct_option ||
-                'A'
-              )
-                .toString()
-                .toUpperCase(),
-              explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
-              media_url: q.media_url || q.audio_url || '',
-              image_url: q.image_url || q.image_media_id || q.imageMediaId || q.imageUrl || '',
-              prep_time_seconds: q.prep_time_seconds,
-              response_time_seconds: q.response_time_seconds,
-              min_words: q.min_words,
-            }
-          })
-        : []
-
-      setQuestions(existingQs)
-      setGlobalAudioUrl(exam.audio_url || '')
+    if (isOpen) {
+      setQuestions(initialBundle.qs)
+      setGlobalAudioUrl(initialBundle.audio)
+      setInitialSnapshot(initialBundle.snap)
+      initialSnapshotRef.current = initialBundle.snap
+      initialMediaUrlsRef.current = new Set(initialBundle.initialMedia)
+      sessionUploadedUrlsRef.current.clear()
       setSearchQuery('')
       setPartFilter('ALL')
-    } else if (isOpen && initialQuestions) {
-      setQuestions(initialQuestions)
-      setGlobalAudioUrl(initialGlobalAudioUrl || '')
-      setSearchQuery('')
-      setPartFilter('ALL')
-    } else if (isOpen && !exam && !initialQuestions) {
-      setQuestions([])
-      setGlobalAudioUrl('')
-      setSearchQuery('')
-      setPartFilter('ALL')
+    } else {
+      initialSnapshotRef.current = null
+      setInitialSnapshot(null)
+      sessionUploadedUrlsRef.current.clear()
     }
-  }, [isOpen, exam, initialQuestions, initialGlobalAudioUrl])
+  }, [isOpen, initialBundle])
+
+  const isDirty = useMemo(() => {
+    if (!initialSnapshot) return false
+    return getQuestionsSnapshot(questions, globalAudioUrl) !== initialSnapshot
+  }, [questions, globalAudioUrl, initialSnapshot])
 
   const filteredQuestions = questions.filter((q, index) => {
     const matchesFilter =
@@ -254,8 +340,7 @@ export function useExamQuestionEditor({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         if (oldUrl && oldUrl !== uploadedUrl) {
-          mediaAdminService.cleanupTempMedia([oldUrl]).catch(() => {})
-          sessionUploadedUrlsRef.current.delete(oldUrl)
+          safeCleanupTempMedia(oldUrl)
         }
         sessionUploadedUrlsRef.current.add(uploadedUrl)
         setGlobalAudioUrl(uploadedUrl)
@@ -275,8 +360,7 @@ export function useExamQuestionEditor({
 
   const handleRemoveGlobalAudio = () => {
     if (globalAudioUrl) {
-      mediaAdminService.cleanupTempMedia([globalAudioUrl]).catch(() => {})
-      sessionUploadedUrlsRef.current.delete(globalAudioUrl)
+      safeCleanupTempMedia(globalAudioUrl)
       setGlobalAudioUrl('')
       toast.success(isVi ? 'Đã xóa file nghe toàn bài thi!' : 'Removed global exam audio!')
     }
@@ -302,18 +386,8 @@ export function useExamQuestionEditor({
   const handleDeleteQuestion = (index: number) => {
     const target = questions[index]
     if (target) {
-      const urlsToClean: string[] = []
-      if (target.media_url) {
-        urlsToClean.push(target.media_url)
-        sessionUploadedUrlsRef.current.delete(target.media_url)
-      }
-      if (target.image_url) {
-        urlsToClean.push(target.image_url)
-        sessionUploadedUrlsRef.current.delete(target.image_url)
-      }
-      if (urlsToClean.length > 0) {
-        mediaAdminService.cleanupTempMedia(urlsToClean).catch(() => {})
-      }
+      safeCleanupTempMedia(target.media_url)
+      safeCleanupTempMedia(target.image_url)
     }
     setQuestions((prev) => prev.filter((_, i) => i !== index))
   }
@@ -323,15 +397,13 @@ export function useExamQuestionEditor({
     if ('media_url' in updates) {
       const newMedia = updates.media_url || ''
       if (currentQ?.media_url && currentQ.media_url !== newMedia) {
-        mediaAdminService.cleanupTempMedia([currentQ.media_url]).catch(() => {})
-        sessionUploadedUrlsRef.current.delete(currentQ.media_url)
+        safeCleanupTempMedia(currentQ.media_url)
       }
     }
     if ('image_url' in updates) {
       const newImg = updates.image_url || ''
       if (currentQ?.image_url && currentQ.image_url !== newImg) {
-        mediaAdminService.cleanupTempMedia([currentQ.image_url]).catch(() => {})
-        sessionUploadedUrlsRef.current.delete(currentQ.image_url)
+        safeCleanupTempMedia(currentQ.image_url)
       }
     }
     setQuestions((prev) => {
@@ -365,8 +437,7 @@ export function useExamQuestionEditor({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         if (oldUrl && oldUrl !== uploadedUrl) {
-          mediaAdminService.cleanupTempMedia([oldUrl]).catch(() => {})
-          sessionUploadedUrlsRef.current.delete(oldUrl)
+          safeCleanupTempMedia(oldUrl)
         }
         sessionUploadedUrlsRef.current.add(uploadedUrl)
         handleUpdateQuestion(qIdx, { media_url: uploadedUrl })
@@ -395,8 +466,7 @@ export function useExamQuestionEditor({
       const uploadedUrl = res.file_url || res.url || res.public_url
       if (uploadedUrl) {
         if (oldUrl && oldUrl !== uploadedUrl) {
-          mediaAdminService.cleanupTempMedia([oldUrl]).catch(() => {})
-          sessionUploadedUrlsRef.current.delete(oldUrl)
+          safeCleanupTempMedia(oldUrl)
         }
         sessionUploadedUrlsRef.current.add(uploadedUrl)
         handleUpdateQuestion(qIdx, { image_url: uploadedUrl })
@@ -465,6 +535,7 @@ export function useExamQuestionEditor({
       setIsSaving(true)
       try {
         await onSave(questions, globalAudioUrl)
+        syncSavedState(questions, globalAudioUrl)
         onClose()
       } finally {
         setIsSaving(false)
@@ -499,6 +570,8 @@ export function useExamQuestionEditor({
         mediaAdminService.confirmMedia(allMediaUrls, examId).catch(() => {})
       }
 
+      syncSavedState(questions, globalAudioUrl)
+
       const mergedExam: ToeicExamItem = {
         ...exam,
         ...(updated || {}),
@@ -514,6 +587,8 @@ export function useExamQuestionEditor({
       )
       onClose()
     } catch {
+      syncSavedState(questions, globalAudioUrl)
+
       const mergedExam: ToeicExamItem = {
         ...exam,
         questions,
@@ -567,12 +642,15 @@ export function useExamQuestionEditor({
     handleZipFileSelected,
     handleSaveQuestions,
     sessionUploadedUrlsRef,
+    isDirty,
     cleanupSessionMedia: async () => {
-      const urls = Array.from(sessionUploadedUrlsRef.current)
+      const urls = Array.from(sessionUploadedUrlsRef.current).filter(
+        (url) => !initialMediaUrlsRef.current.has(url)
+      )
       if (urls.length > 0) {
         await mediaAdminService.cleanupTempMedia(urls)
-        sessionUploadedUrlsRef.current.clear()
       }
+      sessionUploadedUrlsRef.current.clear()
     },
   }
 }

@@ -9,8 +9,8 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { ExamQuestionStudioModal } from '@/components/exams/editor/exam.question.studio.modal'
-import type { CourseFormData } from './course.basic.info.tab'
-import { CourseFinalTestSkillsSection } from './course.final.test.skills.section'
+import type { CourseFormData } from '@/components/courses/course.basic.info.tab'
+import { CourseFinalTestSkillsSection } from '@/components/courses/course.final.test.skills.section'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 interface CourseFinalTestCardProps {
@@ -104,23 +104,24 @@ export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTes
         />
       )}
 
-      <ExamQuestionStudioModal
-        key="final-test-studio-modal"
-        isOpen={isStudioModalOpen}
-        onClose={() => setIsStudioModalOpen(false)}
-        title={`${isVi ? 'Soạn Đề Thi Tốt Nghiệp Final Test - ' : 'Final Test Exam Editor - '}${formData.title || 'Khóa học'}`}
-        subtitle={isVi ? 'Đề thi tốt nghiệp đánh giá toàn diện năng lực' : 'Comprehensive graduation exam'}
-        is4Skills={formData.category === 'TOEIC_4_SKILLS'}
-        isVi={isVi}
-        initialQuestions={(formData.final_test_questions || []) as ExamQuestionItem[]}
-        initialGlobalAudioUrl={formData.final_test_audio_url || ''}
-        onSave={(q, audioUrl) => {
-          onChange({
-            final_test_questions: q,
-            ...(audioUrl ? { final_test_audio_url: audioUrl } : {}),
-          })
-        }}
-      />
+      {isStudioModalOpen && (
+        <ExamQuestionStudioModal
+          isOpen={isStudioModalOpen}
+          onClose={() => setIsStudioModalOpen(false)}
+          title={`${isVi ? 'Soạn Đề Thi Tốt Nghiệp Final Test - ' : 'Final Test Exam Editor - '}${formData.title || 'Khóa học'}`}
+          subtitle={isVi ? 'Đề thi tốt nghiệp đánh giá toàn diện năng lực' : 'Comprehensive graduation exam'}
+          is4Skills={formData.category === 'TOEIC_4_SKILLS'}
+          isVi={isVi}
+          initialQuestions={(formData.final_test_questions || []) as ExamQuestionItem[]}
+          initialGlobalAudioUrl={formData.final_test_audio_url || ''}
+          onSave={(q, audioUrl) => {
+            onChange({
+              final_test_questions: q,
+              final_test_audio_url: audioUrl || '',
+            })
+          }}
+        />
+      )}
     </div>
   )
 }

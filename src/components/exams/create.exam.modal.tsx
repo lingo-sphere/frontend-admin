@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
 import { NumberInput } from '@/components/common/number.input'
+import { ConfirmModal } from '@/components/common/confirm.modal'
 
 interface CreateExamModalProps {
   isOpen: boolean
@@ -24,8 +25,17 @@ export function CreateExamModal({
   const [type, setType] = useState('FULL_TEST')
   const [duration, setDuration] = useState(120)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
 
   if (!isOpen) return null
+
+  const handleRequestClose = () => {
+    if (title.trim()) {
+      setShowDiscardConfirm(true)
+    } else {
+      onClose()
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,7 +55,7 @@ export function CreateExamModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
-      onClick={onClose}
+      onClick={handleRequestClose}
     >
       <div
         className="w-full max-w-lg rounded-3xl border border-slate-200/90 bg-white p-6 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 dark:border-slate-800 dark:bg-slate-900 space-y-4 animate-in zoom-in-95 duration-150"
@@ -56,8 +66,8 @@ export function CreateExamModal({
             {isVi ? 'Tạo Đề Thi Mới' : 'Create New Exam'}
           </h3>
           <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            onClick={handleRequestClose}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -114,8 +124,8 @@ export function CreateExamModal({
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              onClick={handleRequestClose}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
             >
               {isVi ? 'Hủy' : 'Cancel'}
             </button>
@@ -131,6 +141,26 @@ export function CreateExamModal({
           </div>
         </form>
       </div>
+
+      <ConfirmModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={() => {
+          setShowDiscardConfirm(false)
+          setTitle('')
+          onClose()
+        }}
+        variant="warning"
+        icon="warning"
+        title={isVi ? 'Cảnh báo dữ liệu chưa được lưu' : 'Unsaved Changes Warning'}
+        message={
+          isVi
+            ? 'Bạn có thông tin đề thi đang nhập dở. Bạn có chắc chắn muốn đóng và hủy không?'
+            : 'You have entered exam info. Are you sure you want to discard and exit?'
+        }
+        confirmText={isVi ? 'Đồng ý đóng & hủy' : 'Discard & Exit'}
+        cancelText={isVi ? 'Ở lại tiếp tục' : 'Stay'}
+      />
     </div>
   )
 }

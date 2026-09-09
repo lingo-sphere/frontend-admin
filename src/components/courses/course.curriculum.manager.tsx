@@ -1,15 +1,12 @@
-/**
- * @file course.curriculum.manager.tsx
- * @description Quản lý toàn diện chương trình giảng dạy của khóa học với hệ thống phân cấp trực quan, thống kê bài học và điều khiển tổng thể
- */
+// Quan ly toan dien chuong trinh giang day cua khoa hoc.
 
 import { Film, Plus } from 'lucide-react'
 import { ExamQuestionStudioModal } from '@/components/exams/editor/exam.question.studio.modal'
-import { CourseChapterCard } from './course.chapter.card'
-import { CourseCurriculumHeader } from './course.curriculum.header'
-import { CourseCurriculumOutline } from './course.curriculum.outline'
+import { CourseChapterCard } from '@/components/courses/course.chapter.card'
+import { CourseCurriculumHeader } from '@/components/courses/course.curriculum.header'
+import { CourseCurriculumOutline } from '@/components/courses/course.curriculum.outline'
 import { useCourseCurriculum } from '@/hooks/use.course.curriculum'
-import type { CourseModule } from './course.basic.info.tab'
+import type { CourseModule } from '@/components/courses/course.basic.info.tab'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 interface CourseCurriculumManagerProps {
@@ -168,20 +165,22 @@ export function CourseCurriculumManager({
         </div>
       )}
 
-      <ExamQuestionStudioModal
-        key={studioModalState.moduleId || 'studio-modal'}
-        isOpen={studioModalState.isOpen}
-        onClose={() => setStudioModalState((prev) => ({ ...prev, isOpen: false }))}
-        title={`${isVi ? 'Soạn Bài Kiểm Tra - ' : 'Assessment - '}${studioModalState.moduleTitle}`}
-        subtitle={isVi ? 'Bài thi trắc nghiệm kết thúc chương học' : 'Chapter assessment test'}
-        is4Skills={is4Skills}
-        isVi={isVi}
-        initialQuestions={studioModalState.questions}
-        initialGlobalAudioUrl={studioModalState.globalAudioUrl}
-        onSave={(q, audioUrl) => {
-          handleApplyQuestions(studioModalState.moduleId, q, audioUrl)
-        }}
-      />
+      {studioModalState.isOpen && (
+        <ExamQuestionStudioModal
+          key={studioModalState.moduleId || 'studio-modal'}
+          isOpen={studioModalState.isOpen}
+          onClose={() => setStudioModalState((prev) => ({ ...prev, isOpen: false }))}
+          title={`${isVi ? 'Soạn Bài Kiểm Tra - ' : 'Assessment - '}${studioModalState.moduleTitle}`}
+          subtitle={isVi ? 'Bài thi trắc nghiệm kết thúc chương học' : 'Chapter assessment test'}
+          is4Skills={is4Skills}
+          isVi={isVi}
+          initialQuestions={studioModalState.questions}
+          initialGlobalAudioUrl={studioModalState.globalAudioUrl}
+          onSave={(q, audioUrl) => {
+            handleApplyQuestions(studioModalState.moduleId, q, audioUrl)
+          }}
+        />
+      )}
     </div>
   )
 }

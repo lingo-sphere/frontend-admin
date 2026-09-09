@@ -13,6 +13,7 @@ import { ExamEditorHeader } from '@/components/exams/editor/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/components/exams/editor/exam.editor.global.audio'
 import { ExamEditorFooter } from '@/components/exams/editor/exam.editor.footer'
 import { ExamConfigForm } from '@/components/exams/editor/exam.config.form'
+import { ConfirmModal } from '@/components/common/confirm.modal'
 import { useExamQuestionEditor } from '@/hooks/use.exam.question.editor'
 
 export interface CourseExamQuestionsEditorProps {
@@ -126,16 +127,46 @@ export function CourseExamQuestionsEditor({
     handleZipFileSelected,
     cleanupSessionMedia,
     sessionUploadedUrlsRef,
+    isDirty,
   } = useExamQuestionEditor({
     isOpen: true,
     exam: activeExamConfig,
     is4Skills,
     isVi,
     onExamUpdated: () => {},
-    onClose: () => handleCancelExam(),
+    onClose: () => handleRequestCancel(),
   })
 
   const [isCanceling, setIsCanceling] = useState<boolean>(false)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState<boolean>(false)
+
+  const isFormConfigDirty = useMemo(() => {
+    if (isCreateMode) {
+      return (
+        formTitle.trim() !== (initialExam.title || '').trim() ||
+        formDescription.trim().length > 0
+      )
+    }
+    return (
+      formTitle !== (initialExam.title || '') ||
+      formDuration !== (initialExam.duration_minutes || 60) ||
+      formPassingScore !== (initialExam.passing_score || 500) ||
+      formDescription !== (initialExam.description || '') ||
+      formIsPublished !== (initialExam.is_published ?? true) ||
+      formPlacementSkills !== (initialExam.placement_type || (initialExam.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS'))
+    )
+  }, [
+    isCreateMode,
+    formTitle,
+    formDuration,
+    formPassingScore,
+    formDescription,
+    formIsPublished,
+    formPlacementSkills,
+    initialExam,
+  ])
+
+  const hasUnsavedData = isFormConfigDirty || isDirty
 
   const handleCancelExam = async () => {
     setIsCanceling(true)
@@ -145,6 +176,14 @@ export function CourseExamQuestionsEditor({
       setIsCanceling(false)
       sessionStorage.removeItem('lingo_admin_active_exam')
       onBack()
+    }
+  }
+
+  const handleRequestCancel = () => {
+    if (hasUnsavedData) {
+      setShowDiscardConfirm(true)
+    } else {
+      handleCancelExam()
     }
   }
 
@@ -336,7 +375,7 @@ export function CourseExamQuestionsEditor({
         setIsConfigExpanded={setIsConfigExpanded}
         currentActiveConflict={currentActiveConflict}
         isSystemPlacement={isSystemPlacement}
-        onCancelExam={handleCancelExam}
+        onCancelExam={handleRequestCancel}
         isCanceling={isCanceling}
       />
 
@@ -350,7 +389,7 @@ export function CourseExamQuestionsEditor({
           searchQuery={searchQuery}
           uploadingGlobalAudio={uploadingGlobalAudio}
           globalAudioUrl={globalAudioUrl}
-          onClose={handleCancelExam}
+          onClose={handleRequestCancel}
           onSearchChange={setSearchQuery}
           onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
           onAddQuestion={handleAddQuestion}
@@ -453,10 +492,29 @@ export function CourseExamQuestionsEditor({
           isSaving={isSavingAll}
           isCanceling={isCanceling}
           isCreateMode={isCreateMode}
-          onClose={handleCancelExam}
+          onClose={handleRequestCancel}
           onSave={handleSaveUnifiedExam}
         />
       </div>
+
+      <ConfirmModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={() => {
+          setShowDiscardConfirm(false)
+          handleCancelExam()
+        }}
+        variant="warning"
+        icon="warning"
+        title={isVi ? 'Cảnh báo dữ liệu chưa được lưu' : 'Unsaved Changes Warning'}
+        message={
+          isVi
+            ? 'Bạn có chắc chắn muốn thoát? Toàn bộ dữ liệu bài thi và câu hỏi đang biên soạn sẽ không được lưu và bị mất hoàn toàn.'
+            : 'Are you sure you want to leave? All unsaved exam questions and data will be permanently lost.'
+        }
+        confirmText={isVi ? 'Đồng ý thoát & hủy' : 'Discard & Leave'}
+        cancelText={isVi ? 'Ở lại tiếp tục' : 'Stay'}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 // Modal soan thao ngan hang cau hoi dung chung cho khoa hoc va de thi he thong.
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { Save, X, Plus } from 'lucide-react'
 import { useExamQuestionEditor, type ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 import { ExamQuestionCard } from '@/components/exams/exam.question.card'
@@ -8,6 +8,7 @@ import { ExamZipDropzone } from '@/components/exams/exam.zip.dropzone'
 import { ExamEditorHeader } from '@/components/exams/editor/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/components/exams/editor/exam.editor.global.audio'
 import { downloadSampleZip } from '@/components/exams/zip.exam.helper'
+import { ConfirmModal } from '@/components/common/confirm.modal'
 import type { ToeicExamItem } from '@/services/exam.service'
 
 export interface ExamQuestionStudioModalProps {
@@ -80,6 +81,7 @@ export function ExamQuestionStudioModal({
     handleZipFileSelected,
     handleSaveQuestions,
     cleanupSessionMedia,
+    isDirty,
   } = useExamQuestionEditor({
     isOpen,
     exam: null,
@@ -91,11 +93,21 @@ export function ExamQuestionStudioModal({
     onClose,
   })
 
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+
   if (!isOpen) return null
 
   const handleSafeClose = async () => {
     await cleanupSessionMedia()
     onClose()
+  }
+
+  const handleRequestClose = () => {
+    if (isDirty) {
+      setShowDiscardConfirm(true)
+    } else {
+      handleSafeClose()
+    }
   }
 
   return (
@@ -110,7 +122,7 @@ export function ExamQuestionStudioModal({
           searchQuery={searchQuery}
           uploadingGlobalAudio={uploadingGlobalAudio}
           globalAudioUrl={globalAudioUrl}
-          onClose={handleSafeClose}
+          onClose={handleRequestClose}
           onSearchChange={setSearchQuery}
           onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
           onAddQuestion={handleAddQuestion}
@@ -208,7 +220,7 @@ export function ExamQuestionStudioModal({
           <div className="flex items-center gap-2.5">
             <button
               type="button"
-              onClick={handleSafeClose}
+              onClick={handleRequestClose}
               disabled={isSaving}
               className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
@@ -281,6 +293,25 @@ export function ExamQuestionStudioModal({
           className="hidden"
         />
       </div>
+
+      <ConfirmModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={() => {
+          setShowDiscardConfirm(false)
+          handleSafeClose()
+        }}
+        variant="warning"
+        icon="warning"
+        title={isVi ? 'Cảnh báo dữ liệu chưa được lưu' : 'Unsaved Questions Warning'}
+        message={
+          isVi
+            ? 'Bạn có chắc chắn muốn đóng cửa sổ? Dữ liệu câu hỏi đang biên soạn sẽ không được lưu và bị mất.'
+            : 'Are you sure you want to close? All unsaved questions and media will be discarded.'
+        }
+        confirmText={isVi ? 'Đồng ý đóng & hủy' : 'Discard & Close'}
+        cancelText={isVi ? 'Ở lại tiếp tục' : 'Stay'}
+      />
     </div>
   )
 }

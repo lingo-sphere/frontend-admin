@@ -1,10 +1,11 @@
 // Card hien thi va chinh sua chi tiet cau hoi de thi.
 
 import React from 'react'
-import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X } from 'lucide-react'
+import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X, Maximize2 } from 'lucide-react'
 import { Popconfirm } from '@/components/common/popconfirm'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
 import { NumberInput } from '@/components/common/number.input'
+import { Image } from 'antd'
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 
 const SKILL_OPTIONS_2: SelectOption[] = [
@@ -194,19 +195,32 @@ export function ExamQuestionCard({
               <span>{q.image_url ? 'Đổi ảnh câu' : 'Thêm Ảnh câu'}</span>
             </button>
             {q.image_url && (
-              <div className="flex items-center gap-1">
-                <img
-                  src={q.image_url}
-                  alt="minh hoa"
-                  className="h-7 w-12 object-cover rounded-md border border-slate-200"
-                />
+              <div className="flex items-center gap-1.5">
+                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs leading-none">
+                  <Image
+                    src={q.image_url}
+                    alt={isVi ? `Ảnh câu hỏi ${qIndex + 1}` : `Question ${qIndex + 1}`}
+                    width={56}
+                    height={32}
+                    className="object-cover rounded-md"
+                    preview={{
+                      mask: (
+                        <div className="flex items-center justify-center gap-0.5 text-[10px] font-bold text-white">
+                          <Maximize2 className="w-2.5 h-2.5" />
+                          <span>{isVi ? 'Xem' : 'View'}</span>
+                        </div>
+                      ),
+                    }}
+                  />
+                </div>
+
                 <button
                   type="button"
                   onClick={() => onUpdate({ image_url: undefined })}
-                  className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                  title="Xóa ảnh"
+                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                  title={isVi ? 'Xóa ảnh' : 'Remove image'}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
