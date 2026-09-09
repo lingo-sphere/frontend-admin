@@ -1,7 +1,4 @@
-/**
- * @file table.controls.tsx
- * @description Component giao diện TableControls phục vụ khu vực Quản trị Admin
- */
+// Component giao diện TableControls phục vụ khu vực Quản trị Admin.
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -13,7 +10,6 @@ import {
   LayoutGrid,
   List,
   ChevronDown,
-  Layers,
 } from 'lucide-react'
 
 export type TableDensity = 'compact' | 'middle' | 'comfortable'

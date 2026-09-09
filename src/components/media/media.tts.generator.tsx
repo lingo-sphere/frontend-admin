@@ -1,10 +1,7 @@
-/**
- * @file media.tts.generator.tsx
- * @description Component giao diện MediaTtsGenerator phục vụ khu vực Quản trị Admin
- */
+// Component giao diện MediaTtsGenerator phục vụ khu vực Quản trị Admin.
 
 import { useTranslation } from 'react-i18next'
-import { Volume2, Sparkles, CheckCircle, Play } from 'lucide-react'
+import { Volume2, Sparkles, CheckCircle } from 'lucide-react'
 import { CustomSelect } from '@/components/common/custom.select'
 
 interface MediaTtsGeneratorProps {

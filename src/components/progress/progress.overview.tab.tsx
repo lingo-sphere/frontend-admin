@@ -1,9 +1,6 @@
-/**
- * @file progress.overview.tab.tsx
- * @description Component giao diện ProgressOverviewTab phục vụ khu vực Quản trị Admin
- */
+// Component giao diện ProgressOverviewTab phục vụ khu vực Quản trị Admin.
 
-import { Users, GraduationCap, BookOpen, Crown, Database, Sparkles } from 'lucide-react'
+import { Users, GraduationCap, BookOpen, Crown } from 'lucide-react'
 import type { SystemAnalyticsOverview } from '@/types/api.types'
 
 interface ProgressOverviewTabProps {

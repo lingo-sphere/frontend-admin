@@ -1,10 +1,6 @@
-/**
- * @file roles.page.tsx
- * @description Trang quản trị RolesPage trong giao diện Admin
- */
+// Trang quan tri RolesPage trong giao dien Admin.
 
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Shield } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { toast } from '@/store/toast.store'
@@ -13,9 +9,6 @@ import { RolesListTab } from '@/components/roles/roles.list.tab'
 import { RoleEditModal } from '@/components/roles/role.edit.modal'
 
 export function RolesPage() {
-  const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
-
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [isLoading, setIsLoading] = useState(false)

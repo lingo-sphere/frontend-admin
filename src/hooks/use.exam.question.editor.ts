@@ -191,10 +191,8 @@ export function useExamQuestionEditor({
 
   const [questions, setQuestions] = useState<ExamQuestionItem[]>(() => initialBundle.qs)
   const [globalAudioUrl, setGlobalAudioUrl] = useState<string>(() => initialBundle.audio)
-  const [globalAudioFile, setGlobalAudioFile] = useState<File | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
-  const [selectedIdx, setSelectedIdx] = useState<number>(0)
 
   const [isProcessingZip, setIsProcessingZip] = useState<boolean>(false)
   const [zipProcessStatus, setZipProcessStatus] = useState<string>('')

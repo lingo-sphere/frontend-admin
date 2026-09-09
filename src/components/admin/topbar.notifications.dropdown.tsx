@@ -1,9 +1,6 @@
-/**
- * @file topbar.notifications.dropdown.tsx
- * @description Topbar notifications popover list with mark-as-read and navigation actions
- */
+// Topbar notifications popover list with mark-as-read and navigation actions.
 
-import React, { RefObject } from 'react'
+import type { RefObject } from 'react'
 import { Bell } from 'lucide-react'
 import type { AppNotification } from '@/types/api.types'
 

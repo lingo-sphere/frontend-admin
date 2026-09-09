@@ -1,9 +1,6 @@
-/**
- * @file topbar.user.menu.tsx
- * @description Admin user profile dropdown menu with navigation shortcuts and sign out trigger
- */
+// Admin user profile dropdown menu with navigation shortcuts and sign out trigger.
 
-import React, { RefObject } from 'react'
+import type { RefObject } from 'react'
 import { ChevronDown, User as UserIcon, Shield, LogOut } from 'lucide-react'
 import type { UserProfile, AuthUser } from '@/types/api.types'
 

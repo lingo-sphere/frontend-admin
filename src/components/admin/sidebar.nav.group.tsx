@@ -1,11 +1,7 @@
-/**
- * @file sidebar.nav.group.tsx
- * @description Component rendering sidebar navigation group, menu items, kickers, and nested sub-items
- */
+// Component rendering sidebar navigation group, menu items, kickers, and nested sub-items.
 
-import React from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import type { NavGroup } from './sidebar.nav.config'
+import type { NavGroup } from '@/components/admin/sidebar.nav.config'
 
 interface SidebarNavGroupProps {
   group: NavGroup

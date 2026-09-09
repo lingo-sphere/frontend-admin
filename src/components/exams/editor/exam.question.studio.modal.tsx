@@ -1,7 +1,7 @@
 // Modal soan thao ngan hang cau hoi dung chung cho khoa hoc va de thi he thong.
 
-import { useRef, useState, useMemo } from 'react'
-import { Save, X, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Save, Plus } from 'lucide-react'
 import { useExamQuestionEditor, type ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 import { ExamQuestionCard } from '@/components/exams/exam.question.card'
 import { ExamZipDropzone } from '@/components/exams/exam.zip.dropzone'

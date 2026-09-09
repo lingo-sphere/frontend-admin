@@ -1,7 +1,4 @@
-/**
- * @file dashboard.page.tsx
- * @description Trang quản trị DashboardPage trong giao diện Admin
- */
+// Trang quan tri DashboardPage trong giao dien Admin.
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -57,7 +54,7 @@ const base30DaysData = [
 ]
 
 export function DashboardPage() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1])

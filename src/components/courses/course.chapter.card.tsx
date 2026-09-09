@@ -1,7 +1,4 @@
-/**
- * @file course.chapter.card.tsx
- * @description Component quản lý và hiển thị toàn bộ nội dung của một chương học theo cấu trúc cây timeline phân cấp rõ ràng
- */
+// Component quan ly va hien thi toan bo noi dung cua mot chuong hoc.
 
 import {
   Plus,
@@ -9,10 +6,10 @@ import {
   Film,
   Award,
 } from 'lucide-react'
-import { ChapterLessonCard } from './chapter.lesson.card'
-import { ChapterAssessmentCard } from './chapter.assessment.card'
-import { CourseChapterHeader } from './course.chapter.header'
-import type { CourseModule, CourseLesson } from './course.basic.info.tab'
+import { ChapterLessonCard } from '@/components/courses/chapter.lesson.card'
+import { ChapterAssessmentCard } from '@/components/courses/chapter.assessment.card'
+import { CourseChapterHeader } from '@/components/courses/course.chapter.header'
+import type { CourseModule, CourseLesson } from '@/components/courses/course.basic.info.tab'
 
 interface CourseChapterCardProps {
   module: CourseModule
@@ -87,8 +84,6 @@ export function CourseChapterCard({
     : `courses/modules/${modOrder}-${modTimestamp}`
 
   const hasLessons = module.lessons.length > 0
-  const isFirstChapter = moduleIndex === 0
-  const isLastChapter = moduleIndex === totalModules - 1
 
   return (
     <div className={`rounded-2xl border-2 transition-all overflow-hidden ${

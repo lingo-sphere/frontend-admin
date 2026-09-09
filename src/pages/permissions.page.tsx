@@ -1,10 +1,6 @@
-/**
- * @file permissions.page.tsx
- * @description Trang quản trị PermissionsPage trong giao diện Admin
- */
+// Trang quan tri PermissionsPage trong giao dien Admin.
 
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { KeyRound, UserCheck } from 'lucide-react'
 import { roleService } from '@/services/role.service'
 import { userService } from '@/services/user.service'
@@ -17,9 +13,6 @@ import { PermissionModal } from '@/components/roles/permission.modal'
 type PermTabType = 'permissions' | 'assign'
 
 export function PermissionsPage() {
-  const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
-
   const [activeTab, setActiveTab] = useState<PermTabType>('permissions')
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [roles, setRoles] = useState<Role[]>([])

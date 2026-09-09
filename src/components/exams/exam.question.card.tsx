@@ -1,6 +1,5 @@
 // Card hien thi va chinh sua chi tiet cau hoi de thi.
 
-import React from 'react'
 import { Copy, Trash2, Volume2, Image as ImageIcon, Loader2, X, Maximize2 } from 'lucide-react'
 import { Popconfirm } from '@/components/common/popconfirm'
 import { CustomSelect, type SelectOption } from '@/components/common/custom.select'
@@ -81,7 +80,6 @@ export function ExamQuestionCard({
                 const skill = val as 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
                 const isSp = skill === 'SPEAKING'
                 const isWr = skill === 'WRITING'
-                const isLs = skill === 'LISTENING'
                 onUpdate({
                   skill_type: skill,
                   part_number: isSp ? 'speaking' : isWr ? 'writing' : undefined,

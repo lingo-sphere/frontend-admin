@@ -1,11 +1,7 @@
-/**
- * @file chapter.lesson.card.tsx
- * @description Component hiển thị và chỉnh sửa bài học video phân cấp rõ ràng theo chương học
- */
+// Component hiển thị và chỉnh sửa bài học video phân cấp theo chương học.
 
 import { useState } from 'react'
 import {
-  Clock,
   FileText,
   Trash2,
   ChevronDown,
@@ -18,7 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { R2MediaUploader } from '@/components/admin/r2.media.uploader'
-import type { CourseLesson } from './course.basic.info.tab'
+import type { CourseLesson } from '@/components/courses/course.basic.info.tab'
 
 interface ChapterLessonCardProps {
   lesson: CourseLesson
