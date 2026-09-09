@@ -1,10 +1,11 @@
-// Tien ich phan tich giai nen goi zip de thi va tai len media len he thong luu tru.
+// Tien ich phan tich giai nen goi zip va rar de thi va tai len media len he thong luu tru.
 
 import type { ExamQuestionItem } from '@/hooks/use.exam.question.editor'
 import { mediaAdminService } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import JSZip from 'jszip'
 import * as XLSX from 'xlsx'
+import { extractRarExamArchive } from '@/components/exams/rar.exam.helper'
 
 function normalizeKey(str: string): string {
   return str
@@ -291,12 +292,13 @@ export async function parseAndUploadZipExam(
 ): Promise<ParseZipResult> {
   const isDirectExcel = /\.(xlsx|xls|csv)$/i.test(file.name)
   const isZip = /\.(zip)$/i.test(file.name)
+  const isRar = /\.(rar)$/i.test(file.name)
 
-  if (!isZip && !isDirectExcel) {
+  if (!isZip && !isRar && !isDirectExcel) {
     throw new Error(
       isVi
-        ? 'Vui lòng chọn file nén định dạng .zip hoặc file bảng tính .xlsx'
-        : 'Please select a .zip archive or .xlsx spreadsheet file'
+        ? 'Vui lòng chọn file nén định dạng .zip, .rar hoặc file bảng tính .xlsx'
+        : 'Please select a .zip, .rar archive or .xlsx spreadsheet file'
     )
   }
 
@@ -307,8 +309,8 @@ export async function parseAndUploadZipExam(
   }
 
   let rawRows: Record<string, unknown>[] = []
-  const mediaEntries: Record<string, JSZip.JSZipObject> = {}
-  const distinctMediaNames: string[] = []
+  let getMediaBuffer: (name: string) => Promise<ArrayBuffer | null> = async () => null
+  let distinctMediaNames: string[] = []
 
   if (isDirectExcel) {
     onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
@@ -317,6 +319,15 @@ export async function parseAndUploadZipExam(
     const firstSheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[firstSheetName]
     rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+  } else if (isRar) {
+    const rarData = await extractRarExamArchive(file, isVi, (status) => onProgress?.(status))
+    onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
+    const workbook = XLSX.read(rarData.excelBuffer, { type: 'array' })
+    const firstSheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[firstSheetName]
+    rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+    distinctMediaNames = rarData.distinctMediaNames
+    getMediaBuffer = async (name: string) => rarData.mediaBuffers.get(name) || null
   } else {
     onProgress?.(isVi ? 'Đang giải nén file ZIP...' : 'Extracting ZIP archive...')
     const zip = await JSZip.loadAsync(file)
@@ -344,6 +355,7 @@ export async function parseAndUploadZipExam(
     const worksheet = workbook.Sheets[firstSheetName]
     rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
 
+    const zipMediaEntries: Record<string, JSZip.JSZipObject> = {}
     for (const [path, entry] of Object.entries(zip.files)) {
       if (entry.dir || path.includes('__MACOSX')) continue
       const cleanPath = path.replace(/\\/g, '/')
@@ -351,12 +363,17 @@ export async function parseAndUploadZipExam(
       const lowerName = filename.toLowerCase().trim()
 
       if (/\.(mp3|wav|m4a|ogg|aac|flac|jpg|jpeg|png|webp|gif|svg)$/i.test(lowerName)) {
-        mediaEntries[cleanPath.toLowerCase()] = entry
-        mediaEntries[lowerName] = entry
+        zipMediaEntries[cleanPath.toLowerCase()] = entry
+        zipMediaEntries[lowerName] = entry
         if (!distinctMediaNames.includes(lowerName)) {
           distinctMediaNames.push(lowerName)
         }
       }
+    }
+    getMediaBuffer = async (name: string) => {
+      const entry = zipMediaEntries[name]
+      if (!entry) return null
+      return entry.async('arraybuffer')
     }
   }
 
@@ -435,8 +452,6 @@ export async function parseAndUploadZipExam(
 
     for (let i = 0; i < distinctMediaNames.length; i++) {
       const name = distinctMediaNames[i]
-      const entry = mediaEntries[name]
-      if (!entry) continue
 
       onProgress?.(
         isVi
@@ -447,7 +462,8 @@ export async function parseAndUploadZipExam(
       )
 
       try {
-        const arrayBuffer = await entry.async('arraybuffer')
+        const arrayBuffer = await getMediaBuffer(name)
+        if (!arrayBuffer) continue
         const mimeType = getMimeType(name)
         const isAudio = mimeType.startsWith('audio/')
         const cleanExt = name.split('.').pop() || (isAudio ? 'mp3' : 'jpg')

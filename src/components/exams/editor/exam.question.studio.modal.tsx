@@ -237,7 +237,7 @@ export function ExamQuestionStudioModal({
         <input
           ref={zipFileInputRef}
           type="file"
-          accept=".zip,.xlsx,.xls,.csv,application/zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          accept=".zip,.rar,.xlsx,.xls,.csv,application/zip,application/x-rar-compressed,application/vnd.rar,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={(e) => {
             const f = e.target.files?.[0]
             if (f) handleZipFileSelected(f)

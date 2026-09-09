@@ -287,7 +287,7 @@ export function CourseExamQuestionsEditor({
       <input
         ref={zipFileInputRef}
         type="file"
-        accept=".zip"
+        accept=".zip,.rar,.xlsx,.xls,.csv,application/zip,application/x-rar-compressed,application/vnd.rar"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]

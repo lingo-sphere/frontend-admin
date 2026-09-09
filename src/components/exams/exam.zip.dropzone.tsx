@@ -1,4 +1,4 @@
-// Khu vuc keo tha va nap file ZIP de thi.
+// Khu vuc keo tha va nap file ZIP hoac RAR de thi.
 
 import React from 'react'
 import { FolderArchive, Archive, Download, Loader2 } from 'lucide-react'
@@ -38,7 +38,7 @@ export function ExamZipDropzone({
         </div>
         <div className="max-w-md space-y-1">
           <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-            {zipProcessStatus || (isVi ? 'Đang giải nén và nạp câu hỏi từ file ZIP...' : 'Processing ZIP package...')}
+            {zipProcessStatus || (isVi ? 'Đang giải nén và nạp câu hỏi từ file nén...' : 'Processing archive package...')}
           </h4>
           {zipProgress && (
             <p className="text-xs font-bold text-purple-600 dark:text-purple-400">
@@ -80,16 +80,16 @@ export function ExamZipDropzone({
         </div>
 
         <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          {isVi ? 'Kéo thả hoặc chọn file ZIP / Excel đề thi' : 'Drag & drop or select Exam ZIP / Excel file'}
+          {isVi ? 'Kéo thả hoặc chọn file ZIP / RAR / Excel đề thi' : 'Drag & drop or select Exam ZIP / RAR / Excel file'}
         </h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
           {isVi
             ? is4Skills
-              ? 'Gói ZIP gồm questions.xlsx (chứa các câu hỏi Nghe, Đọc, Nói, Viết) và thư mục media chứa audio/ảnh minh họa.'
-              : 'Gói ZIP gồm questions.xlsx (chỉ chấp nhận kỹ năng Nghe và Đọc) và thư mục media chứa audio/ảnh minh họa.'
+              ? 'Gói nén ZIP / RAR gồm questions.xlsx (chứa các câu hỏi Nghe, Đọc, Nói, Viết) và thư mục media chứa audio/ảnh minh họa.'
+              : 'Gói nén ZIP / RAR gồm questions.xlsx (chỉ chấp nhận kỹ năng Nghe và Đọc) và thư mục media chứa audio/ảnh minh họa.'
             : is4Skills
-              ? 'ZIP archive containing questions.xlsx (Listening, Reading, Speaking, Writing) and media files.'
-              : 'ZIP archive containing questions.xlsx (Listening & Reading only) and media files.'}
+              ? 'ZIP or RAR archive containing questions.xlsx (Listening, Reading, Speaking, Writing) and media files.'
+              : 'ZIP or RAR archive containing questions.xlsx (Listening & Reading only) and media files.'}
         </p>
       </div>
 

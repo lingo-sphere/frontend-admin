@@ -418,7 +418,7 @@ export function useExamQuestionEditor({
   const handleZipFileSelected = async (file: File) => {
     if (!file) return
     setIsProcessingZip(true)
-    setZipProcessStatus(isVi ? 'Đang đọc và giải nén file ZIP...' : 'Reading ZIP file...')
+    setZipProcessStatus(isVi ? 'Đang đọc và trích xuất dữ liệu...' : 'Reading archive file...')
     setZipProgress(null)
 
     try {
@@ -446,11 +446,11 @@ export function useExamQuestionEditor({
 
       toast.success(
         isVi
-          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh) từ file ZIP!`
-          : `Successfully imported ${result.questions.length} questions from ZIP!`
+          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh) từ file nén!`
+          : `Successfully imported ${result.questions.length} questions from archive!`
       )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi xử lý file ZIP.'
+      const msg = err instanceof Error ? err.message : 'Lỗi xử lý file nén.'
       toast.error(msg)
     } finally {
       setIsProcessingZip(false)
