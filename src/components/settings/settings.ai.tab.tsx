@@ -3,75 +3,141 @@
  * @description Component giao diện SettingsAiTab phục vụ khu vực Quản trị Admin
  */
 
-import { Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Sparkles, RefreshCw } from 'lucide-react'
+import { aiAdminService, type GenerateQuizItem } from '@/services/ai.service'
 import { toast } from '@/store/toast.store'
+import { AiArchitectureCards } from '@/components/ai/ai.architecture.cards'
+import { AiQuizGeneratorForm } from '@/components/ai/ai.quiz.generator.form'
+import { AiGeneratedQuizList } from '@/components/ai/ai.generated.quiz.list'
 
 export function SettingsAiTab() {
+  const [topic, setTopic] = useState<string>('Business Meetings and Email Etiquette')
+  const [questionCount, setQuestionCount] = useState<number>(3)
+  const [difficulty, setDifficulty] = useState<string>('MEDIUM')
+  const [isGenerating, setIsGenerating] = useState<boolean>(false)
+  const [generatedQuestions, setGeneratedQuestions] = useState<GenerateQuizItem[]>([])
+  const [modelUsed, setModelUsed] = useState<string>('groq (qwen/qwen3.8-27b)')
+  const [primaryProvider, setPrimaryProvider] = useState<'gemini' | 'groq'>('gemini')
+  const [isSwitchingProvider, setIsSwitchingProvider] = useState<boolean>(false)
+  const [isSyncing, setIsSyncing] = useState<boolean>(false)
+
+  const loadProviderConfig = async () => {
+    try {
+      const config = await aiAdminService.getAiProviderConfig()
+      if (config?.primary_provider) {
+        setPrimaryProvider(config.primary_provider === 'groq' ? 'groq' : 'gemini')
+      }
+    } catch {
+      setPrimaryProvider('gemini')
+    }
+  }
+
+  useEffect(() => {
+    loadProviderConfig()
+  }, [])
+
+  const handleSelectProvider = async (provider: 'gemini' | 'groq') => {
+    if (provider === primaryProvider || isSwitchingProvider) return
+    setIsSwitchingProvider(true)
+    try {
+      const updated = await aiAdminService.setAiProviderConfig(provider)
+      const newPrimary = updated?.primary_provider === 'groq' ? 'groq' : 'gemini'
+      setPrimaryProvider(newPrimary)
+      toast.success(
+        `Đã chuyển mô hình AI chính toàn sàn sang ${newPrimary === 'groq' ? 'Groq Cloud LPU' : 'Google Gemini'} thành công!`,
+        'Điều Phối AI'
+      )
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể chuyển đổi mô hình AI. Vui lòng thử lại.'
+      toast.error(msg, 'Lỗi chuyển đổi AI')
+    } finally {
+      setIsSwitchingProvider(false)
+    }
+  }
+
+  const handleSyncAiConnection = async () => {
+    setIsSyncing(true)
+    try {
+      await loadProviderConfig()
+      toast.success('Đã đồng bộ và kiểm tra kết nối hạ tầng AI thành công!', 'Hạ Tầng AI')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể đồng bộ kết nối AI.'
+      toast.error(msg, 'Lỗi kết nối')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  const handleGenerateQuiz = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!topic.trim()) return
+    setIsGenerating(true)
+    try {
+      const res = await aiAdminService.generateQuizForTeacher(topic, questionCount, difficulty)
+      if (res && res.questions) {
+        setGeneratedQuestions(res.questions)
+        if (res.model_used) setModelUsed(res.model_used)
+        toast.success(`AI đã sinh thành công ${res.questions.length} câu hỏi trắc nghiệm!`, 'AI Sư Phạm')
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể sinh câu hỏi bằng AI. Vui lòng kiểm tra lại dịch vụ AI.'
+      toast.error(msg, 'Lỗi AI')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success('Đã sao chép câu hỏi vào bộ nhớ tạm')
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold text-slate-100">
-            Cấu Hình Mô Hình Trí Tuệ Nhân Tạo (AI)
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-500" />
+            Cấu Hình & Điều Phối Mô Hình Trí Tuệ Nhân Tạo (AI)
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Quản lý các kết nối LLM (Gemini 2.5 Pro, Flash, OpenAI GPT-4o, Whisper Audio)
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Quản lý kiến trúc 2-Tier Cloud Hybrid AI (Groq LPU + Google Gemini), điều phối mô hình chính và công cụ trợ lý AI
           </p>
         </div>
         <button
-          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          onClick={() => toast.success('Đã đồng bộ kết nối AI thành công!')}
+          type="button"
+          disabled={isSyncing}
+          onClick={handleSyncAiConnection}
+          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-60 shrink-0 self-start sm:self-auto"
         >
-          <Sparkles className="w-4 h-4" />
+          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
           <span>Kiểm tra kết nối AI</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                Mặc định chính
-              </span>
-              <span className="text-xs text-emerald-400 flex items-center gap-1.5 font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Online · 240ms
-              </span>
-            </div>
-            <h3 className="text-base font-bold text-slate-100 mb-1">Google Gemini 2.5 Flash</h3>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
-              Dùng cho chấm phát âm, giải thích ngữ pháp tức thì, gợi ý viết câu và sinh câu hỏi trắc nghiệm tốc độ cao.
-            </p>
-          </div>
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span>Temperature: 0.7 · Max Tokens: 2048</span>
-            <span className="font-mono text-indigo-400">gemini-2.5-flash</span>
-          </div>
-        </div>
+      <AiArchitectureCards
+        primaryProvider={primaryProvider}
+        isSwitching={isSwitchingProvider}
+        onSelectProvider={handleSelectProvider}
+      />
 
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                Chuyên sâu
-              </span>
-              <span className="text-xs text-emerald-400 flex items-center gap-1.5 font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Online · 520ms
-              </span>
-            </div>
-            <h3 className="text-base font-bold text-slate-100 mb-1">Google Gemini 2.5 Pro</h3>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
-              Dùng cho chấm bài thi IELTS/TOEIC Writing & Speaking dài, phân tích lỗi sai chi tiết và lộ trình học cá nhân hóa.
-            </p>
-          </div>
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span>Temperature: 0.3 · Max Tokens: 4096</span>
-            <span className="font-mono text-purple-400">gemini-2.5-pro</span>
-          </div>
-        </div>
-      </div>
+      <AiQuizGeneratorForm
+        topic={topic}
+        questionCount={questionCount}
+        difficulty={difficulty}
+        isGenerating={isGenerating}
+        onTopicChange={setTopic}
+        onQuestionCountChange={setQuestionCount}
+        onDifficultyChange={setDifficulty}
+        onSubmit={handleGenerateQuiz}
+      />
+
+      <AiGeneratedQuizList
+        questions={generatedQuestions}
+        modelUsed={modelUsed}
+        onCopyToClipboard={copyToClipboard}
+      />
     </div>
   )
 }

@@ -23,7 +23,16 @@ export function SettingsPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const [activeTab, setActiveTab] = useState<SettingsTabType>('plans')
+  const getInitialTab = (): SettingsTabType => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash === '#ai' || window.location.search.includes('tab=ai')) {
+        return 'ai'
+      }
+    }
+    return 'plans'
+  }
+
+  const [activeTab, setActiveTab] = useState<SettingsTabType>(getInitialTab)
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [settings, setSettings] = useState<SystemSetting[]>(systemSettings)
   const [storageUsage, setStorageUsage] = useState<StorageUsageReport | null>(null)

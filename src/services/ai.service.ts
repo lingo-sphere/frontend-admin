@@ -9,10 +9,12 @@ import {
   type TeacherGenerateQuizResponse,
   AiModelListSchema,
   type AiModelItem,
+  AiProviderConfigSchema,
+  type AiProviderConfig,
 } from '@/schemas/ai.schema'
 import { type QuizQuestionItem } from '@/schemas/course.schema'
 
-export type { QuizQuestionItem, GenerateQuizItem, TeacherGenerateQuizResponse, AiModelItem }
+export type { QuizQuestionItem, GenerateQuizItem, TeacherGenerateQuizResponse, AiModelItem, AiProviderConfig }
 
 export interface TeacherGenerateQuizPayload {
   content_or_topic: string
@@ -105,6 +107,14 @@ export const aiAdminService = {
 
   async getAiModels(): Promise<Array<{ model_name: string; provider: string; is_active: boolean }>> {
     return api.get<Array<{ model_name: string; provider: string; is_active: boolean }>>('/ai/models', undefined, AiModelListSchema)
+  },
+
+  async getAiProviderConfig(): Promise<AiProviderConfig> {
+    return api.get<AiProviderConfig>('/ai/admin/config/provider', undefined, AiProviderConfigSchema)
+  },
+
+  async setAiProviderConfig(provider: 'gemini' | 'groq'): Promise<AiProviderConfig> {
+    return api.put<AiProviderConfig>('/ai/admin/config/provider', { provider }, AiProviderConfigSchema)
   },
 }
 

@@ -37,7 +37,6 @@ import { RolesPage } from '@/pages/roles.page'
 import { PermissionsPage } from '@/pages/permissions.page'
 import { ExamsPage } from '@/pages/exams.page'
 import { MediaStoragePage } from '@/pages/media.storage.page'
-import { AiManagementPage } from '@/pages/ai.management.page'
 import { RoadmapsPage } from '@/pages/roadmaps.page'
 
 const pageMap: Record<string, React.ComponentType> = {
@@ -67,8 +66,8 @@ const pageMap: Record<string, React.ComponentType> = {
   exams: ExamsPage,
   'media-storage': MediaStoragePage,
   media: MediaStoragePage,
-  'ai-management': AiManagementPage,
-  'ai-teacher': AiManagementPage,
+  'ai-management': SettingsPage,
+  'ai-teacher': SettingsPage,
   community: CommunityPage,
   'public-decks': PublicDecksPage,
   progress: ProgressPage,

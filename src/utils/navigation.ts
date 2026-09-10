@@ -133,7 +133,7 @@ export function pathToNavItem(pathname: string): string {
   if (pathname === '/analytics/posthog' || pathname === '/posthog') return 'analytics-posthog'
   if (pathname === '/monitoring/betterstack' || pathname === '/betterstack') return 'monitoring-betterstack'
   if (pathname === '/notifications') return 'notifications'
-  if (pathname === '/settings') return 'settings'
+  if (pathname === '/settings' || pathname === '/ai-management' || pathname === '/ai') return 'settings'
   if (pathname === '/roles') return 'roles'
   if (pathname === '/permissions') return 'permissions'
   if (pathname === '/profile') return 'admin-profile'

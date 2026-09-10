@@ -30,6 +30,16 @@ export const AiModelItemSchema = z.object({
 
 export const AiModelListSchema = z.array(AiModelItemSchema)
 
+export const AiProviderConfigSchema = z.object({
+  primary_provider: z.string(),
+  fallback_provider: z.string(),
+  gemini_model: z.string().optional(),
+  groq_model: z.string().optional(),
+  updated_at: z.string().optional().nullable(),
+  updated_by: z.string().optional().nullable(),
+}).passthrough()
+
 export type GenerateQuizItem = z.infer<typeof GenerateQuizItemSchema>
 export type TeacherGenerateQuizResponse = z.infer<typeof TeacherGenerateQuizResponseSchema>
 export type AiModelItem = z.infer<typeof AiModelItemSchema>
+export type AiProviderConfig = z.infer<typeof AiProviderConfigSchema>

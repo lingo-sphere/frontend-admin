@@ -17,7 +17,6 @@ import {
   Settings2,
   Shield,
   KeyRound,
-  Sparkles,
 } from 'lucide-react'
 
 export interface NavSubItem {
@@ -96,7 +95,6 @@ export const navGroups: NavGroup[] = [
           { id: 'toeic-tests', label: 'Đề thi TOEIC' },
         ],
       },
-      { id: 'ai-management', icon: Sparkles, label: 'Quản Trị AI & Soạn Đề' },
       { id: 'media-storage', icon: Layers3, label: 'Kho Media' },
     ],
   },
