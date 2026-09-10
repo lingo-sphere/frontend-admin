@@ -6,5 +6,7 @@ export const courseAdminKeys = {
   lists: () => [...courseAdminKeys.all, 'list'] as const,
   list: (params?: CourseFilterParams & { current?: number; pageSize?: number }) =>
     [...courseAdminKeys.lists(), params ?? {}] as const,
+  apiList: (params?: CourseFilterParams & { current?: number; pageSize?: number }) =>
+    [...courseAdminKeys.all, 'api-list', params ?? {}] as const,
   detail: (id: string) => [...courseAdminKeys.all, 'detail', id] as const,
 }

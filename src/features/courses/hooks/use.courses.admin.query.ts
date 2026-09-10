@@ -1,7 +1,8 @@
 // Custom hook quản lý truy vấn và đột biến danh sách khóa học Admin với Optimistic Update bằng TanStack Query.
-import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { courseService, type CourseFilterParams } from '@/features/courses/services/course.service'
 import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
+import { optimisticUpdateCollection, rollbackCollection, type CollectionRollbackContext } from '@/lib/query.optimistic'
 import type { Course } from '@/features/courses/data/courses.data'
 import type { Course as ApiCourse } from '@/types/api.types'
 
@@ -33,74 +34,54 @@ export async function fetchAdminCourses(
   }))
 }
 
-export function useAdminCoursesQuery(params?: CourseFilterParams & { current?: number; pageSize?: number }) {
-  const queryParams = { pageSize: 50, ...params }
+export const adminCourseQueries = {
+  list: (params?: CourseFilterParams & { current?: number; pageSize?: number }) => {
+    const queryParams = { pageSize: 50, ...params }
+    return queryOptions({
+      queryKey: courseAdminKeys.list(queryParams),
+      queryFn: () => fetchAdminCourses(queryParams),
+      placeholderData: keepPreviousData,
+      staleTime: 90 * 1000,
+    })
+  },
+  apiList: (params?: CourseFilterParams & { current?: number; pageSize?: number }) => {
+    const queryParams = { pageSize: 100, ...params }
+    return queryOptions({
+      queryKey: courseAdminKeys.apiList(queryParams),
+      queryFn: async () => {
+        const res = await courseService.getAllCourses(queryParams)
+        return Array.isArray(res) ? res : (res?.result || [])
+      },
+      staleTime: 90 * 1000,
+    })
+  },
+}
 
-  return useQuery<Course[]>({
-    queryKey: courseAdminKeys.list(queryParams),
-    queryFn: () => fetchAdminCourses(queryParams),
-    placeholderData: keepPreviousData,
-    staleTime: 90 * 1000,
-  })
+export function useAdminCoursesQuery(params?: CourseFilterParams & { current?: number; pageSize?: number }) {
+  return useQuery(adminCourseQueries.list(params))
 }
 
 export function prefetchAdminCourses(
   queryClient: QueryClient,
   params?: CourseFilterParams & { current?: number; pageSize?: number }
 ) {
-  const queryParams = { pageSize: 50, ...params }
-
-  return queryClient.prefetchQuery({
-    queryKey: courseAdminKeys.list(queryParams),
-    queryFn: () => fetchAdminCourses(queryParams),
-    staleTime: 90 * 1000,
-  })
+  return queryClient.prefetchQuery(adminCourseQueries.list(params))
 }
 
 export function useAdminApiCoursesQuery(params?: CourseFilterParams & { current?: number; pageSize?: number }) {
-  const queryParams = { pageSize: 100, ...params }
-
-  return useQuery<ApiCourse[]>({
-    queryKey: ['courses', 'admin', 'api-list', queryParams],
-    queryFn: async () => {
-      const res = await courseService.getAllCourses(queryParams)
-      return Array.isArray(res) ? res : (res?.result || [])
-    },
-    staleTime: 90 * 1000,
-  })
+  return useQuery(adminCourseQueries.apiList(params))
 }
 
 export function useDeleteCourseMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<unknown, Error, string, CollectionRollbackContext<Course>>({
     mutationFn: (id: string) => courseService.deleteCourse(id),
-    onMutate: async (id: string) => {
-      await queryClient.cancelQueries({ queryKey: courseAdminKeys.all })
-      const queryCache = queryClient.getQueryCache()
-      const courseQueries = queryCache.findAll({ queryKey: courseAdminKeys.all })
-      const previousDataMap: Array<{ queryKey: unknown; data: Course[] | undefined }> = []
-
-      courseQueries.forEach((q) => {
-        const prev = q.state.data as Course[] | undefined
-        if (Array.isArray(prev)) {
-          previousDataMap.push({ queryKey: q.queryKey, data: prev })
-          queryClient.setQueryData<Course[]>(
-            q.queryKey,
-            prev.filter((c) => c.id !== id)
-          )
-        }
-      })
-
-      return { previousDataMap }
-    },
-    onError: (_err, _id, context) => {
-      if (context?.previousDataMap) {
-        context.previousDataMap.forEach(({ queryKey, data }) => {
-          queryClient.setQueryData(queryKey as string[], data)
-        })
-      }
-    },
+    onMutate: (id: string) =>
+      optimisticUpdateCollection<Course>(queryClient, courseAdminKeys.all, (courses) =>
+        courses.filter((c) => c.id !== id)
+      ),
+    onError: (_err, _id, context) => rollbackCollection<Course>(queryClient, context),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
     },
@@ -110,35 +91,14 @@ export function useDeleteCourseMutation() {
 export function useUpdateCourseStatusMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<unknown, Error, { id: string; isPublished: boolean }, CollectionRollbackContext<Course>>({
     mutationFn: ({ id, isPublished }: { id: string; isPublished: boolean }) =>
       courseService.updateCourse(id, { is_published: isPublished }),
-    onMutate: async ({ id, isPublished }) => {
-      await queryClient.cancelQueries({ queryKey: courseAdminKeys.all })
-      const queryCache = queryClient.getQueryCache()
-      const courseQueries = queryCache.findAll({ queryKey: courseAdminKeys.all })
-      const previousDataMap: Array<{ queryKey: unknown; data: Course[] | undefined }> = []
-
-      courseQueries.forEach((q) => {
-        const prev = q.state.data as Course[] | undefined
-        if (Array.isArray(prev)) {
-          previousDataMap.push({ queryKey: q.queryKey, data: prev })
-          queryClient.setQueryData<Course[]>(
-            q.queryKey,
-            prev.map((c) => (c.id === id ? { ...c, is_published: isPublished } : c))
-          )
-        }
-      })
-
-      return { previousDataMap }
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previousDataMap) {
-        context.previousDataMap.forEach(({ queryKey, data }) => {
-          queryClient.setQueryData(queryKey as string[], data)
-        })
-      }
-    },
+    onMutate: ({ id, isPublished }) =>
+      optimisticUpdateCollection<Course>(queryClient, courseAdminKeys.all, (courses) =>
+        courses.map((c) => (c.id === id ? { ...c, is_published: isPublished } : c))
+      ),
+    onError: (_err, _vars, context) => rollbackCollection<Course>(queryClient, context),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
     },

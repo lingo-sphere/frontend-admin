@@ -1,7 +1,8 @@
 // Custom hook quản lý truy vấn danh sách học viên và cập nhật trạng thái với Optimistic Update bằng TanStack Query.
-import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { userService, type UserQueryParams } from '@/features/users/services/user.service'
 import { userKeys } from '@/features/users/keys/user.keys'
+import { optimisticUpdateCollection, rollbackCollection, type CollectionRollbackContext } from '@/lib/query.optimistic'
 import type { User } from '@/features/users/types/learner.types'
 import type { UserProfile } from '@/types/api.types'
 
@@ -33,69 +34,49 @@ export async function fetchLearners(queryParams: UserQueryParams): Promise<User[
   }))
 }
 
-export function useLearnersQuery(params?: UserQueryParams) {
-  const queryParams: UserQueryParams = {
-    role: 'STUDENT',
-    limit: 100,
-    ...params,
-  }
+export const learnerQueries = {
+  list: (params?: UserQueryParams) => {
+    const queryParams: UserQueryParams = {
+      role: 'STUDENT',
+      limit: 100,
+      ...params,
+    }
+    return queryOptions({
+      queryKey: userKeys.learners(queryParams),
+      queryFn: () => fetchLearners(queryParams),
+      placeholderData: keepPreviousData,
+      staleTime: 90 * 1000,
+    })
+  },
+}
 
-  return useQuery<User[]>({
-    queryKey: userKeys.learners(queryParams),
-    queryFn: () => fetchLearners(queryParams),
-    placeholderData: keepPreviousData,
-    staleTime: 90 * 1000,
-  })
+export function useLearnersQuery(params?: UserQueryParams) {
+  return useQuery(learnerQueries.list(params))
 }
 
 export function prefetchLearners(queryClient: QueryClient, params?: UserQueryParams) {
-  const queryParams: UserQueryParams = {
-    role: 'STUDENT',
-    limit: 100,
-    ...params,
-  }
-
-  return queryClient.prefetchQuery({
-    queryKey: userKeys.learners(queryParams),
-    queryFn: () => fetchLearners(queryParams),
-    staleTime: 90 * 1000,
-  })
+  return queryClient.prefetchQuery(learnerQueries.list(params))
 }
 
 export function useUpdateLearnerStatusMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<
+    unknown,
+    Error,
+    { userId: string; status: 'ACTIVE' | 'BLOCKED' | 'SUSPENDED'; reason?: string },
+    CollectionRollbackContext<User>
+  >({
     mutationFn: async ({ userId, status, reason }: { userId: string; status: 'ACTIVE' | 'BLOCKED' | 'SUSPENDED'; reason?: string }) => {
       return userService.updateUserStatus(userId, status, reason)
     },
-    onMutate: async ({ userId, status }) => {
-      await queryClient.cancelQueries({ queryKey: userKeys.all })
-      const queryCache = queryClient.getQueryCache()
-      const learnerQueries = queryCache.findAll({ queryKey: userKeys.all })
-      const previousDataMap: Array<{ queryKey: unknown; data: User[] | undefined }> = []
-
-      learnerQueries.forEach((q) => {
-        const prev = q.state.data as User[] | undefined
-        if (Array.isArray(prev)) {
-          previousDataMap.push({ queryKey: q.queryKey, data: prev })
-          const nextMappedStatus = status === 'BLOCKED' ? 'BANNED' : 'ACTIVE'
-          queryClient.setQueryData<User[]>(
-            q.queryKey,
-            prev.map((u) => (u.id === userId ? { ...u, status: nextMappedStatus } : u))
-          )
-        }
-      })
-
-      return { previousDataMap }
+    onMutate: ({ userId, status }) => {
+      const nextMappedStatus = status === 'BLOCKED' ? 'BANNED' : 'ACTIVE'
+      return optimisticUpdateCollection<User>(queryClient, userKeys.all, (learners) =>
+        learners.map((u) => (u.id === userId ? { ...u, status: nextMappedStatus } : u))
+      )
     },
-    onError: (_err, _vars, context) => {
-      if (context?.previousDataMap) {
-        context.previousDataMap.forEach(({ queryKey, data }) => {
-          queryClient.setQueryData(queryKey as string[], data)
-        })
-      }
-    },
+    onError: (_err, _vars, context) => rollbackCollection<User>(queryClient, context),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.all })
     },
