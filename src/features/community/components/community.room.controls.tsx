@@ -1,13 +1,23 @@
 // Bảng điều khiển cấu hình phòng chat cộng đồng (Bật/tắt chat, chế độ chậm)
 import { useState, useEffect } from 'react'
-import { MessageSquare, ShieldAlert, Clock, Save, Lock, Unlock } from 'lucide-react'
+import { MessageSquare, Clock, Save, Lock, Unlock } from 'lucide-react'
 import type { AdminChatRoom, UpdateRoomSettingPayload } from '@/features/community/types/community.admin.types'
+import { CustomSelect, type SelectOption } from '@/components/custom.select'
 
 interface CommunityRoomControlsProps {
   room: AdminChatRoom | null
   isLoading: boolean
   onUpdate: (payload: UpdateRoomSettingPayload) => Promise<void>
 }
+
+const SLOW_MODE_OPTIONS: SelectOption[] = [
+  { value: '0', label: 'Tắt' },
+  { value: '3', label: '3 giây' },
+  { value: '5', label: '5 giây' },
+  { value: '10', label: '10 giây' },
+  { value: '30', label: '30 giây' },
+  { value: '60', label: '60 giây' },
+]
 
 export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRoomControlsProps) {
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true)
@@ -100,7 +110,7 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
           </label>
         </div>
 
-        <div className="flex items-start justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+        <div className="flex items-start justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-500" />
@@ -113,18 +123,15 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
             </p>
           </div>
 
-          <select
-            value={slowModeSeconds}
-            onChange={(e) => setSlowModeSeconds(Number(e.target.value))}
-            className="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value={0}>Tắt</option>
-            <option value={3}>3 giây</option>
-            <option value={5}>5 giây</option>
-            <option value={10}>10 giây</option>
-            <option value={30}>30 giây</option>
-            <option value={60}>60 giây</option>
-          </select>
+          <div className="w-32 shrink-0">
+            <CustomSelect
+              value={String(slowModeSeconds)}
+              onChange={(val) => setSlowModeSeconds(Number(val))}
+              options={SLOW_MODE_OPTIONS}
+              size="sm"
+              showSearch={false}
+            />
+          </div>
         </div>
       </div>
     </div>
