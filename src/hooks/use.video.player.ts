@@ -6,7 +6,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Hls from 'hls.js'
 import { toast } from '@/store/toast.store'
-import type { QualityOption } from '@/components/common/video.controls.bar'
+import type { QualityOption } from '@/components/video.controls.bar'
 
 export interface UseVideoPlayerProps {
   isOpen: boolean

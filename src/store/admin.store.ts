@@ -1,6 +1,6 @@
 // Store quản lý trạng thái giao diện, thanh điều hướng và giao diện nền của trang quản trị
 import { create } from 'zustand'
-import { navItemToPath, pathToNavItem } from '@/utils/navigation'
+import { navItemToPath, pathToNavItem } from '@/routes/navigation'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 type ThemeMode = 'light' | 'dark'
