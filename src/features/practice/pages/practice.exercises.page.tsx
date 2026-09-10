@@ -9,6 +9,7 @@ import { PracticeSetCard } from '@/features/practice/components/practice.set.car
 import { CreatePracticeSetModal } from '@/features/practice/components/create.practice.set.modal'
 import { CustomSelect } from '@/components/custom.select'
 import { Pagination } from '@/components/pagination'
+import { EmptyState } from '@/components/empty.state'
 
 export function PracticeExercisesPage() {
   const { i18n } = useTranslation()
@@ -142,8 +143,15 @@ export function PracticeExercisesPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {paginatedSets.length === 0 ? (
-          <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            {isVi ? 'Không tìm thấy bộ bài tập nào phù hợp' : 'No practice sets found'}
+          <div className="col-span-full">
+            <EmptyState
+              title={isVi ? 'Không tìm thấy bộ bài tập nào phù hợp' : 'No practice sets found'}
+              description={
+                isVi
+                  ? 'Hãy thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc'
+                  : 'Try searching with different keywords or changing filters'
+              }
+            />
           </div>
         ) : (
           paginatedSets.map((set) => (

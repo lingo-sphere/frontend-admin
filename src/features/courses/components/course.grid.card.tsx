@@ -5,6 +5,7 @@ import type { Course } from '@/features/courses/data/courses.data'
 import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
 import { Popconfirm } from '@/components/popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/features/courses/helpers/course.helper'
+import { formatCurrency, formatNumber } from '@/lib/format'
 
 interface CourseGridCardProps {
   course: Course
@@ -49,7 +50,6 @@ export function CourseGridCard({
       ? Math.round((1 - effectivePrice / originalPrice) * 100)
       : 0
 
-  const formatVnd = (val: number) => `${val.toLocaleString('vi-VN')} đ`
 
   return (
     <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full group">
@@ -142,7 +142,7 @@ export function CourseGridCard({
               </span>
               <div className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5">
                 <Users className="w-3 h-3 text-slate-400 shrink-0" />
-                <span>{course.enrollments.toLocaleString('vi-VN')}</span>
+                <span>{formatNumber(course.enrollments)}</span>
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@ export function CourseGridCard({
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
-                  {formatVnd(effectivePrice)}
+                  {formatCurrency(effectivePrice)}
                 </span>
                 {hasDiscount && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
@@ -165,7 +165,7 @@ export function CourseGridCard({
               </div>
               {hasDiscount && originalPrice > 0 && (
                 <span className="text-[10px] text-slate-400 line-through font-medium pl-1 mt-0.5">
-                  {formatVnd(originalPrice)}
+                  {formatCurrency(originalPrice)}
                 </span>
               )}
             </div>

@@ -2,6 +2,7 @@
 import { BookOpen, Plus } from 'lucide-react'
 import { ExamQuestionCard } from '@/features/exams/components/exam.question.card'
 import { ExamZipDropzone } from '@/features/exams/components/exam.zip.dropzone'
+import { EmptyState } from '@/components/empty.state'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 
 export interface CourseExamQuestionsListProps {
@@ -80,21 +81,15 @@ export function CourseExamQuestionsList({
 
     return (
       <div className="p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40 min-h-[400px]">
-        <div className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
-            <BookOpen className="w-8 h-8" />
-          </div>
-          <div className="max-w-md space-y-1.5">
-            <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">
-              {isVi ? 'Đề thi hiện chưa có câu hỏi nào' : 'No questions in this exam yet'}
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {isVi
-                ? 'Nhấn nút "Thêm câu hỏi" để bắt đầu soạn câu hỏi cho bài thi này.'
-                : 'Click "Add Question" to start crafting questions for this exam.'}
-            </p>
-          </div>
-          <div className="flex items-center justify-center pt-2">
+        <EmptyState
+          icon={BookOpen}
+          title={isVi ? 'Đề thi hiện chưa có câu hỏi nào' : 'No questions in this exam yet'}
+          description={
+            isVi
+              ? 'Nhấn nút "Thêm câu hỏi" để bắt đầu soạn câu hỏi cho bài thi này.'
+              : 'Click "Add Question" to start crafting questions for this exam.'
+          }
+          action={
             <button
               type="button"
               onClick={() => onAddQuestion('READING')}
@@ -103,8 +98,8 @@ export function CourseExamQuestionsList({
               <Plus className="w-4 h-4" />
               <span>{isVi ? 'Thêm câu hỏi đầu tiên' : 'Add First Question'}</span>
             </button>
-          </div>
-        </div>
+          }
+        />
       </div>
     )
   }

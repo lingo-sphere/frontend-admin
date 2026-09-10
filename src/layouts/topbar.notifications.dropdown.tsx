@@ -1,8 +1,8 @@
 // Topbar notifications popover list with mark-as-read and navigation actions.
-
 import type { RefObject } from 'react'
 import { Bell } from 'lucide-react'
 import type { AppNotification } from '@/types/api.types'
+import { formatRelativeTime } from '@/lib/format'
 
 interface TopbarNotificationsDropdownProps {
   notificationRef: RefObject<HTMLDivElement | null>
@@ -14,21 +14,6 @@ interface TopbarNotificationsDropdownProps {
   onMarkAllAsRead: () => void
   onGoToNotifications: () => void
   isVietnamese: boolean
-}
-
-function formatTimeAgo(dateStr: string, isVietnamese: boolean): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  if (diffMins < 1) return isVietnamese ? 'Vừa xong' : 'Just now'
-  if (diffMins < 60) return isVietnamese ? `${diffMins}m trước` : `${diffMins}m ago`
-  if (diffHours < 24) return isVietnamese ? `${diffHours}h trước` : `${diffHours}h ago`
-  if (diffDays < 7) return isVietnamese ? `${diffDays}d trước` : `${diffDays}d ago`
-  return date.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US')
 }
 
 export function TopbarNotificationsDropdown({
@@ -109,7 +94,7 @@ export function TopbarNotificationsDropdown({
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{content}</p>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 block">
-                      {formatTimeAgo(createdAt, isVietnamese)}
+                      {formatRelativeTime(createdAt, isVietnamese)}
                     </span>
                   </div>
                 )

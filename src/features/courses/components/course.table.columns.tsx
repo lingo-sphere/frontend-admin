@@ -1,14 +1,11 @@
-/**
- * @file course.table.columns.tsx
- * @description Component giao diện course-table-columns phục vụ khu vực Quản trị Admin
- */
-
+// Component cấu hình cột bảng dữ liệu danh sách khóa học cho Quản trị Admin
 import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones, GraduationCap } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
 import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 import { getCategoryBadgeClass, getLevelBadgeClass } from '@/features/courses/helpers/course.helper'
+import { formatCurrency, formatNumber } from '@/lib/format'
 
 interface GetCourseColumnsOptions {
   isVi: boolean
@@ -111,7 +108,7 @@ export function getCourseColumns({
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
             <Users className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <span>
-              {course.enrollments.toLocaleString(isVi ? 'vi-VN' : 'en-US')}{' '}
+              {formatNumber(course.enrollments)}{' '}
               {isVi ? 'học viên' : 'learners'}
             </span>
           </div>
@@ -144,15 +141,13 @@ export function getCourseColumns({
           ? Math.round((1 - effectivePrice / originalPrice) * 100)
           : 0
 
-        const formatVnd = (val: number) => `${val.toLocaleString('vi-VN')} đ`
-
         return (
           <div className="whitespace-nowrap py-1">
             {effectivePrice > 0 ? (
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-1.5">
                   <span className="inline-flex items-center font-extrabold text-xs px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
-                    {formatVnd(effectivePrice)}
+                    {formatCurrency(effectivePrice)}
                   </span>
                   {hasDiscount && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
@@ -162,7 +157,7 @@ export function getCourseColumns({
                 </div>
                 {hasDiscount && originalPrice > 0 && (
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 line-through font-medium pl-1">
-                    {formatVnd(originalPrice)}
+                    {formatCurrency(originalPrice)}
                   </span>
                 )}
               </div>
@@ -188,7 +183,7 @@ export function getCourseColumns({
             type="button"
           >
             <Users className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-            <span>{course.enrollments || 0} học viên</span>
+            <span>{formatNumber(course.enrollments || 0)} {isVi ? 'học viên' : 'learners'}</span>
           </button>
         </div>
       ),
