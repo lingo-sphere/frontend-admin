@@ -143,8 +143,9 @@ export function NotificationsPage() {
   const handleTriggerDailyReminders = async () => {
     setIsTriggeringCron(true)
     try {
-      await notificationService.triggerDailyReminders()
-      toast.success('Đã quét và phát thông báo nhắc nhở học tập thành công!')
+      const res = await notificationService.triggerDailyReminders()
+      const msg = res?.message || 'Đã quét và phát thông báo nhắc nhở học tập thành công!'
+      toast.success(msg)
       await fetchNotifications()
     } catch {
       toast.error('Không thể kích hoạt tiến trình gửi thông báo')
