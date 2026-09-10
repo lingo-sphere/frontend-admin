@@ -150,14 +150,24 @@ export function CourseLearnersPage() {
     [selectedCourseId, setActiveNavItem]
   )
 
+  const handleSelectReminderHistory = useCallback(
+    (st: StudentProgressItem) => {
+      const targetCourseId = st.course_id || (selectedCourseId !== 'ALL' ? selectedCourseId : 'all')
+      storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, st)
+      setActiveNavItem(`learner-reminders:${targetCourseId}:${st.user_id}`)
+    },
+    [selectedCourseId, setActiveNavItem]
+  )
+
   const progressColumns = useMemo(
     () =>
       createCourseProgressColumns({
         isVi,
         usersMap,
         onSelectStudentDetail: handleSelectStudentDetail,
+        onSelectReminderHistory: handleSelectReminderHistory,
       }),
-    [isVi, usersMap, handleSelectStudentDetail]
+    [isVi, usersMap, handleSelectStudentDetail, handleSelectReminderHistory]
   )
 
   return (

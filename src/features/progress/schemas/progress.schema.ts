@@ -17,6 +17,23 @@ export const StudentModuleProgressSchema = z.object({
   best_score: z.number().optional(),
 }).passthrough()
 
+export const LearnerStudyScheduleSchema = z.object({
+  days_of_week: z.array(z.number()).default([]),
+  reminder_time: z.string().default('19:30'),
+  duration_minutes: z.number().default(45),
+  is_active: z.boolean().default(true),
+  consecutive_missed_sessions: z.number().default(0),
+  last_reminded_at: z.string().optional(),
+}).passthrough()
+
+export const LearnerLockStateSchema = z.object({
+  is_locked: z.boolean().default(false),
+  locked_at: z.string().optional(),
+  locked_chapter_order: z.number().optional(),
+  retest_required_module_id: z.string().optional(),
+  unlocked_at: z.string().optional(),
+}).passthrough()
+
 export const StudentProgressItemSchema = z.object({
   user_id: z.string(),
   full_name: z.string().optional(),
@@ -33,6 +50,9 @@ export const StudentProgressItemSchema = z.object({
   final_test_score: z.number().optional(),
   total_score_growth: z.number().optional(),
   modules_progress: z.array(StudentModuleProgressSchema).optional(),
+  schedule: LearnerStudyScheduleSchema.optional(),
+  lock_state: LearnerLockStateSchema.optional(),
+  last_video_watched_at: z.unknown().optional(),
   last_accessed_at: z.unknown().optional(),
   created_at: z.unknown().optional(),
 }).passthrough()
@@ -204,6 +224,8 @@ export const PostHogAnalyticsDataSchema = z.object({
 }).passthrough()
 
 export type StudentModuleProgress = z.infer<typeof StudentModuleProgressSchema>
+export type LearnerStudySchedule = z.infer<typeof LearnerStudyScheduleSchema>
+export type LearnerLockState = z.infer<typeof LearnerLockStateSchema>
 export type StudentProgressItem = z.infer<typeof StudentProgressItemSchema>
 export type CourseStudentsProgressResponse = z.infer<typeof CourseStudentsProgressResponseSchema>
 export type SkillSubmissionItem = z.infer<typeof SkillSubmissionItemSchema>

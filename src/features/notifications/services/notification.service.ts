@@ -26,6 +26,19 @@ export interface NotificationTemplate {
   template_body: string
 }
 
+export interface ReminderTimelineItem {
+  id: string
+  channel: 'EMAIL' | 'IN_APP' | string
+  event_type: 'ON_TIME' | 'LATE_WARNING' | 'CHAPTER_LOCKED' | 'CHAPTER_UNLOCKED' | 'WEEKLY_INACTIVE' | string
+  title: string
+  content: string
+  violation_count?: number
+  status: 'DELIVERED' | 'FAILED' | string
+  sent_at: string
+  course_id?: string
+  recipient_email?: string
+}
+
 export const notificationService = {
   async getMyNotifications(params?: { is_read?: boolean; category?: string }): Promise<AppNotification[]> {
     return api.get<AppNotification[]>(API_CONFIG.ENDPOINTS.NOTIFICATIONS.MY, params as Record<string, unknown>)
@@ -87,5 +100,10 @@ export const notificationService = {
       API_CONFIG.ENDPOINTS.NOTIFICATIONS.CRON_DAILY_REMINDERS,
       userIds && userIds.length > 0 ? { user_ids: userIds } : {},
     )
+  },
+
+  async getLearnerReminders(userId: string, courseId?: string): Promise<ReminderTimelineItem[]> {
+    const qs = courseId ? `?course_id=${encodeURIComponent(courseId)}` : ''
+    return api.get<ReminderTimelineItem[]>(`${API_CONFIG.ENDPOINTS.NOTIFICATIONS.LEARNER_REMINDERS(userId)}${qs}`)
   },
 }

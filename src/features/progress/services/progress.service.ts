@@ -12,6 +12,8 @@ import {
   type SkillSubmissionItem,
   type BetterStackMonitoringData,
   type PostHogAnalyticsData,
+  type LearnerStudySchedule,
+  type LearnerLockState,
   CourseStudentsProgressResponseSchema,
   SkillSubmissionListSchema,
   SkillSubmissionItemSchema,
@@ -26,6 +28,8 @@ export type {
   SkillSubmissionItem,
   BetterStackMonitoringData,
   PostHogAnalyticsData,
+  LearnerStudySchedule,
+  LearnerLockState,
 }
 
 export const progressService = {
@@ -121,5 +125,9 @@ export const progressService = {
       ? `${API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG}?${qs}`
       : API_CONFIG.ENDPOINTS.PROGRESS.ANALYTICS_POSTHOG
     return api.get<PostHogAnalyticsData>(endpoint, undefined, PostHogAnalyticsDataSchema)
+  },
+
+  async manualUnlockChapter(courseId: string, userId: string): Promise<{ message: string; lock_state: LearnerLockState }> {
+    return api.post(API_CONFIG.ENDPOINTS.PROGRESS.MANUAL_UNLOCK(courseId, userId), {})
   },
 }

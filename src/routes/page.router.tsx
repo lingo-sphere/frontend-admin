@@ -31,6 +31,7 @@ import { CourseFormPage } from '@/features/courses/pages/course.form.page'
 import { CourseScoresPage } from '@/features/courses/pages/course.scores.page'
 import { CourseSubmissionsPage } from '@/features/courses/pages/course.submissions.page'
 import { LearnerProgressDetailPage } from '@/features/users/pages/learner.progress.detail.page'
+import { LearnerReminderHistoryPage } from '@/features/users/pages/learner.reminder.history.page'
 import { AdminUserFormPage } from '@/features/users/pages/admin.user.form.page'
 import { VocabularyImportPage } from '@/features/vocabulary/pages/vocabulary.import.page'
 import { VocabularyFormPage } from '@/features/vocabulary/pages/vocabulary.form.page'
@@ -108,6 +109,7 @@ export function PageRouter() {
       activeNavItem.startsWith('course-scores:') ||
       activeNavItem.startsWith('course-submissions:') ||
       activeNavItem.startsWith('learner-progress:') ||
+      activeNavItem.startsWith('learner-reminders:') ||
       activeNavItem.startsWith('course-edit:') ||
       activeNavItem.startsWith('course-form:')
     ) {
@@ -192,6 +194,13 @@ export function PageRouter() {
     const courseId = parts[1]
     const userId = parts[2]
     return <LearnerProgressDetailPage courseId={courseId} userId={userId} />
+  }
+
+  if (activeNavItem.startsWith('learner-reminders:')) {
+    const parts = activeNavItem.split(':')
+    const courseId = parts[1]
+    const userId = parts[2]
+    return <LearnerReminderHistoryPage courseId={courseId} userId={userId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || DashboardPage

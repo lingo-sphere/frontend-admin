@@ -127,6 +127,7 @@ export const API_CONFIG = {
       TEMPLATES: '/notifications/templates',
       CAMPAIGNS: '/notifications/campaigns',
       CRON_DAILY_REMINDERS: '/notifications/cron/run-daily-reminders',
+      LEARNER_REMINDERS: (userId: string) => `/notifications/admin/learners/${userId}/reminders`,
     },
 
     MEDIA: {
@@ -149,6 +150,7 @@ export const API_CONFIG = {
       MY_COURSES: '/progress/courses',
       STUDENTS: (courseId: string) => `/progress/teacher/courses/${courseId}/students`,
       GROWTH_CHART: (courseId: string) => `/progress/courses/${courseId}/growth-chart`,
+      MANUAL_UNLOCK: (courseId: string, userId: string) => `/progress/courses/${courseId}/manual-unlock/${userId}`,
       MONITORING_BETTERSTACK: '/progress/monitoring/betterstack',
       ANALYTICS_POSTHOG: '/progress/analytics/posthog',
     },

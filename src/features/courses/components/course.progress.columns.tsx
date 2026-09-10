@@ -1,5 +1,5 @@
-// Định nghĩa các cột hiển thị bảng tiến độ học viên trong trang quản trị tiến độ khóa học
-import { BookOpen, TrendingUp, BarChart3 } from 'lucide-react'
+// Định nghĩa các cột hiển thị bảng tiến độ học viên, lịch học và email nhắc nhở trong trang quản trị.
+import { BookOpen, TrendingUp, BarChart3, Mail, Clock, ShieldAlert, AlertTriangle } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
 import type { StudentProgressItem } from '@/features/progress/services/progress.service'
 
@@ -7,12 +7,20 @@ interface CreateCourseProgressColumnsParams {
   isVi: boolean
   usersMap: Map<string, { full_name?: string; email?: string; avatar_url?: string }>
   onSelectStudentDetail: (st: StudentProgressItem) => void
+  onSelectReminderHistory: (st: StudentProgressItem) => void
+}
+
+function formatScheduleDays(days: number[] = []): string {
+  if (!days || days.length === 0) return 'Mặc định T7'
+  const map: Record<number, string> = { 1: 'T2', 2: 'T3', 3: 'T4', 4: 'T5', 5: 'T6', 6: 'T7', 0: 'CN' }
+  return days.map((d) => map[d] || `T${d}`).join(', ')
 }
 
 export function createCourseProgressColumns({
   isVi,
   usersMap,
   onSelectStudentDetail,
+  onSelectReminderHistory,
 }: CreateCourseProgressColumnsParams): DataTableColumn<StudentProgressItem>[] {
   return [
     {
@@ -170,18 +178,72 @@ export function createCourseProgressColumns({
       },
     },
     {
+      key: 'schedule',
+      title: isVi ? 'Lịch Học & Chuyên Cần' : 'Schedule & Attendance',
+      render: (st) => {
+        const sched = st.schedule
+        const lock = st.lock_state
+        const isLocked = lock?.is_locked
+        const missed = sched?.consecutive_missed_sessions || 0
+        const time = sched?.reminder_time || '19:30'
+        const daysText = formatScheduleDays(sched?.days_of_week)
+
+        return (
+          <div className="space-y-1 min-w-[140px]">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+              <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <span>{time} ({daysText})</span>
+            </div>
+            <div>
+              {isLocked ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                  <ShieldAlert className="w-3 h-3" />
+                  Khóa C{lock?.locked_chapter_order || ''}
+                </span>
+              ) : missed > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="w-3 h-3" />
+                  Cảnh báo {missed}/5
+                </span>
+              ) : sched?.is_active ? (
+                <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                  Đúng lịch
+                </span>
+              ) : (
+                <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500">
+                  Mặc định T7
+                </span>
+              )}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
       key: 'actions',
-      title: isVi ? 'Chi Tiết' : 'Action',
+      title: isVi ? 'Thao Tác' : 'Action',
       align: 'right',
       render: (st) => (
-        <button
-          type="button"
-          onClick={() => onSelectStudentDetail(st)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap ml-auto"
-        >
-          <BarChart3 className="w-3.5 h-3.5" />
-          <span>Xem tiến độ</span>
-        </button>
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => onSelectReminderHistory(st)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+            title="Xem lịch học và lịch sử gửi email nhắc nhở"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Lịch & Email</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectStudentDetail(st)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+            title="Xem chi tiết tiến độ các chương và bài thi"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span>Tiến độ</span>
+          </button>
+        </div>
       ),
     },
   ]
