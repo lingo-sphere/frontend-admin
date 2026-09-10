@@ -9,7 +9,7 @@ import {
 } from '@/features/users/components/learner.profile.header'
 import { UserProfileStatsGrid } from '@/features/users/components/learner.profile.stats.grid'
 import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quota.modal'
-import type { User } from '@/features/users/data/users.data'
+import type { User } from '@/features/users/types/learner.types'
 
 export function UserProfilePage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)

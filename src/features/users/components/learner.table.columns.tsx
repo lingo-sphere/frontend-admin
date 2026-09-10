@@ -1,6 +1,6 @@
 // Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
 import { Target, Sparkles, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
-import type { User } from '@/features/users/data/users.data'
+import type { User } from '@/features/users/types/learner.types'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 

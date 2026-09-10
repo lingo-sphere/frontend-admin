@@ -10,7 +10,7 @@ import { DataTable } from '@/components/data.table'
 import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
-import type { User } from '@/features/users/data/users.data'
+import type { User } from '@/features/users/types/learner.types'
 import type { UserProfile } from '@/types/api.types'
 
 import type { FilterStatus, FilterPlan } from '@/features/users/helpers/learner.helper'
