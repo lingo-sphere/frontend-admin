@@ -86,9 +86,9 @@ export function AiQuizGeneratorForm({
               value={difficulty}
               onChange={onDifficultyChange}
               options={[
-                { value: 'EASY', label: isVi ? 'Cơ bản (350 - 500)' : 'Beginner (350 - 500)', badge: '350-500' },
-                { value: 'MEDIUM', label: isVi ? 'Trung cấp (550 - 750)' : 'Intermediate (550 - 750)', badge: '550-750' },
-                { value: 'HARD', label: isVi ? 'Nâng cao (800 - 990)' : 'Advanced (800 - 990)', badge: '800-990' },
+                { value: 'EASY', label: isVi ? 'Cơ bản' : 'Beginner', badge: '350 - 500' },
+                { value: 'MEDIUM', label: isVi ? 'Trung cấp' : 'Intermediate', badge: '550 - 750' },
+                { value: 'HARD', label: isVi ? 'Nâng cao' : 'Advanced', badge: '800 - 990' },
               ]}
               className="w-full"
             />
