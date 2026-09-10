@@ -1,14 +1,20 @@
 // Trang quản trị danh sách quyền hạn và gán quyền người dùng trong giao diện Admin.
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { KeyRound, UserCheck } from 'lucide-react'
-import { roleService } from '@/features/rbac/services/role.service'
-import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
-import type { Role, Permission, UserProfile } from '@/types/api.types'
+import type { Permission, UserProfile } from '@/types/api.types'
 import { PermissionsListTab } from '@/features/rbac/components/permissions.list.tab'
 import { AssignRoleTab } from '@/features/rbac/components/assign.role.tab'
 import { PermissionModal } from '@/features/rbac/components/permission.modal'
-import { usePermissionsQuery, useRolesQuery } from '@/features/rbac/hooks/use.rbac.query'
+import {
+  usePermissionsQuery,
+  useRolesQuery,
+  useRbacUsersQuery,
+  useCreatePermissionMutation,
+  useUpdatePermissionMutation,
+  useDeletePermissionMutation,
+  useAssignRoleMutation,
+} from '@/features/rbac/hooks/use.rbac.query'
 
 type PermTabType = 'permissions' | 'assign'
 
@@ -17,40 +23,27 @@ export function PermissionsPage() {
 
   const { data: permissions = [], isLoading: isPermsLoading, refetch: refetchPerms } = usePermissionsQuery()
   const { data: roles = [], isLoading: isRolesLoading, refetch: refetchRoles } = useRolesQuery()
+  const { data: users = [], isLoading: isUsersLoading, refetch: refetchUsers } = useRbacUsersQuery()
+
+  const { mutateAsync: createPermMutate } = useCreatePermissionMutation()
+  const { mutateAsync: updatePermMutate } = useUpdatePermissionMutation()
+  const { mutateAsync: deletePermMutate } = useDeletePermissionMutation()
+  const { mutateAsync: assignRoleMutate } = useAssignRoleMutation()
 
   const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [editingPerm, setEditingPerm] = useState<Permission | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [users, setUsers] = useState<UserProfile[]>([])
   const [userSearch, setUserSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [assignRoleName, setAssignRoleName] = useState('ADMIN')
   const [isAssigning, setIsAssigning] = useState(false)
-  const [isUsersLoading, setIsUsersLoading] = useState(false)
 
   const isLoading = isPermsLoading || isRolesLoading || isUsersLoading
 
-  const loadData = async () => {
-    setIsUsersLoading(true)
-    try {
-      const [uVal] = await Promise.all([
-        userService.getAllUsers({ limit: 50 }),
-        refetchPerms(),
-        refetchRoles(),
-      ])
-      const items = Array.isArray(uVal) ? uVal : (uVal?.result || [])
-      setUsers(items)
-    } catch (err) {
-      console.warn('Error loading Permissions data:', err)
-    } finally {
-      setIsUsersLoading(false)
-    }
+  const handleRefresh = async () => {
+    await Promise.all([refetchPerms(), refetchRoles(), refetchUsers()])
   }
-
-  useEffect(() => {
-    loadData()
-  }, [])
 
   const handleOpenCreatePerm = () => {
     setEditingPerm(null)
@@ -72,14 +65,13 @@ export function PermissionsPage() {
     setIsSubmitting(true)
     try {
       if (editingPerm) {
-        await roleService.updatePermission(editingPerm._id, payload)
+        await updatePermMutate({ id: editingPerm._id, payload })
         toast.success(`Đã cập nhật quyền ${payload.name} thành công!`)
       } else {
-        await roleService.createPermission(payload)
+        await createPermMutate(payload)
         toast.success(`Đã tạo quyền ${payload.name} mới thành công!`)
       }
       setIsPermModalOpen(false)
-      await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Lưu quyền hạn thất bại'
       toast.error(msg)
@@ -90,9 +82,8 @@ export function PermissionsPage() {
 
   const handleDeletePerm = async (permId: string) => {
     try {
-      await roleService.deletePermission(permId)
+      await deletePermMutate(permId)
       toast.success('Đã xóa quyền hạn thành công!')
-      await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Xóa quyền hạn thất bại'
       toast.error(msg)
@@ -112,10 +103,9 @@ export function PermissionsPage() {
 
     setIsAssigning(true)
     try {
-      await roleService.assignUserRole(targetUserId, assignRoleName)
+      await assignRoleMutate({ userId: targetUserId, role: assignRoleName })
       toast.success(`Đã gán vai trò ${assignRoleName} cho ${selectedUser.full_name} thành công!`)
       setSelectedUser(null)
-      await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gán quyền thất bại'
       toast.error(msg)
@@ -140,27 +130,39 @@ export function PermissionsPage() {
             Quản lý danh mục quyền hạn endpoint API và gán phân quyền cho từng thành viên hệ thống
           </p>
         </div>
+
+        <div className="flex items-center gap-3">
+          {activeTab === 'permissions' && (
+            <button
+              onClick={handleOpenCreatePerm}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>Thêm Quyền Hạn</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-fit">
+      <div className="flex border-b border-slate-200 dark:border-slate-800">
         <button
           onClick={() => setActiveTab('permissions')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition-all cursor-pointer ${
             activeTab === 'permissions'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
-          <span>Danh sách Quyền hạn ({permissions.length})</span>
+          <span>Danh Sách Quyền Hạn ({permissions.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('assign')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition-all cursor-pointer ${
             activeTab === 'assign'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <UserCheck className="w-3.5 h-3.5" />
@@ -174,7 +176,7 @@ export function PermissionsPage() {
           onOpenCreatePerm={handleOpenCreatePerm}
           onOpenEditPerm={handleOpenEditPerm}
           onDeletePerm={handleDeletePerm}
-          onRefresh={loadData}
+          onRefresh={handleRefresh}
           isLoading={isLoading}
         />
       )}

@@ -1,27 +1,23 @@
-/**
- * @file vocabulary.page.tsx
- * @description Trang quản trị VocabularyPage trong giao diện Admin
- */
-
-import { useState, useMemo, useEffect, useCallback } from 'react'
+// Trang quản trị kho từ vựng và bộ thẻ trong giao diện Admin.
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, Bookmark, Layers, RotateCcw, FileSpreadsheet, Plus } from 'lucide-react'
+import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet } from 'lucide-react'
 import { DataTable } from '@/components/data.table'
 import { useAdminStore } from '@/store/admin.store'
-import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { toast } from '@/store/toast.store'
-import type { LexicalItem, Topic, FlashcardDeck } from '@/features/vocabulary/data/vocabulary.data'
-import type {
-  LexicalItem as ApiLexicalItem,
-  Topic as ApiTopic,
-  FlashcardDeck as ApiFlashcardDeck,
-} from '@/types/api.types'
-
-import type { VocabularyTabType } from '@/features/vocabulary/helpers/vocabulary.helper'
+import type { LexicalItem } from '@/features/vocabulary/data/vocabulary.data'
 import { VocabularyFilterBar } from '@/features/vocabulary/components/vocabulary.filter.bar'
-import { getVocabularyColumns } from '@/features/vocabulary/components/vocabulary.table.columns'
 import { VocabularyTopicsTab } from '@/features/vocabulary/components/vocabulary.topics.tab'
 import { VocabularyDecksTab } from '@/features/vocabulary/components/vocabulary.decks.tab'
+import { getVocabularyColumns } from '@/features/vocabulary/components/vocabulary.table.columns'
+import {
+  useVocabularyWordsQuery,
+  useVocabularyTopicsQuery,
+  useVocabularyDecksQuery,
+  useDeleteWordMutation,
+} from '@/features/vocabulary/hooks/use.vocabulary.admin.query'
+
+type VocabularyTabType = 'words' | 'topics' | 'decks'
 
 export function VocabularyPage() {
   const { i18n } = useTranslation()
@@ -29,10 +25,13 @@ export function VocabularyPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
   const [activeTab, setActiveTab] = useState<VocabularyTabType>('words')
-  const [words, setWords] = useState<LexicalItem[]>([])
-  const [topics, setTopics] = useState<Topic[]>([])
-  const [decks, setDecks] = useState<FlashcardDeck[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  const { data: words = [], isLoading: isWordsLoading, refetch: refetchWords } = useVocabularyWordsQuery()
+  const { data: topics = [], isLoading: isTopicsLoading, refetch: refetchTopics } = useVocabularyTopicsQuery()
+  const { data: decks = [], isLoading: isDecksLoading, refetch: refetchDecks } = useVocabularyDecksQuery()
+  const { mutateAsync: deleteWordMutate } = useDeleteWordMutation()
+
+  const isLoading = isWordsLoading || isTopicsLoading || isDecksLoading
 
   const [searchWord, setSearchWord] = useState<string>('')
   const [filterLevel, setFilterLevel] = useState<string>('ALL')
@@ -41,68 +40,9 @@ export function VocabularyPage() {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
-  const fetchVocabularyData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [wordsRes, topicsRes, decksRes] = await Promise.allSettled([
-        vocabularyService.searchVocabulary(),
-        vocabularyService.getAllTopics(),
-        vocabularyService.getAllFlashcardDecks(),
-      ])
-
-      if (wordsRes.status === 'fulfilled' && wordsRes.value) {
-        const mapped: LexicalItem[] = wordsRes.value.map((w: ApiLexicalItem) => ({
-          id: w._id,
-          word: w.word,
-          word_type: w.word_type,
-          cefr_level: w.cefr_level,
-          pronunciation_us: w.pronunciation_us,
-          pronunciation_uk: w.pronunciation_uk,
-          audio_url_us: w.audio_url_us,
-          created_at: w.created_at,
-        }))
-        setWords(mapped)
-      }
-
-      if (topicsRes.status === 'fulfilled' && topicsRes.value) {
-        const mappedTopics: Topic[] = topicsRes.value.map((t: ApiTopic) => ({
-          id: t._id,
-          name_vi: t.name_vi,
-          name_en: t.name_en || t.name,
-          slug: t.slug,
-          description: t.description || '',
-          icon: t.icon_url,
-          is_featured: t.is_featured,
-          status: t.status,
-          lexical_count: t.lexical_count ?? t.words_count ?? 0,
-          created_at: t.created_at || new Date().toISOString(),
-        }))
-        setTopics(mappedTopics)
-      }
-
-      if (decksRes.status === 'fulfilled' && decksRes.value) {
-        const mappedDecks: FlashcardDeck[] = decksRes.value.map((d: ApiFlashcardDeck) => ({
-          id: d._id,
-          name: d.name || d.title || 'Bộ thẻ',
-          creator_name: 'LingoSphere Master',
-          name_vi: d.name_vi || d.title || d.name,
-          name_en: d.title || d.name,
-          description: d.description || '',
-          card_count: d.card_count ?? d.total_cards ?? 0,
-          created_at: d.created_at || new Date().toISOString(),
-        }))
-        setDecks(mappedDecks)
-      }
-    } catch {
-      toast.error('Lỗi khi tải dữ liệu từ vựng')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchVocabularyData()
-  }, [fetchVocabularyData])
+  const handleRefresh = async () => {
+    await Promise.all([refetchWords(), refetchTopics(), refetchDecks()])
+  }
 
   const filteredWords = useMemo(() => {
     const list = words.filter((w) => {
@@ -120,10 +60,6 @@ export function VocabularyPage() {
         const comp = a.word.toLowerCase().localeCompare(b.word.toLowerCase())
         return sortOrder === 'asc' ? comp : -comp
       }
-      if (sortKey === 'cefr') {
-        const comp = (a.cefr_level || 'A1').localeCompare(b.cefr_level || 'A1')
-        return sortOrder === 'asc' ? comp : -comp
-      }
       return 0
     })
   }, [words, searchWord, filterLevel, sortKey, sortOrder])
@@ -135,8 +71,7 @@ export function VocabularyPage() {
 
   const handleDeleteWord = async (wordId: string) => {
     try {
-      await vocabularyService.deleteLexicalItem(wordId)
-      setWords((prev) => prev.filter((w) => w.id !== wordId))
+      await deleteWordMutate(wordId)
       toast.success('Đã xóa từ vựng thành công!')
     } catch {
       toast.error('Xóa từ vựng thất bại')
@@ -175,7 +110,7 @@ export function VocabularyPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={fetchVocabularyData}
+            onClick={handleRefresh}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-500' : ''}`} />
