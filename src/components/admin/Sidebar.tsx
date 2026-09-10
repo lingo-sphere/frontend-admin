@@ -108,6 +108,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'notifications':
           return hasModulePermission('NOTIFICATIONS')
         case 'settings':
+        case 'settings-plans':
+        case 'settings-ai':
+        case 'settings-system':
           return false
         default:
           return true

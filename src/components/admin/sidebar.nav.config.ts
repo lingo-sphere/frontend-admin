@@ -127,7 +127,16 @@ export const navGroups: NavGroup[] = [
     label: 'SYSTEM',
     items: [
       { id: 'notifications', icon: Bell, label: 'Thông báo', kicker: '8' },
-      { id: 'settings', icon: Settings2, label: 'Cài đặt' },
+      {
+        id: 'settings',
+        icon: Settings2,
+        label: 'Cài đặt',
+        children: [
+          { id: 'settings-plans', label: 'Gói dịch vụ' },
+          { id: 'settings-ai', label: 'AI & Mô hình' },
+          { id: 'settings-system', label: 'Hệ thống' },
+        ],
+      },
     ],
   },
 ]

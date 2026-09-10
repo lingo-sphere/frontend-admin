@@ -23,7 +23,9 @@ import { ProgressPage } from '@/pages/progress.page'
 import { PostHogAnalyticsPage } from '@/pages/posthog.analytics.page'
 import { BetterStackMonitoringPage } from '@/pages/better.stack.monitoring.page'
 import { NotificationsPage } from '@/pages/notifications.page'
-import { SettingsPage } from '@/pages/settings.page'
+import { SettingsPlansPage } from '@/pages/settings.plans.page'
+import { SettingsAiPage } from '@/pages/settings.ai.page'
+import { SettingsSystemPage } from '@/pages/settings.system.page'
 import { UserProfilePage } from '@/pages/user.profile.page'
 import { CourseFormPage } from '@/pages/course.form.page'
 import { CourseScoresPage } from '@/pages/course.scores.page'
@@ -66,8 +68,8 @@ const pageMap: Record<string, React.ComponentType> = {
   exams: ExamsPage,
   'media-storage': MediaStoragePage,
   media: MediaStoragePage,
-  'ai-management': SettingsPage,
-  'ai-teacher': SettingsPage,
+  'ai-management': SettingsAiPage,
+  'ai-teacher': SettingsAiPage,
   community: CommunityPage,
   'public-decks': PublicDecksPage,
   progress: ProgressPage,
@@ -76,7 +78,10 @@ const pageMap: Record<string, React.ComponentType> = {
   'monitoring-betterstack': BetterStackMonitoringPage,
   betterstack: BetterStackMonitoringPage,
   notifications: NotificationsPage,
-  settings: SettingsPage,
+  settings: SettingsPlansPage,
+  'settings-plans': SettingsPlansPage,
+  'settings-ai': SettingsAiPage,
+  'settings-system': SettingsSystemPage,
   'admin-profile': AdminProfilePage,
 }
 
