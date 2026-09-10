@@ -4,6 +4,7 @@
  */
 
 import { api } from '@/services/api.client'
+import { API_CONFIG } from '@/config/api.config'
 import {
   type StorageQuota,
   RawStorageUsageResponseSchema,
@@ -27,7 +28,7 @@ export interface MediaFileItem {
 export const mediaAdminService = {
   async getStorageUsage(): Promise<StorageQuota> {
     const res = await api.get(
-      '/media/storage/usage',
+      API_CONFIG.ENDPOINTS.MEDIA.STORAGE_USAGE,
       undefined,
       RawStorageUsageResponseSchema
     )

@@ -1,12 +1,13 @@
 // Tab cài đặt thông số hệ thống và lưu trữ đám mây.
 import { HardDrive, Save } from 'lucide-react'
 import { NumberInput } from '@/components/common/number.input'
-import type { StorageUsageReport } from '@/types/api.types'
+import type { StorageQuota } from '@/services/media.service'
+import { formatMb, formatGb } from '@/helpers/media.helper'
 import type { SystemSetting } from '@/data/settings.data'
 
 interface SettingsSystemTabProps {
   settings: SystemSetting[]
-  storageUsage: StorageUsageReport | null
+  storageUsage: StorageQuota | null
   isVietnamese: boolean
   onUpdateSetting: (key: string, value: string | number | boolean) => void
   onSaveSettings: () => void
@@ -59,13 +60,13 @@ export function SettingsSystemTab({
         <div className="text-left sm:text-right">
           <span className="text-xs font-bold text-slate-900 dark:text-slate-200">
             {storageUsage
-              ? `${storageUsage.used_mb} MB / ${storageUsage.quota_mb} MB`
-              : '3,200 MB / 10,000 MB'}
+              ? `${formatMb(storageUsage.used_bytes)} MB / ${formatGb(storageUsage.total_quota_bytes)} GB`
+              : (isVietnamese ? 'Đang tải...' : 'Loading...')}
           </span>
           <div className="w-36 h-2 rounded-full bg-slate-100 dark:bg-slate-950 mt-1.5 overflow-hidden border border-slate-200 dark:border-slate-800">
             <div
-              className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full"
-              style={{ width: `${storageUsage?.used_percentage || 32}%` }}
+              className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${storageUsage?.used_percentage || 0}%` }}
             />
           </div>
         </div>

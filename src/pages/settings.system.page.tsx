@@ -5,10 +5,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { mediaService } from '@/services/media.service'
+import { mediaService, type StorageQuota } from '@/services/media.service'
 import { toast } from '@/store/toast.store'
 import { systemSettings, type SystemSetting } from '@/data/settings.data'
-import type { StorageUsageReport } from '@/types/api.types'
 import { SettingsNavHeader } from '@/components/settings/settings.nav.header'
 import { SettingsSystemTab } from '@/components/settings/settings.system.tab'
 
@@ -17,7 +16,7 @@ export function SettingsSystemPage() {
   const isVietnamese = i18n.language === 'vi'
 
   const [settings, setSettings] = useState<SystemSetting[]>(systemSettings)
-  const [storageUsage, setStorageUsage] = useState<StorageUsageReport | null>(null)
+  const [storageUsage, setStorageUsage] = useState<StorageQuota | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const loadSystemData = useCallback(async () => {

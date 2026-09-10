@@ -130,7 +130,7 @@ export const API_CONFIG = {
       UPLOAD: '/media/upload',
       PRESIGNED_URL: '/media/presigned-url',
       FILE_BY_ID: (id: string) => `/media/files/${id}`,
-      STORAGE_USAGE: '/media/storage-usage',
+      STORAGE_USAGE: '/media/storage/usage',
       COLLECTIONS: '/media/collections',
       COLLECTION_BY_ID: (id: string) => `/media/collections/${id}`,
     },
