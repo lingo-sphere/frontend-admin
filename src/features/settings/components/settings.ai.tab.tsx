@@ -20,6 +20,7 @@ import {
 import { aiAdminService, type AiProviderConfig } from '@/features/settings/services/ai.service'
 import { toast } from '@/store/toast.store'
 import { AiArchitectureCards } from '@/features/settings/components/ai.architecture.cards'
+import { AiQuotaSettingsCard } from '@/features/settings/components/ai.quota.settings.card'
 
 export function SettingsAiTab() {
   const [providerConfig, setProviderConfig] = useState<AiProviderConfig | null>(null)
@@ -137,6 +138,8 @@ export function SettingsAiTab() {
         isSwitching={isSwitchingProvider}
         onSelectProvider={handleSelectProvider}
       />
+
+      <AiQuotaSettingsCard />
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">

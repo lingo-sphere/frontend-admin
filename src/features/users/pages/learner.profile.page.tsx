@@ -1,8 +1,4 @@
-/**
- * @file user.profile.page.tsx
- * @description Trang quản trị UserProfilePage trong giao diện Admin
- */
-
+// Trang chi tiết hồ sơ học viên, xem tiến độ và quản trị hạn mức AI.
 import { useState, useEffect } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useAdminStore } from '@/store/admin.store'
@@ -12,6 +8,8 @@ import {
   type UserProfileData,
 } from '@/features/users/components/learner.profile.header'
 import { UserProfileStatsGrid } from '@/features/users/components/learner.profile.stats.grid'
+import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quota.modal'
+import type { User } from '@/features/users/data/users.data'
 
 export function UserProfilePage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
@@ -22,37 +20,38 @@ export function UserProfilePage() {
     : 'usr_learner_001'
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
+  const [isAiQuotaModalOpen, setIsAiQuotaModalOpen] = useState<boolean>(false)
+
+  const loadData = async () => {
+    try {
+      const u = await userService.getProfileById(userId)
+      if (u) {
+        setProfileData({
+          id: u.user_id ? u.user_id : (u._id ? u._id : userId),
+          full_name: u.full_name,
+          email: u.email,
+          avatar_url: u.avatar_url,
+          phone: u.phone_number,
+          status: u.status,
+          is_premium: u.is_premium,
+          created_at: u.created_at
+            ? new Date(u.created_at).toLocaleDateString('vi-VN')
+            : undefined,
+          last_active: u.updated_at
+            ? new Date(u.updated_at).toLocaleDateString('vi-VN')
+            : undefined,
+          total_xp: u.total_xp,
+          level: u.level,
+          current_streak: u.current_streak,
+          toeic_score: u.target_toeic_score,
+        })
+      }
+    } catch (err) {
+      console.warn('Error fetching learner profile from backend:', err)
+    }
+  }
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const u = await userService.getProfileById(userId)
-        if (u) {
-          setProfileData({
-            id: u.user_id ? u.user_id : (u._id ? u._id : userId),
-            full_name: u.full_name,
-            email: u.email,
-            avatar_url: u.avatar_url,
-            phone: u.phone_number,
-            status: u.status,
-            is_premium: u.is_premium,
-            created_at: u.created_at
-              ? new Date(u.created_at).toLocaleDateString('vi-VN')
-              : undefined,
-            last_active: u.updated_at
-              ? new Date(u.updated_at).toLocaleDateString('vi-VN')
-              : undefined,
-            total_xp: u.total_xp,
-            level: u.level,
-            current_streak: u.current_streak,
-            toeic_score: u.target_toeic_score,
-          })
-        }
-      } catch (err) {
-        console.warn('Error fetching learner profile from backend:', err)
-      }
-    }
-
     loadData()
   }, [userId])
 
@@ -62,6 +61,30 @@ export function UserProfilePage() {
         Đang tải thông tin hồ sơ học viên...
       </div>
     )
+  }
+
+  const quotaUser: User = {
+    id: profileData.id,
+    full_name: profileData.full_name || '',
+    email: profileData.email,
+    is_premium: Boolean(profileData.is_premium),
+    status: profileData.status === 'BLOCKED' ? 'BANNED' : 'ACTIVE',
+    target_toeic_score: profileData.toeic_score || 0,
+    current_estimated_score: profileData.toeic_score || 0,
+    total_xp: profileData.total_xp || 0,
+    current_streak: profileData.current_streak || 0,
+    avatar_url: profileData.avatar_url,
+    gender: 'OTHER',
+    learning_goal_minutes_per_day: 0,
+    current_plan_slug: profileData.is_premium ? 'vip' : 'free',
+    created_at: profileData.created_at || '',
+    level: profileData.level || 1,
+    longest_streak: profileData.longest_streak || 0,
+    gems: 0,
+    lessons_completed: 0,
+    vocabulary_reviewed: 0,
+    practice_sessions: 0,
+    exams_completed: 0,
   }
 
   return (
@@ -84,9 +107,19 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      <UserProfileHeader profileData={profileData} />
+      <UserProfileHeader
+        profileData={profileData}
+        onOpenAiQuota={() => setIsAiQuotaModalOpen(true)}
+      />
 
       <UserProfileStatsGrid profileData={profileData} />
+
+      <LearnerAiQuotaModal
+        user={quotaUser}
+        isOpen={isAiQuotaModalOpen}
+        onClose={() => setIsAiQuotaModalOpen(false)}
+        onSuccess={loadData}
+      />
     </div>
   )
 }

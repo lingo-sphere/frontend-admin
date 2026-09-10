@@ -9,6 +9,7 @@ interface GetLearnerColumnsOptions {
   onViewDetails?: (userId: string) => void
   onViewProfile?: (userId: string) => void
   onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
+  onOpenAiQuotaModal?: (user: User) => void
 }
 
 export function getLearnerColumns({
@@ -16,6 +17,7 @@ export function getLearnerColumns({
   onViewDetails,
   onViewProfile,
   onOpenStatusModal,
+  onOpenAiQuotaModal,
 }: GetLearnerColumnsOptions): DataTableColumn<User>[] {
   const handleView = onViewProfile || onViewDetails || (() => {})
   return [
@@ -123,6 +125,16 @@ export function getLearnerColumns({
         const isActive = u.status === 'ACTIVE'
         return (
           <div className="flex items-center justify-end gap-1.5">
+            {onOpenAiQuotaModal && (
+              <button
+                className="p-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition-colors cursor-pointer"
+                title={isVi ? 'Hạn mức & Reset AI' : 'AI Quota & Reset'}
+                type="button"
+                onClick={() => onOpenAiQuotaModal(u)}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
+            )}
             {isActive ? (
               <Popconfirm
                 title={isVi ? 'Khóa tài khoản học viên này?' : 'Block this learner account?'}

@@ -17,6 +17,7 @@ import type { FilterStatus, FilterPlan } from '@/features/users/helpers/learner.
 import { LearnerStatsOverview } from '@/features/users/components/learner.stats.overview'
 import { LearnerFilterBar } from '@/features/users/components/learner.filter.bar'
 import { getLearnerColumns } from '@/features/users/components/learner.table.columns'
+import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quota.modal'
 
 export function LearnersPage() {
   const { i18n } = useTranslation()
@@ -142,11 +143,14 @@ export function LearnersPage() {
     }
   }
 
+  const [aiQuotaModalUser, setAiQuotaModalUser] = useState<User | null>(null)
+
   const columns = useMemo(() => {
     return getLearnerColumns({
       isVi,
       onViewProfile: (userId) => setActiveNavItem(`user-profile:${userId}`),
       onOpenStatusModal: handleStatusChange,
+      onOpenAiQuotaModal: (u) => setAiQuotaModalUser(u),
     })
   }, [isVi, setActiveNavItem])
 
@@ -202,6 +206,13 @@ export function LearnersPage() {
             setCurrentPage(1)
           },
         }}
+      />
+
+      <LearnerAiQuotaModal
+        user={aiQuotaModalUser}
+        isOpen={Boolean(aiQuotaModalUser)}
+        onClose={() => setAiQuotaModalUser(null)}
+        onSuccess={fetchLearners}
       />
     </div>
   )
