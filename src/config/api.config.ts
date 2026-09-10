@@ -154,5 +154,21 @@ export const API_CONFIG = {
       MONITORING_BETTERSTACK: '/progress/monitoring/betterstack',
       ANALYTICS_POSTHOG: '/progress/analytics/posthog',
     },
+
+    COMMUNITY: {
+      ROOM: '/community/room',
+      ROOM_SETTINGS: '/community/room/settings',
+      MESSAGES: '/community/messages',
+      DELETE_MESSAGE: (id: string) => `/community/messages/${id}`,
+      PIN_MESSAGE: (id: string) => `/community/messages/${id}/pin`,
+      UNPIN_MESSAGE: (id: string) => `/community/messages/${id}/unpin`,
+      PINNED_MESSAGES: '/community/messages/pinned',
+      MODERATORS: '/community/moderators',
+      MODERATOR_BY_ID: (userId: string) => `/community/moderators/${userId}`,
+      BANNED_MEMBERS: '/community/banned-members',
+      BAN: '/community/ban',
+      UNBAN: (userId: string) => `/community/unban/${userId}`,
+      UNMUTE: (userId: string) => `/community/unmute/${userId}`,
+    },
   },
 }
