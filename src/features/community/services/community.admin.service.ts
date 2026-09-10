@@ -9,6 +9,8 @@ import type {
   SetModeratorPayload,
   UpdateRoomSettingPayload,
   BanMemberPayload,
+  MuteMemberPayload,
+  KickMemberPayload,
 } from '@/features/community/types/community.admin.types'
 
 export const communityAdminService = {
@@ -60,6 +62,14 @@ export const communityAdminService = {
 
   async banMember(payload: BanMemberPayload): Promise<AdminCommunityMember> {
     return api.post<AdminCommunityMember>(API_CONFIG.ENDPOINTS.COMMUNITY.BAN, payload)
+  },
+
+  async muteMember(payload: MuteMemberPayload): Promise<AdminCommunityMember> {
+    return api.post<AdminCommunityMember>(API_CONFIG.ENDPOINTS.COMMUNITY.MUTE, payload)
+  },
+
+  async kickMember(payload: KickMemberPayload): Promise<AdminCommunityMember> {
+    return api.post<AdminCommunityMember>(API_CONFIG.ENDPOINTS.COMMUNITY.KICK, payload)
   },
 
   async unbanMember(userId: string): Promise<AdminCommunityMember> {

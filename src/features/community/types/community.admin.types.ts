@@ -78,3 +78,22 @@ export interface BanMemberPayload {
   user_name?: string;
   user_avatar?: string;
 }
+
+export interface MuteMemberPayload {
+  target_user_id: string;
+  duration_minutes: number;
+  reason?: string;
+  user_name?: string;
+  user_avatar?: string;
+}
+
+export interface KickMemberPayload {
+  target_user_id: string;
+  cooldown_minutes?: number;
+  reason?: string;
+  user_name?: string;
+  user_avatar?: string;
+}
+
+export type SanctionActionType = 'BAN' | 'MUTE' | 'KICK';
+

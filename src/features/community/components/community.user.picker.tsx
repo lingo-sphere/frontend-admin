@@ -183,7 +183,7 @@ export function CommunityUserPicker({
             />
           </div>
 
-          <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+          <div className="max-h-36 sm:max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
             {isLoading ? (
               <div className="p-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />

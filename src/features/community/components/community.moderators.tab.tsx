@@ -284,10 +284,10 @@ export function CommunityModeratorsTab({
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 animate-in zoom-in-95 duration-150"
+            className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-indigo-600" />
                 <span>Thiết lập phó nhóm & phân quyền</span>
@@ -300,8 +300,8 @@ export function CommunityModeratorsTab({
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-              <div className="p-6 space-y-5 overflow-y-auto flex-1">
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-4">
                 <CommunityUserPicker
                   selectedUser={selectedLearner}
                   onSelectUser={(u) => {
@@ -314,7 +314,7 @@ export function CommunityModeratorsTab({
                   themeColor="indigo"
                 />
 
-                <div className="space-y-2.5 pt-2">
+                <div className="space-y-2 pt-1">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Tùy chọn phân quyền chi tiết
@@ -324,7 +324,7 @@ export function CommunityModeratorsTab({
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {PERMISSION_CONFIG.map((perm) => {
                       const isEnabled = Boolean(permissions[perm.key])
                       const Icon = perm.icon
@@ -333,16 +333,16 @@ export function CommunityModeratorsTab({
                         <div
                           key={perm.key}
                           onClick={() => handleTogglePermission(perm.key)}
-                          className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                          className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 select-none ${
                             isEnabled
                               ? 'bg-indigo-50/60 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800/70 shadow-xs'
                               : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                           }`}
                         >
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${perm.color}`}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${perm.color}`}
                           >
-                            <Icon className="w-4 h-4" />
+                            <Icon className="w-3.5 h-3.5" />
                           </div>
 
                           <div className="flex-1 min-w-0">
@@ -358,13 +358,13 @@ export function CommunityModeratorsTab({
                               </span>
 
                               <div
-                                className={`w-8 h-4.5 rounded-full transition-colors relative shrink-0 p-0.5 ${
+                                className={`w-7 h-4 rounded-full transition-colors relative shrink-0 p-0.5 ${
                                   isEnabled ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
                                 }`}
                               >
                                 <div
-                                  className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${
-                                    isEnabled ? 'translate-x-3.5' : 'translate-x-0'
+                                  className={`w-3 h-3 rounded-full bg-white transition-transform ${
+                                    isEnabled ? 'translate-x-3' : 'translate-x-0'
                                   }`}
                                 />
                               </div>
@@ -381,7 +381,7 @@ export function CommunityModeratorsTab({
                 </div>
               </div>
 
-              <div className="p-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
+              <div className="p-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

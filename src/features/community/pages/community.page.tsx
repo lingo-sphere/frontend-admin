@@ -9,12 +9,16 @@ import type {
   AdminCommunityMember,
   SetModeratorPayload,
   UpdateRoomSettingPayload,
-  BanMemberPayload,
+  SanctionActionType,
 } from '@/features/community/types/community.admin.types'
 import { CommunityRoomControls } from '@/features/community/components/community.room.controls'
 import { CommunityMessagesTable } from '@/features/community/components/community.messages.table'
 import { CommunityModeratorsTab } from '@/features/community/components/community.moderators.tab'
 import { CommunitySanctionsTab } from '@/features/community/components/community.sanctions.tab'
+import {
+  CommunitySanctionModal,
+  type SanctionTargetUser,
+} from '@/features/community/components/community.sanction.modal'
 
 export function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'MONITOR' | 'MODERATORS' | 'SANCTIONS'>('MONITOR')
@@ -23,6 +27,8 @@ export function CommunityPage() {
   const [moderators, setModerators] = useState<AdminCommunityMember[]>([])
   const [bannedMembers, setBannedMembers] = useState<AdminCommunityMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSanctionModalOpen, setIsSanctionModalOpen] = useState(false)
+  const [sanctionTargetUser, setSanctionTargetUser] = useState<SanctionTargetUser | null>(null)
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
@@ -107,14 +113,54 @@ export function CommunityPage() {
     }
   }
 
-  const handleBanMember = async (payload: BanMemberPayload) => {
+  const handleOpenSanctionModal = (user?: SanctionTargetUser) => {
+    setSanctionTargetUser(user || null)
+    setIsSanctionModalOpen(true)
+  }
+
+  const handleSanction = async (
+    action: SanctionActionType,
+    data: {
+      target_user_id: string
+      reason: string
+      duration_minutes?: number
+      cooldown_minutes?: number
+      user_name?: string
+      user_avatar?: string
+    }
+  ) => {
     try {
-      await communityAdminService.banMember(payload)
+      if (action === 'BAN') {
+        await communityAdminService.banMember({
+          target_user_id: data.target_user_id,
+          reason: data.reason,
+          user_name: data.user_name,
+          user_avatar: data.user_avatar,
+        })
+        toast.success('Đã cấm học viên tham gia cộng đồng thành công')
+      } else if (action === 'MUTE') {
+        await communityAdminService.muteMember({
+          target_user_id: data.target_user_id,
+          duration_minutes: data.duration_minutes || 60,
+          reason: data.reason,
+          user_name: data.user_name,
+          user_avatar: data.user_avatar,
+        })
+        toast.success('Đã tắt tiếng học viên thành công')
+      } else if (action === 'KICK') {
+        await communityAdminService.kickMember({
+          target_user_id: data.target_user_id,
+          cooldown_minutes: data.cooldown_minutes || 15,
+          reason: data.reason,
+          user_name: data.user_name,
+          user_avatar: data.user_avatar,
+        })
+        toast.success('Đã trục xuất học viên khỏi phòng chat thành công')
+      }
       const updatedBanned = await communityAdminService.getBannedMembers()
       setBannedMembers(updatedBanned)
-      toast.success('Đã thêm học viên vào danh sách đen thành công')
     } catch {
-      toast.error('Không thể thêm học viên vào danh sách đen')
+      toast.error('Không thể thực hiện biện pháp kỷ luật học viên')
     }
   }
 
@@ -212,6 +258,7 @@ export function CommunityPage() {
             onRefresh={loadData}
             onDeleteMessage={handleDeleteMessage}
             onTogglePin={handleTogglePin}
+            onOpenSanctionModal={handleOpenSanctionModal}
           />
         </div>
       )}
@@ -229,11 +276,21 @@ export function CommunityPage() {
         <CommunitySanctionsTab
           bannedMembers={bannedMembers}
           isLoading={isLoading}
-          onBanMember={handleBanMember}
+          onOpenSanctionModal={() => handleOpenSanctionModal()}
           onUnbanMember={handleUnbanMember}
           onUnmuteMember={handleUnmuteMember}
         />
       )}
+
+      <CommunitySanctionModal
+        isOpen={isSanctionModalOpen}
+        onClose={() => {
+          setIsSanctionModalOpen(false)
+          setSanctionTargetUser(null)
+        }}
+        initialTargetUser={sanctionTargetUser}
+        onSanction={handleSanction}
+      />
     </div>
   )
 }

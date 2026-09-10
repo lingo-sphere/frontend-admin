@@ -10,9 +10,12 @@ import {
   RefreshCw,
   AlertCircle,
   Loader2,
+  ShieldAlert,
 } from 'lucide-react'
 import type { AdminChatMessage } from '@/features/community/types/community.admin.types'
 import { ConfirmModal } from '@/components/confirm.modal'
+import { CommunityPinReplaceModal } from '@/features/community/components/community.pin.replace.modal'
+import type { SanctionTargetUser } from '@/features/community/components/community.sanction.modal'
 
 interface CommunityMessagesTableProps {
   messages: AdminChatMessage[]
@@ -20,6 +23,7 @@ interface CommunityMessagesTableProps {
   onRefresh: () => void
   onDeleteMessage: (messageId: string) => Promise<void>
   onTogglePin?: (messageId: string, isPinned: boolean) => Promise<void>
+  onOpenSanctionModal?: (user: SanctionTargetUser) => void
 }
 
 export function CommunityMessagesTable({
@@ -28,16 +32,24 @@ export function CommunityMessagesTable({
   onRefresh,
   onDeleteMessage,
   onTogglePin,
+  onOpenSanctionModal,
 }: CommunityMessagesTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [targetMessageId, setTargetMessageId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [pinningId, setPinningId] = useState<string | null>(null)
+  const [replaceTargetMessage, setReplaceTargetMessage] = useState<AdminChatMessage | null>(null)
 
   const safeMessages = Array.isArray(messages) ? messages : []
-  const sortedMessages = [...safeMessages].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )
+  const sortedMessages = [...safeMessages].sort((a, b) => {
+    const aPinned = Boolean(a.is_pinned && !a.is_deleted)
+    const bPinned = Boolean(b.is_pinned && !b.is_deleted)
+    if (aPinned !== bPinned) {
+      return aPinned ? -1 : 1
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+
   const filteredMessages = sortedMessages.filter(
     (m) =>
       m.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,7 +57,8 @@ export function CommunityMessagesTable({
       m.sender_id.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const pinnedCount = safeMessages.filter((m) => m.is_pinned && !m.is_deleted).length
+  const pinnedMessages = safeMessages.filter((m) => m.is_pinned && !m.is_deleted)
+  const pinnedCount = pinnedMessages.length
 
   const handleDeleteConfirm = async () => {
     if (!targetMessageId) return
@@ -63,6 +76,27 @@ export function CommunityMessagesTable({
     setPinningId(messageId)
     try {
       await onTogglePin(messageId, isPinned)
+    } finally {
+      setPinningId(null)
+    }
+  }
+
+  const handleTogglePinClick = (msg: AdminChatMessage) => {
+    if (!onTogglePin || pinningId) return
+    const isCurrentlyPinned = Boolean(msg.is_pinned)
+    if (!isCurrentlyPinned && pinnedCount >= 3) {
+      setReplaceTargetMessage(msg)
+      return
+    }
+    handleTogglePin(msg._id, !isCurrentlyPinned)
+  }
+
+  const handleConfirmReplacePin = async (unpinId: string, pinId: string) => {
+    if (!onTogglePin) return
+    setPinningId(pinId)
+    try {
+      await onTogglePin(unpinId, false)
+      await onTogglePin(pinId, true)
     } finally {
       setPinningId(null)
     }
@@ -99,7 +133,7 @@ export function CommunityMessagesTable({
           {pinnedCount > 0 && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80">
               <Pin className="w-3 h-3 fill-amber-500 text-amber-600" />
-              <span>{pinnedCount} tin đang ghim</span>
+              <span>{pinnedCount}/3 tin đang ghim</span>
             </span>
           )}
 
@@ -137,7 +171,7 @@ export function CommunityMessagesTable({
                 <tr
                   key={msg._id}
                   className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
-                    msg.is_pinned ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''
+                    msg.is_pinned && !msg.is_deleted ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''
                   } ${msg.is_deleted ? 'opacity-50 bg-rose-50/20 dark:bg-rose-950/10' : ''}`}
                 >
                   <td className="px-5 py-3.5 align-top">
@@ -185,15 +219,15 @@ export function CommunityMessagesTable({
                         </p>
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-800 dark:text-slate-200 break-words whitespace-pre-wrap">
+                      <p
+                        className={`text-xs break-words whitespace-pre-wrap ${
+                          msg.is_pinned && !msg.is_deleted
+                            ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                            : 'text-slate-800 dark:text-slate-200'
+                        }`}
+                      >
                         {msg.content}
                       </p>
-                    )}
-                    {msg.is_pinned && !msg.is_deleted && (
-                      <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                        <Pin className="w-3 h-3 fill-amber-500 text-amber-600 dark:text-amber-400" />
-                        <span>Đang ghim ở đầu phòng</span>
-                      </div>
                     )}
                   </td>
 
@@ -239,7 +273,7 @@ export function CommunityMessagesTable({
                           <button
                             type="button"
                             disabled={pinningId === msg._id}
-                            onClick={() => handleTogglePin(msg._id, !msg.is_pinned)}
+                            onClick={() => handleTogglePinClick(msg)}
                             className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                               msg.is_pinned
                                 ? 'text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800'
@@ -255,6 +289,25 @@ export function CommunityMessagesTable({
                               <Pin className="w-3.5 h-3.5" />
                             )}
                             <span>{msg.is_pinned ? 'Bỏ ghim' : 'Ghim'}</span>
+                          </button>
+                        )}
+
+                        {onOpenSanctionModal && msg.sender_badge !== 'ADMIN' && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onOpenSanctionModal({
+                                user_id: msg.sender_id,
+                                user_name: msg.sender_name,
+                                user_avatar: msg.sender_avatar,
+                                sender_badge: msg.sender_badge,
+                              })
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/40 transition-colors cursor-pointer"
+                            title="Kỷ luật học viên này (Mute, Kick, Ban)"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5" />
+                            <span>Kỷ luật</span>
                           </button>
                         )}
 
@@ -289,6 +342,14 @@ export function CommunityMessagesTable({
         confirmText="Xóa ngay"
         cancelText="Hủy bỏ"
         isLoading={isDeleting}
+      />
+
+      <CommunityPinReplaceModal
+        isOpen={Boolean(replaceTargetMessage)}
+        onClose={() => setReplaceTargetMessage(null)}
+        targetMessage={replaceTargetMessage}
+        pinnedMessages={pinnedMessages}
+        onConfirmReplace={handleConfirmReplacePin}
       />
     </div>
   )

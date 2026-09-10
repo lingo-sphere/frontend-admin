@@ -1,18 +1,13 @@
 // Quản lý danh sách đen, học viên bị cấm hoặc phạt tắt tiếng trong cộng đồng
 import { useState } from 'react'
-import { Ban, VolumeX, ShieldAlert, CheckCircle, Clock, UserX, X } from 'lucide-react'
-import type {
-  AdminCommunityMember,
-  BanMemberPayload,
-} from '@/features/community/types/community.admin.types'
+import { Ban, VolumeX, ShieldAlert, CheckCircle, Clock, UserX } from 'lucide-react'
+import type { AdminCommunityMember } from '@/features/community/types/community.admin.types'
 import { ConfirmModal } from '@/components/confirm.modal'
-import { CommunityUserPicker } from '@/features/community/components/community.user.picker'
-import type { UserProfile } from '@/features/users/schemas/user.schema'
 
 interface CommunitySanctionsTabProps {
   bannedMembers: AdminCommunityMember[]
   isLoading: boolean
-  onBanMember: (payload: BanMemberPayload) => Promise<void>
+  onOpenSanctionModal: () => void
   onUnbanMember: (userId: string) => Promise<void>
   onUnmuteMember: (userId: string) => Promise<void>
 }
@@ -20,42 +15,13 @@ interface CommunitySanctionsTabProps {
 export function CommunitySanctionsTab({
   bannedMembers,
   isLoading,
-  onBanMember,
+  onOpenSanctionModal,
   onUnbanMember,
   onUnmuteMember,
 }: CommunitySanctionsTabProps) {
-  const [isBanModalOpen, setIsBanModalOpen] = useState(false)
-  const [targetUserId, setTargetUserId] = useState('')
-  const [banReason, setBanReason] = useState('')
-  const [selectedLearner, setSelectedLearner] = useState<UserProfile | null>(null)
-  const [isSubmittingBan, setIsSubmittingBan] = useState(false)
   const [unbanTargetUserId, setUnbanTargetUserId] = useState<string | null>(null)
   const [unmuteTargetUserId, setUnmuteTargetUserId] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-
-  const handleOpenBanModal = () => {
-    setTargetUserId('')
-    setBanReason('')
-    setSelectedLearner(null)
-    setIsBanModalOpen(true)
-  }
-
-  const handleBanSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!targetUserId.trim() || !banReason.trim()) return
-    setIsSubmittingBan(true)
-    try {
-      await onBanMember({
-        target_user_id: targetUserId.trim(),
-        reason: banReason.trim(),
-        user_name: selectedLearner?.full_name,
-        user_avatar: selectedLearner?.avatar_url,
-      })
-      setIsBanModalOpen(false)
-    } finally {
-      setIsSubmittingBan(false)
-    }
-  }
 
   const handleConfirmUnban = async () => {
     if (!unbanTargetUserId) return
@@ -104,11 +70,11 @@ export function CommunitySanctionsTab({
 
         <button
           type="button"
-          onClick={handleOpenBanModal}
+          onClick={onOpenSanctionModal}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
         >
           <UserX className="w-4 h-4" />
-          <span>Thêm vào danh sách đen</span>
+          <span>Kỷ luật học viên</span>
         </button>
       </div>
 
@@ -118,9 +84,9 @@ export function CommunitySanctionsTab({
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-xs uppercase font-bold border-b border-slate-100 dark:border-slate-800">
               <tr>
                 <th className="px-5 py-3">Học viên vi phạm</th>
-                <th className="px-5 py-3">Hình thức kỷ luật</th>
+                <th className="px-5 py-3">Hình thức chế tài</th>
                 <th className="px-5 py-3">Lý do xử lý</th>
-                <th className="px-5 py-3">Thời hạn</th>
+                <th className="px-5 py-3">Thời hạn hiệu lực</th>
                 <th className="px-5 py-3 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -128,7 +94,9 @@ export function CommunitySanctionsTab({
               {bannedMembers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-slate-400">
-                    {isLoading ? 'Đang tải danh sách...' : 'Không có học viên nào đang bị kỷ luật'}
+                    {isLoading
+                      ? 'Đang tải danh sách kỷ luật...'
+                      : 'Hiện không có học viên nào bị cấm, phạt tắt tiếng hoặc chịu cooldown'}
                   </td>
                 </tr>
               ) : (
@@ -218,9 +186,9 @@ export function CommunitySanctionsTab({
                           {muted && (
                             <button
                               onClick={() => setUnmuteTargetUserId(member.user_id)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
                             >
-                              <VolumeX className="w-3.5 h-3.5" />
+                              <CheckCircle className="w-3.5 h-3.5" />
                               <span>Mở khóa chat</span>
                             </button>
                           )}
@@ -258,80 +226,6 @@ export function CommunitySanctionsTab({
         cancelText="Hủy bỏ"
         isLoading={isProcessing}
       />
-
-      {isBanModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 dark:bg-black/40 backdrop-blur-[1px] animate-in fade-in duration-150"
-          onClick={() => setIsBanModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 animate-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Ban className="w-4 h-4 text-rose-600" />
-                <span>Thêm thành viên vào Danh sách đen</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsBanModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleBanSubmit} className="flex-1 flex flex-col min-h-0">
-              <div className="p-6 space-y-4 overflow-y-auto flex-1">
-                <CommunityUserPicker
-                  selectedUser={selectedLearner}
-                  onSelectUser={(u) => {
-                    setSelectedLearner(u)
-                    setTargetUserId(u?.user_id || '')
-                  }}
-                  manualUserId={targetUserId}
-                  onChangeManualUserId={setTargetUserId}
-                  disabledRoles={['ADMIN', 'SUPER_ADMIN']}
-                  themeColor="rose"
-                />
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Lý do kỷ luật / đưa vào danh sách đen
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={banReason}
-                    onChange={(e) => setBanReason(e.target.value)}
-                    placeholder="Ví dụ: Spam tin nhắn, phát ngôn thô tục vi phạm tiêu chuẩn cộng đồng..."
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsBanModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingBan || !targetUserId.trim() || !banReason.trim()}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <Ban className="w-3.5 h-3.5" />
-                  <span>{isSubmittingBan ? 'Đang xử lý...' : 'Xác nhận cấm'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

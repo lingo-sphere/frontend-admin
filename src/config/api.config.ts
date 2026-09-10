@@ -167,6 +167,8 @@ export const API_CONFIG = {
       MODERATOR_BY_ID: (userId: string) => `/community/moderators/${userId}`,
       BANNED_MEMBERS: '/community/banned-members',
       BAN: '/community/ban',
+      MUTE: '/community/mute',
+      KICK: '/community/kick',
       UNBAN: (userId: string) => `/community/unban/${userId}`,
       UNMUTE: (userId: string) => `/community/unmute/${userId}`,
     },
