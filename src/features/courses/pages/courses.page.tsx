@@ -1,17 +1,19 @@
 // Trang quản trị danh mục khóa học và giáo trình học tập.
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, GraduationCap, FileCheck2 } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
-import type { Course as ApiCourse } from '@/types/api.types'
 import { DataTable } from '@/components/data.table'
 import { useAdminStore } from '@/store/admin.store'
 import { usePermission } from '@/features/rbac/hooks/use.permission'
 import { Can } from '@/components/can'
-import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import {
+  useAdminCoursesQuery,
+  useDeleteCourseMutation,
+} from '@/features/courses/hooks/use.courses.admin.query'
 
 import { CourseStatsOverview } from '@/features/courses/components/course.stats.overview'
 import { CourseFilterBar } from '@/features/courses/components/course.filter.bar'
@@ -25,8 +27,9 @@ export function CoursesPage() {
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const { can } = usePermission()
 
-  const [courses, setCourses] = useState<Course[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { data: courses = [], isLoading, refetch } = useAdminCoursesQuery()
+  const { mutateAsync: deleteCourseMutate } = useDeleteCourseMutation()
+
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('ALL')
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
@@ -45,53 +48,6 @@ export function CoursesPage() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
-
-  const fetchCourses = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const res = await courseService.getAllCourses({ pageSize: 50 })
-
-      if (res) {
-        const raw = res
-        const data: ApiCourse[] = Array.isArray(raw) ? raw : (raw?.result || [])
-        if (data && data.length > 0) {
-          const mappedCourses: Course[] = data.map((c: ApiCourse) => ({
-            id: c._id || '',
-            title: c.title,
-            slug: c.slug || '',
-            description: c.description || '',
-            thumbnail_url: c.thumbnail_url || '',
-            target_score: c.target_score || 500,
-            category: (c.category as Course['category']) || 'TOEIC_2_SKILLS',
-            level: (c.level as Course['level']) || 'BEGINNER',
-            total_modules: c.total_modules || 0,
-            total_lessons: c.total_lessons || 0,
-            price: c.price || 0,
-            discount_price: typeof c.discount_price === 'number' ? c.discount_price : undefined,
-            is_published: c.is_published ?? true,
-            author_id: c.author_id || '',
-            author_name: c.author_name || 'Đội ngũ Giảng viên LingoSphere',
-            created_at: c.created_at || new Date().toISOString(),
-            enrollments: c.students_count || 0,
-            completed_count: Math.round((c.students_count || 0) * 0.4),
-            avg_progress: 58,
-          }))
-          setCourses(mappedCourses)
-        } else {
-          setCourses([])
-        }
-      }
-    } catch (err) {
-      console.warn('Error loading courses:', err)
-      setCourses([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCourses()
-  }, [fetchCourses])
 
   const stats = useMemo(() => {
     const total = courses.length
@@ -170,8 +126,7 @@ export function CoursesPage() {
 
   const handleDeleteCourse = async (courseId: string) => {
     try {
-      await courseService.deleteCourse(courseId)
-      setCourses((prev) => prev.filter((c) => c.id !== courseId))
+      await deleteCourseMutate(courseId)
       toast.success('Đã xóa khóa học thành công!')
     } catch {
       toast.error('Xóa khóa học thất bại')
@@ -244,7 +199,7 @@ export function CoursesPage() {
               <span>{isVi ? 'Quản lý bài thi' : 'Exams'}</span>
             </button>
             <button
-              onClick={fetchCourses}
+              onClick={() => refetch()}
               className="flex items-center gap-2 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />

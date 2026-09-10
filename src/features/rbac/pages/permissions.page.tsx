@@ -1,5 +1,4 @@
-// Trang quan tri PermissionsPage trong giao dien Admin.
-
+// Trang quản trị danh sách quyền hạn và gán quyền người dùng trong giao diện Admin.
 import { useState, useEffect } from 'react'
 import { KeyRound, UserCheck } from 'lucide-react'
 import { roleService } from '@/features/rbac/services/role.service'
@@ -9,14 +8,15 @@ import type { Role, Permission, UserProfile } from '@/types/api.types'
 import { PermissionsListTab } from '@/features/rbac/components/permissions.list.tab'
 import { AssignRoleTab } from '@/features/rbac/components/assign.role.tab'
 import { PermissionModal } from '@/features/rbac/components/permission.modal'
+import { usePermissionsQuery, useRolesQuery } from '@/features/rbac/hooks/use.rbac.query'
 
 type PermTabType = 'permissions' | 'assign'
 
 export function PermissionsPage() {
   const [activeTab, setActiveTab] = useState<PermTabType>('permissions')
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+
+  const { data: permissions = [], isLoading: isPermsLoading, refetch: refetchPerms } = usePermissionsQuery()
+  const { data: roles = [], isLoading: isRolesLoading, refetch: refetchRoles } = useRolesQuery()
 
   const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [editingPerm, setEditingPerm] = useState<Permission | null>(null)
@@ -27,35 +27,24 @@ export function PermissionsPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [assignRoleName, setAssignRoleName] = useState('ADMIN')
   const [isAssigning, setIsAssigning] = useState(false)
+  const [isUsersLoading, setIsUsersLoading] = useState(false)
+
+  const isLoading = isPermsLoading || isRolesLoading || isUsersLoading
 
   const loadData = async () => {
-    setIsLoading(true)
+    setIsUsersLoading(true)
     try {
-      const [permsRes, rolesRes, usersRes] = await Promise.allSettled([
-        roleService.getAllPermissions({ pageSize: 100 }),
-        roleService.getAllRoles({ pageSize: 50 }),
+      const [uVal] = await Promise.all([
         userService.getAllUsers({ limit: 50 }),
+        refetchPerms(),
+        refetchRoles(),
       ])
-
-      if (permsRes.status === 'fulfilled' && permsRes.value) {
-        const pVal = permsRes.value
-        const items = Array.isArray(pVal) ? pVal : (pVal?.result || [])
-        setPermissions(items)
-      }
-      if (rolesRes.status === 'fulfilled' && rolesRes.value) {
-        const rVal = rolesRes.value
-        const items = Array.isArray(rVal) ? rVal : (rVal?.result || [])
-        setRoles(items)
-      }
-      if (usersRes.status === 'fulfilled' && usersRes.value) {
-        const uVal = usersRes.value
-        const items = Array.isArray(uVal) ? uVal : (uVal?.result || [])
-        setUsers(items)
-      }
+      const items = Array.isArray(uVal) ? uVal : (uVal?.result || [])
+      setUsers(items)
     } catch (err) {
       console.warn('Error loading Permissions data:', err)
     } finally {
-      setIsLoading(false)
+      setIsUsersLoading(false)
     }
   }
 

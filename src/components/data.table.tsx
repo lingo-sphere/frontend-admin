@@ -48,6 +48,7 @@ export interface DataTableProps<T> {
     totalItems: number
     onPageChange: (page: number) => void
     onPageSizeChange?: (size: number) => void
+    onPrefetchPage?: (page: number) => void
   }
 
   onRowClick?: (record: T) => void
@@ -347,6 +348,7 @@ export function DataTable<T extends object>({
           pageSize={pagination.pageSize}
           onPageChange={pagination.onPageChange}
           onPageSizeChange={pagination.onPageSizeChange}
+          onPrefetchPage={pagination.onPrefetchPage}
         />
       )}
     </div>

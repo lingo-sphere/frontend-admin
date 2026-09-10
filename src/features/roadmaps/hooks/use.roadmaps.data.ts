@@ -1,19 +1,35 @@
-/**
- * @file use.roadmaps.data.ts
- * @description Custom hook quản lý tải dữ liệu lộ trình học tập, danh sách khóa học/đề thi, bộ lọc và các thao tác CRUD
- */
-
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { courseService, roadmapService } from '@/features/courses/services/course.service'
-import { examAdminService, type ToeicExamItem } from '@/features/exams/services/exam.service'
+// Custom hook quản lý tải dữ liệu lộ trình học tập, danh sách khóa học và đề thi bằng TanStack Query.
+import { useState, useMemo, useCallback } from 'react'
+import {
+  useAdminRoadmapsQuery,
+  useUpdateRoadmapMutation,
+  useDeleteRoadmapMutation,
+} from '@/features/roadmaps/hooks/use.roadmaps.admin.query'
+import { useAdminApiCoursesQuery } from '@/features/courses/hooks/use.courses.admin.query'
+import { useAdminExamsQuery } from '@/features/exams/hooks/use.exams.admin.query'
 import { toast } from '@/store/toast.store'
-import type { Course as ApiCourse, LearningRoadmap } from '@/types/api.types'
+import type { LearningRoadmap } from '@/types/api.types'
 
 export function useRoadmapsData() {
-  const [roadmaps, setRoadmaps] = useState<LearningRoadmap[]>([])
-  const [courses, setCourses] = useState<ApiCourse[]>([])
-  const [exams, setExams] = useState<ToeicExamItem[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const {
+    data: roadmaps = [],
+    isLoading: isLoadingRoadmaps,
+    refetch: refetchRoadmaps,
+  } = useAdminRoadmapsQuery()
+
+  const {
+    data: courses = [],
+    isLoading: isLoadingCourses,
+  } = useAdminApiCoursesQuery({ pageSize: 100 })
+
+  const {
+    data: exams = [],
+    isLoading: isLoadingExams,
+  } = useAdminExamsQuery()
+
+  const { mutateAsync: updateRoadmap } = useUpdateRoadmapMutation()
+  const { mutateAsync: deleteRoadmap } = useDeleteRoadmapMutation()
+
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [skillsFilter, setSkillsFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
@@ -25,30 +41,6 @@ export function useRoadmapsData() {
 
   const [showModal, setShowModal] = useState<boolean>(false)
   const [editingRoadmap, setEditingRoadmap] = useState<LearningRoadmap | null>(null)
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [roadmapsData, coursesRes, examsData] = await Promise.all([
-        roadmapService.getAllRoadmaps(),
-        courseService.getAllCourses({ pageSize: 100 }),
-        examAdminService.getExams(),
-      ])
-
-      setRoadmaps(Array.isArray(roadmapsData) ? roadmapsData : [])
-      setCourses(coursesRes.result || [])
-      setExams(Array.isArray(examsData) ? examsData : [])
-    } catch (err) {
-      console.error('Lỗi khi tải dữ liệu lộ trình:', err)
-      toast.error('Không thể tải danh sách lộ trình học tập')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
 
   const handleOpenCreateModal = () => {
     setEditingRoadmap(null)
@@ -62,28 +54,25 @@ export function useRoadmapsData() {
 
   const handleDeleteRoadmap = async (roadmapId: string) => {
     try {
-      await roadmapService.deleteRoadmap(roadmapId)
+      await deleteRoadmap(roadmapId)
       toast.success('Đã xóa lộ trình thành công!')
-      loadData()
-    } catch (err) {
-      console.error('Lỗi khi xóa lộ trình:', err)
+    } catch {
       toast.error('Không thể xóa lộ trình này')
     }
   }
 
   const handleTogglePublish = async (roadmap: LearningRoadmap) => {
     try {
-      await roadmapService.updateRoadmap(roadmap._id, {
-        is_published: !roadmap.is_published,
+      await updateRoadmap({
+        id: roadmap._id,
+        payload: { is_published: !roadmap.is_published },
       })
       toast.success(
         roadmap.is_published
           ? 'Đã chuyển lộ trình về bản nháp!'
           : 'Đã xuất bản lộ trình công khai!'
       )
-      loadData()
-    } catch (err) {
-      console.error('Lỗi khi cập nhật trạng thái:', err)
+    } catch {
       toast.error('Không thể cập nhật trạng thái xuất bản')
     }
   }
@@ -116,6 +105,15 @@ export function useRoadmapsData() {
 
     return { total, twoSkills, fourSkills, published }
   }, [roadmaps])
+
+  const loadData = useCallback(async () => {
+    refetchRoadmaps()
+  }, [refetchRoadmaps])
+
+  const isLoading =
+    (isLoadingRoadmaps && roadmaps.length === 0) ||
+    (isLoadingCourses && courses.length === 0) ||
+    (isLoadingExams && exams.length === 0)
 
   return {
     roadmaps,

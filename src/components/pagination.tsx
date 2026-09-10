@@ -19,6 +19,7 @@ interface PaginationProps {
   showTotal?: boolean
   goToText?: string
   pageText?: string
+  onPrefetchPage?: (page: number) => void
 }
 
 export function Pagination({
@@ -32,6 +33,7 @@ export function Pagination({
   showTotal = false,
   goToText,
   pageText,
+  onPrefetchPage,
 }: PaginationProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -115,6 +117,7 @@ export function Pagination({
             <li
               key={page}
               onClick={() => onPageChange(page)}
+              onMouseEnter={() => onPrefetchPage?.(page)}
               className={`min-w-[32px] h-8 px-2 flex items-center justify-center rounded-md text-[13px] transition-all cursor-pointer ${
                 currentPage === page
                   ? 'border border-blue-500 dark:border-blue-500 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs'
@@ -128,6 +131,7 @@ export function Pagination({
 
         <li
           onClick={() => currentPage < safeTotalPages && onPageChange(currentPage + 1)}
+          onMouseEnter={() => currentPage < safeTotalPages && onPrefetchPage?.(currentPage + 1)}
           className={`w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer ${
             currentPage >= safeTotalPages
               ? 'opacity-35 pointer-events-none text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-900/50'

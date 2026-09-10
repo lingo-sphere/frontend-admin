@@ -1,53 +1,30 @@
 // Trang quan tri RolesPage trong giao dien Admin.
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Shield } from 'lucide-react'
 import { roleService } from '@/features/rbac/services/role.service'
 import { toast } from '@/store/toast.store'
 import type { Role, Permission } from '@/types/api.types'
 import { RolesListTab } from '@/features/rbac/components/roles.list.tab'
 import { RoleEditModal } from '@/features/rbac/components/role.edit.modal'
+import { useRolesQuery, usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
 
 export function RolesPage() {
-  const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-
+  const { data: roles = [], isLoading: isRolesLoading, refetch: refetchRoles } = useRolesQuery()
+  const { data: permissions = [], isLoading: isPermsLoading, refetch: refetchPerms } = usePermissionsQuery()
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
+
+  const isLoading = isRolesLoading || isPermsLoading || isSeeding
 
   const loadData = async () => {
-    setIsLoading(true)
-    try {
-      const [rolesRes, permsRes] = await Promise.allSettled([
-        roleService.getAllRoles({ pageSize: 50 }),
-        roleService.getAllPermissions({ pageSize: 100 }),
-      ])
-
-      if (rolesRes.status === 'fulfilled' && rolesRes.value) {
-        const rVal = rolesRes.value
-        const items = Array.isArray(rVal) ? rVal : (rVal?.result || [])
-        setRoles(items)
-      }
-      if (permsRes.status === 'fulfilled' && permsRes.value) {
-        const pVal = permsRes.value
-        const items = Array.isArray(pVal) ? pVal : (pVal?.result || [])
-        setPermissions(items)
-      }
-    } catch (err) {
-      console.warn('Error loading Roles data:', err)
-    } finally {
-      setIsLoading(false)
-    }
+    await Promise.all([refetchRoles(), refetchPerms()])
   }
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
   const handleSeedRBAC = async () => {
-    setIsLoading(true)
+    setIsSeeding(true)
     try {
       await roleService.seedDefaultRolesAndPermissions()
       toast.success('Khởi tạo ma trận quyền hạn (RBAC) và vai trò mặc định thành công!')
@@ -56,7 +33,7 @@ export function RolesPage() {
       const msg = err instanceof Error ? err.message : 'Khởi tạo thất bại'
       toast.error(msg)
     } finally {
-      setIsLoading(false)
+      setIsSeeding(false)
     }
   }
 

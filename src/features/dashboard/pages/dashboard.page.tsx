@@ -9,9 +9,10 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { useAdminStore } from '@/store/admin.store'
-import { userService } from '@/features/users/services/user.service'
-import { courseService } from '@/features/courses/services/course.service'
-import type { SystemAnalyticsOverview } from '@/types/api.types'
+import {
+  useSystemAnalyticsQuery,
+  useDashboardCoursesQuery,
+} from '@/features/dashboard/hooks/use.dashboard.admin.query'
 import { DashboardStatsGrid } from '@/features/dashboard/components/dashboard.stats.grid'
 import { SimpleChart, type ChartItem } from '@/features/dashboard/components/dashboard.activity.chart'
 import { DashboardRecentActivity } from '@/features/dashboard/components/dashboard.recent.activity'
@@ -61,36 +62,25 @@ export function DashboardPage() {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
 
-  const [analytics, setAnalytics] = useState<SystemAnalyticsOverview | null>(null)
-  const [totalCoursesCount, setTotalCoursesCount] = useState<number>(0)
-  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false)
+  const {
+    data: analytics = null,
+    isLoading: isLoadingAnalytics,
+    refetch: refetchAnalytics,
+  } = useSystemAnalyticsQuery()
 
-  const fetchDashboardData = async () => {
-    setIsLoadingStats(true)
-    try {
-      const [analyticsData, coursesData] = await Promise.allSettled([
-        userService.getSystemAnalytics(),
-        courseService.getAllCourses(),
-      ])
+  const {
+    data: coursesData = [],
+    isLoading: isLoadingCourses,
+    refetch: refetchCourses,
+  } = useDashboardCoursesQuery()
 
-      if (analyticsData.status === 'fulfilled' && analyticsData.value) {
-        setAnalytics(analyticsData.value)
-      }
-      if (coursesData.status === 'fulfilled' && coursesData.value) {
-        const cVal = coursesData.value
-        const count = Array.isArray(cVal) ? cVal.length : (cVal?.meta?.total ?? cVal?.result?.length ?? 0)
-        setTotalCoursesCount(count)
-      }
-    } catch (err) {
-      console.warn('Using local fallback stats:', err)
-    } finally {
-      setIsLoadingStats(false)
-    }
+  const totalCoursesCount = coursesData.length
+  const isLoadingStats = (isLoadingAnalytics && !analytics) || (isLoadingCourses && coursesData.length === 0)
+
+  const fetchDashboardData = () => {
+    refetchAnalytics()
+    refetchCourses()
   }
-
-  useEffect(() => {
-    fetchDashboardData()
-  }, [])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

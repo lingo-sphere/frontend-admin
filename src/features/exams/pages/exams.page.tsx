@@ -1,10 +1,15 @@
-// Trang quản trị ngân hàng đề thi toàn hệ thống
-import { useState, useEffect, useMemo, useCallback } from 'react'
+// Trang quản trị ngân hàng đề thi toàn hệ thống sử dụng TanStack Query.
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw } from 'lucide-react'
-import { examAdminService, type ToeicExamItem } from '@/features/exams/services/exam.service'
+import { type ToeicExamItem } from '@/features/exams/services/exam.service'
+import {
+  useAdminExamsQuery,
+  useCreateExamMutation,
+  useUpdateExamMutation,
+  useDeleteExamMutation,
+} from '@/features/exams/hooks/use.exams.admin.query'
 import { toast } from '@/store/toast.store'
-
 import { ExamStatsOverview } from '@/features/exams/components/exam.stats.overview'
 import { ExamListTable } from '@/features/exams/components/exam.list.table'
 import { CreateExamModal } from '@/features/exams/components/create.exam.modal'
@@ -17,8 +22,11 @@ export function ExamsPage() {
 
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
 
-  const [exams, setExams] = useState<ToeicExamItem[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { data: exams = [], isLoading, refetch } = useAdminExamsQuery()
+  const { mutateAsync: createExam } = useCreateExamMutation()
+  const { mutateAsync: updateExam } = useUpdateExamMutation()
+  const { mutateAsync: deleteExam } = useDeleteExamMutation()
+
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedType, setSelectedType] = useState<string>('ALL')
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
@@ -27,22 +35,6 @@ export function ExamsPage() {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
     setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
   }
-
-  const fetchExams = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await examAdminService.getExams()
-      setExams(Array.isArray(data) ? data : [])
-    } catch {
-      setExams([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchExams()
-  }, [fetchExams])
 
   const stats = useMemo(() => {
     const total = exams.length
@@ -58,10 +50,7 @@ export function ExamsPage() {
 
   const handleTogglePublish = async (id: string, current: boolean) => {
     try {
-      await examAdminService.updateExam(id, { is_published: !current })
-      setExams((prev) =>
-        prev.map((e) => ((e._id || e.id) === id ? { ...e, is_published: !current } : e))
-      )
+      await updateExam({ id, dto: { is_published: !current } })
       toast.success(
         isVi
           ? 'Cập nhật trạng thái xuất bản thành công!'
@@ -74,8 +63,7 @@ export function ExamsPage() {
 
   const handleDeleteExam = async (id: string) => {
     try {
-      await examAdminService.deleteExam(id)
-      setExams((prev) => prev.filter((e) => (e._id || e.id) !== id))
+      await deleteExam(id)
       toast.success(isVi ? 'Đã xóa đề thi thành công!' : 'Exam deleted successfully!')
     } catch {
       toast.error(isVi ? 'Lỗi khi xóa đề thi' : 'Failed to delete exam')
@@ -84,7 +72,7 @@ export function ExamsPage() {
 
   const handleCreateExam = async (title: string, type: string, duration: number) => {
     try {
-      const created = await examAdminService.createExam({
+      const created = await createExam({
         title,
         type: type || 'FULL_TEST',
         duration_minutes: duration,
@@ -101,7 +89,6 @@ export function ExamsPage() {
         is_published: true,
         created_at: new Date().toISOString().split('T')[0],
       }
-      setExams((prev) => [examItem, ...prev])
       setShowAddModal(false)
       storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, examItem)
       setActiveNavItem(`course-exam-questions:${examItem._id || examItem.id}`)
@@ -119,44 +106,59 @@ export function ExamsPage() {
     }
   }
 
+  const filteredExams = useMemo(() => {
+    return exams.filter((exam) => {
+      const matchSearch =
+        !searchQuery ||
+        exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (typeof exam.code === 'string' && exam.code.toLowerCase().includes(searchQuery.toLowerCase()))
+
+      const matchType =
+        selectedType === 'ALL' ||
+        exam.type === selectedType ||
+        (selectedType === 'MINI_TEST' && exam.type === 'PART_PRACTICE')
+
+      return matchSearch && matchType
+    })
+  }, [exams, searchQuery, selectedType])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            {isVi ? 'Quản Lý Đề Thi TOEIC & Kiểm Tra' : 'TOEIC Exam & Test Management'}
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            {isVi ? 'Ngân Hàng Đề Thi TOEIC' : 'TOEIC Exam Bank'}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {isVi
-              ? 'Ngân hàng đề thi TOEIC Full Test 200 câu, Mini-Test 50 câu, Pre-Test Baseline và Post-Mini Test theo chương'
-              : 'Question bank for TOEIC Full Test (200Q), Mini-Test (50Q), Baseline Pre-Test, and Chapter Post-Mini Tests'}
+              ? 'Quản lý các đề thi Full Test, Mini Test và ngân hàng câu hỏi phục vụ học viên'
+              : 'Manage Full Tests, Mini Tests, and question banks for learners'}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={fetchExams}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            onClick={() => refetch()}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
           >
-            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
             <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
+
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer"
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>{isVi ? 'Tạo Đề Thi Mới' : 'Create New Exam'}</span>
+            <span>{isVi ? 'Thêm đề thi mới' : 'Create Exam'}</span>
           </button>
         </div>
       </div>
 
-      
       <ExamStatsOverview stats={stats} />
 
-      
       <ExamListTable
-        exams={exams}
+        exams={filteredExams}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         selectedType={selectedType}

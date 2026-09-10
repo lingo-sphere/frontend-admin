@@ -1,8 +1,7 @@
-/**
- * @file app.tsx
- * @description Mã nguồn thành phần App.tsx
- */
-
+// Component gốc cấu hình giao diện Admin và cung cấp QueryClientProvider.
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { queryClient } from '@/config/query.config'
 import { AdminShell } from '@/layouts/admin.shell'
 import { PageRouter } from '@/routes/page.router'
 import { AuthGuard } from '@/layouts/auth.guard'
@@ -14,7 +13,7 @@ export function App() {
   useThemeSync()
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <AuthGuard>
         <AdminShell>
           <PageRouter />
@@ -22,6 +21,8 @@ export function App() {
       </AuthGuard>
       <ToastContainer />
       <SessionKickoutModal />
-    </>
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+    </QueryClientProvider>
   )
 }
+

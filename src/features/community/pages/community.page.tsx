@@ -1,12 +1,19 @@
 // Trang quản trị trung tâm kênh chat cộng đồng, phân quyền phó nhóm và kỷ luật vi phạm
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { MessageSquare, ShieldCheck, ShieldAlert, RefreshCw } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import { communityAdminService } from '@/features/community/services/community.admin.service'
+import {
+  useCommunityRoomQuery,
+  useCommunityMessagesQuery,
+  useCommunityModeratorsQuery,
+  useCommunityBannedMembersQuery,
+  useUpdateRoomSettingsMutation,
+  useDeleteMessageMutation,
+  usePinMessageMutation,
+  useUnpinMessageMutation,
+} from '@/features/community/hooks/use.community.admin.query'
 import type {
-  AdminChatRoom,
-  AdminChatMessage,
-  AdminCommunityMember,
   SetModeratorPayload,
   UpdateRoomSettingPayload,
   SanctionActionType,
@@ -22,42 +29,32 @@ import {
 
 export function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'MONITOR' | 'MODERATORS' | 'SANCTIONS'>('MONITOR')
-  const [room, setRoom] = useState<AdminChatRoom | null>(null)
-  const [messages, setMessages] = useState<AdminChatMessage[]>([])
-  const [moderators, setModerators] = useState<AdminCommunityMember[]>([])
-  const [bannedMembers, setBannedMembers] = useState<AdminCommunityMember[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [isSanctionModalOpen, setIsSanctionModalOpen] = useState(false)
   const [sanctionTargetUser, setSanctionTargetUser] = useState<SanctionTargetUser | null>(null)
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [roomData, messagesData, modsData, sanctionsData] = await Promise.all([
-        communityAdminService.getRoom(),
-        communityAdminService.getMessages(50),
-        communityAdminService.getModerators(),
-        communityAdminService.getBannedMembers(),
-      ])
-      setRoom(roomData)
-      setMessages(messagesData?.messages || [])
-      setModerators(modsData || [])
-      setBannedMembers(sanctionsData || [])
-    } catch {
-      toast.error('Không thể tải dữ liệu phòng chat cộng đồng')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: room = null, isLoading: isRoomLoading, refetch: refetchRoom } = useCommunityRoomQuery()
+  const { data: messagesData, isLoading: isMessagesLoading, refetch: refetchMessages } = useCommunityMessagesQuery(50)
+  const { data: moderators = [], isLoading: isModsLoading, refetch: refetchMods } = useCommunityModeratorsQuery()
+  const { data: bannedMembers = [], isLoading: isBannedLoading, refetch: refetchBanned } = useCommunityBannedMembersQuery()
 
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  const { mutateAsync: updateRoomSettingsMutate } = useUpdateRoomSettingsMutation()
+  const { mutateAsync: deleteMessageMutate } = useDeleteMessageMutation()
+  const { mutateAsync: pinMessageMutate } = usePinMessageMutation()
+  const { mutateAsync: unpinMessageMutate } = useUnpinMessageMutation()
+
+  const messages = messagesData?.messages || []
+  const isLoading = isRoomLoading || isMessagesLoading || isModsLoading || isBannedLoading
+
+  const loadData = () => {
+    refetchRoom()
+    refetchMessages()
+    refetchMods()
+    refetchBanned()
+  }
 
   const handleUpdateRoomSettings = async (payload: UpdateRoomSettingPayload) => {
     try {
-      const updated = await communityAdminService.updateRoomSettings(payload)
-      setRoom(updated)
+      await updateRoomSettingsMutate(payload)
       toast.success('Đã cập nhật cấu hình phòng chat thành công')
     } catch {
       toast.error('Không thể cập nhật cấu hình phòng chat')
@@ -66,10 +63,7 @@ export function CommunityPage() {
 
   const handleDeleteMessage = async (messageId: string) => {
     try {
-      await communityAdminService.deleteMessage(messageId)
-      setMessages((prev) =>
-        prev.map((m) => (m._id === messageId ? { ...m, is_deleted: true } : m))
-      )
+      await deleteMessageMutate(messageId)
       toast.success('Đã xóa tin nhắn vi phạm thành công')
     } catch {
       toast.error('Không thể xóa tin nhắn')
@@ -79,13 +73,10 @@ export function CommunityPage() {
   const handleTogglePin = async (messageId: string, isPinned: boolean) => {
     try {
       if (isPinned) {
-        await communityAdminService.pinMessage(messageId)
+        await pinMessageMutate(messageId)
       } else {
-        await communityAdminService.unpinMessage(messageId)
+        await unpinMessageMutate(messageId)
       }
-      setMessages((prev) =>
-        prev.map((m) => (m._id === messageId ? { ...m, is_pinned: isPinned } : m))
-      )
       toast.success(isPinned ? 'Đã ghim tin nhắn lên đầu phòng chat' : 'Đã bỏ ghim tin nhắn')
     } catch {
       toast.error(isPinned ? 'Không thể ghim tin nhắn' : 'Không thể bỏ ghim tin nhắn')
@@ -95,8 +86,7 @@ export function CommunityPage() {
   const handleSetModerator = async (payload: SetModeratorPayload) => {
     try {
       await communityAdminService.setModerator(payload)
-      const updatedMods = await communityAdminService.getModerators()
-      setModerators(updatedMods)
+      refetchMods()
       toast.success('Đã bổ nhiệm và cập nhật quyền phó nhóm thành công')
     } catch {
       toast.error('Không thể thiết lập quyền phó nhóm')
@@ -106,7 +96,7 @@ export function CommunityPage() {
   const handleRemoveModerator = async (userId: string) => {
     try {
       await communityAdminService.removeModerator(userId)
-      setModerators((prev) => prev.filter((m) => m.user_id !== userId))
+      refetchMods()
       toast.success('Đã tước quyền phó nhóm thành công')
     } catch {
       toast.error('Không thể tước quyền phó nhóm')
@@ -157,8 +147,7 @@ export function CommunityPage() {
         })
         toast.success('Đã trục xuất học viên khỏi phòng chat thành công')
       }
-      const updatedBanned = await communityAdminService.getBannedMembers()
-      setBannedMembers(updatedBanned)
+      refetchBanned()
     } catch {
       toast.error('Không thể thực hiện biện pháp kỷ luật học viên')
     }
@@ -167,7 +156,7 @@ export function CommunityPage() {
   const handleUnbanMember = async (userId: string) => {
     try {
       await communityAdminService.unbanMember(userId)
-      setBannedMembers((prev) => prev.filter((m) => m.user_id !== userId || m.muted_until))
+      refetchBanned()
       toast.success('Đã gỡ lệnh cấm tham gia phòng chat cho học viên')
     } catch {
       toast.error('Không thể gỡ cấm cho học viên')
@@ -177,7 +166,7 @@ export function CommunityPage() {
   const handleUnmuteMember = async (userId: string) => {
     try {
       await communityAdminService.unmuteMember(userId)
-      setBannedMembers((prev) => prev.filter((m) => m.user_id !== userId || m.is_banned))
+      refetchBanned()
       toast.success('Đã mở khóa chat cho học viên')
     } catch {
       toast.error('Không thể mở khóa chat')
