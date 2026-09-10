@@ -89,9 +89,7 @@ export function NotificationsPage() {
       prev.map((n) => (n.id === id ? { ...n, is_read: !current } : n))
     )
     try {
-      if (!current) {
-        await notificationService.markAsRead(id)
-      }
+      await notificationService.markAsRead(id, !current)
     } catch {
       fetchNotifications()
     }

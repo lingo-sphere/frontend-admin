@@ -50,8 +50,8 @@ export const notificationService = {
     return api.post<AppNotification>(API_CONFIG.ENDPOINTS.NOTIFICATIONS.CREATE, body)
   },
 
-  async markAsRead(id: string): Promise<{ message: string }> {
-    return api.put<{ message: string }>(API_CONFIG.ENDPOINTS.NOTIFICATIONS.MARK_READ(id))
+  async markAsRead(id: string, isRead = true): Promise<{ message: string }> {
+    return api.put<{ message: string }>(`${API_CONFIG.ENDPOINTS.NOTIFICATIONS.MARK_READ(id)}?is_read=${isRead}`)
   },
 
   async markAllAsRead(): Promise<{ message: string }> {
