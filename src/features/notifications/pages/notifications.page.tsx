@@ -1,9 +1,5 @@
-/**
- * @file notifications.page.tsx
- * @description Trang quản trị trung tâm thông báo và phát thông báo in-app trong giao diện Admin
- */
-
-import { useState, useMemo, useEffect } from 'react'
+// Trang quản trị trung tâm thông báo và phát thông báo in-app trong giao diện Admin
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bell,
@@ -13,15 +9,16 @@ import {
   Send,
   CalendarCheck,
 } from 'lucide-react'
-import { notificationService } from '@/features/notifications/services/notification.service'
 import { toast } from '@/store/toast.store'
-import type { Notification } from '@/features/notifications/data/notifications.data'
-import type { AppNotification } from '@/types/api.types'
 import { Pagination } from '@/components/pagination'
 import { NotificationFilterBar } from '@/features/notifications/components/notification.filter.bar'
 import { NotificationListItem } from '@/features/notifications/components/notification.list.item'
 import { Popconfirm } from '@/components/popconfirm'
 import { CreateNotificationModal } from '@/features/notifications/components/create.notification.modal'
+import {
+  useNotificationsAdminQuery,
+  useNotificationAdminMutations,
+} from '@/features/notifications/hooks/use.notifications.admin.query'
 import type {
   FilterCategory,
   FilterPriority,
@@ -32,9 +29,16 @@ export function NotificationsPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isTriggeringCron, setIsTriggeringCron] = useState(false)
+  const { data: notifications = [], isLoading, refetch } = useNotificationsAdminQuery()
+  const {
+    markAsRead,
+    togglePin,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
+    triggerDailyReminders,
+  } = useNotificationAdminMutations()
+
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('ALL')
   const [selectedPriority, setSelectedPriority] = useState<FilterPriority>('ALL')
@@ -43,115 +47,53 @@ export function NotificationsPage() {
   const [pageSize, setPageSize] = useState(8)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const fetchNotifications = async () => {
-    setIsLoading(true)
-    try {
-      const list = await notificationService.getMyNotifications()
-      if (Array.isArray(list)) {
-        const mapped: Notification[] = list.map((n: AppNotification) => ({
-          id: n._id || '',
-          recipient_id: n.recipient_id || 'ALL_USERS',
-          recipient_type: (n.recipient_type as Notification['recipient_type']) || 'USER',
-          notification_type: n.notification_type || 'SYSTEM_ALERT',
-          notification_category:
-            (n.notification_category as Notification['notification_category']) ||
-            (n.category as Notification['notification_category']) ||
-            'SYSTEM',
-          channels: ['IN_APP'],
-          title: n.title,
-          title_vi: n.title_vi || n.title,
-          content: n.content || '',
-          content_vi: n.content_vi || n.content || '',
-          priority: (n.priority as Notification['priority']) || 'NORMAL',
-          is_read: Boolean(n.is_read),
-          is_pinned: Boolean(n.is_pinned),
-          created_at: n.created_at || new Date().toISOString(),
-          read_at: undefined,
-          action_url: n.action_url,
-        }))
-        setNotifications(mapped)
-      } else {
-        setNotifications([])
+  const handleToggleRead = (id: string, current: boolean) => {
+    markAsRead.mutate(
+      { id, isRead: !current },
+      {
+        onError: () => toast.error('Không thể cập nhật trạng thái đã đọc'),
       }
-    } catch {
-      toast.error('Không thể kết nối đến máy chủ thông báo')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchNotifications()
-  }, [])
-
-  const handleToggleRead = async (id: string, current: boolean) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_read: !current } : n))
     )
-    try {
-      await notificationService.markAsRead(id, !current)
-    } catch {
-      fetchNotifications()
-    }
   }
 
-  const handleTogglePin = async (id: string, current: boolean) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_pinned: !current } : n))
+  const handleTogglePin = (id: string, current: boolean) => {
+    togglePin.mutate(
+      { id, isPinned: !current },
+      {
+        onError: () => toast.error('Không thể cập nhật trạng thái ghim'),
+      }
     )
-    try {
-      await notificationService.togglePin(id, !current)
-    } catch {
-      toast.error('Không thể cập nhật trạng thái ghim')
-      fetchNotifications()
-    }
   }
 
-  const handleDelete = async (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
-    try {
-      await notificationService.deleteNotification(id)
-      toast.success('Đã xóa thông báo')
-    } catch {
-      toast.error('Không thể xóa thông báo')
-      fetchNotifications()
-    }
+  const handleDelete = (id: string) => {
+    deleteNotification.mutate(id, {
+      onSuccess: () => toast.success('Đã xóa thông báo'),
+      onError: () => toast.error('Không thể xóa thông báo'),
+    })
   }
 
-  const handleMarkAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-    try {
-      await notificationService.markAllAsRead()
-      toast.success('Đã đánh dấu đọc tất cả thông báo!')
-    } catch {
-      toast.error('Có lỗi xảy ra')
-      fetchNotifications()
-    }
+  const handleMarkAllAsRead = () => {
+    markAllAsRead.mutate(undefined, {
+      onSuccess: () => toast.success('Đã đánh dấu đọc tất cả thông báo!'),
+      onError: () => toast.error('Có lỗi xảy ra'),
+    })
   }
 
-  const handleDeleteAll = async () => {
-    setNotifications([])
-    try {
-      await notificationService.clearAllNotifications()
-      toast.success('Đã dọn dẹp toàn bộ thông báo!')
-    } catch {
-      toast.error('Không thể xóa thông báo trên máy chủ')
-      fetchNotifications()
-    }
+  const handleDeleteAll = () => {
+    clearAllNotifications.mutate(undefined, {
+      onSuccess: () => toast.success('Đã dọn dẹp toàn bộ thông báo!'),
+      onError: () => toast.error('Không thể xóa thông báo trên máy chủ'),
+    })
   }
 
-  const handleTriggerDailyReminders = async () => {
-    setIsTriggeringCron(true)
-    try {
-      const res = await notificationService.triggerDailyReminders()
-      const msg = res?.message || 'Đã quét và phát thông báo nhắc nhở học tập thành công!'
-      toast.success(msg)
-      await fetchNotifications()
-    } catch {
-      toast.error('Không thể kích hoạt tiến trình gửi thông báo')
-    } finally {
-      setIsTriggeringCron(false)
-    }
+  const handleTriggerDailyReminders = () => {
+    triggerDailyReminders.mutate(undefined, {
+      onSuccess: (res) => {
+        const msg = res?.message || 'Đã quét và phát thông báo nhắc nhở học tập thành công!'
+        toast.success(msg)
+      },
+      onError: () => toast.error('Không thể kích hoạt tiến trình gửi thông báo'),
+    })
   }
 
   const filteredNotifications = useMemo(() => {
@@ -219,16 +161,16 @@ export function NotificationsPage() {
           <button
             type="button"
             onClick={handleTriggerDailyReminders}
-            disabled={isTriggeringCron}
+            disabled={triggerDailyReminders.isPending}
             className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-100/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors cursor-pointer"
             title="Quét và gửi thông báo nhắc học viên"
           >
-            <CalendarCheck className={`w-4 h-4 ${isTriggeringCron ? 'animate-bounce' : ''}`} />
+            <CalendarCheck className={`w-4 h-4 ${triggerDailyReminders.isPending ? 'animate-bounce' : ''}`} />
             <span>Nhắc Học Tập</span>
           </button>
 
           <button
-            onClick={fetchNotifications}
+            onClick={() => refetch()}
             className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
             title="Làm mới thông báo"
           >
@@ -237,6 +179,7 @@ export function NotificationsPage() {
 
           <button
             onClick={handleMarkAllAsRead}
+            disabled={markAllAsRead.isPending}
             className="flex items-center gap-1.5 h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
           >
             <CheckCheck className="w-4 h-4 text-emerald-500" />
@@ -308,7 +251,7 @@ export function NotificationsPage() {
       <CreateNotificationModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={fetchNotifications}
+        onSuccess={() => refetch()}
       />
     </div>
   )

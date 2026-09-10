@@ -1,62 +1,33 @@
-/**
- * @file use.platform.analytics.ts
- * @description Hook quản lý việc nạp dữ liệu thống kê TOEIC toàn sàn và lưu lượng chỉ số AI từ Backend API
- */
-
-import { useState, useEffect, useCallback } from 'react'
+// Hook quản lý truy vấn dữ liệu thống kê TOEIC toàn sàn và lưu lượng chỉ số AI bằng TanStack Query
+import { useQuery } from '@tanstack/react-query'
 import {
   statisticsService,
   type TOEICAnalyticsOverviewResponse,
   type AiMetricsResponse,
 } from '@/features/progress/services/statistics.service'
+import { progressAdminKeys } from '@/features/progress/keys/progress.admin.keys'
 
 export function usePlatformAnalytics() {
-  const [toeicData, setToeicData] = useState<TOEICAnalyticsOverviewResponse | null>(null)
-  const [aiData, setAiData] = useState<AiMetricsResponse | null>(null)
-  const [isLoadingToeic, setIsLoadingToeic] = useState<boolean>(true)
-  const [isLoadingAi, setIsLoadingAi] = useState<boolean>(true)
-  const [toeicError, setToeicError] = useState<string | null>(null)
-  const [aiError, setAiError] = useState<string | null>(null)
+  const toeicQuery = useQuery<TOEICAnalyticsOverviewResponse>({
+    queryKey: progressAdminKeys.toeicOverview(),
+    queryFn: () => statisticsService.getToeicAnalyticsOverview(),
+    staleTime: 60 * 1000,
+  })
 
-  const fetchToeicAnalytics = useCallback(async () => {
-    setIsLoadingToeic(true)
-    setToeicError(null)
-    try {
-      const data = await statisticsService.getToeicAnalyticsOverview()
-      setToeicData(data)
-    } catch (err: unknown) {
-      setToeicError(err instanceof Error ? err.message : 'Không thể tải thống kê TOEIC')
-    } finally {
-      setIsLoadingToeic(false)
-    }
-  }, [])
-
-  const fetchAiMetrics = useCallback(async () => {
-    setIsLoadingAi(true)
-    setAiError(null)
-    try {
-      const data = await statisticsService.getAiMetrics()
-      setAiData(data)
-    } catch (err: unknown) {
-      setAiError(err instanceof Error ? err.message : 'Không thể tải chỉ số mô hình AI')
-    } finally {
-      setIsLoadingAi(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchToeicAnalytics()
-    fetchAiMetrics()
-  }, [fetchToeicAnalytics, fetchAiMetrics])
+  const aiQuery = useQuery<AiMetricsResponse>({
+    queryKey: progressAdminKeys.aiMetrics(),
+    queryFn: () => statisticsService.getAiMetrics(),
+    staleTime: 60 * 1000,
+  })
 
   return {
-    toeicData,
-    aiData,
-    isLoadingToeic,
-    isLoadingAi,
-    toeicError,
-    aiError,
-    refetchToeic: fetchToeicAnalytics,
-    refetchAi: fetchAiMetrics,
+    toeicData: toeicQuery.data ?? null,
+    aiData: aiQuery.data ?? null,
+    isLoadingToeic: toeicQuery.isLoading,
+    isLoadingAi: aiQuery.isLoading,
+    toeicError: toeicQuery.error instanceof Error ? toeicQuery.error.message : null,
+    aiError: aiQuery.error instanceof Error ? aiQuery.error.message : null,
+    refetchToeic: toeicQuery.refetch,
+    refetchAi: aiQuery.refetch,
   }
 }
