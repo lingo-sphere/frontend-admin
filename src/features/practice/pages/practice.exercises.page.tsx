@@ -1,14 +1,10 @@
-/**
- * @file practice.exercises.page.tsx
- * @description Trang quản trị PracticeExercisesPage trong giao diện Admin
- */
-
-import { useState, useEffect, useMemo } from 'react'
+// Trang quản trị danh sách và cấu hình các bộ bài tập luyện thi trong hệ thống Admin
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
-import { practiceService } from '@/features/practice/services/practice.service'
 import { toast } from '@/store/toast.store'
 import type { PracticeSet } from '@/types/api.types'
+import { usePracticeSetsQuery } from '@/features/practice/hooks/use.practice.admin.query'
 import { PracticeSetCard } from '@/features/practice/components/practice.set.card'
 import { CreatePracticeSetModal } from '@/features/practice/components/create.practice.set.modal'
 import { CustomSelect } from '@/components/custom.select'
@@ -18,8 +14,8 @@ export function PracticeExercisesPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
+  const { data: serverSets = [], isLoading, refetch } = usePracticeSetsQuery()
   const [practiceSets, setPracticeSets] = useState<PracticeSet[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
@@ -33,21 +29,9 @@ export function PracticeExercisesPage() {
   const [newTotalQuestions, setNewTotalQuestions] = useState(30)
   const [newDuration, setNewDuration] = useState(30)
 
-  const fetchSets = async () => {
-    setIsLoading(true)
-    try {
-      const data = await practiceService.getAllPracticeSets()
-      setPracticeSets(Array.isArray(data) ? data : [])
-    } catch {
-      setPracticeSets([])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchSets()
-  }, [])
+    setPracticeSets(serverSets)
+  }, [serverSets])
 
   const handleToggleStatus = (id: string, current: boolean) => {
     setPracticeSets((prev) =>
@@ -116,7 +100,7 @@ export function PracticeExercisesPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={fetchSets}
+            onClick={() => refetch()}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
