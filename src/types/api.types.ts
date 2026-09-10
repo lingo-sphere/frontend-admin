@@ -471,9 +471,13 @@ export interface AppNotification {
   content: string
   content_vi?: string
   category: NotificationCategory | string
+  notification_category?: NotificationCategory | string
   priority: NotificationPriority | string
   is_read: boolean
   is_pinned?: boolean
+  recipient_id?: string
+  recipient_type?: string
+  notification_type?: string
   action_url?: string
   created_at: string
 }

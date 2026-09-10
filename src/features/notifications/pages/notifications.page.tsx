@@ -1,6 +1,6 @@
 /**
  * @file notifications.page.tsx
- * @description Trang quản trị NotificationsPage trong giao diện Admin
+ * @description Trang quản trị trung tâm thông báo và phát thông báo in-app trong giao diện Admin
  */
 
 import { useState, useMemo, useEffect } from 'react'
@@ -10,6 +10,8 @@ import {
   CheckCheck,
   Trash2,
   RotateCcw,
+  Send,
+  CalendarCheck,
 } from 'lucide-react'
 import { notificationService } from '@/features/notifications/services/notification.service'
 import { toast } from '@/store/toast.store'
@@ -19,6 +21,7 @@ import { Pagination } from '@/components/pagination'
 import { NotificationFilterBar } from '@/features/notifications/components/notification.filter.bar'
 import { NotificationListItem } from '@/features/notifications/components/notification.list.item'
 import { Popconfirm } from '@/components/popconfirm'
+import { CreateNotificationModal } from '@/features/notifications/components/create.notification.modal'
 import type {
   FilterCategory,
   FilterPriority,
@@ -31,25 +34,29 @@ export function NotificationsPage() {
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isTriggeringCron, setIsTriggeringCron] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('ALL')
   const [selectedPriority, setSelectedPriority] = useState<FilterPriority>('ALL')
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(8)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const fetchNotifications = async () => {
     setIsLoading(true)
     try {
       const list = await notificationService.getMyNotifications()
-      if (list && list.length > 0) {
+      if (Array.isArray(list)) {
         const mapped: Notification[] = list.map((n: AppNotification) => ({
           id: n._id || '',
-          recipient_id: 'admin',
-          recipient_type: 'ADMIN',
-          notification_type: 'SYSTEM_ALERT',
+          recipient_id: n.recipient_id || 'ALL_USERS',
+          recipient_type: (n.recipient_type as Notification['recipient_type']) || 'USER',
+          notification_type: n.notification_type || 'SYSTEM_ALERT',
           notification_category:
-            (n.category as Notification['notification_category']) || 'SYSTEM',
+            (n.notification_category as Notification['notification_category']) ||
+            (n.category as Notification['notification_category']) ||
+            'SYSTEM',
           channels: ['IN_APP'],
           title: n.title,
           title_vi: n.title_vi || n.title,
@@ -63,6 +70,8 @@ export function NotificationsPage() {
           action_url: n.action_url,
         }))
         setNotifications(mapped)
+      } else {
+        setNotifications([])
       }
     } catch {
       toast.error('Không thể kết nối đến máy chủ thông báo')
@@ -84,19 +93,31 @@ export function NotificationsPage() {
         await notificationService.markAsRead(id)
       }
     } catch {
-
+      fetchNotifications()
     }
   }
 
-  const handleTogglePin = (id: string, current: boolean) => {
+  const handleTogglePin = async (id: string, current: boolean) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_pinned: !current } : n))
     )
+    try {
+      await notificationService.togglePin(id, !current)
+    } catch {
+      toast.error('Không thể cập nhật trạng thái ghim')
+      fetchNotifications()
+    }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id))
-    toast.success('Đã xóa thông báo')
+    try {
+      await notificationService.deleteNotification(id)
+      toast.success('Đã xóa thông báo')
+    } catch {
+      toast.error('Không thể xóa thông báo')
+      fetchNotifications()
+    }
   }
 
   const handleMarkAllAsRead = async () => {
@@ -106,12 +127,32 @@ export function NotificationsPage() {
       toast.success('Đã đánh dấu đọc tất cả thông báo!')
     } catch {
       toast.error('Có lỗi xảy ra')
+      fetchNotifications()
     }
   }
 
-  const handleDeleteAll = () => {
+  const handleDeleteAll = async () => {
     setNotifications([])
-    toast.success('Đã xóa toàn bộ thông báo!')
+    try {
+      await notificationService.clearAllNotifications()
+      toast.success('Đã dọn dẹp toàn bộ thông báo!')
+    } catch {
+      toast.error('Không thể xóa thông báo trên máy chủ')
+      fetchNotifications()
+    }
+  }
+
+  const handleTriggerDailyReminders = async () => {
+    setIsTriggeringCron(true)
+    try {
+      await notificationService.triggerDailyReminders()
+      toast.success('Đã quét và phát thông báo nhắc nhở học tập thành công!')
+      await fetchNotifications()
+    } catch {
+      toast.error('Không thể kích hoạt tiến trình gửi thông báo')
+    } finally {
+      setIsTriggeringCron(false)
+    }
   }
 
   const filteredNotifications = useMemo(() => {
@@ -123,7 +164,8 @@ export function NotificationsPage() {
         n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         titleVi.toLowerCase().includes(searchTerm.toLowerCase()) ||
         n.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contentVi.toLowerCase().includes(searchTerm.toLowerCase())
+        contentVi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        n.recipient_id.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchCategory =
         selectedCategory === 'ALL' || n.notification_category === selectedCategory
@@ -161,11 +203,31 @@ export function NotificationsPage() {
             )}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý nhật ký thông báo tự động, cảnh báo hệ thống và tin nhắn in-app gửi tới học viên
+            Quản lý nhật ký thông báo tự động, cảnh báo hệ thống và phát tin nhắn in-app gửi tới học viên
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+          >
+            <Send className="w-4 h-4" />
+            <span>Phát Thông Báo Mới</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleTriggerDailyReminders}
+            disabled={isTriggeringCron}
+            className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-100/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors cursor-pointer"
+            title="Quét và gửi thông báo nhắc học viên"
+          >
+            <CalendarCheck className={`w-4 h-4 ${isTriggeringCron ? 'animate-bounce' : ''}`} />
+            <span>Nhắc Học Tập</span>
+          </button>
+
           <button
             onClick={fetchNotifications}
             className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
@@ -173,6 +235,7 @@ export function NotificationsPage() {
           >
             <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
+
           <button
             onClick={handleMarkAllAsRead}
             className="flex items-center gap-1.5 h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
@@ -180,9 +243,10 @@ export function NotificationsPage() {
             <CheckCheck className="w-4 h-4 text-emerald-500" />
             <span>Đọc tất cả</span>
           </button>
+
           <Popconfirm
             title="Xóa tất cả thông báo?"
-            description="Toàn bộ thông báo trong hòm thư sẽ bị dọn dẹp vĩnh viễn."
+            description="Toàn bộ thông báo trong hòm thư sẽ bị dọn dẹp vĩnh viễn trên hệ thống."
             okText="Xóa tất cả"
             cancelText="Hủy"
             okType="danger"
@@ -241,6 +305,12 @@ export function NotificationsPage() {
           onPageSizeChange={setPageSize}
         />
       )}
+
+      <CreateNotificationModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={fetchNotifications}
+      />
     </div>
   )
 }
