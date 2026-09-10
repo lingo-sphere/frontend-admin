@@ -1,5 +1,5 @@
 // Custom hook quản lý truy vấn và đột biến ngân hàng đề thi Admin với Optimistic Update bằng TanStack Query.
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
 import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/features/exams/services/exam.service'
 import { examAdminKeys } from '@/features/exams/keys/exam.admin.keys'
 
@@ -8,6 +8,15 @@ export function useAdminExamsQuery(params?: Record<string, unknown>, enabled = t
     queryKey: examAdminKeys.list(params),
     queryFn: () => examAdminService.getExams(params),
     enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function prefetchAdminExams(queryClient: QueryClient, params?: Record<string, unknown>) {
+  return queryClient.prefetchQuery({
+    queryKey: examAdminKeys.list(params),
+    queryFn: () => examAdminService.getExams(params),
     staleTime: 60 * 1000,
   })
 }

@@ -10,9 +10,11 @@ import { usePermission } from '@/features/rbac/hooks/use.permission'
 import { Can } from '@/components/can'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   useAdminCoursesQuery,
   useDeleteCourseMutation,
+  prefetchAdminCourses,
 } from '@/features/courses/hooks/use.courses.admin.query'
 
 import { CourseStatsOverview } from '@/features/courses/components/course.stats.overview'
@@ -26,6 +28,7 @@ export function CoursesPage() {
   const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
   const { can } = usePermission()
+  const queryClient = useQueryClient()
 
   const { data: courses = [], isLoading, refetch } = useAdminCoursesQuery()
   const { mutateAsync: deleteCourseMutate } = useDeleteCourseMutation()
@@ -236,6 +239,9 @@ export function CoursesPage() {
           onPageSizeChange: (limit) => {
             setItemsPerPage(limit)
             setCurrentPage(1)
+          },
+          onPrefetchPage: (page) => {
+            prefetchAdminCourses(queryClient, { current: page, pageSize: itemsPerPage })
           },
         }}
       />

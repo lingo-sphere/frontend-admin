@@ -1,5 +1,5 @@
 // Custom hook quản lý truy vấn và đột biến lộ trình học tập Admin với Optimistic Update bằng TanStack Query.
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
 import { roadmapService } from '@/features/courses/services/course.service'
 import { roadmapAdminKeys } from '@/features/roadmaps/keys/roadmap.admin.keys'
 import type { LearningRoadmap } from '@/types/api.types'
@@ -12,6 +12,21 @@ export function useAdminRoadmapsQuery(params?: { skills_focus?: string; is_publi
       return Array.isArray(res) ? res : []
     },
     enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 90 * 1000,
+  })
+}
+
+export function prefetchAdminRoadmaps(
+  queryClient: QueryClient,
+  params?: { skills_focus?: string; is_published?: boolean }
+) {
+  return queryClient.prefetchQuery({
+    queryKey: roadmapAdminKeys.list(params),
+    queryFn: async () => {
+      const res = await roadmapService.getAllRoadmaps(params)
+      return Array.isArray(res) ? res : []
+    },
     staleTime: 90 * 1000,
   })
 }

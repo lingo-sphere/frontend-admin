@@ -1,8 +1,4 @@
-/**
- * @file learners.page.tsx
- * @description Trang quản trị LearnersPage trong giao diện Admin
- */
-
+// Trang quản trị danh sách học viên trong giao diện Admin.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RotateCcw } from 'lucide-react'
@@ -10,9 +6,11 @@ import { DataTable } from '@/components/data.table'
 import { useAdminStore } from '@/store/admin.store'
 import { toast } from '@/store/toast.store'
 import type { User } from '@/features/users/types/learner.types'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   useLearnersQuery,
   useUpdateLearnerStatusMutation,
+  prefetchLearners,
 } from '@/features/users/hooks/use.learners.query'
 
 import type { FilterStatus, FilterPlan } from '@/features/users/helpers/learner.helper'
@@ -25,6 +23,7 @@ export function LearnersPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const queryClient = useQueryClient()
 
   const { data: users = [], isLoading, refetch } = useLearnersQuery()
   const { mutateAsync: updateLearnerStatus } = useUpdateLearnerStatusMutation()
@@ -162,6 +161,9 @@ export function LearnersPage() {
           onPageSizeChange: (limit) => {
             setPageSize(limit)
             setCurrentPage(1)
+          },
+          onPrefetchPage: (nextPage) => {
+            prefetchLearners(queryClient, { page: nextPage, limit: pageSize, role: 'STUDENT' })
           },
         }}
       />
