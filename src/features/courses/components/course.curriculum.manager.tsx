@@ -2,6 +2,7 @@
 
 import { Film, Plus } from 'lucide-react'
 import { ExamQuestionStudioModal } from '@/features/courses/components/exam.question.studio.modal'
+import { LessonQuizStudioModal } from '@/features/courses/components/lesson.quiz.studio.modal'
 import { CourseChapterCard } from '@/features/courses/components/course.chapter.card'
 import { CourseCurriculumHeader } from '@/features/courses/components/course.curriculum.header'
 import { CourseCurriculumOutline } from '@/features/courses/components/course.curriculum.outline'
@@ -30,6 +31,10 @@ export function CourseCurriculumManager({
     expandedModules,
     studioModalState,
     setStudioModalState,
+    lessonQuizModalState,
+    openLessonQuizStudio,
+    closeLessonQuizStudio,
+    handleSaveLessonQuestions,
     totalLessons,
     totalMinutes,
     totalTests,
@@ -142,6 +147,10 @@ export function CourseCurriculumManager({
                   globalAudioUrl: audioUrl,
                 })
               }}
+              onOpenLessonQuizStudio={(lesson) => {
+                const lIdx = mod.lessons.findIndex((l) => l.id === lesson.id)
+                openLessonQuizStudio(mod.id, lesson, modIdx, lIdx !== -1 ? lIdx : 0)
+              }}
               formatDurationDisplay={formatDurationDisplay}
             />
           ))}
@@ -178,6 +187,25 @@ export function CourseCurriculumManager({
           initialGlobalAudioUrl={studioModalState.globalAudioUrl}
           onSave={(q, audioUrl) => {
             handleApplyQuestions(studioModalState.moduleId, q, audioUrl)
+          }}
+        />
+      )}
+
+      {lessonQuizModalState.isOpen && lessonQuizModalState.lesson && (
+        <LessonQuizStudioModal
+          key={lessonQuizModalState.lesson.id || 'lesson-quiz-modal'}
+          isOpen={lessonQuizModalState.isOpen}
+          lesson={lessonQuizModalState.lesson}
+          chapterIndex={lessonQuizModalState.chapterIndex}
+          lessonIndex={lessonQuizModalState.lessonIndex}
+          isVi={isVi}
+          onClose={closeLessonQuizStudio}
+          onSave={(questions) => {
+            handleSaveLessonQuestions(
+              lessonQuizModalState.moduleId,
+              lessonQuizModalState.lesson!.id,
+              questions
+            )
           }}
         />
       )}

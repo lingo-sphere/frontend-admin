@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react'
-import type { CourseModule, CourseLesson } from '@/features/courses/components/course.basic.info.tab'
+import type { CourseModule, CourseLesson, LessonQuestion } from '@/features/courses/components/course.basic.info.tab'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 
 interface UseCourseCurriculumProps {
@@ -27,6 +27,20 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
     moduleTitle: '',
     questions: [],
     globalAudioUrl: '',
+  })
+
+  const [lessonQuizModalState, setLessonQuizModalState] = useState<{
+    isOpen: boolean
+    moduleId: string
+    lesson: CourseLesson | null
+    chapterIndex: number
+    lessonIndex: number
+  }>({
+    isOpen: false,
+    moduleId: '',
+    lesson: null,
+    chapterIndex: 0,
+    lessonIndex: 0,
   })
 
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
@@ -253,6 +267,33 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
     })
   }
 
+  const openLessonQuizStudio = (
+    moduleId: string,
+    lesson: CourseLesson,
+    chapterIndex: number,
+    lessonIndex: number
+  ) => {
+    setLessonQuizModalState({
+      isOpen: true,
+      moduleId,
+      lesson,
+      chapterIndex,
+      lessonIndex,
+    })
+  }
+
+  const closeLessonQuizStudio = () => {
+    setLessonQuizModalState((prev) => ({ ...prev, isOpen: false, lesson: null }))
+  }
+
+  const handleSaveLessonQuestions = (
+    moduleId: string,
+    lessonId: string,
+    questions: LessonQuestion[]
+  ) => {
+    updateLessonFields(moduleId, lessonId, { questions })
+  }
+
   const scrollToChapter = (moduleId: string) => {
     if (!expandedModules.includes(moduleId)) {
       setExpandedModules((prev) => [...prev, moduleId])
@@ -263,6 +304,10 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
     expandedModules,
     studioModalState,
     setStudioModalState,
+    lessonQuizModalState,
+    openLessonQuizStudio,
+    closeLessonQuizStudio,
+    handleSaveLessonQuestions,
     totalLessons,
     totalMinutes,
     totalTests,

@@ -9,6 +9,7 @@ import {
   Loader2,
   Film,
   Image as ImageIcon,
+  FileText,
   X,
 } from 'lucide-react'
 import { VideoPreviewModal } from '@/components/video.preview.modal'
@@ -16,9 +17,11 @@ import { useR2Uploader, resolveStreamUrl } from '@/features/media/hooks/use.r2.u
 import { R2MediaPreviewCard } from '@/features/media/components/r2.media.preview.card'
 
 interface R2MediaUploaderProps {
-  type: 'image' | 'video'
+  type: 'image' | 'video' | 'document'
   value: string
   onChange: (url: string) => void
+  fileName?: string
+  onFileNameChange?: (fileName: string) => void
   onDurationChange?: (durationMinutes: number, durationSeconds: number) => void
   folder?: string
   label?: string
@@ -30,6 +33,8 @@ export function R2MediaUploader({
   type,
   value,
   onChange,
+  fileName,
+  onFileNameChange,
   onDurationChange,
   folder = 'courses',
   label,
@@ -47,6 +52,7 @@ export function R2MediaUploader({
     showPreviewModal,
     setShowPreviewModal,
     isVideo,
+    isDocument,
     acceptTypes,
     handleFileSelect,
     handleDrop,
@@ -55,6 +61,8 @@ export function R2MediaUploader({
     type,
     value,
     onChange,
+    fileName,
+    onFileNameChange,
     onDurationChange,
     folder,
     isVi,
@@ -67,6 +75,8 @@ export function R2MediaUploader({
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
             {isVideo ? (
               <Film className="w-3.5 h-3.5 text-indigo-500" />
+            ) : isDocument ? (
+              <FileText className="w-3.5 h-3.5 text-indigo-500" />
             ) : (
               <ImageIcon className="w-3.5 h-3.5 text-indigo-500" />
             )}
@@ -95,8 +105,16 @@ export function R2MediaUploader({
           <R2MediaPreviewCard
             value={value}
             isVideo={isVideo}
+            isDocument={isDocument}
+            fileName={fileName}
             isVi={isVi}
-            onPreview={() => setShowPreviewModal(true)}
+            onPreview={() => {
+              if (isDocument) {
+                window.open(resolveStreamUrl(value) || value, '_blank')
+              } else {
+                setShowPreviewModal(true)
+              }
+            }}
             onChangeFile={() => {
               if (fileInputRef.current) fileInputRef.current.value = ''
               fileInputRef.current?.click()
@@ -118,8 +136,8 @@ export function R2MediaUploader({
                       ? 'Đang xử lý & lưu trữ file...'
                       : 'Processing & finalizing...'
                     : isVi
-                    ? `Đang tải ${isVideo ? 'video' : 'ảnh'} lên máy chủ...`
-                    : `Uploading ${isVideo ? 'video' : 'image'}...`}
+                    ? `Đang tải ${isVideo ? 'video' : isDocument ? 'tài liệu' : 'ảnh'} lên máy chủ...`
+                    : `Uploading ${isVideo ? 'video' : isDocument ? 'document' : 'image'}...`}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -155,18 +173,22 @@ export function R2MediaUploader({
             }`}
           >
             <div className="h-9 w-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2 shadow-xs">
-              <UploadCloud className="w-5 h-5" />
+              {isDocument ? <FileText className="w-5 h-5" /> : <UploadCloud className="w-5 h-5" />}
             </div>
             <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
               {isVi
-                ? `Kéo thả hoặc bấm để tải lên ${isVideo ? 'Video bài giảng' : 'Ảnh Thumbnail'}`
-                : `Drop or click to upload ${isVideo ? 'Video' : 'Thumbnail'}`}
+                ? `Kéo thả hoặc bấm để tải lên ${isVideo ? 'Video bài giảng' : isDocument ? 'File tài liệu lý thuyết' : 'Ảnh Thumbnail'}`
+                : `Drop or click to upload ${isVideo ? 'Video' : isDocument ? 'Theory Document' : 'Thumbnail'}`}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               {isVideo
                 ? isVi
                   ? 'Hỗ trợ MP4, WebM, QuickTime (Tối đa 200MB) • Tối ưu hóa bài giảng'
                   : 'Supports MP4, WebM, MOV (Max 200MB) • Lesson optimized'
+                : isDocument
+                ? isVi
+                  ? 'Hỗ trợ PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx), ZIP (Tối đa 100MB)'
+                  : 'Supports PDF, Word, PowerPoint, ZIP (Max 100MB)'
                 : isVi
                 ? 'Hỗ trợ PNG, JPG, WebP (Tối đa 10MB) • Tối ưu chuẩn tỉ lệ 16:9'
                 : 'Supports PNG, JPG, WebP (Max 10MB) • 16:9 ratio'}
@@ -192,7 +214,7 @@ export function R2MediaUploader({
         />
       )}
 
-      {showPreviewModal && value && !isVideo && (
+      {showPreviewModal && value && !isVideo && !isDocument && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
           onClick={() => setShowPreviewModal(false)}

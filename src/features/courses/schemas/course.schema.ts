@@ -41,6 +41,8 @@ export const LessonSchema = z.object({
   duration_minutes: z.number().nullable().optional(),
   content: z.string().nullable().optional(),
   is_preview: z.boolean().optional(),
+  theory_file_url: z.string().nullable().optional(),
+  theory_file_name: z.string().nullable().optional(),
 })
 
 export const CourseModuleSchema = z.object({
@@ -64,6 +66,8 @@ export const CourseModuleSchema = z.object({
   test_audio_url: z.string().nullable().optional(),
   challenge_audio_url: z.string().nullable().optional(),
   audio_url: z.string().nullable().optional(),
+  theory_file_url: z.string().nullable().optional(),
+  theory_file_name: z.string().nullable().optional(),
   lessons: z.array(LessonSchema).optional(),
   test_questions: z.array(QuizQuestionItemSchema).optional(),
   created_at: z.string().nullable().optional(),
@@ -82,6 +86,8 @@ export const CourseBaseSchema = z.object({
   price: z.number().default(0),
   discount_price: z.number().nullable().optional(),
   thumbnail_url: z.string().nullable().optional(),
+  document_url: z.string().nullable().optional(),
+  document_name: z.string().nullable().optional(),
   author_id: z.string().nullable().optional(),
   author_name: z.string().nullable().optional(),
   author_email: z.string().nullable().optional(),
