@@ -24,6 +24,7 @@ export function useExamQuestionEditor({
   isOpen,
   exam,
   is4Skills,
+  isLessonMode = false,
   initialQuestions,
   initialGlobalAudioUrl,
   isVi,
@@ -354,11 +355,12 @@ export function useExamQuestionEditor({
             setZipProgress({ current, total })
           }
         },
-        effectiveIs4Skills
+        effectiveIs4Skills,
+        isLessonMode
       )
 
       setQuestions(result.questions)
-      if (result.globalAudioUrl) {
+      if (!isLessonMode && result.globalAudioUrl) {
         sessionUploadedUrlsRef.current.add(result.globalAudioUrl)
         setGlobalAudioUrl(result.globalAudioUrl)
       }

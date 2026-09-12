@@ -60,6 +60,7 @@ export function LessonQuizStudioModal({
       title={modalTitle}
       subtitle={lesson.title || (isVi ? 'Bài học video' : 'Video Lesson')}
       is4Skills={false}
+      isLessonMode={true}
       isVi={isVi}
       initialQuestions={initialQuestions}
       onSave={handleSave}
