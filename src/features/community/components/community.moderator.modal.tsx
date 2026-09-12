@@ -1,5 +1,6 @@
-// Modal thiết lập phó nhóm phòng chat và cấu hình phân quyền kiểm duyệt chi tiết
+// Modal thiết lập phó nhóm phòng chat và cấu hình phân quyền kiểm duyệt chi tiết với hỗ trợ chọn nhiều người dùng bằng checkbox.
 import { useState, useEffect } from 'react'
+import { toast } from '@/store/toast.store'
 import {
   ShieldCheck,
   X,
@@ -22,7 +23,7 @@ export interface CommunityModeratorModalProps {
   onClose: () => void
   initialUserId?: string
   initialPermissions?: AdminModeratorPermissions
-  onSave: (payload: SetModeratorPayload) => Promise<void>
+  onSave: (payload: SetModeratorPayload | SetModeratorPayload[]) => Promise<void>
 }
 
 export const DEFAULT_MODERATOR_PERMISSIONS: AdminModeratorPermissions = {
@@ -92,17 +93,17 @@ export function CommunityModeratorModal({
   initialPermissions,
   onSave,
 }: CommunityModeratorModalProps) {
-  const [targetUserId, setTargetUserId] = useState(initialUserId)
+  const [targetUserIdInput, setTargetUserIdInput] = useState(initialUserId)
   const [permissions, setPermissions] = useState<AdminModeratorPermissions>(
     initialPermissions || DEFAULT_MODERATOR_PERMISSIONS
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedLearner, setSelectedLearner] = useState<UserProfile | null>(null)
+  const [selectedLearners, setSelectedLearners] = useState<UserProfile[]>([])
 
   useEffect(() => {
     if (isOpen) {
-      setTargetUserId(initialUserId)
-      setSelectedLearner(null)
+      setTargetUserIdInput(initialUserId)
+      setSelectedLearners([])
       setPermissions(initialPermissions || DEFAULT_MODERATOR_PERMISSIONS)
       setIsSubmitting(false)
     }
@@ -117,15 +118,44 @@ export function CommunityModeratorModal({
     }))
   }
 
+  const selectedCount = selectedLearners.length > 0
+    ? selectedLearners.length
+    : targetUserIdInput
+        .split(/[\s,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean).length
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!targetUserId.trim()) return
+
+    const targetIds = selectedLearners.length > 0
+      ? selectedLearners.map((u) => u.user_id)
+      : targetUserIdInput
+          .split(/[\s,]+/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+
+    if (targetIds.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một người dùng để bổ nhiệm làm phó nhóm')
+      return
+    }
+
+    for (const learner of selectedLearners) {
+      const role = (learner.role || '').toUpperCase()
+      const isAllowed = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR', 'TEACHER'].includes(role)
+      if (!isAllowed) {
+        toast.error(`Tài khoản ${learner.full_name} không phải Quản trị viên hoặc Giáo viên`)
+        return
+      }
+    }
+
     setIsSubmitting(true)
     try {
-      await onSave({
-        user_id: targetUserId.trim(),
+      const payloads: SetModeratorPayload[] = targetIds.map((uid) => ({
+        user_id: uid,
         permissions,
-      })
+      }))
+      await onSave(payloads)
       onClose()
     } finally {
       setIsSubmitting(false)
@@ -157,14 +187,12 @@ export function CommunityModeratorModal({
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-4">
             <CommunityUserPicker
-              selectedUser={selectedLearner}
-              onSelectUser={(u) => {
-                setSelectedLearner(u)
-                setTargetUserId(u?.user_id || '')
-              }}
-              manualUserId={targetUserId}
-              onChangeManualUserId={setTargetUserId}
-              disabledRoles={['ADMIN', 'SUPER_ADMIN']}
+              multiple={true}
+              selectedUsers={selectedLearners}
+              onSelectUsers={setSelectedLearners}
+              manualUserId={targetUserIdInput}
+              onChangeManualUserId={setTargetUserIdInput}
+              allowedRoles={['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR', 'TEACHER']}
               themeColor="indigo"
             />
 
@@ -245,10 +273,14 @@ export function CommunityModeratorModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !targetUserId.trim()}
+              disabled={isSubmitting || selectedCount === 0}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 shadow-sm transition-all cursor-pointer"
             >
-              {isSubmitting ? 'Đang lưu...' : 'Lưu bổ nhiệm'}
+              {isSubmitting
+                ? 'Đang lưu...'
+                : selectedCount > 1
+                ? `Lưu bổ nhiệm (${selectedCount} người)`
+                : 'Lưu bổ nhiệm'}
             </button>
           </div>
         </form>

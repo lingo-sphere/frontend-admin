@@ -33,7 +33,7 @@ export function CommunityPage() {
   const [sanctionTargetUser, setSanctionTargetUser] = useState<SanctionTargetUser | null>(null)
 
   const { data: room = null, isLoading: isRoomLoading, refetch: refetchRoom } = useCommunityRoomQuery()
-  const { data: messagesData, isLoading: isMessagesLoading, refetch: refetchMessages } = useCommunityMessagesQuery(50)
+  const { data: messagesData, isLoading: isMessagesLoading, refetch: refetchMessages } = useCommunityMessagesQuery(100)
   const { data: moderators = [], isLoading: isModsLoading, refetch: refetchMods } = useCommunityModeratorsQuery()
   const { data: bannedMembers = [], isLoading: isBannedLoading, refetch: refetchBanned } = useCommunityBannedMembersQuery()
 
@@ -83,11 +83,16 @@ export function CommunityPage() {
     }
   }
 
-  const handleSetModerator = async (payload: SetModeratorPayload) => {
+  const handleSetModerator = async (payload: SetModeratorPayload | SetModeratorPayload[]) => {
+    const list = Array.isArray(payload) ? payload : [payload]
     try {
-      await communityAdminService.setModerator(payload)
+      await Promise.all(list.map((p) => communityAdminService.setModerator(p)))
       refetchMods()
-      toast.success('Đã bổ nhiệm và cập nhật quyền phó nhóm thành công')
+      toast.success(
+        list.length > 1
+          ? `Đã bổ nhiệm thành công ${list.length} phó nhóm!`
+          : 'Đã bổ nhiệm và cập nhật quyền phó nhóm thành công'
+      )
     } catch {
       toast.error('Không thể thiết lập quyền phó nhóm')
     }
