@@ -5,7 +5,7 @@ import type { StudentProgressItem } from '@/features/progress/services/progress.
 
 interface CreateCourseProgressColumnsParams {
   isVi: boolean
-  usersMap: Map<string, { full_name?: string; email?: string; avatar_url?: string }>
+  usersMap: Map<string, import('@/types/api.types').UserProfile | { full_name?: string | null; email?: string | null; avatar_url?: string | null }>
   onSelectStudentDetail: (st: StudentProgressItem) => void
   onSelectReminderHistory: (st: StudentProgressItem) => void
 }
@@ -31,13 +31,14 @@ export function createCourseProgressColumns({
         const u = usersMap.get(st.user_id) || usersMap.get(String(st.user_id))
         const displayName = u?.full_name || st.full_name || 'Học viên ẩn danh'
         const email = u?.email || st.email || 'Chưa cập nhật email'
+        const avatarSrc = (u?.avatar_url || st.avatar_url) || undefined
 
         return (
           <div className="flex items-center gap-3 min-w-[170px]">
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-xs shrink-0 overflow-hidden">
-              {u?.avatar_url || st.avatar_url ? (
+              {avatarSrc ? (
                 <img
-                  src={u?.avatar_url || st.avatar_url}
+                  src={avatarSrc}
                   alt={displayName}
                   className="w-full h-full object-cover"
                 />

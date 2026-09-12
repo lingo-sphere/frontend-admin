@@ -97,7 +97,7 @@ export function CommunitySanctionModal({
         duration_minutes: action === 'MUTE' ? muteDuration : undefined,
         cooldown_minutes: action === 'KICK' ? kickCooldown : undefined,
         user_name: initialTargetUser?.user_name || selectedLearner?.full_name,
-        user_avatar: initialTargetUser?.user_avatar || selectedLearner?.avatar_url,
+        user_avatar: (initialTargetUser?.user_avatar || selectedLearner?.avatar_url) || undefined,
       })
       onClose()
     } finally {

@@ -40,16 +40,16 @@ export interface PermissionItem {
   api_path: string
   module: string
   name: string
-  description?: string
+  description?: string | null
 }
 
 export interface AuthUser {
   user_id: string
   email: string
   role: UserRole | string
-  role_id?: string
-  full_name?: string
-  avatar_url?: string
+  role_id?: string | null
+  full_name?: string | null
+  avatar_url?: string | null
   permissions?: PermissionItem[]
 }
 

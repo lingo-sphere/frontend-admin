@@ -9,7 +9,7 @@ export const PermissionItemSchema = z.object({
   module: z.string(),
   name: z.string(),
   description: z.string().nullable().optional(),
-}).passthrough()
+})
 
 export const AuthUserSchema = z.object({
   user_id: z.string(),
@@ -19,7 +19,7 @@ export const AuthUserSchema = z.object({
   full_name: z.string().nullable().optional(),
   avatar_url: z.string().nullable().optional(),
   permissions: z.array(PermissionItemSchema).optional(),
-}).passthrough()
+})
 
 export const UserProfileSchema = z.object({
   _id: z.string().optional(),

@@ -17,43 +17,43 @@ export interface ExamQuestionItem {
   question_text: string
   options: string[]
   correct_answer: string
-  explanation?: string
-  media_url?: string
-  audio_url?: string
-  image_url?: string
-  prep_time_seconds?: number
-  response_time_seconds?: number
-  min_words?: number
+  explanation?: string | null
+  media_url?: string | null
+  audio_url?: string | null
+  image_url?: string | null
+  prep_time_seconds?: number | null
+  response_time_seconds?: number | null
+  min_words?: number | null
 }
 
 interface RawExamQuestion {
-  id?: string
-  _id?: string
-  skill_type?: string
-  skillType?: string
-  part_number?: number | string
-  part?: number | string
-  part_name?: string
-  question_type?: string
-  question_text?: string
-  questionTextEn?: string
-  question_text_en?: string
-  options?: Array<string | { textEn?: string; text?: string }>
-  correct_answer?: string
-  correctOption?: string
-  correct_option?: string
-  explanation?: string
-  explanation_vi?: string
-  explanation_en?: string
-  media_url?: string
-  audio_url?: string
-  image_url?: string
-  image_media_id?: string
-  imageMediaId?: string
-  imageUrl?: string
-  prep_time_seconds?: number
-  response_time_seconds?: number
-  min_words?: number
+  id?: string | null
+  _id?: string | null
+  skill_type?: string | null
+  skillType?: string | null
+  part_number?: number | string | null
+  part?: number | string | null
+  part_name?: string | null
+  question_type?: string | null
+  question_text?: string | null
+  questionTextEn?: string | null
+  question_text_en?: string | null
+  options?: Array<string | { textEn?: string; text?: string }> | null
+  correct_answer?: string | null
+  correctOption?: string | null
+  correct_option?: string | null
+  explanation?: string | null
+  explanation_vi?: string | null
+  explanation_en?: string | null
+  media_url?: string | null
+  audio_url?: string | null
+  image_url?: string | null
+  image_media_id?: string | null
+  imageMediaId?: string | null
+  imageUrl?: string | null
+  prep_time_seconds?: number | null
+  response_time_seconds?: number | null
+  min_words?: number | null
 }
 
 interface UseExamQuestionEditorParams {
@@ -68,7 +68,7 @@ interface UseExamQuestionEditorParams {
   onClose: () => void
 }
 
-function normalizeQuestions(rawList: Array<ExamQuestionItem | RawExamQuestion>): ExamQuestionItem[] {
+function normalizeQuestions(rawList: Array<ExamQuestionItem | RawExamQuestion | Record<string, unknown>>): ExamQuestionItem[] {
   return rawList.map((q, idx) => {
     const raw = q as RawExamQuestion
     const rawPart = raw.part_number ?? raw.part
