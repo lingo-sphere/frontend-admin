@@ -5,8 +5,9 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { navItemToPath } from '@/routes/navigation'
 import { NAVIGATION_INDEX } from '@/layouts/global.search.config'
 import { GlobalSearchResultItem } from '@/layouts/global.search.result.item'
 
@@ -18,8 +19,7 @@ interface GlobalSearchModalProps {
 export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -55,7 +55,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   }, [filteredItems.length])
 
   const handleSelect = (navTarget: string) => {
-    setActiveNavItem(navTarget)
+    navigate(navItemToPath(navTarget))
     onClose()
   }
 

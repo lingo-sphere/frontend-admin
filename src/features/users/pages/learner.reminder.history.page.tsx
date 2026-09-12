@@ -1,6 +1,6 @@
 // Trang quản trị hiển thị chi tiết cấu hình lịch học và dòng thời gian email nhắc nhở, cảnh báo của học viên.
 
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { useLearnerReminderHistory } from '@/features/users/hooks/use.learner.reminder.history'
 import { LearnerReminderHeader } from '@/features/users/components/learner.reminder.header'
 import { LearnerReminderStatusCards } from '@/features/users/components/learner.reminder.status.cards'
@@ -12,7 +12,7 @@ interface LearnerReminderHistoryPageProps {
 }
 
 export function LearnerReminderHistoryPage({ courseId, userId }: LearnerReminderHistoryPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const {
     student,
@@ -52,7 +52,7 @@ export function LearnerReminderHistoryPage({ courseId, userId }: LearnerReminder
         consecutiveMissedSessions={consecutiveMissedSessions}
         isLoading={isLoading}
         isUnlocking={isUnlocking}
-        onBack={() => setActiveNavItem('course-learners')}
+        onBack={() => navigate('/course-learners')}
         onRefresh={loadData}
         onManualUnlock={handleManualUnlock}
       />

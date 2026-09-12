@@ -10,17 +10,16 @@ import {
   useDeleteExamMutation,
 } from '@/features/exams/hooks/use.exams.admin.query'
 import { toast } from '@/store/toast.store'
+import { useNavigate } from 'react-router-dom'
 import { ExamStatsOverview } from '@/features/exams/components/exam.stats.overview'
 import { ExamListTable } from '@/features/exams/components/exam.list.table'
 import { CreateExamModal } from '@/features/exams/components/create.exam.modal'
-import { useAdminStore } from '@/store/admin.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function ExamsPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const { data: exams = [], isLoading, refetch } = useAdminExamsQuery()
   const { mutateAsync: createExam } = useCreateExamMutation()
@@ -33,7 +32,7 @@ export function ExamsPage() {
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
+    navigate(`/course-exams/${exam._id || exam.id}/questions`)
   }
 
   const stats = useMemo(() => {
@@ -91,7 +90,7 @@ export function ExamsPage() {
       }
       setShowAddModal(false)
       storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, examItem)
-      setActiveNavItem(`course-exam-questions:${examItem._id || examItem.id}`)
+      navigate(`/course-exams/${examItem._id || examItem.id}/questions`)
       toast.success(
         isVi
           ? 'Đã tạo khung đề thi! Chuyển sang bước soạn câu hỏi...'

@@ -1,6 +1,6 @@
 // Trang quản trị hiển thị chi tiết tiến độ học tập, bài thi từng chương và bài nộp kỹ năng của học viên.
 
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { CourseSubmissionReviewDialog } from '@/features/courses/components/course.submission.review.dialog'
 import { useLearnerProgressDetail } from '@/features/users/hooks/use.learner.progress.detail'
 import { LearnerProgressHeader } from '@/features/users/components/learner.progress.header'
@@ -13,7 +13,7 @@ interface LearnerProgressDetailPageProps {
 }
 
 export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressDetailPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const {
     student,
@@ -60,7 +60,7 @@ export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressD
         finalTestScore={finalTestScore}
         growth={growth}
         isLoading={isLoading}
-        onBack={() => setActiveNavItem('course-learners')}
+        onBack={() => navigate('/course-learners')}
         onRefresh={loadData}
       />
 

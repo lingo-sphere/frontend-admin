@@ -5,8 +5,8 @@
 
 import { useState } from 'react'
 import { ChevronLeft, Download } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import { useAdminStore } from '@/store/admin.store'
 import { toast } from '@/store/toast.store'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { VocabularyImportDropzone } from '@/features/vocabulary/components/vocabulary.import.dropzone'
@@ -16,7 +16,7 @@ import {
 } from '@/features/vocabulary/components/vocabulary.import.history.table'
 
 export function VocabularyImportPage() {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('EXCEL')
   const [isImporting, setIsImporting] = useState(false)
@@ -129,7 +129,7 @@ export function VocabularyImportPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('vocabulary')}
+            onClick={() => navigate('/vocabulary')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >

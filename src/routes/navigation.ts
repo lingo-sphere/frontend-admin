@@ -24,6 +24,12 @@ export function navItemToPath(navItem: string): string {
     const userId = parts[2]
     return `/course-learners/${courseId}/students/${userId}`
   }
+  if (navItem.startsWith('learner-reminders:')) {
+    const parts = navItem.split(':')
+    const courseId = parts[1]
+    const userId = parts[2]
+    return `/course-learners/${courseId}/reminders/${userId}`
+  }
   if (navItem === 'course-exams') return '/course-exams'
   if (navItem === 'course-exam-create') return '/course-exams/create'
   if (navItem.startsWith('course-exam-questions:')) {
@@ -96,6 +102,13 @@ export function pathToNavItem(pathname: string): string {
     const courseId = parts[0]
     const userId = parts[1]
     return `learner-progress:${courseId}:${userId}`
+  }
+  if (pathname.startsWith('/course-learners/') && pathname.includes('/reminders/')) {
+    const raw = pathname.replace('/course-learners/', '')
+    const parts = raw.split('/reminders/')
+    const courseId = parts[0]
+    const userId = parts[1]
+    return `learner-reminders:${courseId}:${userId}`
   }
   if (pathname === '/courses/exams' || pathname === '/course-exams') return 'course-exams'
   if (pathname === '/course-exams/create') return 'course-exam-create'

@@ -4,17 +4,20 @@
  */
 
 import { useState, useEffect, type FormEvent } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import type { CourseFormData } from '@/features/courses/components/course.basic.info.tab'
 import { courseService } from '@/features/courses/services/course.service'
 import { mediaService } from '@/features/media/services/media.service'
-import { useAdminStore } from '@/store/admin.store'
+import { pathToNavItem, navItemToPath } from '@/routes/navigation'
 import { authStore, useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { validateCourseFormData } from '@/features/courses/helpers/course.helper'
 
 export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
-  const activeNavItem = useAdminStore((state) => state.activeNavItem)
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const activeNavItem = pathToNavItem(pathname)
+  const setActiveNavItem = (target: string) => navigate(navItemToPath(target))
   const currentUser = useAuthStore((state) => state.user)
   const currentProfile = useAuthStore((state) => state.profile)
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)

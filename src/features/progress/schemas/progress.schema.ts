@@ -1,7 +1,4 @@
-/**
- * @file progress.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ progress
- */
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ progress trong Admin.
 
 import { z } from 'zod'
 

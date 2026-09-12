@@ -1,7 +1,7 @@
 // Trang chi tiết hồ sơ học viên, xem tiến độ và quản trị hạn mức AI.
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/features/users/services/user.service'
 import {
   UserProfileHeader,
@@ -12,12 +12,10 @@ import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quot
 import type { User } from '@/features/users/types/learner.types'
 
 export function UserProfilePage() {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
-  const activeNavItem = useAdminStore((state) => state.activeNavItem)
-
-  const userId = activeNavItem.includes(':')
-    ? activeNavItem.split(':')[1]
-    : 'usr_learner_001'
+  const location = useLocation()
+  const navigate = useNavigate()
+  const pathParts = location.pathname.split('/users/')
+  const userId = pathParts[1] || 'usr_learner_001'
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
   const [isAiQuotaModalOpen, setIsAiQuotaModalOpen] = useState<boolean>(false)
@@ -30,8 +28,8 @@ export function UserProfilePage() {
           id: u.user_id ? u.user_id : (u._id ? u._id : userId),
           full_name: u.full_name,
           email: u.email,
-          avatar_url: u.avatar_url,
-          phone: u.phone_number,
+          avatar_url: u.avatar_url || undefined,
+          phone: u.phone_number || undefined,
           status: u.status,
           is_premium: u.is_premium,
           created_at: u.created_at
@@ -40,10 +38,10 @@ export function UserProfilePage() {
           last_active: u.updated_at
             ? new Date(u.updated_at).toLocaleDateString('vi-VN')
             : undefined,
-          total_xp: u.total_xp,
-          level: u.level,
-          current_streak: u.current_streak,
-          toeic_score: u.target_toeic_score,
+          total_xp: u.total_xp ?? 0,
+          level: u.level ?? 1,
+          current_streak: u.current_streak ?? 0,
+          toeic_score: u.target_toeic_score ?? 0,
         })
       }
     } catch (err) {
@@ -91,7 +89,7 @@ export function UserProfilePage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setActiveNavItem('users')}
+          onClick={() => navigate('/users')}
           className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
           type="button"
         >

@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import {
   CalendarDays,
   ChevronDown,
   Check,
   RefreshCw,
 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
 import {
   useSystemAnalyticsQuery,
   useDashboardCoursesQuery,
@@ -57,7 +57,7 @@ const base30DaysData = [
 export function DashboardPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1])
   const [showDatePicker, setShowDatePicker] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -248,8 +248,8 @@ export function DashboardPage() {
 
       <DashboardRecentActivity
         activities={analytics?.recent_activities}
-        onViewAll={() => setActiveNavItem('progress')}
-        onSelectUser={(userId) => setActiveNavItem(`user-profile:${userId}`)}
+        onViewAll={() => navigate('/progress')}
+        onSelectUser={(userId) => navigate(`/users/${userId}`)}
         isVietnamese={isVietnamese}
       />
     </div>

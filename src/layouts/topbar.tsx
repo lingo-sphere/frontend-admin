@@ -4,8 +4,9 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, Moon, Sun, Menu, Users } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { notificationService } from '@/features/notifications/services/notification.service'
@@ -18,12 +19,10 @@ import { TopbarNotificationsDropdown } from '@/layouts/topbar.notifications.drop
 import { TopbarUserMenu } from '@/layouts/topbar.user.menu'
 
 export function Topbar() {
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const toggleTheme = useAdminStore((state) => state.toggleTheme)
-  const theme = useAdminStore((state) => state.theme)
-  const setMobileSidebarOpen = useAdminStore((state) => state.setMobileSidebarOpen)
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const { toggleTheme, theme, setMobileSidebarOpen } = useAdminLayout()
 
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
@@ -126,7 +125,7 @@ export function Topbar() {
   }
 
   const goToNotifications = () => {
-    setActiveNavItem('notifications')
+    navigate('/notifications')
     setNotificationOpen(false)
   }
 
@@ -230,11 +229,11 @@ export function Topbar() {
             avatarError={avatarError}
             onAvatarError={() => setAvatarError(true)}
             onNavigateProfile={() => {
-              setActiveNavItem(`admin-profile:${user?.user_id || 'me'}`)
+              navigate(`/profile/${user?.user_id || 'me'}`)
               setUserDropdownOpen(false)
             }}
             onNavigateSettings={() => {
-              setActiveNavItem('settings')
+              navigate('/settings/plans')
               setUserDropdownOpen(false)
             }}
             onTriggerLogout={() => {

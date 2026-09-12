@@ -3,9 +3,9 @@
  * @description Trang quản trị AdminProfilePage trong giao diện Admin
  */
 
+import { useNavigate } from 'react-router-dom'
 import { authService } from '@/features/auth/services/auth.service'
 import { userService } from '@/features/users/services/user.service'
-import { useAdminStore } from '@/store/admin.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { CheckCircle2, ChevronLeft, Loader2 } from 'lucide-react'
@@ -18,7 +18,7 @@ import type { AdminProfileData } from '@/features/auth/helpers/admin.profile.hel
 import { evaluatePasswordStrength } from '@/features/auth/helpers/admin.profile.helper'
 
 export function AdminProfilePage() {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const authUser = useAuthStore((state) => state.user)
   const authProfile = useAuthStore((state) => state.profile)
@@ -192,7 +192,7 @@ export function AdminProfilePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('dashboard')}
+            onClick={() => navigate('/dashboard')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
             title="Quay lại Tổng quan"
@@ -243,7 +243,7 @@ export function AdminProfilePage() {
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => setActiveNavItem('dashboard')}
+            onClick={() => navigate('/dashboard')}
             className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
           >
             Hủy / Quay lại

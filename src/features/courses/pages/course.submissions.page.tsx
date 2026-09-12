@@ -13,7 +13,7 @@ import {
   FileText,
   Volume2,
 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { courseService } from '@/features/courses/services/course.service'
 import { progressService, type SkillSubmissionItem } from '@/features/progress/services/progress.service'
 import { CourseSubmissionItemCard } from '@/features/courses/components/course.submission.item.card'
@@ -26,7 +26,7 @@ interface CourseSubmissionsPageProps {
 }
 
 export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
   const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -108,7 +108,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setActiveNavItem('courses')}
+            onClick={() => navigate('/courses')}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -140,7 +140,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
-            onClick={() => setActiveNavItem(`course-scores:${courseId}`)}
+            onClick={() => navigate(`/courses/${courseId}/scores`)}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
           >
             <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />

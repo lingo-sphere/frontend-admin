@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/data.table'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
 import type { User } from '@/features/users/types/learner.types'
 import { useQueryClient } from '@tanstack/react-query'
@@ -22,7 +22,7 @@ import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quot
 export function LearnersPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const { data: users = [], isLoading, refetch } = useLearnersQuery()
@@ -105,11 +105,11 @@ export function LearnersPage() {
   const columns = useMemo(() => {
     return getLearnerColumns({
       isVi,
-      onViewProfile: (userId) => setActiveNavItem(`user-profile:${userId}`),
+      onViewProfile: (userId) => navigate(`/users/${userId}`),
       onOpenStatusModal: handleStatusChange,
       onOpenAiQuotaModal: (u) => setAiQuotaModalUser(u),
     })
-  }, [isVi, setActiveNavItem])
+  }, [isVi, navigate])
 
   return (
     <div className="space-y-6">

@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
 import { AdminUserAccountForm } from '@/features/users/components/admin.user.account.form'
@@ -24,7 +24,7 @@ interface AdminUserFormPageProps {
 }
 
 export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const isEditing = !!editUserId
 
   const [formData, setFormData] = useState<AdminUserFormData>({
@@ -100,10 +100,15 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         })
         toast.success('Tạo tài khoản quản trị viên mới thành công!')
       }
-      setActiveNavItem('admins')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi lưu thông tin'
-      toast.error(msg)
+      navigate('/admins')
+    } catch (err: unknown) {
+      const errorMsg =
+        err && typeof err === 'object' && 'response' in err && (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : err instanceof Error
+            ? err.message
+            : 'Có lỗi xảy ra khi lưu thông tin'
+      toast.error(errorMsg || 'Có lỗi xảy ra khi lưu thông tin')
     } finally {
       setIsSubmitting(false)
     }
@@ -121,7 +126,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('admins')}
+            onClick={() => navigate('/admins')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >
@@ -160,7 +165,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         <div className="flex items-center justify-end gap-3 pt-4">
           <button
             type="button"
-            onClick={() => setActiveNavItem('admins')}
+            onClick={() => navigate('/admins')}
             className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
           >
             Hủy bỏ

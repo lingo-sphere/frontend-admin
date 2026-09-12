@@ -1,13 +1,14 @@
 // Custom hook quản lý truy vấn và thao tác từ vựng, bộ thẻ bằng TanStack Query.
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { vocabularyService, type SearchVocabParams } from '@/features/vocabulary/services/vocabulary.service'
+import {
+  vocabularyService,
+  type SearchVocabParams,
+  type FlashcardDeck as ApiFlashcardDeck,
+  type LexicalItem as ApiLexicalItem,
+  type Topic as ApiTopic,
+} from '@/features/vocabulary/services/vocabulary.service'
 import { vocabAdminKeys } from '@/features/vocabulary/keys/vocabulary.admin.keys'
 import type { LexicalItem, Topic, FlashcardDeck } from '@/features/vocabulary/data/vocabulary.data'
-import type {
-  LexicalItem as ApiLexicalItem,
-  Topic as ApiTopic,
-  FlashcardDeck as ApiFlashcardDeck,
-} from '@/types/api.types'
 
 export function useVocabularyWordsQuery(params?: SearchVocabParams) {
   return useQuery<LexicalItem[]>({
@@ -19,10 +20,10 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams) {
         word: w.word,
         word_type: w.word_type,
         cefr_level: w.cefr_level,
-        pronunciation_us: w.pronunciation_us,
-        pronunciation_uk: w.pronunciation_uk,
-        audio_url_us: w.audio_url_us,
-        created_at: w.created_at,
+        pronunciation_us: w.pronunciation_us || undefined,
+        pronunciation_uk: w.pronunciation_uk || undefined,
+        audio_url_us: w.audio_url_us || undefined,
+        created_at: typeof w.created_at === 'string' ? w.created_at : (w.created_at ? new Date(w.created_at).toISOString() : ''),
       }))
     },
     placeholderData: keepPreviousData,
@@ -37,17 +38,18 @@ export function useVocabularyTopicsQuery() {
       const res = await vocabularyService.getAllTopics()
       return (res || []).map((t: ApiTopic) => ({
         id: t._id,
-        name_vi: t.name_vi,
-        name_en: t.name_en || t.name,
+        name_vi: t.name_vi || undefined,
+        name_en: t.name_en || t.name || undefined,
         slug: t.slug,
         description: t.description || '',
-        icon: t.icon_url,
+        icon: t.icon_url || undefined,
         is_featured: t.is_featured,
         status: t.status,
-        lexical_count: t.lexical_count ?? t.words_count ?? 0,
-        created_at: t.created_at || new Date().toISOString(),
+        lexical_count: t.lexical_count || 0,
+        created_at: typeof t.created_at === 'string' ? t.created_at : (t.created_at ? new Date(t.created_at).toISOString() : ''),
       }))
     },
+    placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
   })
 }
@@ -68,7 +70,7 @@ export function useVocabularyDecksQuery() {
         description: d.description || '',
         card_count: d.card_count ?? d.total_cards ?? 0,
         total_cards: d.total_cards ?? d.card_count ?? 0,
-        created_at: d.created_at || new Date().toISOString(),
+        created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
     },
     staleTime: 60 * 1000,

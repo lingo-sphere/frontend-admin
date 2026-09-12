@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet } from 'lucide-react'
 import { DataTable } from '@/components/data.table'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
 import type { LexicalItem } from '@/features/vocabulary/data/vocabulary.data'
 import { VocabularyFilterBar } from '@/features/vocabulary/components/vocabulary.filter.bar'
@@ -22,7 +22,7 @@ type VocabularyTabType = 'words' | 'topics' | 'decks'
 export function VocabularyPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState<VocabularyTabType>('words')
 
@@ -89,10 +89,10 @@ export function VocabularyPage() {
   const columns = useMemo(() => {
     return getVocabularyColumns({
       isVi,
-      onEditWord: (wordId) => setActiveNavItem(`vocab-edit:${wordId}`),
+      onEditWord: (wordId) => navigate(`/vocabulary/${wordId}/edit`),
       onDeleteWord: handleDeleteWord,
     })
-  }, [isVi, setActiveNavItem])
+  }, [isVi, navigate])
 
   return (
     <div className="space-y-6">
@@ -117,14 +117,14 @@ export function VocabularyPage() {
             <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
           <button
-            onClick={() => setActiveNavItem('vocabulary-import')}
+            onClick={() => navigate('/vocabulary/import')}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-teal-500" />
             <span>{isVi ? 'Nhập File CSV' : 'Import CSV'}</span>
           </button>
           <button
-            onClick={() => setActiveNavItem('vocab-create')}
+            onClick={() => navigate('/vocabulary/create')}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />

@@ -1,7 +1,4 @@
-/**
- * @file media.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ media
- */
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ media trong Admin.
 
 import { z } from 'zod'
 

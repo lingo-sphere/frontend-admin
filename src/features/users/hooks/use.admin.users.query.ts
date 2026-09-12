@@ -59,10 +59,10 @@ export async function fetchAdminUsers(): Promise<AdminUser[]> {
     email: u.email,
     role: u.role?.toUpperCase() === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN',
     is_active: u.status?.toUpperCase() === 'ACTIVE',
-    avatar: u.avatar_url,
+    avatar: u.avatar_url || undefined,
     created_at: u.created_at || new Date().toISOString(),
     last_active: 'Vừa xong',
-    phone: u.phone_number,
+    phone: u.phone_number || undefined,
   }))
 }
 

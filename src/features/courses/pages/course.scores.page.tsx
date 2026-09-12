@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   FileCheck2,
 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
 import { StudentScoresTableRow } from '@/features/courses/components/student.scores.table.row'
@@ -26,7 +26,7 @@ interface CourseScoresPageProps {
 }
 
 export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
 
   const {
@@ -70,7 +70,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setActiveNavItem('courses')}
+            onClick={() => navigate('/courses')}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -100,7 +100,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
-            onClick={() => setActiveNavItem(`course-submissions:${courseId}`)}
+            onClick={() => navigate(`/courses/${courseId}/submissions`)}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
           >
             <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Loader2 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
 import { courseService } from '@/features/courses/services/course.service'
 import { examAdminService, type ToeicExamItem } from '@/features/exams/services/exam.service'
 import { toast } from '@/store/toast.store'
@@ -18,7 +18,7 @@ interface CourseExamQuestionsPageProps {
 export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const isCreateMode = examId === 'new'
 
@@ -184,7 +184,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
 
   const handleBack = () => {
     storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
-    setActiveNavItem('course-exams')
+    navigate('/course-exams')
   }
 
   if (isLoading) {

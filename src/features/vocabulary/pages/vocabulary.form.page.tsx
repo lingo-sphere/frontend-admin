@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
 import { VocabularyBasicInfoForm } from '@/features/vocabulary/components/vocabulary.basic.info.form'
 import { VocabularyMeaningsForm, type Meaning } from '@/features/vocabulary/components/vocabulary.meanings.form'
@@ -18,7 +18,7 @@ export function VocabularyFormPage({
   editWordId?: string
   editId?: string
 }) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const currentEditId = editWordId || editId
   const isEditing = !!currentEditId
 
@@ -122,7 +122,7 @@ export function VocabularyFormPage({
           ? 'Cập nhật từ vựng thành công!'
           : 'Thêm từ vựng mới vào từ điển thành công!'
       )
-      setActiveNavItem('vocabulary')
+      navigate('/vocabulary')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu từ vựng'
       toast.error(msg)
@@ -136,7 +136,7 @@ export function VocabularyFormPage({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('vocabulary')}
+            onClick={() => navigate('/vocabulary')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >
@@ -184,7 +184,7 @@ export function VocabularyFormPage({
         <div className="flex items-center justify-end gap-3 pt-4">
           <button
             type="button"
-            onClick={() => setActiveNavItem('vocabulary')}
+            onClick={() => navigate('/vocabulary')}
             className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
           >
             Hủy bỏ

@@ -1,6 +1,44 @@
 // Store quản lý trạng thái phiên đăng nhập, quyền hạn và thông tin quản trị viên
+interface StoreApi<T> {
+  getState: () => T
+  getInitialState: () => T
+  setState: (updater: Partial<T> | ((state: T) => Partial<T>)) => void
+  subscribe: (listener: () => void) => () => void
+}
+
+function createStore<T>() {
+  return (
+    initializer: (
+      set: (updater: Partial<T> | ((state: T) => Partial<T>)) => void,
+      get: () => T,
+    ) => T,
+  ): StoreApi<T> => {
+    let state: T
+    const listeners = new Set<() => void>()
+    const getState = () => state
+    const setState = (updater: Partial<T> | ((state: T) => Partial<T>)) => {
+      const next = typeof updater === 'function' ? updater(state) : updater
+      state = { ...state, ...next }
+      listeners.forEach((listener) => listener())
+    }
+    const subscribe = (listener: () => void) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
+    }
+    state = initializer(setState, getState)
+    const initialState = state
+    return {
+      getState,
+      getInitialState: () => initialState,
+      setState,
+      subscribe,
+    }
+  }
+}
+
 import { useSyncExternalStore } from 'react'
-import { createStore } from 'zustand/vanilla'
 import { authService, type LoginCredentials } from '@/features/auth/services/auth.service'
 import { userService } from '@/features/users/services/user.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
