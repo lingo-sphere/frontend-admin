@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { userService } from '@/features/users/services/user.service'
+import { toast } from '@/store/toast.store'
+import { useResetLearnerDataMutation } from '@/features/users/hooks/use.learners.query'
 import {
   UserProfileHeader,
   type UserProfileData,
@@ -19,6 +21,7 @@ export function UserProfilePage() {
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
   const [isAiQuotaModalOpen, setIsAiQuotaModalOpen] = useState<boolean>(false)
+  const { mutateAsync: resetLearnerData } = useResetLearnerDataMutation()
 
   const loadData = async () => {
     try {
@@ -108,6 +111,15 @@ export function UserProfilePage() {
       <UserProfileHeader
         profileData={profileData}
         onOpenAiQuota={() => setIsAiQuotaModalOpen(true)}
+        onResetData={async () => {
+          try {
+            await resetLearnerData(profileData.id)
+            toast.success('Đã khởi tạo lại toàn bộ dữ liệu học tập của học viên thành công!')
+            await loadData()
+          } catch {
+            toast.error('Khởi tạo lại dữ liệu học viên thất bại')
+          }
+        }}
       />
 
       <UserProfileStatsGrid profileData={profileData} />

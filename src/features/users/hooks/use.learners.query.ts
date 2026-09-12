@@ -82,3 +82,21 @@ export function useUpdateLearnerStatusMutation() {
     },
   })
 }
+
+export function useResetLearnerDataMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    { success: boolean; message: string },
+    Error,
+    string
+  >({
+    mutationFn: async (userId: string) => {
+      return userService.resetLearnerData(userId)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+    },
+  })
+}
+

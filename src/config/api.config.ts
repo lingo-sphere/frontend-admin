@@ -42,6 +42,7 @@ export const API_CONFIG = {
       SUBSCRIPTION_PLAN_BY_ID: (id: string) => `/users/subscriptions/plans/${id}`,
       MY_SUBSCRIPTION: '/users/subscriptions/my',
       SUBSCRIPTION_HISTORY: '/users/subscriptions/history',
+      RESET_DATA: (userId: string) => `/users/admin/${userId}/reset-data`,
     },
 
     ROLES: {

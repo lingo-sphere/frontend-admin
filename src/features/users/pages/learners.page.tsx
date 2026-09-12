@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   useLearnersQuery,
   useUpdateLearnerStatusMutation,
+  useResetLearnerDataMutation,
   prefetchLearners,
 } from '@/features/users/hooks/use.learners.query'
 
@@ -27,6 +28,7 @@ export function LearnersPage() {
 
   const { data: users = [], isLoading, refetch } = useLearnersQuery()
   const { mutateAsync: updateLearnerStatus } = useUpdateLearnerStatusMutation()
+  const { mutateAsync: resetLearnerData } = useResetLearnerDataMutation()
 
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('ALL')
@@ -100,6 +102,20 @@ export function LearnersPage() {
     }
   }
 
+  const handleResetData = async (user: User) => {
+    try {
+      await resetLearnerData(user.id)
+      toast.success(
+        isVi
+          ? `Đã khởi tạo lại dữ liệu học tập của học viên ${user.full_name || user.email} thành công!`
+          : `Reset learning data for learner ${user.full_name || user.email} successfully!`
+      )
+      refetch()
+    } catch {
+      toast.error(isVi ? 'Khởi tạo lại dữ liệu học viên thất bại' : 'Failed to reset learner data')
+    }
+  }
+
   const [aiQuotaModalUser, setAiQuotaModalUser] = useState<User | null>(null)
 
   const columns = useMemo(() => {
@@ -108,8 +124,9 @@ export function LearnersPage() {
       onViewProfile: (userId) => navigate(`/users/${userId}`),
       onOpenStatusModal: handleStatusChange,
       onOpenAiQuotaModal: (u) => setAiQuotaModalUser(u),
+      onResetData: handleResetData,
     })
-  }, [isVi, navigate])
+  }, [isVi, navigate, resetLearnerData])
 
   return (
     <div className="space-y-6">

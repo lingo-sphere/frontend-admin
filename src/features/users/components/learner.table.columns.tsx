@@ -1,5 +1,5 @@
 // Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
-import { Target, Sparkles, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
+import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw } from 'lucide-react'
 import type { User } from '@/features/users/types/learner.types'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
@@ -10,6 +10,7 @@ interface GetLearnerColumnsOptions {
   onViewProfile?: (userId: string) => void
   onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
   onOpenAiQuotaModal?: (user: User) => void
+  onResetData?: (user: User) => Promise<void> | void
 }
 
 export function getLearnerColumns({
@@ -18,6 +19,7 @@ export function getLearnerColumns({
   onViewProfile,
   onOpenStatusModal,
   onOpenAiQuotaModal,
+  onResetData,
 }: GetLearnerColumnsOptions): DataTableColumn<User>[] {
   const handleView = onViewProfile || onViewDetails || (() => {})
   return [
@@ -177,6 +179,29 @@ export function getLearnerColumns({
                   type="button"
                 >
                   <CheckCircle className="w-3.5 h-3.5" />
+                </button>
+              </Popconfirm>
+            )}
+            {onResetData && (
+              <Popconfirm
+                title={isVi ? 'Khởi tạo lại dữ liệu học tập?' : 'Reset learner learning data?'}
+                description={
+                  isVi
+                    ? 'Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp và điểm thi của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên.'
+                    : 'Clear course enrollments, lesson progress, submissions, and test scores. Login credentials remain intact.'
+                }
+                okText={isVi ? 'Khởi tạo lại' : 'Reset'}
+                cancelText={isVi ? 'Hủy' : 'Cancel'}
+                okType="danger"
+                placement="topRight"
+                onConfirm={() => onResetData(u)}
+              >
+                <button
+                  className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
+                  title={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập' : 'Reset learner data'}
+                  type="button"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               </Popconfirm>
             )}
