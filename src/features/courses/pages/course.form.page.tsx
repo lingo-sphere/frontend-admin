@@ -1,8 +1,6 @@
-/**
- * @file course.form.page.tsx
- * @description Trang quản trị tạo mới và chỉnh sửa khóa học (Course Form Page)
- */
+// Trang quan tri tao moi va chinh sua khoa hoc kem tinh nang nhap nhanh tu thu muc.
 
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Save } from 'lucide-react'
 import { CourseBasicInfoTab } from '@/features/courses/components/course.basic.info.tab'
@@ -10,6 +8,7 @@ import { CourseCurriculumManager } from '@/features/courses/components/course.cu
 import { VideoPreviewModal } from '@/components/video.preview.modal'
 import { useCourseForm } from '@/features/courses/hooks/use.course.form'
 import { CourseFormHeader } from '@/features/courses/components/course.form.header'
+import { CourseFolderImportModal } from '@/features/courses/components/course.folder.import.modal'
 
 interface CourseFormPageProps {
   editCourseId?: string
@@ -18,6 +17,7 @@ interface CourseFormPageProps {
 export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false)
 
   const {
     formData,
@@ -51,6 +51,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         totalLessons={totalLessons}
         totalDuration={totalDuration}
         onBack={() => setActiveNavItem('courses')}
+        onOpenFolderImport={!isEditMode ? () => setIsFolderModalOpen(true) : undefined}
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -105,6 +106,21 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           isVi={isVi}
         />
       )}
+
+      <CourseFolderImportModal
+        isOpen={isFolderModalOpen}
+        onClose={() => setIsFolderModalOpen(false)}
+        onApply={(importedInfo, importedModules) => {
+          setFormData((prev) => ({
+            ...prev,
+            ...importedInfo,
+            modules: importedModules,
+          }))
+        }}
+        isVi={isVi}
+        courseFolder={courseFolder}
+      />
     </div>
   )
 }
+

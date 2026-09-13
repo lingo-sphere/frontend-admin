@@ -1,9 +1,6 @@
-/**
- * @file course.form.header.tsx
- * @description Header trang tạo/chỉnh sửa khóa học kèm nút quay lại và tóm tắt số lượng bài học
- */
+// Header trang tao/chinh sua khoa hoc kem nut quay lai, nut nhap thu muc va tom tat so luong bai hoc.
 
-import { ChevronLeft, BookOpen } from 'lucide-react'
+import { ChevronLeft, BookOpen, FolderUp } from 'lucide-react'
 
 interface CourseFormHeaderProps {
   isEditMode: boolean
@@ -12,6 +9,7 @@ interface CourseFormHeaderProps {
   totalLessons: number
   totalDuration: number
   onBack: () => void
+  onOpenFolderImport?: () => void
 }
 
 export function CourseFormHeader({
@@ -21,6 +19,7 @@ export function CourseFormHeader({
   totalLessons,
   totalDuration,
   onBack,
+  onOpenFolderImport,
 }: CourseFormHeaderProps) {
   return (
     <div className="space-y-4">
@@ -59,7 +58,19 @@ export function CourseFormHeader({
               : 'Manage video curriculum, modules and lesson duration.'}
           </p>
         </div>
+
+        {onOpenFolderImport && (
+          <button
+            type="button"
+            onClick={onOpenFolderImport}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/60 text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0"
+          >
+            <FolderUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span>{isVi ? 'Nhập Nhanh Từ Thư Mục' : 'Fast Import From Folder'}</span>
+          </button>
+        )}
       </div>
     </div>
   )
 }
+
