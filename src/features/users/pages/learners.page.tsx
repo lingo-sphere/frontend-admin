@@ -19,6 +19,7 @@ import { LearnerStatsOverview } from '@/features/users/components/learner.stats.
 import { LearnerFilterBar } from '@/features/users/components/learner.filter.bar'
 import { getLearnerColumns } from '@/features/users/components/learner.table.columns'
 import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quota.modal'
+import { useDebounce } from '@/hooks/use.debounce'
 
 export function LearnersPage() {
   const { i18n } = useTranslation()
@@ -26,11 +27,8 @@ export function LearnersPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data: users = [], isLoading, refetch } = useLearnersQuery()
-  const { mutateAsync: updateLearnerStatus } = useUpdateLearnerStatusMutation()
-  const { mutateAsync: resetLearnerData } = useResetLearnerDataMutation()
-
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('ALL')
   const [selectedPlan, setSelectedPlan] = useState<FilterPlan>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -38,46 +36,32 @@ export function LearnersPage() {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
-  const stats = useMemo(() => {
+  const queryParams = useMemo(() => {
     return {
-      total: users.length,
-      active: users.filter((u) => u.status === 'ACTIVE').length,
-      premium: users.filter((u) => u.is_premium).length,
-      banned: users.filter((u) => u.status === 'BANNED').length,
+      role: 'STUDENT',
+      page: currentPage,
+      limit: pageSize,
+      search: debouncedSearch.trim() || undefined,
+      status: selectedStatus !== 'ALL' ? (selectedStatus === 'BANNED' ? 'BLOCKED' : selectedStatus) : undefined,
+      plan: selectedPlan !== 'ALL' ? selectedPlan : undefined,
+      sortBy: sortKey === 'user' ? 'full_name' : sortKey || undefined,
+      sortOrder: sortOrder || undefined,
     }
-  }, [users])
+  }, [currentPage, pageSize, debouncedSearch, selectedStatus, selectedPlan, sortKey, sortOrder])
 
-  const filteredUsers = useMemo(() => {
-    const list = users.filter((u) => {
-      const matchSearch =
-        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchStatus =
-        selectedStatus === 'ALL' || u.status === selectedStatus
-      const matchPlan =
-        selectedPlan === 'ALL' ||
-        (selectedPlan === 'premium' && u.is_premium) ||
-        (selectedPlan === 'free' && !u.is_premium)
-      return matchSearch && matchStatus && matchPlan
-    })
+  const { data, isLoading, refetch } = useLearnersQuery(queryParams)
+  const { mutateAsync: updateLearnerStatus } = useUpdateLearnerStatusMutation()
+  const { mutateAsync: resetLearnerData } = useResetLearnerDataMutation()
 
-    if (!sortKey || !sortOrder) return list
-
-    return [...list].sort((a, b) => {
-      if (sortKey === 'user') {
-        const nameA = (a.full_name || '').toLowerCase()
-        const nameB = (b.full_name || '').toLowerCase()
-        const comp = nameA.localeCompare(nameB)
-        return sortOrder === 'asc' ? comp : -comp
-      }
-      return 0
-    })
-  }, [users, searchTerm, selectedStatus, selectedPlan, sortKey, sortOrder])
-
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredUsers.slice(start, start + pageSize)
-  }, [filteredUsers, currentPage, pageSize])
+  const stats = useMemo(() => {
+    const list = data?.items || []
+    return {
+      total: data?.total || 0,
+      active: list.filter((u) => u.status === 'ACTIVE').length,
+      premium: list.filter((u) => u.is_premium).length,
+      banned: list.filter((u) => u.status === 'BANNED').length,
+    }
+  }, [data])
 
   const handleResetFilters = () => {
     setSearchTerm('')
@@ -141,7 +125,7 @@ export function LearnersPage() {
         }
         isLoading={isLoading}
         columns={columns}
-        data={paginatedUsers}
+        data={data?.items || []}
         rowKey={(u) => u.id}
         sortKey={sortKey}
         sortOrder={sortOrder}
@@ -163,24 +147,33 @@ export function LearnersPage() {
         filterSlot={
           <LearnerFilterBar
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={(term) => {
+              setSearchTerm(term)
+              setCurrentPage(1)
+            }}
             selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
+            onStatusChange={(status) => {
+              setSelectedStatus(status)
+              setCurrentPage(1)
+            }}
             selectedPlan={selectedPlan}
-            onPlanChange={setSelectedPlan}
+            onPlanChange={(plan) => {
+              setSelectedPlan(plan)
+              setCurrentPage(1)
+            }}
           />
         }
         pagination={{
           currentPage,
           pageSize,
-          totalItems: filteredUsers.length,
+          totalItems: data?.total || 0,
           onPageChange: setCurrentPage,
           onPageSizeChange: (limit) => {
             setPageSize(limit)
             setCurrentPage(1)
           },
           onPrefetchPage: (nextPage) => {
-            prefetchLearners(queryClient, { page: nextPage, limit: pageSize, role: 'STUDENT' })
+            prefetchLearners(queryClient, { ...queryParams, page: nextPage })
           },
         }}
       />

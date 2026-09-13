@@ -1,8 +1,4 @@
-/**
- * @file permissions.list.tab.tsx
- * @description Component giao diện PermissionsListTab phục vụ khu vực Quản trị Admin
- */
-
+// Component giao diện PermissionsListTab phục vụ khu vực Quản trị Admin.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Edit2, Trash2, Search, KeyRound } from 'lucide-react'
@@ -10,23 +6,38 @@ import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 import { CustomSelect } from '@/components/custom.select'
+import { usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
+import { useDebounce } from '@/hooks/use.debounce'
+
+const RBAC_MODULES = [
+  'AUTH',
+  'USERS',
+  'COURSES',
+  'EXAMS',
+  'PRACTICE',
+  'PROGRESS',
+  'COMMUNITY',
+  'NOTIFICATIONS',
+  'MEDIA',
+  'AI',
+  'ROLES',
+  'PERMISSIONS',
+]
 
 interface PermissionsListTabProps {
-  permissions: Permission[]
   onOpenCreatePerm: () => void
   onOpenEditPerm: (perm: Permission) => void
   onDeletePerm: (permId: string) => Promise<void> | void
-  onRefresh: () => void
+  onRefresh?: () => void
   isLoading?: boolean
 }
 
 export function PermissionsListTab({
-  permissions,
   onOpenCreatePerm,
   onOpenEditPerm,
   onDeletePerm,
   onRefresh,
-  isLoading,
+  isLoading = false,
 }: PermissionsListTabProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -34,20 +45,28 @@ export function PermissionsListTab({
   const [filterName, setFilterName] = useState('')
   const [filterApi, setFilterApi] = useState('')
   const [filterModule, setFilterModule] = useState('ALL')
+  const debouncedName = useDebounce(filterName, 300)
+  const debouncedApi = useDebounce(filterApi, 300)
 
-  const [searchQuery, setSearchQuery] = useState({ name: '', api: '', module: 'ALL' })
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
+  const queryParams = useMemo(() => {
+    return {
+      current: currentPage,
+      pageSize,
+      name: debouncedName.trim() || undefined,
+      api_path: debouncedApi.trim() || undefined,
+      module: filterModule !== 'ALL' ? filterModule : undefined,
+    }
+  }, [currentPage, pageSize, debouncedName, debouncedApi, filterModule])
+
+  const { data, isLoading: isQueryLoading, refetch } = usePermissionsQuery(queryParams)
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    setSearchQuery({
-      name: filterName.trim().toLowerCase(),
-      api: filterApi.trim().toLowerCase(),
-      module: filterModule,
-    })
     setCurrentPage(1)
   }
 
@@ -55,46 +74,12 @@ export function PermissionsListTab({
     setFilterName('')
     setFilterApi('')
     setFilterModule('ALL')
-    setSearchQuery({ name: '', api: '', module: 'ALL' })
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
   }
 
-  const modulesList = useMemo(() => {
-    const set = new Set(permissions.map((p) => (p.module || 'GENERAL').toUpperCase()))
-    return Array.from(set).sort()
-  }, [permissions])
-
-  const filteredData = useMemo(() => {
-    const list = permissions.filter((p) => {
-      const matchName = !searchQuery.name || p.name.toLowerCase().includes(searchQuery.name)
-      const matchApi = !searchQuery.api || (p.api_path || '').toLowerCase().includes(searchQuery.api)
-      const matchModule = searchQuery.module === 'ALL' || (p.module || '').toUpperCase() === searchQuery.module
-      return matchName && matchApi && matchModule
-    })
-
-    if (!sortKey || !sortOrder) return list
-
-    return [...list].sort((a, b) => {
-      if (sortKey === 'created_at') {
-        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0
-        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0
-        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
-      }
-      if (sortKey === 'updated_at') {
-        const timeA = a.updated_at ? new Date(a.updated_at).getTime() : 0
-        const timeB = b.updated_at ? new Date(b.updated_at).getTime() : 0
-        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
-      }
-      return 0
-    })
-  }, [permissions, searchQuery, sortKey, sortOrder])
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredData.slice(start, start + pageSize)
-  }, [filteredData, currentPage, pageSize])
+  const modulesList = RBAC_MODULES
 
   const getMethodBadgeClass = (method?: string) => {
     switch (method?.toUpperCase()) {
@@ -264,7 +249,6 @@ export function PermissionsListTab({
         value={filterModule}
         onChange={(val) => {
           setFilterModule(val)
-          setSearchQuery((prev) => ({ ...prev, module: val }))
           setCurrentPage(1)
         }}
         options={[
@@ -297,11 +281,14 @@ export function PermissionsListTab({
       </button>
 
       <button
-        onClick={onRefresh}
+        onClick={() => {
+          if (onRefresh) onRefresh()
+          refetch()
+        }}
         className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
         title={isVi ? 'Làm mới' : 'Refresh'}
       >
-        <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+        <RotateCcw className={`w-4 h-4 ${isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
       </button>
     </div>
   )
@@ -309,9 +296,9 @@ export function PermissionsListTab({
   return (
     <DataTable<Permission>
       columns={columns}
-      data={paginatedData}
+      data={data?.items || []}
       rowKey={(p) => p._id}
-      isLoading={isLoading}
+      isLoading={isLoading || isQueryLoading}
       emptyText={isVi ? 'Không tìm thấy quyền hạn nào phù hợp' : 'No matching permissions found'}
       sortKey={sortKey}
       sortOrder={sortOrder}
@@ -326,7 +313,7 @@ export function PermissionsListTab({
       pagination={{
         currentPage,
         pageSize,
-        totalItems: filteredData.length,
+        totalItems: data?.total || 0,
         onPageChange: setCurrentPage,
         onPageSizeChange: (size) => {
           setPageSize(size)

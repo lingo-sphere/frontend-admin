@@ -1,26 +1,36 @@
-// Trang quan tri RolesPage trong giao dien Admin.
-
+// Trang quản trị các vai trò và quyền hạn RBAC trong giao diện Admin.
 import { useState } from 'react'
 import { Shield } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { roleService } from '@/features/rbac/services/role.service'
 import { toast } from '@/store/toast.store'
-import type { Role, Permission } from '@/types/api.types'
+import type { Role } from '@/types/api.types'
 import { RolesListTab } from '@/features/rbac/components/roles.list.tab'
 import { RoleEditModal } from '@/features/rbac/components/role.edit.modal'
-import { useRolesQuery, usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
+import {
+  useAllPermissionsQuery,
+  useCreateRoleMutation,
+  useUpdateRoleMutation,
+  useDeleteRoleMutation,
+} from '@/features/rbac/hooks/use.rbac.query'
+import { rbacKeys } from '@/features/rbac/keys/rbac.keys'
 
 export function RolesPage() {
-  const { data: roles = [], isLoading: isRolesLoading, refetch: refetchRoles } = useRolesQuery()
-  const { data: permissions = [], isLoading: isPermsLoading, refetch: refetchPerms } = usePermissionsQuery()
+  const queryClient = useQueryClient()
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSeeding, setIsSeeding] = useState(false)
 
-  const isLoading = isRolesLoading || isPermsLoading || isSeeding
+  const { data: allPermissions = [] } = useAllPermissionsQuery(isRoleModalOpen)
 
-  const loadData = async () => {
-    await Promise.all([refetchRoles(), refetchPerms()])
+  const createRoleMutation = useCreateRoleMutation()
+  const updateRoleMutation = useUpdateRoleMutation()
+  const deleteRoleMutation = useDeleteRoleMutation()
+
+  const isSubmitting = createRoleMutation.isPending || updateRoleMutation.isPending
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: rbacKeys.roles() })
   }
 
   const handleSeedRBAC = async () => {
@@ -28,7 +38,7 @@ export function RolesPage() {
     try {
       await roleService.seedDefaultRolesAndPermissions()
       toast.success('Khởi tạo ma trận quyền hạn (RBAC) và vai trò mặc định thành công!')
-      await loadData()
+      await queryClient.invalidateQueries({ queryKey: rbacKeys.all })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Khởi tạo thất bại'
       toast.error(msg)
@@ -53,30 +63,25 @@ export function RolesPage() {
     permissions: string[]
     is_active: boolean
   }) => {
-    setIsSubmitting(true)
     try {
       if (editingRole) {
-        await roleService.updateRole(editingRole._id, payload)
+        await updateRoleMutation.mutateAsync({ id: editingRole._id, payload })
         toast.success(`Đã cập nhật vai trò ${payload.name} thành công!`)
       } else {
-        await roleService.createRole(payload)
+        await createRoleMutation.mutateAsync(payload)
         toast.success(`Đã tạo vai trò ${payload.name} mới thành công!`)
       }
       setIsRoleModalOpen(false)
-      await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Lưu vai trò thất bại'
       toast.error(msg)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   const handleDeleteRole = async (roleId: string) => {
     try {
-      await roleService.deleteRole(roleId)
+      await deleteRoleMutation.mutateAsync(roleId)
       toast.success('Đã xóa vai trò thành công!')
-      await loadData()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Xóa vai trò thất bại'
       toast.error(msg)
@@ -98,21 +103,19 @@ export function RolesPage() {
       </div>
 
       <RolesListTab
-        roles={roles}
-        permissions={permissions}
         onOpenCreateRole={handleOpenCreateRole}
         onOpenEditRole={handleOpenEditRole}
         onDeleteRole={handleDeleteRole}
-        onRefresh={loadData}
+        onRefresh={handleRefresh}
         onSeedDefaultRBAC={handleSeedRBAC}
-        isLoading={isLoading}
+        isLoading={isSeeding}
       />
 
       <RoleEditModal
         isOpen={isRoleModalOpen}
         onClose={() => setIsRoleModalOpen(false)}
         editingRole={editingRole}
-        allPermissions={permissions}
+        allPermissions={allPermissions}
         onSave={handleSaveRole}
         isSubmitting={isSubmitting}
       />

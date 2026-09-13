@@ -6,10 +6,18 @@ import { optimisticUpdateCollection, rollbackCollection, type CollectionRollback
 import type { User } from '@/features/users/types/learner.types'
 import type { UserProfile } from '@/types/api.types'
 
-export async function fetchLearners(queryParams: UserQueryParams): Promise<User[]> {
+export interface PaginatedLearnersResult {
+  items: User[]
+  total: number
+  current: number
+  pageSize: number
+  pages: number
+}
+
+export async function fetchLearners(queryParams: UserQueryParams): Promise<PaginatedLearnersResult> {
   const res = await userService.getAllUsers(queryParams)
-  const items: UserProfile[] = Array.isArray(res) ? res : (res?.result || [])
-  return items.map((u: UserProfile) => ({
+  const rawItems: UserProfile[] = Array.isArray(res) ? res : (res?.result || [])
+  const items = rawItems.map((u: UserProfile) => ({
     id: u.user_id,
     full_name: u.full_name,
     email: u.email,
@@ -18,9 +26,9 @@ export async function fetchLearners(queryParams: UserQueryParams): Promise<User[
     total_xp: u.total_xp ?? 0,
     current_streak: u.current_streak ?? 0,
     is_premium: Boolean(u.is_premium),
-    status: u.status === 'BLOCKED' ? 'BANNED' : 'ACTIVE',
+    status: (u.status === 'BLOCKED' ? 'BANNED' : 'ACTIVE') as User['status'],
     avatar_url: u.avatar_url || undefined,
-    gender: (u.gender === 'MALE' || u.gender === 'FEMALE') ? u.gender : 'OTHER',
+    gender: ((u.gender === 'MALE' || u.gender === 'FEMALE') ? u.gender : 'OTHER') as User['gender'],
     learning_goal_minutes_per_day: u.learning_goal_minutes_per_day ?? 0,
     current_plan_slug: u.current_plan_slug || (u.is_premium ? 'vip' : 'free'),
     created_at: u.created_at || '',
@@ -32,20 +40,38 @@ export async function fetchLearners(queryParams: UserQueryParams): Promise<User[
     practice_sessions: 0,
     exams_completed: 0,
   }))
+
+  const meta = Array.isArray(res)
+    ? { current: queryParams.page || 1, pageSize: queryParams.limit || 10, pages: 1, total: items.length }
+    : {
+        current: res?.meta?.current || queryParams.page || 1,
+        pageSize: res?.meta?.pageSize || queryParams.limit || 10,
+        pages: res?.meta?.pages || 1,
+        total: res?.meta?.total ?? items.length,
+      }
+
+  return {
+    items,
+    total: meta.total,
+    current: meta.current,
+    pageSize: meta.pageSize,
+    pages: meta.pages,
+  }
 }
 
 export const learnerQueries = {
   list: (params?: UserQueryParams) => {
     const queryParams: UserQueryParams = {
       role: 'STUDENT',
-      limit: 100,
+      page: 1,
+      limit: 10,
       ...params,
     }
     return queryOptions({
       queryKey: userKeys.learners(queryParams),
       queryFn: () => fetchLearners(queryParams),
       placeholderData: keepPreviousData,
-      staleTime: 90 * 1000,
+      staleTime: 60 * 1000,
     })
   },
 }

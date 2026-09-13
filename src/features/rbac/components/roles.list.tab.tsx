@@ -1,92 +1,61 @@
-/**
- * @file roles.list.tab.tsx
- * @description Component giao diện RolesListTab phục vụ khu vực Quản trị Admin
- */
-
+// Component giao diện danh sách vai trò phục vụ quản trị phân quyền.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Edit2, Trash2, Sparkles, Shield, Search } from 'lucide-react'
-import type { Role, Permission } from '@/types/api.types'
+import type { Role } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
+import { useRolesQuery } from '@/features/rbac/hooks/use.rbac.query'
+import { useDebounce } from '@/hooks/use.debounce'
 
 interface RolesListTabProps {
-  roles: Role[]
-  permissions: Permission[]
   onOpenCreateRole: () => void
   onOpenEditRole: (role: Role) => void
   onDeleteRole: (roleId: string) => Promise<void> | void
-  onRefresh: () => void
+  onRefresh?: () => void
   onSeedDefaultRBAC: () => void
   isLoading?: boolean
 }
 
 export function RolesListTab({
-  roles,
-  permissions,
   onOpenCreateRole,
   onOpenEditRole,
   onDeleteRole,
   onRefresh,
   onSeedDefaultRBAC,
-  isLoading,
+  isLoading = false,
 }: RolesListTabProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
   const [filterName, setFilterName] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedName = useDebounce(filterName, 300)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
+  const queryParams = useMemo(() => {
+    return {
+      current: currentPage,
+      pageSize,
+      search: debouncedName.trim() || undefined,
+    }
+  }, [currentPage, pageSize, debouncedName])
+
+  const { data, isLoading: isQueryLoading, refetch } = useRolesQuery(queryParams)
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    setSearchQuery(filterName.trim().toLowerCase())
     setCurrentPage(1)
   }
 
   const handleResetFilters = () => {
     setFilterName('')
-    setSearchQuery('')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
   }
-
-  const filteredData = useMemo(() => {
-    let list = roles
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      list = list.filter(
-        (r) =>
-          r.name?.toLowerCase().includes(q) ||
-          r.description?.toLowerCase().includes(q)
-      )
-    }
-
-    if (!sortKey || !sortOrder) return list
-
-    return [...list].sort((a, b) => {
-      if (sortKey === 'created_at') {
-        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0
-        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0
-        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
-      }
-      if (sortKey === 'updated_at') {
-        const timeA = a.updated_at ? new Date(a.updated_at).getTime() : 0
-        const timeB = b.updated_at ? new Date(b.updated_at).getTime() : 0
-        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
-      }
-      return 0
-    })
-  }, [roles, searchQuery, sortKey, sortOrder])
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredData.slice(start, start + pageSize)
-  }, [filteredData, currentPage, pageSize])
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-'
@@ -245,11 +214,14 @@ export function RolesListTab({
       </button>
 
       <button
-        onClick={onRefresh}
+        onClick={() => {
+          if (onRefresh) onRefresh()
+          refetch()
+        }}
         className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
         title={isVi ? 'Làm mới' : 'Refresh'}
       >
-        <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+        <RotateCcw className={`w-4 h-4 ${isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
       </button>
     </div>
   )
@@ -257,9 +229,9 @@ export function RolesListTab({
   return (
     <DataTable<Role>
       columns={columns}
-      data={paginatedData}
+      data={data?.items || []}
       rowKey={(r) => r._id}
-      isLoading={isLoading}
+      isLoading={isLoading || isQueryLoading}
       emptyText={isVi ? 'Không tìm thấy vai trò nào phù hợp' : 'No matching roles found'}
       sortKey={sortKey}
       sortOrder={sortOrder}
@@ -274,7 +246,7 @@ export function RolesListTab({
       pagination={{
         currentPage,
         pageSize,
-        totalItems: filteredData.length,
+        totalItems: data?.total || 0,
         onPageChange: setCurrentPage,
         onPageSizeChange: (size) => {
           setPageSize(size)
