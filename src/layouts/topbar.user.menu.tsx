@@ -32,17 +32,19 @@ export function TopbarUserMenu({
   isVietnamese,
 }: TopbarUserMenuProps) {
   const avatarUrl = profile?.avatar_url
-  const fullName = profile?.full_name || 'Admin Console'
-  const email = profile?.email || user?.email || 'admin@lingosphere.local'
-  const role = (profile?.role || user?.role || 'ADMIN').toUpperCase()
+  const fullName = profile?.full_name || user?.full_name || profile?.email || user?.email || ''
+  const email = profile?.email || user?.email || ''
+  const role = (profile?.role || user?.role || '').toUpperCase()
 
   const initials = fullName
-    .split(' ')
-    .filter(Boolean)
-    .map((n) => n[0])
-    .slice(-2)
-    .join('')
-    .toUpperCase() || 'AD'
+    ? fullName
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .slice(-2)
+        .join('')
+        .toUpperCase()
+    : 'U'
 
   return (
     <div className="relative" ref={userDropdownRef}>

@@ -1,7 +1,4 @@
-/**
- * @file topbar.tsx
- * @description Admin topbar navigation header with global search, system telemetry, language/theme toggles, and user menu
- */
+// Thanh điều hướng trên cùng của giao diện Quản trị Admin.
 
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -105,7 +102,7 @@ export function Topbar() {
   const markAsRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => {
-        const notifId = (n as { _id?: string })._id || (n as { id?: string }).id
+        const notifId = n._id
         return notifId === id ? { ...n, is_read: true } : n
       }),
     )
@@ -229,7 +226,9 @@ export function Topbar() {
             avatarError={avatarError}
             onAvatarError={() => setAvatarError(true)}
             onNavigateProfile={() => {
-              navigate(`/profile/${user?.user_id || 'me'}`)
+              if (user?.user_id) {
+                navigate(`/profile/${user.user_id}`)
+              }
               setUserDropdownOpen(false)
             }}
             onNavigateSettings={() => {

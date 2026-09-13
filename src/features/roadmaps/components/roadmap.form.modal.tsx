@@ -1,7 +1,4 @@
-/**
- * @file roadmap.form.modal.tsx
- * @description Modal tạo mới và chỉnh sửa Lộ trình học tập (Learning Roadmap) kèm cấu hình các chặng học (Stages)
- */
+// Modal tạo mới và chỉnh sửa Lộ trình học tập (Learning Roadmap) trong Admin.
 
 import { useState, useEffect } from 'react'
 import { Compass, RotateCcw, CheckCircle2, X } from 'lucide-react'
@@ -69,60 +66,29 @@ export function RoadmapFormModal({
       setFormSlug(editingRoadmap.slug || '')
       setFormDescription(editingRoadmap.description || '')
       setFormSkillsFocus(editingRoadmap.skills_focus || '2SKILLS')
-      setFormTargetScore(editingRoadmap.target_score || 650)
-      setFormMinEntryScore(editingRoadmap.min_entry_score || 0)
-      setFormMaxEntryScore(editingRoadmap.max_entry_score || 990)
-      setFormBundlePrice(editingRoadmap.bundle_price || 0)
-      setFormOriginalPrice(editingRoadmap.original_price || 0)
+      setFormTargetScore(editingRoadmap.target_score ?? 0)
+      setFormMinEntryScore(editingRoadmap.min_entry_score ?? 0)
+      setFormMaxEntryScore(editingRoadmap.max_entry_score ?? 0)
+      setFormBundlePrice(editingRoadmap.bundle_price ?? 0)
+      setFormOriginalPrice(editingRoadmap.original_price ?? 0)
       setFormIsPublished(editingRoadmap.is_published ?? true)
       setFormStages(
-        Array.isArray(editingRoadmap.stages) && editingRoadmap.stages.length > 0
-          ? editingRoadmap.stages
-          : [
-              {
-                stage_order: 1,
-                stage_title: 'Chặng 1: Xây Dựng Nền Tảng',
-                stage_description: 'Củng cố ngữ pháp và từ vựng',
-                course_id: courses[0]?._id || '',
-                target_band: '450+',
-                checkpoint_exam_id: '',
-                passing_score: 70,
-              },
-            ]
+        Array.isArray(editingRoadmap.stages) ? editingRoadmap.stages : []
       )
     } else {
       setFormTitle('')
       setFormSlug('')
       setFormDescription('')
       setFormSkillsFocus('2SKILLS')
-      setFormTargetScore(650)
-      setFormMinEntryScore(250)
-      setFormMaxEntryScore(500)
-      setFormBundlePrice(1200000)
-      setFormOriginalPrice(1600000)
+      setFormTargetScore(0)
+      setFormMinEntryScore(0)
+      setFormMaxEntryScore(0)
+      setFormBundlePrice(0)
+      setFormOriginalPrice(0)
       setFormIsPublished(true)
-      setFormStages([
-        {
-          stage_order: 1,
-          stage_title: 'Chặng 1: Xây Dựng Nền Tảng',
-          stage_description: 'Củng cố ngữ pháp và từ vựng trọng tâm',
-          course_id: courses[0]?._id || '',
-          target_band: '450+',
-          checkpoint_exam_id: '',
-          passing_score: 70,
-        },
-        {
-          stage_order: 2,
-          stage_title: 'Chặng 2: Bứt Phá Điểm Số',
-          stage_description: 'Nâng cao tốc độ và xử lý các câu khó',
-          course_id: courses[1]?._id || courses[0]?._id || '',
-          target_band: '650+',
-          checkpoint_exam_id: '',
-          passing_score: 75,
-        },
-      ])
+      setFormStages([])
     }
-  }, [isOpen, editingRoadmap, courses])
+  }, [isOpen, editingRoadmap])
 
   if (!isOpen) return null
 

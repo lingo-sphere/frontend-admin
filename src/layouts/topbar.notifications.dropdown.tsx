@@ -68,8 +68,8 @@ export function TopbarNotificationsDropdown({
               </p>
             ) : (
               notifications.map((notif) => {
-                const notifId = (notif as { _id?: string })._id || (notif as { id?: string }).id || ''
-                const createdAt = (notif as { created_at?: string }).created_at || new Date().toISOString()
+                const notifId = notif._id || ''
+                const createdAt = notif.created_at || ''
                 const title = isVietnamese && notif.title_vi ? notif.title_vi : notif.title
                 const content =
                   isVietnamese && (notif as { content_vi?: string }).content_vi

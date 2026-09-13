@@ -32,8 +32,8 @@ export function CourseExamQuestionsEditor({
       (initialExam.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS')
   )
   const is4Skills = formPlacementSkills === '4SKILLS'
-  const [formDuration, setFormDuration] = useState<number>(initialExam.duration_minutes || 60)
-  const [formPassingScore, setFormPassingScore] = useState<number>(initialExam.passing_score || 500)
+  const [formDuration, setFormDuration] = useState<number>(initialExam.duration_minutes ?? 0)
+  const [formPassingScore, setFormPassingScore] = useState<number>(initialExam.passing_score ?? 0)
   const [formDescription, setFormDescription] = useState<string>(initialExam.description || '')
   const [formIsPublished, setFormIsPublished] = useState<boolean>(initialExam.is_published ?? true)
   const [isConfigExpanded, setIsConfigExpanded] = useState<boolean>(isCreateMode)

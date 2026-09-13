@@ -61,8 +61,8 @@ export function useCourseExamSave({
     }
     return (
       formTitle !== (initialExam.title || '') ||
-      formDuration !== (initialExam.duration_minutes || 60) ||
-      formPassingScore !== (initialExam.passing_score || 500) ||
+      formDuration !== (initialExam.duration_minutes ?? 0) ||
+      formPassingScore !== (initialExam.passing_score ?? 0) ||
       formDescription !== (initialExam.description || '') ||
       formIsPublished !== (initialExam.is_published ?? true) ||
       formPlacementSkills !== (initialExam.placement_type || (initialExam.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS'))

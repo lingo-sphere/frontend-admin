@@ -133,7 +133,7 @@ export function RoadmapStagesListSection({
                 >
                   <option value="">-- Chọn bài thi hoặc bỏ trống --</option>
                   {exams.map((ex) => (
-                    <option key={ex._id || ex.id} value={ex._id || ex.id}>
+                    <option key={ex._id || ''} value={ex._id || ''}>
                       {ex.title}
                     </option>
                   ))}

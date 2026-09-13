@@ -17,18 +17,19 @@ export function UserProfilePage() {
   const location = useLocation()
   const navigate = useNavigate()
   const pathParts = location.pathname.split('/users/')
-  const userId = pathParts[1] || 'usr_learner_001'
+  const userId = pathParts[1] || ''
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
   const [isAiQuotaModalOpen, setIsAiQuotaModalOpen] = useState<boolean>(false)
   const { mutateAsync: resetLearnerData } = useResetLearnerDataMutation()
 
   const loadData = async () => {
+    if (!userId) return
     try {
       const u = await userService.getProfileById(userId)
       if (u) {
         setProfileData({
-          id: u.user_id ? u.user_id : (u._id ? u._id : userId),
+          id: u.user_id,
           full_name: u.full_name,
           email: u.email,
           avatar_url: u.avatar_url || undefined,
@@ -70,17 +71,17 @@ export function UserProfilePage() {
     email: profileData.email,
     is_premium: Boolean(profileData.is_premium),
     status: profileData.status === 'BLOCKED' ? 'BANNED' : 'ACTIVE',
-    target_toeic_score: profileData.toeic_score || 0,
-    current_estimated_score: profileData.toeic_score || 0,
-    total_xp: profileData.total_xp || 0,
-    current_streak: profileData.current_streak || 0,
+    target_toeic_score: profileData.toeic_score ?? 0,
+    current_estimated_score: profileData.toeic_score ?? 0,
+    total_xp: profileData.total_xp ?? 0,
+    current_streak: profileData.current_streak ?? 0,
     avatar_url: profileData.avatar_url,
     gender: 'OTHER',
     learning_goal_minutes_per_day: 0,
     current_plan_slug: profileData.is_premium ? 'vip' : 'free',
     created_at: profileData.created_at || '',
-    level: profileData.level || 1,
-    longest_streak: profileData.longest_streak || 0,
+    level: profileData.level ?? 1,
+    longest_streak: profileData.longest_streak ?? 0,
     gems: 0,
     lessons_completed: 0,
     vocabulary_reviewed: 0,
