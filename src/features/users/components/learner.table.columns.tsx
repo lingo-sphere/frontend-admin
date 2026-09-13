@@ -62,10 +62,10 @@ export function getLearnerColumns({
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400">
             <Target className="w-3.5 h-3.5" />
-            <span>Target {u.target_toeic_score || 650}+</span>
+            <span>Target {u.target_toeic_score ? `${u.target_toeic_score}+` : 0}</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            {isVi ? 'Ước lượng:' : 'Estimated:'} {u.current_estimated_score || 450}
+            {isVi ? 'Ước lượng:' : 'Estimated:'} {u.current_estimated_score ?? 0}
           </p>
         </div>
       ),
@@ -77,11 +77,11 @@ export function getLearnerColumns({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <Sparkles className="w-3.5 h-3.5 fill-amber-500" />
-            {(u.total_xp || 0).toLocaleString()} XP
+            {(u.total_xp ?? 0).toLocaleString()} XP
           </span>
           <span className="flex items-center gap-1 text-xs font-semibold text-rose-500">
             <Flame className="w-3.5 h-3.5 fill-rose-500" />
-            {u.current_streak || 0} {isVi ? 'ngày' : 'days'}
+            {u.current_streak ?? 0} {isVi ? 'ngày' : 'days'}
           </span>
         </div>
       ),
