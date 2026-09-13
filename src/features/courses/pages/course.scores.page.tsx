@@ -1,7 +1,4 @@
-/**
- * @file course.scores.page.tsx
- * @description Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học
- */
+// Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học.
 
 import { useState, useEffect } from 'react'
 import {
@@ -156,7 +153,9 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           </div>
           <div>
             <div className="text-xs text-slate-500 dark:text-slate-400">Mục tiêu đầu ra</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{courseInfo?.target_score || 650}+ TOEIC</div>
+            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
+            </div>
           </div>
         </div>
       </div>

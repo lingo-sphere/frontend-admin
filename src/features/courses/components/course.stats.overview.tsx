@@ -1,7 +1,4 @@
-/**
- * @file course.stats.overview.tsx
- * @description Component giao diện CourseStatsOverview phục vụ khu vực Quản trị Admin
- */
+// Component giao diện CourseStatsOverview phục vụ khu vực Quản trị Admin.
 
 import { useTranslation } from 'react-i18next'
 import { GraduationCap, Users, CheckCircle2, Sparkles } from 'lucide-react'

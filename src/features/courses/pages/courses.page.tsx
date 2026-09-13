@@ -57,10 +57,15 @@ export function CoursesPage() {
     const published = courses.filter((c) => c.is_published).length
     const totalStudents = courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
 
-    const scores = courses.map((c) => c.target_score).filter(Boolean)
-    const minScore = scores.length ? Math.min(...scores) : 450
-    const maxScore = scores.length ? Math.max(...scores) : 850
-    const targetBand = scores.length > 1 && minScore !== maxScore ? `${minScore} - ${maxScore}+` : `${maxScore || 750}+`
+    const scores = courses
+      .map((c) => c.target_score)
+      .filter((s): s is number => typeof s === 'number' && s > 0)
+    let targetBand = '-'
+    if (scores.length > 0) {
+      const minScore = Math.min(...scores)
+      const maxScore = Math.max(...scores)
+      targetBand = minScore !== maxScore ? `${minScore} - ${maxScore}+` : `${maxScore}+`
+    }
 
     return { total, published, totalStudents, targetBand }
   }, [courses])
