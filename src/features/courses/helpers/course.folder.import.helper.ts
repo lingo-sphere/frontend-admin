@@ -1,4 +1,4 @@
-// Helper xu ly doc file Excel 4 sheet va khop noi danh sach file video trong thu muc phuc vu tao nhanh khoa hoc.
+// Helper xu ly doc file Excel va khop noi video cung tai lieu PDF phuc vu tao nhanh khoa hoc.
 
 import * as XLSX from 'xlsx'
 import type { CourseFormData, CourseModule, CourseLesson, LessonQuestion } from '@/features/courses/components/course.basic.info.tab'
@@ -38,6 +38,7 @@ export interface ParsedFolderResult {
   videoFilesToUpload: { lessonKey: string; file: File }[]
   theoryFilesToUpload: { moduleOrder: number; file: File }[]
   lessonTheoryFilesToUpload: { lessonKey: string; file: File }[]
+  courseDocumentFileToUpload?: File
 }
 
 const findValue = (rows: Record<string, unknown>[], fieldKeywords: string[]): string | number | undefined => {
@@ -51,6 +52,43 @@ const findValue = (rows: Record<string, unknown>[], fieldKeywords: string[]): st
     }
   }
   return undefined
+}
+
+const findRowString = (row: Record<string, unknown>, fieldKeywords: string[]): string => {
+  for (const key of Object.keys(row)) {
+    const lowerKey = key.toLowerCase()
+    for (const kw of fieldKeywords) {
+      if (lowerKey.includes(kw.toLowerCase())) {
+        const val = row[key]
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          return String(val).trim()
+        }
+      }
+    }
+  }
+  return ''
+}
+
+const normalizeFilename = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/\.[^/.]+$/, '')
+    .replace(/[^a-z0-9]/g, '')
+}
+
+const findMatchingFile = (targetName: string, files: File[]): File | undefined => {
+  if (!targetName || !targetName.trim()) return undefined
+  const cleanTarget = targetName.trim().toLowerCase()
+  const exact = files.find((f) => f.name.trim().toLowerCase() === cleanTarget)
+  if (exact) return exact
+
+  const normTarget = normalizeFilename(cleanTarget)
+  if (!normTarget) return undefined
+
+  return files.find((f) => {
+    const normF = normalizeFilename(f.name)
+    return normF === normTarget || normF.includes(normTarget) || normTarget.includes(normF)
+  })
 }
 
 export const readVideoDuration = (file: File): Promise<number> => {
@@ -101,12 +139,6 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     throw new Error('Không tìm thấy file Excel (.xlsx) cấu hình khóa học trong thư mục được chọn.')
   }
 
-  const fileMap = new Map<string, File>()
-  files.forEach((f) => {
-    const cleanName = f.name.trim().toLowerCase()
-    fileMap.set(cleanName, f)
-  })
-
   const arrayBuffer = await excelFile.arrayBuffer()
   const workbook = XLSX.read(arrayBuffer, { type: 'array' })
 
@@ -144,6 +176,37 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   const rawIsPublished = String(findValue(infoRaw, ['is_published', 'xuất bản']) || 'TRUE').toUpperCase()
   const is_published = rawIsPublished !== 'FALSE'
 
+  const rawDocumentName = String(
+    findValue(infoRaw, [
+      'document_file',
+      'document_name',
+      'document_url',
+      'tài liệu tổng quan',
+      'tài liệu khóa học',
+      'giáo trình',
+      'cẩm nang',
+      'file tài liệu',
+      'syllabus',
+    ]) || ''
+  ).trim()
+
+  let matchedCourseDocumentFile = rawDocumentName ? findMatchingFile(rawDocumentName, files) : undefined
+  if (!matchedCourseDocumentFile) {
+    matchedCourseDocumentFile = files.find((f) => {
+      const lower = f.name.toLowerCase()
+      return (
+        lower.endsWith('.pdf') &&
+        (lower.includes('tong_quan') ||
+          lower.includes('giao_trinh') ||
+          lower.includes('cam_nang') ||
+          lower.includes('handbook') ||
+          lower.includes('syllabus'))
+      )
+    })
+  }
+
+  const document_name = matchedCourseDocumentFile?.name || rawDocumentName || undefined
+
   const courseInfo: Partial<CourseFormData> = {
     title,
     slug,
@@ -157,6 +220,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     description,
     final_test_passing_score: isNaN(final_test_passing_score) ? 70 : final_test_passing_score,
     is_published,
+    document_name,
   }
 
   const chapterTestsByModule = new Map<number, QuizQuestionItem[]>()
@@ -222,7 +286,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   const modulesMap = new Map<number, { title: string; description: string; theoryFile?: string; passingScore: number; lessons: CourseLesson[] }>()
   const videoFilesToUpload: { lessonKey: string; file: File }[] = []
   const lessonTheoryFilesToUpload: { lessonKey: string; file: File }[] = []
-  let matchedPdfsCount = 0
+  let matchedPdfsCount = matchedCourseDocumentFile ? 1 : 0
   let matchedCount = 0
   let missingCount = 0
 
@@ -231,7 +295,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1)
     const mTitle = String(row['Tên chương (module_title)'] ?? row['module_title'] ?? `Chương ${mOrder}`).trim()
     const mDesc = String(row['Mô tả chương (module_description)'] ?? row['module_description'] ?? '').trim()
-    const mTheory = String(row['File tài liệu chương (module_theory_file)'] ?? row['module_theory_file'] ?? '').trim()
+    const mTheory = findRowString(row, ['module_theory_file', 'tài liệu chương', 'tài liệu lý thuyết', 'theory_file', 'tài liệu'])
     const mPassing = Number(row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score'] ?? 70)
 
     const lOrder = Number(row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1)
@@ -239,36 +303,12 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const videoFilename = String(row['Tên file video (video_filename)'] ?? row['video_filename'] ?? '').trim()
     const rawPreview = String(row['Học thử miễn phí (is_free_preview)'] ?? row['is_free_preview'] ?? 'FALSE').toUpperCase()
     const isFree = rawPreview === 'TRUE' || rawPreview === '1'
-    const lTheoryFile = String(row['File lý thuyết bài học (lesson_theory_file)'] ?? row['lesson_theory_file'] ?? '').trim()
+    const lTheoryFile = findRowString(row, ['lesson_theory_file', 'file lý thuyết bài học', 'lý thuyết bài học', 'tài liệu bài học', 'theory'])
     const lTheoryText = String(row['Tóm tắt lý thuyết bài học (lesson_theory_text)'] ?? row['lesson_theory_text'] ?? '').trim()
 
-    let matchedVideo: File | undefined
-    if (videoFilename) {
-      matchedVideo = fileMap.get(videoFilename.toLowerCase())
-      if (!matchedVideo) {
-        for (const [fName, fileObj] of fileMap.entries()) {
-          if (fName.includes(videoFilename.toLowerCase()) || videoFilename.toLowerCase().includes(fName)) {
-            matchedVideo = fileObj
-            break
-          }
-        }
-      }
-    }
-
+    const matchedVideo = videoFilename ? findMatchingFile(videoFilename, files) : undefined
+    const matchedTheory = lTheoryFile ? findMatchingFile(lTheoryFile, files) : undefined
     const lessonKey = `m${mOrder}-l${lOrder}`
-
-    let matchedTheory: File | undefined
-    if (lTheoryFile) {
-      matchedTheory = fileMap.get(lTheoryFile.toLowerCase())
-      if (!matchedTheory) {
-        for (const [fName, fileObj] of fileMap.entries()) {
-          if (fName.includes(lTheoryFile.toLowerCase()) || lTheoryFile.toLowerCase().includes(fName)) {
-            matchedTheory = fileObj
-            break
-          }
-        }
-      }
-    }
 
     if (matchedTheory) {
       matchedPdfsCount++
@@ -277,12 +317,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
     if (matchedVideo) {
       matchedCount++
+      videoFilesToUpload.push({ lessonKey, file: matchedVideo })
     } else if (videoFilename) {
       missingCount++
-    }
-
-    if (matchedVideo) {
-      videoFilesToUpload.push({ lessonKey, file: matchedVideo })
     }
 
     matchedLessons.push({
@@ -309,6 +346,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
         passingScore: isNaN(mPassing) ? 70 : mPassing,
         lessons: [],
       })
+    } else {
+      const existingMod = modulesMap.get(mOrder)
+      if (existingMod && !existingMod.theoryFile && mTheory) {
+        existingMod.theoryFile = mTheory
+      }
     }
 
     const lessonQuizzes = lessonQuizzesByModuleAndLesson.get(`${mOrder}-${lOrder}`) || []
@@ -322,7 +364,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       content: lTheoryText,
       is_preview: isFree,
       lesson_order: lOrder,
-      theory_file_name: lTheoryFile || undefined,
+      theory_file_name: matchedTheory?.name || lTheoryFile || undefined,
       theory_file_url: undefined,
       questions: lessonQuizzes,
     })
@@ -335,17 +377,18 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const modData = modulesMap.get(mOrder)!
     const tests = chapterTestsByModule.get(mOrder) || []
 
-    let matchedModulePdf: File | undefined
-    if (modData.theoryFile) {
-      matchedModulePdf = fileMap.get(modData.theoryFile.toLowerCase())
-      if (!matchedModulePdf) {
-        for (const [fName, fileObj] of fileMap.entries()) {
-          if (fName.includes(modData.theoryFile.toLowerCase()) || modData.theoryFile.toLowerCase().includes(fName)) {
-            matchedModulePdf = fileObj
-            break
-          }
-        }
-      }
+    let matchedModulePdf = modData.theoryFile ? findMatchingFile(modData.theoryFile, files) : undefined
+    if (!matchedModulePdf) {
+      matchedModulePdf = files.find((f) => {
+        const lower = f.name.toLowerCase()
+        return (
+          lower.endsWith('.pdf') &&
+          (lower.includes(`chuong_${mOrder}`) ||
+            lower.includes(`chuong${mOrder}`) ||
+            lower.includes(`module_${mOrder}`) ||
+            lower.includes(`module${mOrder}`))
+        )
+      })
     }
 
     if (matchedModulePdf) {
@@ -358,7 +401,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       title: modData.title,
       description: modData.description,
       module_order: mOrder,
-      theory_file_name: modData.theoryFile || undefined,
+      theory_file_name: matchedModulePdf?.name || modData.theoryFile || undefined,
       passing_score: modData.passingScore,
       challenge_passing_score: modData.passingScore,
       test_questions: tests,
@@ -392,5 +435,6 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     videoFilesToUpload,
     theoryFilesToUpload,
     lessonTheoryFilesToUpload,
+    courseDocumentFileToUpload: matchedCourseDocumentFile,
   }
 }

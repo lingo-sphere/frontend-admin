@@ -1,4 +1,4 @@
-// Modal nhap nhanh khoa hoc tu thu muc chua file Excel va video bai giang.
+// Modal nhap nhanh khoa hoc tu thu muc chua file Excel va video bai giang cung tai lieu PDF.
 
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react'
 import {
@@ -14,6 +14,7 @@ import {
   Loader2,
   ArrowRight,
   BookOpen,
+  FileText,
 } from 'lucide-react'
 import {
   parseCourseFolder,
@@ -55,21 +56,40 @@ export function CourseFolderImportModal({
   const collectFilesFromDataTransfer = async (items: DataTransferItemList): Promise<File[]> => {
     const files: File[] = []
 
+    const readAllDirectoryEntries = async (dirReader: FileSystemDirectoryReader): Promise<FileSystemEntry[]> => {
+      const allEntries: FileSystemEntry[] = []
+      const readBatch = (): Promise<FileSystemEntry[]> => {
+        return new Promise((resolve) => {
+          dirReader.readEntries(
+            (entries) => resolve(entries || []),
+            () => resolve([])
+          )
+        })
+      }
+      let batch = await readBatch()
+      while (batch.length > 0) {
+        allEntries.push(...batch)
+        batch = await readBatch()
+      }
+      return allEntries
+    }
+
     const readEntry = async (entry: FileSystemEntry) => {
       if (entry.isFile) {
         const fileEntry = entry as FileSystemFileEntry
         await new Promise<void>((resolve) => {
-          fileEntry.file((file) => {
-            files.push(file)
-            resolve()
-          }, () => resolve())
+          fileEntry.file(
+            (file) => {
+              files.push(file)
+              resolve()
+            },
+            () => resolve()
+          )
         })
       } else if (entry.isDirectory) {
         const dirEntry = entry as FileSystemDirectoryEntry
         const reader = dirEntry.createReader()
-        const entries = await new Promise<FileSystemEntry[]>((resolve) => {
-          reader.readEntries((ents) => resolve(ents), () => resolve([]))
-        })
+        const entries = await readAllDirectoryEntries(reader)
         for (const child of entries) {
           await readEntry(child)
         }
@@ -152,15 +172,22 @@ export function CourseFolderImportModal({
     setError(null)
 
     const updatedModules = JSON.parse(JSON.stringify(parsedResult.modules)) as CourseModule[]
+    const updatedCourseInfo: Partial<CourseFormData> = { ...parsedResult.courseInfo }
     const videoFiles = parsedResult.videoFilesToUpload
     const moduleTheoryFiles = parsedResult.theoryFilesToUpload || []
     const lessonTheoryFiles = parsedResult.lessonTheoryFilesToUpload || []
-    const totalFiles = videoFiles.length + moduleTheoryFiles.length + lessonTheoryFiles.length
+    const courseDocFile = parsedResult.courseDocumentFileToUpload
+    const totalFiles =
+      videoFiles.length +
+      moduleTheoryFiles.length +
+      lessonTheoryFiles.length +
+      (courseDocFile ? 1 : 0)
 
     let totalBytes = 0
     videoFiles.forEach((v) => { totalBytes += v.file.size })
     moduleTheoryFiles.forEach((m) => { totalBytes += m.file.size })
     lessonTheoryFiles.forEach((l) => { totalBytes += l.file.size })
+    if (courseDocFile) { totalBytes += courseDocFile.size }
 
     const loadedBytesMap: Record<number, number> = {}
     let completedFiles = 0
@@ -179,6 +206,26 @@ export function CourseFolderImportModal({
     }
 
     let globalFileIndex = 0
+
+    if (courseDocFile) {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, courseDocFile.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          courseDocFile,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, courseDocFile.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, courseDocFile.size, courseDocFile.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        if (uploadedUrl) {
+          updatedCourseInfo.document_url = uploadedUrl
+          updatedCourseInfo.document_name = courseDocFile.name
+        }
+      })
+    }
 
     videoFiles.forEach((item) => {
       const fIdx = globalFileIndex++
@@ -283,7 +330,7 @@ export function CourseFolderImportModal({
       await Promise.all(executing)
       setUploadPercent(100)
 
-      onApply(parsedResult.courseInfo, updatedModules)
+      onApply(updatedCourseInfo, updatedModules)
       toast.success(isVi ? `Đã tải lên toàn bộ ${totalFiles} tài nguyên trực tiếp lên R2 thành công!` : `Successfully uploaded ${totalFiles} files to R2!`)
       onClose()
     } catch (err: unknown) {
@@ -295,22 +342,29 @@ export function CourseFolderImportModal({
     }
   }
 
+  const totalFilesToUploadCount = parsedResult
+    ? parsedResult.videoFilesToUpload.length +
+      parsedResult.theoryFilesToUpload.length +
+      parsedResult.lessonTheoryFilesToUpload.length +
+      (parsedResult.courseDocumentFileToUpload ? 1 : 0)
+    : 0
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
               <FolderUp className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                {isVi ? 'Nhập Nhanh Khóa Học Từ Thư Mục' : 'Fast Course Import From Folder'}
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                {isVi ? 'Nhập khóa học nhanh từ Thư mục' : 'Import Course from Folder'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isVi
-                  ? 'Kéo thả thư mục chứa file Excel và các video MP4 để tự động điền Form'
-                  : 'Drop course directory containing Excel and MP4 videos'}
+                  ? 'Quét file Excel cấu hình, tự động khớp video & upload trực tiếp lên Cloudflare R2'
+                  : 'Parse Excel config, auto match videos and upload directly to Cloudflare R2'}
               </p>
             </div>
           </div>
@@ -318,7 +372,7 @@ export function CourseFolderImportModal({
             type="button"
             onClick={onClose}
             disabled={isUploading}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors disabled:opacity-40"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -330,26 +384,23 @@ export function CourseFolderImportModal({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={() => folderInputRef.current?.click()}
-              className={`relative flex flex-col items-center justify-center p-10 sm:p-14 border-2 border-dashed rounded-3xl transition-all cursor-pointer text-center ${
+              onClick={() => !isParsing && folderInputRef.current?.click()}
+              className={`relative border-2 border-dashed rounded-3xl p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-4 ${
                 isDragging
-                  ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 ring-4 ring-indigo-500/10'
-                  : 'border-slate-200 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/20 dark:border-slate-800 dark:bg-slate-950/40 dark:hover:bg-indigo-950/20'
+                  ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30'
+                  : 'border-slate-300 dark:border-slate-700 hover:border-indigo-400 bg-slate-50/50 dark:bg-slate-950/30'
               }`}
             >
               <input
                 ref={folderInputRef}
                 type="file"
                 multiple
-                {...({ webkitdirectory: '', directory: '' } as React.InputHTMLAttributes<HTMLInputElement> & {
-                  webkitdirectory?: string
-                  directory?: string
-                })}
                 className="hidden"
                 onChange={handleFileInputChange}
+                {...({ webkitdirectory: '', directory: '' } as Record<string, string>)}
               />
 
-              <div className="w-16 h-16 rounded-3xl bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center ring-8 ring-indigo-500/5 mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/10">
                 {isParsing ? (
                   <Loader2 className="w-8 h-8 animate-spin" />
                 ) : (
@@ -357,24 +408,24 @@ export function CourseFolderImportModal({
                 )}
               </div>
 
-              <div className="max-w-md space-y-1.5">
-                <p className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+              <div className="space-y-1.5 max-w-md">
+                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
                   {isParsing
                     ? isVi
-                      ? 'Đang phân tích cấu trúc Excel & Video...'
-                      : 'Parsing Excel and video files...'
+                      ? 'Đang đọc và phân tích cấu trúc khóa học...'
+                      : 'Analyzing folder and files...'
                     : isVi
-                    ? 'Kéo thả thư mục khóa học vào đây'
-                    : 'Drop course folder here'}
-                </p>
+                    ? 'Kéo thả thư mục khóa học hoặc bấm để chọn'
+                    : 'Drag and drop course folder or click to choose'}
+                </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   {isVi
-                    ? 'Hoặc bấm vào để duyệt chọn thư mục từ máy tính (Ví dụ thư mục D:\\data_doan\\phatam chứa file Excel và các video MP4).'
-                    : 'Or click to browse folder from your device containing Excel and MP4 videos.'}
+                    ? 'Thư mục cần chứa file Excel (.xlsx) cấu hình khóa học cùng toàn bộ video bài giảng (.mp4) và tài liệu (.pdf).'
+                    : 'Folder must contain course Excel file (.xlsx) along with video files (.mp4) and documents (.pdf).'}
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 mt-6 pt-6 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-400">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 dark:text-slate-500 pt-2">
                 <span className="flex items-center gap-1.5">
                   <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
                   <span>File Excel 4 sheet (.xlsx)</span>
@@ -383,6 +434,11 @@ export function CourseFolderImportModal({
                 <span className="flex items-center gap-1.5">
                   <Film className="w-3.5 h-3.5 text-indigo-500" />
                   <span>Video bài giảng (.mp4, .webm)</span>
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Tài liệu PDF bài học & chương</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
@@ -464,13 +520,13 @@ export function CourseFolderImportModal({
                       <span>{parsedResult.missingVideosCount} {isVi ? 'video chưa có trong thư mục' : 'missing files'}</span>
                     </span>
                   )}
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                    <FileText className="w-3.5 h-3.5 text-sky-600" />
+                    <span>{parsedResult.matchedPdfsCount} {isVi ? 'tài liệu PDF khớp' : 'PDF documents'}</span>
+                  </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
                     <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
                     <span>{parsedResult.totalChapterQuestionsCount} {isVi ? 'câu hỏi đề thi chương' : 'exam questions'}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                    <FileSpreadsheet className="w-3.5 h-3.5 text-sky-600" />
-                    <span>{parsedResult.matchedPdfsCount} {isVi ? 'tài liệu PDF (bài học & chương)' : 'PDF documents'}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
                     <HelpCircle className="w-3.5 h-3.5 text-teal-600" />
@@ -486,8 +542,8 @@ export function CourseFolderImportModal({
                       <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400" />
                       <span>
                         {isVi
-                          ? `Đang tải lên tài nguyên ${uploadIndex}/${parsedResult.videoFilesToUpload.length + (parsedResult.theoryFilesToUpload?.length || 0) + (parsedResult.lessonTheoryFilesToUpload?.length || 0)}: ${currentUploadName}`
-                          : `Uploading resource ${uploadIndex}/${parsedResult.videoFilesToUpload.length + (parsedResult.theoryFilesToUpload?.length || 0) + (parsedResult.lessonTheoryFilesToUpload?.length || 0)}: ${currentUploadName}`}
+                          ? `Đang tải lên tài nguyên ${uploadIndex}/${totalFilesToUploadCount}: ${currentUploadName}`
+                          : `Uploading resource ${uploadIndex}/${totalFilesToUploadCount}: ${currentUploadName}`}
                       </span>
                     </span>
                     <span>{uploadPercent}%</span>
@@ -508,7 +564,7 @@ export function CourseFolderImportModal({
 
               <div className="space-y-3">
                 <h5 className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  {isVi ? 'Danh sách bài học & kiểm tra video' : 'Curriculum Lessons Preview'}
+                  {isVi ? 'Danh sách bài học & tài liệu kiểm tra' : 'Curriculum Lessons & Documents Preview'}
                 </h5>
                 <div className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
                   {parsedResult.lessons.map((les, idx) => (
@@ -522,20 +578,41 @@ export function CourseFolderImportModal({
                         </span>
                         <div className="truncate">
                           <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{les.lessonTitle}</p>
-                          <p className="text-[11px] text-slate-400 truncate">{les.videoFilename}</p>
+                          <p className="text-[11px] text-slate-400 truncate">
+                            {les.videoFilename}
+                            {les.lessonTheoryFile ? ` • Tài liệu: ${les.lessonTheoryFile}` : ''}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
+                        {les.lessonTheoryFile && (
+                          les.matchedTheoryFile ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 text-[10.5px] font-semibold border border-sky-200/60 dark:border-sky-800/60" title={les.matchedTheoryFile.name}>
+                              <FileText className="w-3 h-3 text-sky-600" />
+                              <span>PDF</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 text-[10.5px] font-semibold border border-amber-200/60 dark:border-amber-800/60" title={`Thiếu file: ${les.lessonTheoryFile}`}>
+                              <AlertCircle className="w-3 h-3 text-amber-600" />
+                              <span>Thiếu PDF</span>
+                            </span>
+                          )
+                        )}
+
                         {les.matchedVideoFile ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 text-[11px] font-semibold border border-emerald-200/60 dark:border-emerald-800/60">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>{isVi ? 'Khớp file' : 'Matched'}</span>
+                            <span>{isVi ? 'Khớp video' : 'Matched video'}</span>
                           </span>
-                        ) : (
+                        ) : les.videoFilename ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 text-[11px] font-semibold border border-amber-200/60 dark:border-amber-800/60">
                             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                            <span>{isVi ? 'Chưa thấy file' : 'Missing'}</span>
+                            <span>{isVi ? 'Chưa thấy video' : 'Missing video'}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[11px] font-semibold">
+                            <span>{isVi ? 'Bài đọc' : 'Reading'}</span>
                           </span>
                         )}
                       </div>
@@ -548,48 +625,57 @@ export function CourseFolderImportModal({
         </div>
 
         {parsedResult && (
-          <div className="flex flex-wrap items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isUploading}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
-            >
-              <span>{isVi ? 'Đóng' : 'Cancel'}</span>
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 shrink-0">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              <span>{isVi ? 'Sẵn sàng tải lên: ' : 'Ready to upload: '}</span>
+              <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
+                {parsedResult.videoFilesToUpload.length} video, {parsedResult.theoryFilesToUpload.length + parsedResult.lessonTheoryFilesToUpload.length + (parsedResult.courseDocumentFileToUpload ? 1 : 0)} tài liệu PDF
+              </strong>
+            </div>
 
-            <button
-              type="button"
-              onClick={handleApplyWithoutUpload}
-              disabled={isUploading}
-              className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
-            >
-              <span>{isVi ? 'Chỉ nạp cấu trúc vào Form' : 'Apply structure only'}</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isUploading}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
+              >
+                <span>{isVi ? 'Đóng' : 'Cancel'}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleUploadAndApply}
-              disabled={isUploading || parsedResult.videoFilesToUpload.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all disabled:opacity-50 cursor-pointer"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{isVi ? 'Đang tải lên R2...' : 'Uploading to R2...'}</span>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="w-4 h-4" />
-                  <span>
-                    {isVi
-                      ? `Tải lên ${parsedResult.videoFilesToUpload.length} video & Lưu vào Form`
-                      : `Upload ${parsedResult.videoFilesToUpload.length} videos & Apply`}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={handleApplyWithoutUpload}
+                disabled={isUploading}
+                className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
+              >
+                <span>{isVi ? 'Chỉ nạp cấu trúc vào Form' : 'Apply structure only'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleUploadAndApply}
+                disabled={isUploading || totalFilesToUploadCount === 0}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{isVi ? 'Đang tải lên R2...' : 'Uploading to R2...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="w-4 h-4" />
+                    <span>
+                      {isVi
+                        ? `Tải lên ${totalFilesToUploadCount} tệp (video & tài liệu) & Lưu`
+                        : `Upload ${totalFilesToUploadCount} files & Apply`}
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
