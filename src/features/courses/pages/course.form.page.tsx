@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Save } from 'lucide-react'
 import { CourseBasicInfoTab } from '@/features/courses/components/course.basic.info.tab'
 import { CourseCurriculumManager } from '@/features/courses/components/course.curriculum.manager'
 import { VideoPreviewModal } from '@/components/video.preview.modal'
@@ -44,7 +43,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   }
 
   return (
-    <div className="space-y-6 w-full px-[10px] pb-12">
+    <div className="flex-1 flex flex-col justify-between space-y-6 w-full">
       <CourseFormHeader
         isEditMode={isEditMode}
         isVi={isVi}
@@ -55,22 +54,24 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         onOpenFolderImport={!isEditMode ? () => setIsFolderModalOpen(true) : undefined}
       />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <CourseBasicInfoTab
-          formData={formData}
-          onChange={(updated) => setFormData((prev) => ({ ...prev, ...updated }))}
-          isVi={isVi}
-          courseFolder={courseFolder}
-        />
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between space-y-6">
+        <div className="space-y-6">
+          <CourseBasicInfoTab
+            formData={formData}
+            onChange={(updated) => setFormData((prev) => ({ ...prev, ...updated }))}
+            isVi={isVi}
+            courseFolder={courseFolder}
+          />
 
-        <CourseCurriculumManager
-          modules={formData.modules}
-          onChange={(modules) => setFormData((prev) => ({ ...prev, modules }))}
-          onPreviewVideo={(url) => setVideoPreviewUrl(url)}
-          isVi={isVi}
-          is4Skills={formData.category === 'TOEIC_4_SKILLS'}
-          courseFolder={courseFolder}
-        />
+          <CourseCurriculumManager
+            modules={formData.modules}
+            onChange={(modules) => setFormData((prev) => ({ ...prev, modules }))}
+            onPreviewVideo={(url) => setVideoPreviewUrl(url)}
+            isVi={isVi}
+            is4Skills={formData.category === 'TOEIC_4_SKILLS'}
+            courseFolder={courseFolder}
+          />
+        </div>
 
         <StickyFormActionBar
           title={formData.title || (isEditMode ? (isVi ? 'Khóa học' : 'Course') : (isVi ? 'Khóa học mới' : 'New course'))}

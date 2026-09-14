@@ -1,12 +1,12 @@
-// Component biên soạn đề thi và ngân hàng câu hỏi tích hợp cho kỳ thi khóa học và placement test
+// Component biên soạn đề thi và ngân hàng câu hỏi tích hợp thanh tác vụ lưu biểu mẫu cố định.
 import { useState, useMemo } from 'react'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { downloadSampleZip } from '@/features/exams/helpers/zip.exam.helper'
 import { ExamEditorHeader } from '@/features/courses/components/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/features/courses/components/exam.editor.global.audio'
-import { ExamEditorFooter } from '@/features/courses/components/exam.editor.footer'
 import { ExamConfigForm } from '@/features/courses/components/exam.config.form'
 import { CourseExamQuestionsList } from '@/features/courses/components/course.exam.questions.list'
+import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
 import { ConfirmModal } from '@/components/confirm.modal'
 import { useExamQuestionEditor } from '@/features/courses/hooks/use.exam.question.editor'
 import { useCourseExamSave } from '@/features/courses/hooks/use.course.exam.save'
@@ -174,134 +174,149 @@ export function CourseExamQuestionsEditor({
   }
 
   return (
-    <div className="space-y-5 pb-12">
-      <input
-        ref={zipFileInputRef}
-        type="file"
-        accept=".zip,.rar,.xlsx,.xls,.csv,application/zip,application/x-rar-compressed,application/vnd.rar"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) handleZipFileSelected(file)
-        }}
-      />
-      <input
-        ref={globalAudioInputRef}
-        type="file"
-        accept="audio/*"
-        className="hidden"
-        onChange={handleUploadQuestionAudio}
-      />
-      <input
-        ref={questionAudioInputRef}
-        type="file"
-        accept="audio/*"
-        className="hidden"
-        onChange={handleUploadQuestionAudio}
-      />
-      <input
-        ref={questionImageInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleUploadQuestionImage}
-      />
-
-      <ExamConfigForm
-        initialExam={initialExam}
-        isCreateMode={isCreateMode}
-        isVi={isVi}
-        formTitle={formTitle}
-        setFormTitle={setFormTitle}
-        formPlacementSkills={formPlacementSkills}
-        handleSkillsChange={handleSkillsChange}
-        formDuration={formDuration}
-        setFormDuration={setFormDuration}
-        formPassingScore={formPassingScore}
-        setFormPassingScore={setFormPassingScore}
-        formDescription={formDescription}
-        setFormDescription={setFormDescription}
-        formIsPublished={formIsPublished}
-        setFormIsPublished={setFormIsPublished}
-        isConfigExpanded={isConfigExpanded}
-        setIsConfigExpanded={setIsConfigExpanded}
-        currentActiveConflict={currentActiveConflict}
-        isSystemPlacement={isSystemPlacement}
-        onCancelExam={handleRequestCancel}
-        isCanceling={isCanceling}
-      />
-
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-        <ExamEditorHeader
-          exam={activeExamConfig}
-          isVi={isVi}
-          is4Skills={is4Skills}
-          isSystemPlacement={isSystemPlacement}
-          questionsCount={questions.length}
-          searchQuery={searchQuery}
-          uploadingGlobalAudio={uploadingGlobalAudio}
-          globalAudioUrl={globalAudioUrl}
-          onClose={handleRequestCancel}
-          onSearchChange={setSearchQuery}
-          onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
-          onAddQuestion={handleAddQuestion}
-        />
-
-        <ExamEditorGlobalAudio
-          globalAudioUrl={globalAudioUrl}
-          isVi={isVi}
-          onRemove={handleRemoveGlobalAudio}
-        />
-
-        <CourseExamQuestionsList
-          questions={questions}
-          filteredQuestions={filteredQuestions}
-          isVi={isVi}
-          is4Skills={is4Skills}
-          isSystemPlacement={isSystemPlacement}
-          isProcessingZip={isProcessingZip}
-          zipProcessStatus={zipProcessStatus}
-          zipProgress={zipProgress}
-          isDragOverZip={isDragOverZip}
-          formPlacementSkills={formPlacementSkills}
-          uploadingQuestionAudioIdx={uploadingQuestionAudioIdx}
-          uploadingQuestionImageIdx={uploadingQuestionImageIdx}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setIsDragOverZip(true)
-          }}
-          onDragLeave={() => setIsDragOverZip(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setIsDragOverZip(false)
-            const file = e.dataTransfer.files?.[0]
+    <>
+      <div className="flex-1 flex flex-col justify-between space-y-5">
+        <input
+          ref={zipFileInputRef}
+          type="file"
+          accept=".zip,.rar,.xlsx,.xls,.csv,application/zip,application/x-rar-compressed,application/vnd.rar"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
             if (file) handleZipFileSelected(file)
           }}
-          onOpenZipPicker={() => zipFileInputRef.current?.click()}
-          onDownloadSampleZip={() => downloadSampleZip(isVi, is4Skills)}
-          onAddQuestion={handleAddQuestion}
-          onUpdateQuestion={handleUpdateQuestion}
-          onOptionChange={handleOptionChange}
-          onDuplicateQuestion={handleDuplicateQuestion}
-          onDeleteQuestion={handleDeleteQuestion}
-          onRequestUploadAudio={(idx) => {
-            activeQuestionIdxRef.current = idx
-            questionAudioInputRef.current?.click()
-          }}
-          onRequestUploadImage={(idx) => {
-            activeQuestionIdxRef.current = idx
-            questionImageInputRef.current?.click()
-          }}
+        />
+        <input
+          ref={globalAudioInputRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={handleUploadQuestionAudio}
+        />
+        <input
+          ref={questionAudioInputRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={handleUploadQuestionAudio}
+        />
+        <input
+          ref={questionImageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleUploadQuestionImage}
         />
 
-        <ExamEditorFooter
-          questionsCount={questions.length}
-          isVi={isVi}
-          isSaving={isSavingAll}
-          isCanceling={isCanceling}
-          isCreateMode={isCreateMode}
-          onClose={handleRequestCancel}
+        <div className="space-y-5">
+          <ExamConfigForm
+            initialExam={initialExam}
+            isCreateMode={isCreateMode}
+            isVi={isVi}
+            formTitle={formTitle}
+            setFormTitle={setFormTitle}
+            formPlacementSkills={formPlacementSkills}
+            handleSkillsChange={handleSkillsChange}
+            formDuration={formDuration}
+            setFormDuration={setFormDuration}
+            formPassingScore={formPassingScore}
+            setFormPassingScore={setFormPassingScore}
+            formDescription={formDescription}
+            setFormDescription={setFormDescription}
+            formIsPublished={formIsPublished}
+            setFormIsPublished={setFormIsPublished}
+            isConfigExpanded={isConfigExpanded}
+            setIsConfigExpanded={setIsConfigExpanded}
+            currentActiveConflict={currentActiveConflict}
+            isSystemPlacement={isSystemPlacement}
+            onCancelExam={handleRequestCancel}
+            isCanceling={isCanceling}
+          />
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+            <ExamEditorHeader
+              exam={activeExamConfig}
+              isVi={isVi}
+              is4Skills={is4Skills}
+              isSystemPlacement={isSystemPlacement}
+              questionsCount={questions.length}
+              searchQuery={searchQuery}
+              uploadingGlobalAudio={uploadingGlobalAudio}
+              globalAudioUrl={globalAudioUrl}
+              onClose={handleRequestCancel}
+              onSearchChange={setSearchQuery}
+              onOpenGlobalAudioPicker={() => globalAudioInputRef.current?.click()}
+              onAddQuestion={handleAddQuestion}
+            />
+
+            <ExamEditorGlobalAudio
+              globalAudioUrl={globalAudioUrl}
+              isVi={isVi}
+              onRemove={handleRemoveGlobalAudio}
+            />
+
+            <CourseExamQuestionsList
+              questions={questions}
+              filteredQuestions={filteredQuestions}
+              isVi={isVi}
+              is4Skills={is4Skills}
+              isSystemPlacement={isSystemPlacement}
+              isProcessingZip={isProcessingZip}
+              zipProcessStatus={zipProcessStatus}
+              zipProgress={zipProgress}
+              isDragOverZip={isDragOverZip}
+              formPlacementSkills={formPlacementSkills}
+              uploadingQuestionAudioIdx={uploadingQuestionAudioIdx}
+              uploadingQuestionImageIdx={uploadingQuestionImageIdx}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDragOverZip(true)
+              }}
+              onDragLeave={() => setIsDragOverZip(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setIsDragOverZip(false)
+                const file = e.dataTransfer.files?.[0]
+                if (file) handleZipFileSelected(file)
+              }}
+              onOpenZipPicker={() => zipFileInputRef.current?.click()}
+              onDownloadSampleZip={() => downloadSampleZip(isVi, is4Skills)}
+              onAddQuestion={handleAddQuestion}
+              onUpdateQuestion={handleUpdateQuestion}
+              onOptionChange={handleOptionChange}
+              onDuplicateQuestion={handleDuplicateQuestion}
+              onDeleteQuestion={handleDeleteQuestion}
+              onRequestUploadAudio={(idx) => {
+                activeQuestionIdxRef.current = idx
+                questionAudioInputRef.current?.click()
+              }}
+              onRequestUploadImage={(idx) => {
+                activeQuestionIdxRef.current = idx
+                questionImageInputRef.current?.click()
+              }}
+            />
+          </div>
+        </div>
+
+        <StickyFormActionBar
+          title={formTitle.trim() || (isCreateMode ? (isVi ? 'Bài thi đánh giá mới' : 'New Placement Exam') : (isVi ? 'Bài thi' : 'Exam'))}
+          statusText={isVi ? (isCreateMode ? 'Đang tạo bài thi:' : 'Đang chỉnh sửa:') : (isCreateMode ? 'Creating exam:' : 'Editing:')}
+          badgeText={`${questions.length} ${isVi ? 'câu hỏi' : 'questions'} · ${formDuration} ${isVi ? 'phút' : 'min'}`}
+          cancelText={isVi ? 'Hủy Bỏ' : 'Cancel'}
+          saveText={
+            isCreateMode
+              ? isVi
+                ? 'Tạo Bài Thi & Lưu Câu Hỏi'
+                : 'Create Exam & Save Questions'
+              : isVi
+              ? 'Lưu Bài Thi & Ngân Hàng Câu Hỏi'
+              : 'Save Exam & Question Bank'
+          }
+          savingText={isVi ? 'Đang lưu bài thi...' : 'Saving...'}
+          isSubmitting={isSavingAll}
+          onCancel={handleRequestCancel}
           onSave={handleSaveUnifiedExam}
+          saveButtonType="button"
         />
       </div>
 
@@ -323,6 +338,6 @@ export function CourseExamQuestionsEditor({
         confirmText={isVi ? 'Đồng ý thoát & hủy' : 'Discard & Leave'}
         cancelText={isVi ? 'Ở lại tiếp tục' : 'Stay'}
       />
-    </div>
+    </>
   )
 }
