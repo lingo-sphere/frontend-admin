@@ -132,7 +132,7 @@ export interface QuizQuestionItem {
   id?: string
   question_text: string
   options: string[]
-  correct_answer: string
+  correct_answer?: string | null
   explanation?: string | null
   media_url?: string | null
   audio_url?: string | null
@@ -155,7 +155,7 @@ export interface LessonQuestion {
   id?: string
   question_text: string
   options: string[]
-  correct_answer: string
+  correct_answer?: string | null
   explanation?: string | null
   media_url?: string | null
   audio_url?: string | null

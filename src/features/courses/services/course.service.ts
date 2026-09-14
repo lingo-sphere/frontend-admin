@@ -45,7 +45,7 @@ export const courseService = {
   },
 
   async getCourseById(id: string): Promise<Course> {
-    return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.BY_ID(id), undefined, CourseSchema)
+    return api.get<Course>(`${API_CONFIG.ENDPOINTS.COURSES.BY_ID(id)}?sanitize=false`, undefined, CourseSchema)
   },
 
   async getCourseCurriculum(id: string): Promise<Course> {

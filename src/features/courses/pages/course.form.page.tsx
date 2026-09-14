@@ -9,6 +9,7 @@ import { VideoPreviewModal } from '@/components/video.preview.modal'
 import { useCourseForm } from '@/features/courses/hooks/use.course.form'
 import { CourseFormHeader } from '@/features/courses/components/course.form.header'
 import { CourseFolderImportModal } from '@/features/courses/components/course.folder.import.modal'
+import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
 
 interface CourseFormPageProps {
   editCourseId?: string
@@ -71,31 +72,16 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           courseFolder={courseFolder}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={() => setActiveNavItem('courses')}
-            className="flex items-center gap-2 h-11 px-5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
-          >
-            <span>{isVi ? 'Hủy Bỏ' : 'Cancel'}</span>
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>
-              {isSubmitting
-                ? isVi
-                  ? 'Đang lưu...'
-                  : 'Saving...'
-                : isVi
-                ? 'Lưu Khóa Học'
-                : 'Save Course'}
-            </span>
-          </button>
-        </div>
+        <StickyFormActionBar
+          title={formData.title || (isEditMode ? (isVi ? 'Khóa học' : 'Course') : (isVi ? 'Khóa học mới' : 'New course'))}
+          statusText={isVi ? (isEditMode ? 'Đang chỉnh sửa:' : 'Đang tạo mới:') : (isEditMode ? 'Editing:' : 'Creating:')}
+          badgeText={`${formData.modules.length} ${isVi ? 'chương' : 'chapters'} · ${totalLessons} ${isVi ? 'bài học' : 'lessons'}`}
+          cancelText={isVi ? 'Hủy Bỏ' : 'Cancel'}
+          saveText={isSubmitting ? (isVi ? 'Đang lưu...' : 'Saving...') : (isVi ? 'Lưu Khóa Học' : 'Save Course')}
+          savingText={isVi ? 'Đang lưu...' : 'Saving...'}
+          isSubmitting={isSubmitting}
+          onCancel={() => setActiveNavItem('courses')}
+        />
       </form>
 
       {videoPreviewUrl && (

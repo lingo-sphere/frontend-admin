@@ -1,15 +1,13 @@
-/**
- * @file vocabulary.form.page.tsx
- * @description Trang quản trị VocabularyFormPage trong giao diện Admin
- */
+// Trang quan tri tao moi va chinh sua tu vung kem quan ly ngu nghia trong Admin.
 
 import { useState } from 'react'
-import { ChevronLeft, Save } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
 import { VocabularyBasicInfoForm } from '@/features/vocabulary/components/vocabulary.basic.info.form'
 import { VocabularyMeaningsForm, type Meaning } from '@/features/vocabulary/components/vocabulary.meanings.form'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
 
 export function VocabularyFormPage({
   editWordId,
@@ -181,23 +179,16 @@ export function VocabularyFormPage({
           onRemoveExample={removeExample}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => navigate('/vocabulary')}
-            className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 h-11 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isSubmitting ? 'Đang lưu...' : isEditing ? 'Cập nhật từ vựng' : 'Lưu từ vựng'}</span>
-          </button>
-        </div>
+        <StickyFormActionBar
+          title={word.trim() || (isEditing ? 'Từ vựng' : 'Từ vựng mới')}
+          statusText={isEditing ? 'Đang chỉnh sửa:' : 'Đang tạo mới:'}
+          badgeText={wordType}
+          cancelText="Hủy Bỏ"
+          saveText={isEditing ? 'Cập Nhật Từ Vựng' : 'Lưu Từ Vựng'}
+          savingText="Đang lưu..."
+          isSubmitting={isSubmitting}
+          onCancel={() => navigate('/vocabulary')}
+        />
       </form>
     </div>
   )

@@ -268,8 +268,10 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           modules: mappedModules,
         })
       }
-    } catch {
-      toast.error('Không thể tải thông tin khóa học')
+    } catch (err: unknown) {
+      console.error('Failed to load course details:', err)
+      const msg = err instanceof Error ? err.message : 'Không thể tải thông tin khóa học'
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }

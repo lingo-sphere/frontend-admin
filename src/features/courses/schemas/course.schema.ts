@@ -5,9 +5,9 @@ import { PaginationMetaSchema } from '@/features/users/schemas/user.schema'
 
 export const QuizQuestionItemSchema = z.object({
   id: z.string().optional(),
-  question_text: z.string(),
-  options: z.array(z.string()),
-  correct_answer: z.string(),
+  question_text: z.string().default(''),
+  options: z.array(z.string()).default([]),
+  correct_answer: z.string().nullable().optional(),
   explanation: z.string().nullable().optional(),
   media_url: z.string().nullable().optional(),
   audio_url: z.string().nullable().optional(),

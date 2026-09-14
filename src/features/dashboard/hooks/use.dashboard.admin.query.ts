@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { userService } from '@/features/users/services/user.service'
 import { courseService } from '@/features/courses/services/course.service'
 import { dashboardAdminKeys } from '@/features/dashboard/keys/dashboard.admin.keys'
-import type { SystemAnalyticsOverview, Course as ApiCourse } from '@/types/api.types'
+import type { SystemAnalyticsOverview } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 export function useSystemAnalyticsQuery(enabled = true) {
   return useQuery<SystemAnalyticsOverview>({
@@ -17,7 +18,7 @@ export function useSystemAnalyticsQuery(enabled = true) {
 }
 
 export function useDashboardCoursesQuery(enabled = true) {
-  return useQuery<ApiCourse[]>({
+  return useQuery<Course[]>({
     queryKey: dashboardAdminKeys.courses(),
     queryFn: async () => {
       const res = await courseService.getAllCourses()
