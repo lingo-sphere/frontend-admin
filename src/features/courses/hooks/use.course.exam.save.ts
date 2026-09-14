@@ -120,11 +120,17 @@ export function useCourseExamSave({
     setIsSavingAll(true)
     try {
       if (isCreateMode) {
+        const generatedCode = isSystemPlacement
+          ? `placement_${formPlacementSkills.toLowerCase()}_${Date.now()}`
+          : `exam_${Date.now()}`
+
         const createPayload: CreateExamDto = {
           title: trimmedTitle,
+          code: generatedCode,
           course_id: undefined,
           course_title: 'Toàn Hệ Thống',
           type: 'DIAGNOSTIC_TEST',
+          exam_type: 'DIAGNOSTIC_TEST',
           is_system_placement: true,
           skills_enabled: formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR',
           placement_type: formPlacementSkills,

@@ -73,7 +73,9 @@ export function ExamsPage() {
     try {
       const created = await createExam({
         title,
+        code: `exam_${Date.now()}`,
         type: type || 'FULL_TEST',
+        exam_type: type || 'FULL_TEST',
         duration_minutes: duration,
         is_published: true,
       })
