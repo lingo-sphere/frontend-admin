@@ -1,48 +1,51 @@
-/**
- * @file media.storage.page.tsx
- * @description Trang quản trị MediaStoragePage trong giao diện Admin
- */
-
-import { useState, useEffect } from 'react'
+// Trang quản trị kho media, tts generator và hạn mức lưu trữ với TanStack Query.
+import { useState, useCallback } from 'react'
 import { HardDrive } from 'lucide-react'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { mediaAdminService, type StorageQuota } from '@/features/media/services/media.service'
 import { toast } from '@/store/toast.store'
 import { MediaStorageQuotaCards } from '@/features/media/components/media.storage.quota.cards'
 import { MediaTtsGenerator } from '@/features/media/components/media.tts.generator'
 
 export function MediaStoragePage() {
-  const [quota, setQuota] = useState<StorageQuota | null>(null)
   const [ttsText, setTtsText] = useState<string>('Hello! Welcome to LingoSphere English Learning Ecosystem.')
   const [selectedVoice, setSelectedVoice] = useState<string>('alloy')
-  const [isGeneratingTts, setIsGeneratingTts] = useState<boolean>(false)
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchUsage = async () => {
+  const { data: quota = null } = useQuery<StorageQuota | null>({
+    queryKey: ['media-storage-quota'],
+    queryFn: async () => {
       try {
-        const data = await mediaAdminService.getStorageUsage()
-        setQuota(data)
+        return await mediaAdminService.getStorageUsage()
       } catch {
         toast.error('Không thể tải thông tin dung lượng lưu trữ')
+        return null
       }
-    }
-    fetchUsage()
-  }, [])
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
-  const handleGenerateTts = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!ttsText.trim()) return
-    setIsGeneratingTts(true)
-    try {
-      const res = await mediaAdminService.generateTts(ttsText, selectedVoice)
+  const ttsMutation = useMutation({
+    mutationFn: async ({ text, voice }: { text: string; voice: string }) => {
+      return mediaAdminService.generateTts(text, voice)
+    },
+    onSuccess: (res) => {
       setGeneratedAudioUrl(res.audio_url)
       toast.success('Sinh giọng đọc Text-to-Speech thành công!', 'TTS Sẵn sàng')
-    } catch {
+    },
+    onError: () => {
       toast.error('Có lỗi xảy ra khi sinh giọng đọc TTS')
-    } finally {
-      setIsGeneratingTts(false)
-    }
-  }
+    },
+  })
+
+  const handleGenerateTts = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!ttsText.trim()) return
+      await ttsMutation.mutateAsync({ text: ttsText, voice: selectedVoice })
+    },
+    [ttsText, selectedVoice, ttsMutation]
+  )
 
   return (
     <div className="space-y-6">
@@ -61,7 +64,7 @@ export function MediaStoragePage() {
       <MediaTtsGenerator
         ttsText={ttsText}
         selectedVoice={selectedVoice}
-        isGeneratingTts={isGeneratingTts}
+        isGeneratingTts={ttsMutation.isPending}
         generatedAudioUrl={generatedAudioUrl}
         onTtsTextChange={setTtsText}
         onVoiceChange={setSelectedVoice}

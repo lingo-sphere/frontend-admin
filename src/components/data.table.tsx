@@ -16,9 +16,11 @@ export interface DataTableColumn<T> {
   render?: (record: T, index: number) => React.ReactNode
   dataIndex?: keyof T
   width?: string
+  minWidth?: string
   align?: 'left' | 'center' | 'right'
   hidden?: boolean
   sortable?: boolean
+  sticky?: 'left' | 'right'
 }
 
 export interface DataTableProps<T> {
@@ -238,47 +240,57 @@ export function DataTable<T extends object>({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60">
-                  {visibleColumns.map((col) => (
-                    <th
-                      key={col.key}
-                      style={{ width: col.width }}
-                      onClick={() => handleHeaderClick(col.key, col.sortable)}
-                      className={`py-3.5 px-4 whitespace-nowrap ${
-                        col.align === 'right'
-                          ? 'text-right'
-                          : col.align === 'center'
-                          ? 'text-center'
-                          : 'text-left'
-                      } ${
-                        col.sortable
-                          ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
-                          : ''
-                      }`}
-                    >
-                      <div
-                        className={`inline-flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
+                  {visibleColumns.map((col) => {
+                    const isStickyRight = col.sticky === 'right'
+                    const isStickyLeft = col.sticky === 'left'
+                    return (
+                      <th
+                        key={col.key}
+                        style={{ width: col.width, minWidth: col.minWidth }}
+                        onClick={() => handleHeaderClick(col.key, col.sortable)}
+                        className={`py-3.5 px-3.5 whitespace-nowrap ${
                           col.align === 'right'
-                            ? 'justify-end'
+                            ? 'text-right'
                             : col.align === 'center'
-                            ? 'justify-center'
-                            : 'justify-start'
+                            ? 'text-center'
+                            : 'text-left'
+                        } ${
+                          col.sortable
+                            ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
+                            : ''
+                        } ${
+                          isStickyRight
+                            ? 'sticky right-0 bg-slate-50/95 dark:bg-slate-950/95 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.4)]'
+                            : isStickyLeft
+                            ? 'sticky left-0 bg-slate-50/95 dark:bg-slate-950/95 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_6px_-2px_rgba(0,0,0,0.4)]'
+                            : ''
                         }`}
                       >
-                        <span className="tracking-tight whitespace-nowrap">{col.title}</span>
-                        {col.sortable && (
-                          <span className="shrink-0 transition-colors">
-                            {activeSortKey === col.key && activeSortOrder === 'asc' ? (
-                              <ArrowUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
-                            ) : activeSortKey === col.key && activeSortOrder === 'desc' ? (
-                              <ArrowDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
-                            ) : (
-                              <ChevronsUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                  ))}
+                        <div
+                          className={`inline-flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
+                            col.align === 'right'
+                              ? 'justify-end'
+                              : col.align === 'center'
+                              ? 'justify-center'
+                              : 'justify-start'
+                          }`}
+                        >
+                          <span className="tracking-tight whitespace-nowrap">{col.title}</span>
+                          {col.sortable && (
+                            <span className="shrink-0 transition-colors">
+                              {activeSortKey === col.key && activeSortOrder === 'asc' ? (
+                                <ArrowUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
+                              ) : activeSortKey === col.key && activeSortOrder === 'desc' ? (
+                                <ArrowDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
+                              ) : (
+                                <ChevronsUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody className="text-slate-700 dark:text-slate-200 text-xs">
@@ -308,29 +320,39 @@ export function DataTable<T extends object>({
                     <tr
                       key={rowKey(record)}
                       onClick={() => onRowClick && onRowClick(record)}
-                      className={`border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100 ${
+                      className={`group border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100 ${
                         onRowClick ? 'cursor-pointer' : ''
                       }`}
                     >
-                      {visibleColumns.map((col) => (
-                        <td
-                          key={col.key}
-                          style={{ width: col.width }}
-                          className={`${getCellPadding()} ${
-                            col.align === 'right'
-                              ? 'text-right'
-                              : col.align === 'center'
-                              ? 'text-center'
-                              : 'text-left'
-                          }`}
-                        >
-                          {col.render
-                            ? col.render(record, index)
-                            : col.dataIndex
-                            ? String(record[col.dataIndex] ?? '')
-                            : null}
-                        </td>
-                      ))}
+                      {visibleColumns.map((col) => {
+                        const isStickyRight = col.sticky === 'right'
+                        const isStickyLeft = col.sticky === 'left'
+                        return (
+                          <td
+                            key={col.key}
+                            style={{ width: col.width, minWidth: col.minWidth }}
+                            className={`${getCellPadding()} ${
+                              col.align === 'right'
+                                ? 'text-right'
+                                : col.align === 'center'
+                                ? 'text-center'
+                                : 'text-left'
+                            } ${
+                              isStickyRight
+                                ? 'sticky right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.4)] transition-colors'
+                                : isStickyLeft
+                                ? 'sticky left-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_6px_-2px_rgba(0,0,0,0.4)] transition-colors'
+                                : ''
+                            }`}
+                          >
+                            {col.render
+                              ? col.render(record, index)
+                              : col.dataIndex
+                              ? String(record[col.dataIndex] ?? '')
+                              : null}
+                          </td>
+                        )
+                      })}
                     </tr>
                   ))
                 )}
