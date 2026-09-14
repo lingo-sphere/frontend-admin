@@ -177,17 +177,20 @@ export function CourseFolderImportModal({
     const moduleTheoryFiles = parsedResult.theoryFilesToUpload || []
     const lessonTheoryFiles = parsedResult.lessonTheoryFilesToUpload || []
     const courseDocFile = parsedResult.courseDocumentFileToUpload
+    const courseThumbFile = parsedResult.courseThumbnailFileToUpload
     const totalFiles =
       videoFiles.length +
       moduleTheoryFiles.length +
       lessonTheoryFiles.length +
-      (courseDocFile ? 1 : 0)
+      (courseDocFile ? 1 : 0) +
+      (courseThumbFile ? 1 : 0)
 
     let totalBytes = 0
     videoFiles.forEach((v) => { totalBytes += v.file.size })
     moduleTheoryFiles.forEach((m) => { totalBytes += m.file.size })
     lessonTheoryFiles.forEach((l) => { totalBytes += l.file.size })
     if (courseDocFile) { totalBytes += courseDocFile.size }
+    if (courseThumbFile) { totalBytes += courseThumbFile.size }
 
     const loadedBytesMap: Record<number, number> = {}
     let completedFiles = 0
@@ -206,6 +209,25 @@ export function CourseFolderImportModal({
     }
 
     let globalFileIndex = 0
+
+    if (courseThumbFile) {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, courseThumbFile.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          courseThumbFile,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, courseThumbFile.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, courseThumbFile.size, courseThumbFile.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        if (uploadedUrl) {
+          updatedCourseInfo.thumbnail_url = uploadedUrl
+        }
+      })
+    }
 
     if (courseDocFile) {
       const fIdx = globalFileIndex++
@@ -346,7 +368,8 @@ export function CourseFolderImportModal({
     ? parsedResult.videoFilesToUpload.length +
       parsedResult.theoryFilesToUpload.length +
       parsedResult.lessonTheoryFilesToUpload.length +
-      (parsedResult.courseDocumentFileToUpload ? 1 : 0)
+      (parsedResult.courseDocumentFileToUpload ? 1 : 0) +
+      (parsedResult.courseThumbnailFileToUpload ? 1 : 0)
     : 0
 
   return (
@@ -539,6 +562,18 @@ export function CourseFolderImportModal({
                     <HelpCircle className="w-3.5 h-3.5 text-teal-600" />
                     <span>{parsedResult.totalLessonQuizzesCount} {isVi ? 'câu hỏi ôn tập bài học' : 'lesson quizzes'}</span>
                   </span>
+                  {parsedResult.courseThumbnailFileToUpload && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{isVi ? 'Ảnh Thumbnail' : 'Thumbnail image'}</span>
+                    </span>
+                  )}
+                  {parsedResult.totalFinalQuestionsCount > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                      <HelpCircle className="w-3.5 h-3.5 text-rose-600" />
+                      <span>{parsedResult.totalFinalQuestionsCount} {isVi ? 'câu hỏi tốt nghiệp Final Test' : 'final test questions'}</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -636,7 +671,7 @@ export function CourseFolderImportModal({
             <div className="text-xs text-slate-500 dark:text-slate-400">
               <span>{isVi ? 'Sẵn sàng tải lên: ' : 'Ready to upload: '}</span>
               <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
-                {parsedResult.videoFilesToUpload.length} video, {parsedResult.theoryFilesToUpload.length + parsedResult.lessonTheoryFilesToUpload.length + (parsedResult.courseDocumentFileToUpload ? 1 : 0)} tài liệu PDF
+                {parsedResult.videoFilesToUpload.length} video, {parsedResult.theoryFilesToUpload.length + parsedResult.lessonTheoryFilesToUpload.length + (parsedResult.courseDocumentFileToUpload ? 1 : 0)} tài liệu PDF{parsedResult.courseThumbnailFileToUpload ? `, 1 ảnh thumbnail` : ''}
               </strong>
             </div>
 

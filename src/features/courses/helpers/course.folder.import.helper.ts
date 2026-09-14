@@ -1,4 +1,4 @@
-// Helper xu ly doc file Excel va khop noi video cung tai lieu PDF phuc vu tao nhanh khoa hoc.
+// Helper xu ly doc file Excel va khop noi video cung tai lieu PDF va anh thumbnail phuc vu tao nhanh khoa hoc.
 
 import * as XLSX from 'xlsx'
 import type { CourseFormData, CourseModule, CourseLesson, LessonQuestion } from '@/features/courses/components/course.basic.info.tab'
@@ -11,6 +11,9 @@ export interface MatchedLessonItem {
   moduleDescription?: string
   moduleTheoryFile?: string
   modulePassingScore: number
+  moduleDurationMinutes?: number
+  moduleSpeakingPrompt?: string
+  moduleWritingPrompt?: string
   lessonOrder: number
   lessonTitle: string
   videoFilename: string
@@ -35,10 +38,12 @@ export interface ParsedFolderResult {
   matchedPdfsCount: number
   totalChapterQuestionsCount: number
   totalLessonQuizzesCount: number
+  totalFinalQuestionsCount: number
   videoFilesToUpload: { lessonKey: string; file: File }[]
   theoryFilesToUpload: { moduleOrder: number; file: File }[]
   lessonTheoryFilesToUpload: { lessonKey: string; file: File }[]
   courseDocumentFileToUpload?: File
+  courseThumbnailFileToUpload?: File
 }
 
 const findValue = (rows: Record<string, unknown>[], fieldKeywords: string[]): string | number | undefined => {
@@ -145,8 +150,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   const sheetNames = workbook.SheetNames
   const infoSheetName = sheetNames.find((s) => /info|thong_tin|course/i.test(s)) || sheetNames[0]
   const lessonsSheetName = sheetNames.find((s) => /lesson|bai_hoc|curriculum/i.test(s)) || sheetNames[1]
-  const testsSheetName = sheetNames.find((s) => /chapter_test|test|kiem_tra/i.test(s))
+  const testsSheetName = sheetNames.find((s) => /chapter_test|chapter|kiem_tra/i.test(s))
   const quizzesSheetName = sheetNames.find((s) => /quiz|on_tap/i.test(s))
+  const finalTestsSheetName = sheetNames.find((s) => /final|tot_nghiep/i.test(s))
 
   const infoRaw = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[infoSheetName] || {})
   const lessonsRaw = lessonsSheetName
@@ -157,6 +163,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     : []
   const lessonQuizzesRaw = quizzesSheetName
     ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[quizzesSheetName] || {})
+    : []
+  const finalTestsRaw = finalTestsSheetName
+    ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[finalTestsSheetName] || {})
     : []
 
   const title = String(findValue(infoRaw, ['title', 'tên khóa học']) || excelFile.name.replace(/\.[^/.]+$/, '').replace(/^\d+_/, '').replace(/_/g, ' ')).trim()
@@ -171,10 +180,44 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   const discount_price = Number(findValue(infoRaw, ['discount_price', 'giá khuyến mãi']) || 0)
   const author_name = String(findValue(infoRaw, ['author_name', 'tên giảng viên']) || 'Đội ngũ Giảng viên LingoSphere').trim()
   const author_title = String(findValue(infoRaw, ['author_title', 'chức danh']) || 'Giảng viên chuyên môn').trim()
+  const author_email = String(findValue(infoRaw, ['author_email', 'email giảng viên']) || '').trim()
+  const author_bio = String(findValue(infoRaw, ['author_bio', 'tiểu sử giảng viên']) || '').trim()
   const description = String(findValue(infoRaw, ['description', 'mô tả']) || `Khóa học ${title} chất lượng cao chuẩn quốc tế trên LingoSphere.`).trim()
-  const final_test_passing_score = Number(findValue(infoRaw, ['final_test_passing_score', 'cuối khóa']) || 70)
+  const final_test_passing_score = Number(findValue(infoRaw, ['final_test_passing_score', 'điểm đạt kiểm tra cuối khóa', 'cuối khóa']) || 70)
+  const final_test_duration_minutes = Number(findValue(infoRaw, ['final_test_duration_minutes', 'thời lượng thi tốt nghiệp', 'thời lượng kiểm tra cuối khóa']) || 60)
+  const final_test_speaking_prompt = String(findValue(infoRaw, ['final_test_speaking_prompt', 'đề thi nói cuối khóa']) || '').trim()
+  const final_test_writing_prompt = String(findValue(infoRaw, ['final_test_writing_prompt', 'đề thi viết cuối khóa']) || '').trim()
   const rawIsPublished = String(findValue(infoRaw, ['is_published', 'xuất bản']) || 'TRUE').toUpperCase()
   const is_published = rawIsPublished !== 'FALSE'
+
+  const rawThumbnailName = String(
+    findValue(infoRaw, [
+      'thumbnail_file',
+      'thumbnail_image',
+      'ảnh thumbnail',
+      'ảnh đại diện',
+      'thumbnail',
+      'cover',
+    ]) || 'thumbnail.png'
+  ).trim()
+
+  let matchedCourseThumbnailFile = rawThumbnailName ? findMatchingFile(rawThumbnailName, files) : undefined
+  if (!matchedCourseThumbnailFile) {
+    matchedCourseThumbnailFile = files.find((f) => {
+      const lower = f.name.toLowerCase()
+      return (
+        /\.(png|jpe?g|webp)$/i.test(lower) &&
+        (lower.includes('thumb') ||
+          lower.includes('cover') ||
+          lower.includes('avatar') ||
+          lower.includes('poster') ||
+          lower.includes('banner'))
+      )
+    })
+  }
+  if (!matchedCourseThumbnailFile) {
+    matchedCourseThumbnailFile = files.find((f) => /\.(png|jpe?g|webp)$/i.test(f.name.toLowerCase()))
+  }
 
   const rawDocumentName = String(
     findValue(infoRaw, [
@@ -207,6 +250,29 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   const document_name = matchedCourseDocumentFile?.name || rawDocumentName || undefined
 
+  const finalTestQuestions: QuizQuestionItem[] = []
+  finalTestsRaw.forEach((row, ftIdx) => {
+    const qText = String(row['Câu hỏi trắc nghiệm (question_text)'] ?? row['question_text'] ?? row['Câu hỏi'] ?? '').trim()
+    if (!qText) return
+    const optA = String(row['Đáp án A (option_a)'] ?? row['option_a'] ?? row['A'] ?? '').trim()
+    const optB = String(row['Đáp án B (option_b)'] ?? row['option_b'] ?? row['B'] ?? '').trim()
+    const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? row['C'] ?? '').trim()
+    const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? row['D'] ?? '').trim()
+    const options = [optA, optB, optC, optD].filter(Boolean)
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
+    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
+
+    finalTestQuestions.push({
+      id: `final-q${ftIdx + 1}`,
+      question_text: qText,
+      options,
+      correct_answer,
+      explanation,
+      order_index: ftIdx + 1,
+    })
+  })
+
   const courseInfo: Partial<CourseFormData> = {
     title,
     slug,
@@ -217,8 +283,14 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     discount_price: isNaN(discount_price) ? 0 : discount_price,
     author_name,
     author_title,
+    author_email: author_email || undefined,
+    author_bio: author_bio || undefined,
     description,
     final_test_passing_score: isNaN(final_test_passing_score) ? 70 : final_test_passing_score,
+    final_test_duration_minutes: isNaN(final_test_duration_minutes) ? 60 : final_test_duration_minutes,
+    final_test_speaking_prompt: final_test_speaking_prompt || undefined,
+    final_test_writing_prompt: final_test_writing_prompt || undefined,
+    final_test_questions: finalTestQuestions,
     is_published,
     document_name,
   }
@@ -283,7 +355,19 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   })
 
   const matchedLessons: MatchedLessonItem[] = []
-  const modulesMap = new Map<number, { title: string; description: string; theoryFile?: string; passingScore: number; lessons: CourseLesson[] }>()
+  const modulesMap = new Map<
+    number,
+    {
+      title: string
+      description: string
+      theoryFile?: string
+      passingScore: number
+      durationMinutes: number
+      speakingPrompt?: string
+      writingPrompt?: string
+      lessons: CourseLesson[]
+    }
+  >()
   const videoFilesToUpload: { lessonKey: string; file: File }[] = []
   const lessonTheoryFilesToUpload: { lessonKey: string; file: File }[] = []
   let matchedPdfsCount = matchedCourseDocumentFile ? 1 : 0
@@ -297,6 +381,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const mDesc = String(row['Mô tả chương (module_description)'] ?? row['module_description'] ?? '').trim()
     const mTheory = findRowString(row, ['module_theory_file', 'tài liệu chương', 'tài liệu lý thuyết', 'theory_file', 'tài liệu'])
     const mPassing = Number(row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score'] ?? 70)
+    const mDuration = Number(row['Thời lượng test chương (module_test_duration_minutes)'] ?? row['module_test_duration_minutes'] ?? (category === 'TOEIC_4_SKILLS' ? 20 : 15))
+    const mSpeakingPrompt = findRowString(row, ['module_speaking_prompt', 'đề kiểm tra nói'])
+    const mWritingPrompt = findRowString(row, ['module_writing_prompt', 'đề kiểm tra viết'])
 
     const lOrder = Number(row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1)
     const lTitle = String(row['Tên bài học (lesson_title)'] ?? row['lesson_title'] ?? `Bài học ${mOrder}.${lOrder}`).trim()
@@ -328,6 +415,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       moduleDescription: mDesc,
       moduleTheoryFile: mTheory,
       modulePassingScore: isNaN(mPassing) ? 70 : mPassing,
+      moduleDurationMinutes: isNaN(mDuration) ? 15 : mDuration,
+      moduleSpeakingPrompt: mSpeakingPrompt || undefined,
+      moduleWritingPrompt: mWritingPrompt || undefined,
       lessonOrder: lOrder,
       lessonTitle: lTitle,
       videoFilename,
@@ -344,6 +434,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
         description: mDesc,
         theoryFile: mTheory,
         passingScore: isNaN(mPassing) ? 70 : mPassing,
+        durationMinutes: isNaN(mDuration) ? 15 : mDuration,
+        speakingPrompt: mSpeakingPrompt || undefined,
+        writingPrompt: mWritingPrompt || undefined,
         lessons: [],
       })
     } else {
@@ -404,6 +497,10 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       theory_file_name: matchedModulePdf?.name || modData.theoryFile || undefined,
       passing_score: modData.passingScore,
       challenge_passing_score: modData.passingScore,
+      duration_minutes: modData.durationMinutes,
+      challenge_duration_minutes: modData.durationMinutes,
+      speaking_prompt: modData.speakingPrompt,
+      writing_prompt: modData.writingPrompt,
       test_questions: tests,
       challenge_questions: tests,
       lessons: modData.lessons,
@@ -432,9 +529,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     matchedPdfsCount,
     totalChapterQuestionsCount: totalChapterQuestions,
     totalLessonQuizzesCount: totalLessonQuizzes,
+    totalFinalQuestionsCount: finalTestQuestions.length,
     videoFilesToUpload,
     theoryFilesToUpload,
     lessonTheoryFilesToUpload,
     courseDocumentFileToUpload: matchedCourseDocumentFile,
+    courseThumbnailFileToUpload: matchedCourseThumbnailFile,
   }
 }
