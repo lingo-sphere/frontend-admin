@@ -76,9 +76,12 @@ export const API_CONFIG = {
     },
 
     VOCABULARY: {
+      LIST: '/vocabulary/lexical-items',
       SEARCH: '/vocabulary/lexical-items/search',
       BY_ID: (id: string) => `/vocabulary/lexical-items/${id}`,
       CREATE: '/vocabulary/lexical-items',
+      INGEST: '/vocabulary/ingest',
+      INGEST_BATCH: '/vocabulary/ingest/batch',
       TOPICS: '/vocabulary/topics',
       TOPIC_BY_ID: (id: string) => `/vocabulary/topics/${id}`,
       IPA_SYMBOLS: '/vocabulary/ipa-symbols',

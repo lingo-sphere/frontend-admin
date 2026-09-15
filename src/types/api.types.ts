@@ -314,8 +314,7 @@ export interface LexicalItem {
   slug?: string
   word_type: WordType | string
   cefr_level: CefrLevel | string
-  pronunciation_us?: string
-  pronunciation_uk?: string
+  pronunciation?: string  // ✅ IPA pronunciation (backend field: p)
   audio_url_us?: string
   audio_url_uk?: string
   syllables?: number
@@ -333,8 +332,7 @@ export interface Word {
   slug?: string
   word_type: WordType | string
   cefr_level: CefrLevel | string
-  pronunciation_us?: string
-  pronunciation_uk?: string
+  pronunciation?: string  // ✅ IPA pronunciation (backend field: p)
   audio_url_us?: string
   audio_url_uk?: string
   syllables?: number
