@@ -5,6 +5,24 @@ import type { CourseFormData, CourseModule, CourseLesson, LessonQuestion } from 
 import type { QuizQuestionItem } from '@/features/courses/schemas/course.schema'
 import { generateSlug } from '@/features/courses/helpers/course.helper'
 
+export interface VideoUploadTaskItem {
+  lessonId: string
+  lessonKey: string
+  moduleOrder: number
+  lessonOrder: number
+  file: File
+  durationSeconds?: number
+  durationMinutes?: number
+}
+
+export interface LessonTheoryUploadTaskItem {
+  lessonId: string
+  lessonKey: string
+  moduleOrder: number
+  lessonOrder: number
+  file: File
+}
+
 export interface MatchedLessonItem {
   moduleOrder: number
   moduleTitle: string
@@ -39,9 +57,9 @@ export interface ParsedFolderResult {
   totalChapterQuestionsCount: number
   totalLessonQuizzesCount: number
   totalFinalQuestionsCount: number
-  videoFilesToUpload: { lessonKey: string; file: File }[]
+  videoFilesToUpload: VideoUploadTaskItem[]
   theoryFilesToUpload: { moduleOrder: number; file: File }[]
-  lessonTheoryFilesToUpload: { lessonKey: string; file: File }[]
+  lessonTheoryFilesToUpload: LessonTheoryUploadTaskItem[]
   courseDocumentFileToUpload?: File
   courseThumbnailFileToUpload?: File
   finalTestAudioFileToUpload?: File
@@ -470,8 +488,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       lessons: CourseLesson[]
     }
   >()
-  const videoFilesToUpload: { lessonKey: string; file: File }[] = []
-  const lessonTheoryFilesToUpload: { lessonKey: string; file: File }[] = []
+  const videoFilesToUpload: VideoUploadTaskItem[] = []
+  const lessonTheoryFilesToUpload: LessonTheoryUploadTaskItem[] = []
   let matchedPdfsCount = matchedCourseDocumentFile ? 1 : 0
   let matchedCount = 0
   let missingCount = 0
@@ -498,15 +516,34 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const matchedVideo = videoFilename ? findMatchingFile(videoFilename, files) : undefined
     const matchedTheory = lTheoryFile ? findMatchingFile(lTheoryFile, files) : undefined
     const lessonKey = `m${mOrder}-l${lOrder}`
+    const lessonId = `lesson-${lessonKey}-${idx + 1}`
+
+    let durSec = 600
+    let durMin = 10
+    if (matchedVideo) {
+      const readSec = await readVideoDuration(matchedVideo)
+      if (readSec && readSec > 0) {
+        durSec = readSec
+        durMin = readSec >= 60 ? Math.round(readSec / 60) : Number((readSec / 60).toFixed(2))
+      }
+    }
 
     if (matchedTheory) {
       matchedPdfsCount++
-      lessonTheoryFilesToUpload.push({ lessonKey, file: matchedTheory })
+      lessonTheoryFilesToUpload.push({ lessonId, lessonKey, moduleOrder: mOrder, lessonOrder: lOrder, file: matchedTheory })
     }
 
     if (matchedVideo) {
       matchedCount++
-      videoFilesToUpload.push({ lessonKey, file: matchedVideo })
+      videoFilesToUpload.push({
+        lessonId,
+        lessonKey,
+        moduleOrder: mOrder,
+        lessonOrder: lOrder,
+        file: matchedVideo,
+        durationSeconds: durSec,
+        durationMinutes: durMin,
+      })
     } else if (videoFilename) {
       missingCount++
     }
@@ -528,6 +565,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       lessonTheoryText: lTheoryText,
       matchedVideoFile: matchedVideo,
       matchedTheoryFile: matchedTheory,
+      videoDurationSeconds: durSec,
+      videoDurationMinutes: durMin,
     })
 
     if (!modulesMap.has(mOrder)) {
@@ -551,11 +590,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const lessonQuizzes = lessonQuizzesByModuleAndLesson.get(`${mOrder}-${lOrder}`) || []
 
     modulesMap.get(mOrder)!.lessons.push({
-      id: `lesson-${lessonKey}-${Date.now()}`,
+      id: lessonId,
       title: lTitle,
       video_url: '',
-      duration_minutes: 10,
-      duration_seconds: 600,
+      duration_minutes: durMin,
+      duration_seconds: durSec,
       content: lTheoryText,
       is_preview: isFree,
       lesson_order: lOrder,

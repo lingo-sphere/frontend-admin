@@ -62,38 +62,54 @@ export const mediaAdminService = {
     try {
       let mimeType = file.type
       if (!mimeType) {
-        if (file.name.toLowerCase().endsWith('.pdf')) mimeType = 'application/pdf'
-        else if (file.name.toLowerCase().endsWith('.mp4')) mimeType = 'video/mp4'
-        else if (file.name.toLowerCase().endsWith('.webm')) mimeType = 'video/webm'
+        const lowerName = file.name.toLowerCase()
+        if (lowerName.endsWith('.pdf')) mimeType = 'application/pdf'
+        else if (lowerName.endsWith('.mp4')) mimeType = 'video/mp4'
+        else if (lowerName.endsWith('.webm')) mimeType = 'video/webm'
+        else if (lowerName.endsWith('.wav')) mimeType = 'audio/wav'
+        else if (lowerName.endsWith('.mp3')) mimeType = 'audio/mpeg'
+        else if (lowerName.endsWith('.ogg')) mimeType = 'audio/ogg'
+        else if (lowerName.endsWith('.m4a')) mimeType = 'audio/mp4'
+        else if (lowerName.endsWith('.png')) mimeType = 'image/png'
+        else if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) mimeType = 'image/jpeg'
+        else if (lowerName.endsWith('.webp')) mimeType = 'image/webp'
         else mimeType = 'application/octet-stream'
       }
+
       const presigned = await this.getPresignedUploadUrl(file.name, mimeType, file.size, folder)
 
       if (presigned?.upload_url && presigned?.public_url) {
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest()
-          xhr.open('PUT', presigned.upload_url, true)
-          xhr.setRequestHeader('Content-Type', mimeType)
+        const executePut = () =>
+          new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+            xhr.open('PUT', presigned.upload_url, true)
+            xhr.setRequestHeader('Content-Type', mimeType)
 
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const pct = Math.round((e.loaded * 100) / e.total)
-              onProgress?.(pct, e.loaded, e.total)
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const pct = Math.round((e.loaded * 100) / e.total)
+                onProgress?.(pct, e.loaded, e.total)
+              }
             }
-          }
 
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              onProgress?.(100, file.size, file.size)
-              resolve()
-            } else {
-              reject(new Error(`R2 Direct Upload failed: ${xhr.status}`))
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                onProgress?.(100, file.size, file.size)
+                resolve()
+              } else {
+                reject(new Error(`R2 Direct Upload failed: ${xhr.status}`))
+              }
             }
-          }
 
-          xhr.onerror = () => reject(new Error('R2 Direct Upload network error'))
-          xhr.send(file)
-        })
+            xhr.onerror = () => reject(new Error('R2 Direct Upload network error'))
+            xhr.send(file)
+          })
+
+        try {
+          await executePut()
+        } catch {
+          await executePut()
+        }
 
         return {
           id: presigned.storage_key,
