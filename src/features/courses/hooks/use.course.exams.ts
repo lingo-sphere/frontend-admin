@@ -52,7 +52,7 @@ export function useCourseExams() {
         currentUserId,
       })
     },
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
   })
 
   const courses: CourseSelectItem[] = useMemo(() => aggregatedData?.allowedCourses || [], [aggregatedData])

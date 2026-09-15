@@ -9,6 +9,8 @@ import type { Course as ApiCourse, LearningRoadmap, LearningRoadmapStage } from 
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { RoadmapBasicInfoSection } from '@/features/roadmaps/components/roadmap.basic.info.section'
 import { RoadmapStagesListSection } from '@/features/roadmaps/components/roadmap.stages.list.section'
+import { queryClient } from '@/config/query.config'
+import { roadmapAdminKeys } from '@/features/roadmaps/keys/roadmap.admin.keys'
 
 interface RoadmapFormModalProps {
   isOpen: boolean
@@ -113,6 +115,7 @@ export function RoadmapFormModal({
           toast.success('Tạo lộ trình học tập mới thành công!')
         }
 
+        await queryClient.invalidateQueries({ queryKey: roadmapAdminKeys.all })
         onSuccess()
         onClose()
       } catch {

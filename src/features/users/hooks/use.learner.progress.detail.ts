@@ -101,7 +101,7 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
       }
     },
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   })
 
   const student = data?.student || initialCachedStudent

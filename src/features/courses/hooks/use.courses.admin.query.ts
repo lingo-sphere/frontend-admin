@@ -41,7 +41,7 @@ export const adminCourseQueries = {
       queryKey: courseAdminKeys.list(queryParams),
       queryFn: () => fetchAdminCourses(queryParams),
       placeholderData: keepPreviousData,
-      staleTime: 90 * 1000,
+      staleTime: 0,
     })
   },
   apiList: (params?: CourseFilterParams & { current?: number; pageSize?: number }) => {
@@ -52,7 +52,7 @@ export const adminCourseQueries = {
         const res = await courseService.getAllCourses(queryParams)
         return Array.isArray(res) ? res : (res?.result || [])
       },
-      staleTime: 90 * 1000,
+      staleTime: 0,
     })
   },
 }
@@ -77,7 +77,7 @@ export function useAdminCourseDetailQuery(courseId?: string, enabled = true) {
     queryKey: [...courseAdminKeys.all, 'detail', courseId],
     queryFn: () => (courseId ? courseService.getCourseById(courseId) : null),
     enabled: Boolean(courseId) && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 }
 

@@ -46,7 +46,7 @@ export function useRolesQuery(params?: { current?: number; pageSize?: number; se
       }
     },
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -58,7 +58,7 @@ export function useAllRolesQuery(enabled = true) {
       return Array.isArray(res) ? res : (res?.result || [])
     },
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -90,7 +90,7 @@ export function usePermissionsQuery(
       }
     },
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -102,7 +102,7 @@ export function useAllPermissionsQuery(enabled = true) {
       return Array.isArray(res) ? res : (res?.result || [])
     },
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -114,7 +114,7 @@ export function useRbacUsersQuery(enabled = true) {
       return Array.isArray(res) ? res : (res?.result || [])
     },
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 

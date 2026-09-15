@@ -38,7 +38,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
       return courseService.getCourseById(courseId).catch(() => null)
     },
     enabled: !!courseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
   const {
@@ -53,7 +53,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
       return data || []
     },
     enabled: !!courseId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   })
 
   const reviewMutation = useMutation({

@@ -49,7 +49,7 @@ export function useCommunityRoomQuery(enabled = true) {
     queryKey: communityAdminKeys.room(),
     queryFn: () => communityAdminService.getRoom(),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -58,7 +58,7 @@ export function useCommunityMessagesQuery(limit = 50, order: 'asc' | 'desc' = 'd
     queryKey: communityAdminKeys.messages(limit, order),
     queryFn: () => communityAdminService.getMessages(limit, undefined, order),
     enabled,
-    staleTime: 15 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -67,7 +67,7 @@ export function useCommunityModeratorsQuery(enabled = true) {
     queryKey: communityAdminKeys.moderators(),
     queryFn: () => communityAdminService.getModerators(),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -76,7 +76,7 @@ export function useCommunityBannedMembersQuery(enabled = true) {
     queryKey: communityAdminKeys.bannedMembers(),
     queryFn: () => communityAdminService.getBannedMembers(),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 0,
   })
 }
 

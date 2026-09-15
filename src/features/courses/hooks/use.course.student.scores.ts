@@ -69,7 +69,7 @@ export function useCourseStudentScores(courseId: string, isOpen: boolean) {
       }
     },
     enabled: isOpen && !!courseId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   })
 
   const data = queryResult?.progressResponse || null

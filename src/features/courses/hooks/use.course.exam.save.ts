@@ -5,6 +5,9 @@ import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/feat
 import { mediaAdminService } from '@/features/media/services/media.service'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { queryClient } from '@/config/query.config'
+import { examAdminKeys } from '@/features/exams/keys/exam.admin.keys'
+import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 
 export interface UseCourseExamSaveParams {
@@ -159,6 +162,9 @@ export function useCourseExamSave({
             ? `Đã tạo thành công bài thi "${trimmedTitle}" với ${questions.length} câu hỏi!`
             : `Created exam "${trimmedTitle}" with ${questions.length} questions!`
         )
+        await queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
+        await queryClient.invalidateQueries({ queryKey: ['course-exams-aggregated'] })
+        await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
         onBack()
       } else {
         const examId = initialExam._id || initialExam.id || ''
@@ -210,6 +216,9 @@ export function useCourseExamSave({
             ? `Đã lưu thành công bài thi "${trimmedTitle}" với ${questions.length} câu hỏi!`
             : `Saved exam "${trimmedTitle}" with ${questions.length} questions!`
         )
+        await queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
+        await queryClient.invalidateQueries({ queryKey: ['course-exams-aggregated'] })
+        await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
         storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
         onBack()
       }

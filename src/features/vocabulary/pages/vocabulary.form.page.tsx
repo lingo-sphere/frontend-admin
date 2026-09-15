@@ -8,6 +8,8 @@ import { VocabularyBasicInfoForm } from '@/features/vocabulary/components/vocabu
 import { VocabularyMeaningsForm, type Meaning } from '@/features/vocabulary/components/vocabulary.meanings.form'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
+import { queryClient } from '@/config/query.config'
+import { vocabAdminKeys } from '@/features/vocabulary/keys/vocabulary.admin.keys'
 
 export function VocabularyFormPage({
   editWordId,
@@ -120,6 +122,7 @@ export function VocabularyFormPage({
           ? 'Cập nhật từ vựng thành công!'
           : 'Thêm từ vựng mới vào từ điển thành công!'
       )
+      await queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
       navigate('/vocabulary')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu từ vựng'

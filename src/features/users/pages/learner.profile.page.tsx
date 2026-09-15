@@ -54,7 +54,7 @@ export function UserProfilePage() {
       }
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
   const quotaUser: User | null = useMemo(() => {

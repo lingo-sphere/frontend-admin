@@ -58,7 +58,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       const allExams = await examAdminService.getExams()
       return Array.isArray(allExams) ? allExams : []
     },
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
   })
 
   const {
@@ -149,7 +149,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       return null
     },
     initialData: initialCachedExam,
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
   })
 
   const handleBack = useCallback(() => {

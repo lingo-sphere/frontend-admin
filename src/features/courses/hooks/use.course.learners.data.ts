@@ -84,7 +84,7 @@ export function useCourseLearnersData() {
 
       return loadedCourses
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
   const coursesKey = useMemo(() => courses.map((c) => c.id).sort().join(','), [courses])
@@ -161,7 +161,7 @@ export function useCourseLearnersData() {
       }
     },
     enabled: courses.length > 0,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   })
 
   const {
@@ -196,7 +196,7 @@ export function useCourseLearnersData() {
       return submissionResults.flat()
     },
     enabled: courses.length > 0,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   })
 
   const allStudentsProgress = useMemo(() => progressData?.students || [], [progressData])

@@ -5,6 +5,8 @@ import { notificationService, type CreateNotificationPayload } from '@/features/
 import { userService } from '@/features/users/services/user.service'
 import type { UserProfile } from '@/features/users/schemas/user.schema'
 import { toast } from '@/store/toast.store'
+import { queryClient } from '@/config/query.config'
+import { notificationsAdminKeys } from '@/features/notifications/keys/notifications.admin.keys'
 
 export type TargetAudience = 'ALL_USERS' | 'PREMIUM_USERS' | 'FREE_USERS' | 'SPECIFIC_USER'
 
@@ -147,6 +149,7 @@ export function useCreateNotificationForm({ isOpen, onClose, onSuccess }: UseCre
       }
 
       resetForm()
+      await queryClient.invalidateQueries({ queryKey: notificationsAdminKeys.list() })
       if (onSuccess) onSuccess()
       onClose()
     } catch (err: unknown) {

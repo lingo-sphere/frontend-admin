@@ -27,7 +27,7 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams) {
       }))
     },
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -50,7 +50,7 @@ export function useVocabularyTopicsQuery() {
       }))
     },
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -73,7 +73,7 @@ export function useVocabularyDecksQuery() {
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
     },
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -85,7 +85,7 @@ export function usePublicDecksQuery() {
       return res || []
     },
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 

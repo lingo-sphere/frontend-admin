@@ -11,7 +11,7 @@ export function useSubscriptionPlansQuery() {
       const res = await userService.getSubscriptionPlans()
       return res || []
     },
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 

@@ -13,7 +13,7 @@ export function useSystemAnalyticsQuery(enabled = true) {
       return userService.getSystemAnalytics()
     },
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -25,6 +25,6 @@ export function useDashboardCoursesQuery(enabled = true) {
       return Array.isArray(res) ? res : (res?.result || [])
     },
     enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   })
 }

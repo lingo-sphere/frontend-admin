@@ -9,6 +9,8 @@ import { pathToNavItem, navItemToPath } from '@/routes/navigation'
 import { authStore, useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { validateCourseFormData } from '@/features/courses/helpers/course.helper'
+import { queryClient } from '@/config/query.config'
+import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
 
 export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const navigate = useNavigate()
@@ -423,6 +425,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã tạo khóa học mới "${formData.title}" thành công!`)
       }
 
+      await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
       setActiveNavItem('courses')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Lưu khóa học thất bại'

@@ -11,7 +11,7 @@ export const adminExamQueries = {
       queryFn: () => examAdminService.getExams(params),
       enabled,
       placeholderData: keepPreviousData,
-      staleTime: 60 * 1000,
+      staleTime: 0,
     }),
 }
 

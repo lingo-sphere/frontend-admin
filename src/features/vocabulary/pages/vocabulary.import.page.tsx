@@ -1,8 +1,4 @@
-/**
- * @file vocabulary.import.page.tsx
- * @description Trang quản trị VocabularyImportPage trong giao diện Admin
- */
-
+// Trang quan tri VocabularyImportPage trong giao dien Admin.
 import { useState } from 'react'
 import { ChevronLeft, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -14,6 +10,8 @@ import {
   VocabularyImportHistoryTable,
   type ImportBatch,
 } from '@/features/vocabulary/components/vocabulary.import.history.table'
+import { queryClient } from '@/config/query.config'
+import { vocabAdminKeys } from '@/features/vocabulary/keys/vocabulary.admin.keys'
 
 export function VocabularyImportPage() {
   const navigate = useNavigate()
@@ -115,6 +113,7 @@ export function VocabularyImportPage() {
       }
       setHistory((prev) => [newBatch, ...prev])
       setSelectedFile(null)
+      await queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
       toast.success(`Đã nạp thành công ${successCount}/${rows.length} từ vựng vào hệ thống!`)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi nhập tệp từ vựng'

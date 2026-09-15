@@ -71,7 +71,7 @@ export const learnerQueries = {
       queryKey: userKeys.learners(queryParams),
       queryFn: () => fetchLearners(queryParams),
       placeholderData: keepPreviousData,
-      staleTime: 60 * 1000,
+      staleTime: 0,
     })
   },
 }

@@ -29,7 +29,7 @@ export function SettingsSystemPage() {
         return null
       }
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
   const loadSystemData = useCallback(async () => {

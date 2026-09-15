@@ -8,6 +8,8 @@ import { toast } from '@/store/toast.store'
 import { AdminUserAccountForm } from '@/features/users/components/admin.user.account.form'
 import { AdminUserRoleSelector } from '@/features/users/components/admin.user.role.selector'
 import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
+import { queryClient } from '@/config/query.config'
+import { adminUserKeys } from '@/features/users/keys/admin.user.keys'
 
 interface AdminUserFormData {
   email: string
@@ -98,6 +100,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         })
         toast.success('Tạo tài khoản quản trị viên mới thành công!')
       }
+      await queryClient.invalidateQueries({ queryKey: adminUserKeys.all })
       navigate('/admins')
     } catch (err: unknown) {
       const errorMsg =
