@@ -46,7 +46,7 @@ export const courseService = {
   },
 
   async getCourseCurriculum(id: string): Promise<Course> {
-    return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.CURRICULUM(id), undefined, CourseSchema)
+    return api.get<Course>(`${API_CONFIG.ENDPOINTS.COURSES.CURRICULUM(id)}?sanitize=false`, undefined, CourseSchema)
   },
 
   async createCourse(payload: Partial<Course>): Promise<Course> {

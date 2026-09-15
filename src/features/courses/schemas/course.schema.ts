@@ -3,10 +3,22 @@
 import { z } from 'zod'
 import { PaginationMetaSchema } from '@/features/users/schemas/user.schema'
 
+export const QuizQuestionOptionSchema = z.union([
+  z.string(),
+  z.object({
+    key: z.string().optional(),
+    text: z.string().default(''),
+  }).passthrough(),
+])
+
 export const QuizQuestionItemSchema = z.object({
   id: z.string().optional(),
-  question_text: z.string().default(''),
-  options: z.array(z.string()).default([]),
+  _id: z.string().optional(),
+  lesson_id: z.string().optional(),
+  prompt: z.string().optional(),
+  question_text: z.string().optional(),
+  options: z.array(QuizQuestionOptionSchema).default([]),
+  correct_option: z.string().nullable().optional(),
   correct_answer: z.string().nullable().optional(),
   explanation: z.string().nullable().optional(),
   media_url: z.string().nullable().optional(),
@@ -23,7 +35,10 @@ export const QuizQuestionItemSchema = z.object({
   prep_time_seconds: z.number().nullable().optional(),
   response_time_seconds: z.number().nullable().optional(),
   min_words: z.number().nullable().optional(),
-})
+  created_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+}).passthrough()
 
 export const LessonSchema = z.object({
   _id: z.string().default(''),
@@ -37,13 +52,17 @@ export const LessonSchema = z.object({
   is_free_preview: z.boolean().optional(),
   status: z.string().optional(),
   questions: z.array(QuizQuestionItemSchema).optional(),
+  question_count: z.number().optional(),
   lesson_order: z.number().optional(),
   duration_minutes: z.number().nullable().optional(),
   content: z.string().nullable().optional(),
   is_preview: z.boolean().optional(),
   theory_file_url: z.string().nullable().optional(),
   theory_file_name: z.string().nullable().optional(),
-})
+  created_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+}).passthrough()
 
 export const CourseModuleSchema = z.object({
   _id: z.string().default(''),
@@ -72,7 +91,8 @@ export const CourseModuleSchema = z.object({
   test_questions: z.array(QuizQuestionItemSchema).optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
-})
+  isDeleted: z.boolean().optional(),
+}).passthrough()
 
 export const CourseBaseSchema = z.object({
   _id: z.string().default(''),
@@ -115,7 +135,8 @@ export const CourseBaseSchema = z.object({
   curriculum: z.array(CourseModuleSchema).optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
-})
+  isDeleted: z.boolean().optional(),
+}).passthrough()
 
 export const CourseDetailResponseSchema = z.object({
   course: CourseBaseSchema,
@@ -123,7 +144,7 @@ export const CourseDetailResponseSchema = z.object({
   modules: z.array(CourseModuleSchema).optional(),
   total_modules: z.number().optional(),
   total_lessons: z.number().optional(),
-}).transform((val) => ({
+}).passthrough().transform((val) => ({
   ...val.course,
   course: val.course,
   curriculum: val.curriculum || val.course.modules || [],
