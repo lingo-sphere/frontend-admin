@@ -44,6 +44,17 @@ export interface ParsedFolderResult {
   lessonTheoryFilesToUpload: { lessonKey: string; file: File }[]
   courseDocumentFileToUpload?: File
   courseThumbnailFileToUpload?: File
+  finalTestAudioFileToUpload?: File
+  finalTestSpeakingFileToUpload?: File
+  moduleAudioFilesToUpload: { moduleOrder: number; file: File }[]
+  moduleSpeakingFilesToUpload: { moduleOrder: number; file: File }[]
+  questionMediaFilesToUpload: {
+    questionId: string
+    file: File
+    isChapterTest: boolean
+    isFinalTest: boolean
+    moduleOrder?: number
+  }[]
 }
 
 const findValue = (rows: Record<string, unknown>[], fieldKeywords: string[]): string | number | undefined => {
@@ -250,6 +261,56 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   const document_name = matchedCourseDocumentFile?.name || rawDocumentName || undefined
 
+  const rawFinalAudio = String(
+    findValue(infoRaw, [
+      'final_test_audio_file',
+      'final_test_audio',
+      'âm thanh đề thi cuối khóa',
+      'audio đề thi cuối khóa',
+      'audio cuối khóa',
+      'file âm thanh cuối khóa',
+    ]) || 'audio_final_test.wav'
+  ).trim()
+
+  let matchedFinalTestAudioFile = rawFinalAudio ? findMatchingFile(rawFinalAudio, files) : undefined
+  if (!matchedFinalTestAudioFile) {
+    matchedFinalTestAudioFile = files.find((f) => {
+      const lower = f.name.toLowerCase()
+      return (
+        (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
+        (lower.includes('final') || lower.includes('tot_nghiep'))
+      )
+    })
+  }
+
+  const rawFinalSpeaking = String(
+    findValue(infoRaw, [
+      'final_test_speaking_file',
+      'speaking_sample_final',
+      'âm thanh nói mẫu cuối khóa',
+      'audio nói mẫu cuối khóa',
+    ]) || 'speaking_sample_final.wav'
+  ).trim()
+
+  let matchedFinalTestSpeakingFile = rawFinalSpeaking ? findMatchingFile(rawFinalSpeaking, files) : undefined
+  if (!matchedFinalTestSpeakingFile) {
+    matchedFinalTestSpeakingFile = files.find((f) => {
+      const lower = f.name.toLowerCase()
+      return (
+        (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
+        (lower.includes('speaking_sample_final') || (lower.includes('speaking') && lower.includes('final')))
+      )
+    })
+  }
+
+  const questionMediaFilesToUpload: {
+    questionId: string
+    file: File
+    isChapterTest: boolean
+    isFinalTest: boolean
+    moduleOrder?: number
+  }[] = []
+
   const finalTestQuestions: QuizQuestionItem[] = []
   finalTestsRaw.forEach((row, ftIdx) => {
     const qText = String(row['Câu hỏi trắc nghiệm (question_text)'] ?? row['question_text'] ?? row['Câu hỏi'] ?? '').trim()
@@ -262,14 +323,34 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
     const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
     const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
+    const mediaFilename = String(
+      row['File hình ảnh / âm thanh (media_filename)'] ??
+      row['media_filename'] ??
+      row['media_file'] ??
+      row['image_file'] ??
+      row['audio_file'] ??
+      ''
+    ).trim()
+
+    const qId = `final-q${ftIdx + 1}`
+    const matchedMedia = mediaFilename ? findMatchingFile(mediaFilename, files) : undefined
+    if (matchedMedia) {
+      questionMediaFilesToUpload.push({
+        questionId: qId,
+        file: matchedMedia,
+        isChapterTest: false,
+        isFinalTest: true,
+      })
+    }
 
     finalTestQuestions.push({
-      id: `final-q${ftIdx + 1}`,
+      id: qId,
       question_text: qText,
       options,
       correct_answer,
       explanation,
       order_index: ftIdx + 1,
+      media_url: mediaFilename || undefined,
     })
   })
 
@@ -308,14 +389,35 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
     const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
     const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
+    const mediaFilename = String(
+      row['File hình ảnh / âm thanh (media_filename)'] ??
+      row['media_filename'] ??
+      row['media_file'] ??
+      row['image_file'] ??
+      row['audio_file'] ??
+      ''
+    ).trim()
+
+    const qId = `test-m${mOrder}-q${qIdx + 1}`
+    const matchedMedia = mediaFilename ? findMatchingFile(mediaFilename, files) : undefined
+    if (matchedMedia) {
+      questionMediaFilesToUpload.push({
+        questionId: qId,
+        file: matchedMedia,
+        isChapterTest: true,
+        isFinalTest: false,
+        moduleOrder: mOrder,
+      })
+    }
 
     const item: QuizQuestionItem = {
-      id: `test-m${mOrder}-q${qIdx + 1}`,
+      id: qId,
       question_text: qText,
       options,
       correct_answer,
       explanation,
       order_index: (chapterTestsByModule.get(mOrder)?.length || 0) + 1,
+      media_url: mediaFilename || undefined,
     }
 
     if (!chapterTestsByModule.has(mOrder)) {
@@ -464,6 +566,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   }
 
   const theoryFilesToUpload: { moduleOrder: number; file: File }[] = []
+  const moduleAudioFilesToUpload: { moduleOrder: number; file: File }[] = []
+  const moduleSpeakingFilesToUpload: { moduleOrder: number; file: File }[] = []
 
   const sortedModuleOrders = Array.from(modulesMap.keys()).sort((a, b) => a - b)
   const modules: CourseModule[] = sortedModuleOrders.map((mOrder, idx) => {
@@ -489,6 +593,43 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       theoryFilesToUpload.push({ moduleOrder: mOrder, file: matchedModulePdf })
     }
 
+    const rawModAudio = `audio_test_chapter_${mOrder}.wav`
+    let matchedModuleAudio = findMatchingFile(rawModAudio, files)
+    if (!matchedModuleAudio) {
+      matchedModuleAudio = files.find((f) => {
+        const lower = f.name.toLowerCase()
+        return (
+          (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
+          (lower.includes(`chapter_${mOrder}`) ||
+            lower.includes(`chapter${mOrder}`) ||
+            lower.includes(`chuong_${mOrder}`) ||
+            lower.includes(`chuong${mOrder}`))
+        )
+      })
+    }
+
+    if (matchedModuleAudio) {
+      moduleAudioFilesToUpload.push({ moduleOrder: mOrder, file: matchedModuleAudio })
+    }
+
+    const rawModSpeaking = `speaking_sample_chapter_${mOrder}.wav`
+    let matchedModuleSpeaking = findMatchingFile(rawModSpeaking, files)
+    if (!matchedModuleSpeaking) {
+      matchedModuleSpeaking = files.find((f) => {
+        const lower = f.name.toLowerCase()
+        return (
+          (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
+          (lower.includes(`speaking_sample_chapter_${mOrder}`) ||
+            lower.includes('speaking_sample_chapter_1') ||
+            lower.includes('speaking_sample'))
+        )
+      })
+    }
+
+    if (matchedModuleSpeaking) {
+      moduleSpeakingFilesToUpload.push({ moduleOrder: mOrder, file: matchedModuleSpeaking })
+    }
+
     return {
       id: `module-${mOrder}-${Date.now() + idx * 100}`,
       title: modData.title,
@@ -501,6 +642,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       challenge_duration_minutes: modData.durationMinutes,
       speaking_prompt: modData.speakingPrompt,
       writing_prompt: modData.writingPrompt,
+      test_audio_url: matchedModuleAudio?.name || undefined,
+      challenge_audio_url: matchedModuleAudio?.name || undefined,
+      speaking_file_url: matchedModuleSpeaking?.name || undefined,
       test_questions: tests,
       challenge_questions: tests,
       lessons: modData.lessons,
@@ -535,5 +679,10 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     lessonTheoryFilesToUpload,
     courseDocumentFileToUpload: matchedCourseDocumentFile,
     courseThumbnailFileToUpload: matchedCourseThumbnailFile,
+    finalTestAudioFileToUpload: matchedFinalTestAudioFile,
+    finalTestSpeakingFileToUpload: matchedFinalTestSpeakingFile,
+    moduleAudioFilesToUpload,
+    moduleSpeakingFilesToUpload,
+    questionMediaFilesToUpload,
   }
 }

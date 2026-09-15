@@ -15,6 +15,8 @@ import {
   ArrowRight,
   BookOpen,
   FileText,
+  Headphones,
+  ImageIcon,
 } from 'lucide-react'
 import {
   parseCourseFolder,
@@ -178,12 +180,23 @@ export function CourseFolderImportModal({
     const lessonTheoryFiles = parsedResult.lessonTheoryFilesToUpload || []
     const courseDocFile = parsedResult.courseDocumentFileToUpload
     const courseThumbFile = parsedResult.courseThumbnailFileToUpload
+    const finalTestAudioFile = parsedResult.finalTestAudioFileToUpload
+    const finalTestSpeakingFile = parsedResult.finalTestSpeakingFileToUpload
+    const moduleAudioFiles = parsedResult.moduleAudioFilesToUpload || []
+    const moduleSpeakingFiles = parsedResult.moduleSpeakingFilesToUpload || []
+    const questionMediaFiles = parsedResult.questionMediaFilesToUpload || []
+
     const totalFiles =
       videoFiles.length +
       moduleTheoryFiles.length +
       lessonTheoryFiles.length +
       (courseDocFile ? 1 : 0) +
-      (courseThumbFile ? 1 : 0)
+      (courseThumbFile ? 1 : 0) +
+      (finalTestAudioFile ? 1 : 0) +
+      (finalTestSpeakingFile ? 1 : 0) +
+      moduleAudioFiles.length +
+      moduleSpeakingFiles.length +
+      questionMediaFiles.length
 
     let totalBytes = 0
     videoFiles.forEach((v) => { totalBytes += v.file.size })
@@ -191,6 +204,11 @@ export function CourseFolderImportModal({
     lessonTheoryFiles.forEach((l) => { totalBytes += l.file.size })
     if (courseDocFile) { totalBytes += courseDocFile.size }
     if (courseThumbFile) { totalBytes += courseThumbFile.size }
+    if (finalTestAudioFile) { totalBytes += finalTestAudioFile.size }
+    if (finalTestSpeakingFile) { totalBytes += finalTestSpeakingFile.size }
+    moduleAudioFiles.forEach((a) => { totalBytes += a.file.size })
+    moduleSpeakingFiles.forEach((s) => { totalBytes += s.file.size })
+    questionMediaFiles.forEach((q) => { totalBytes += q.file.size })
 
     const loadedBytesMap: Record<number, number> = {}
     let completedFiles = 0
@@ -245,6 +263,44 @@ export function CourseFolderImportModal({
         if (uploadedUrl) {
           updatedCourseInfo.document_url = uploadedUrl
           updatedCourseInfo.document_name = courseDocFile.name
+        }
+      })
+    }
+
+    if (finalTestAudioFile) {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, finalTestAudioFile.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          finalTestAudioFile,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, finalTestAudioFile.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, finalTestAudioFile.size, finalTestAudioFile.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        if (uploadedUrl) {
+          updatedCourseInfo.final_test_audio_url = uploadedUrl
+        }
+      })
+    }
+
+    if (finalTestSpeakingFile) {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, finalTestSpeakingFile.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          finalTestSpeakingFile,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, finalTestSpeakingFile.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, finalTestSpeakingFile.size, finalTestSpeakingFile.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        if (uploadedUrl) {
+          updatedCourseInfo.final_test_speaking_file_url = uploadedUrl
         }
       })
     }
@@ -332,6 +388,93 @@ export function CourseFolderImportModal({
       })
     })
 
+    moduleAudioFiles.forEach((item) => {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, item.file.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          item.file,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, item.file.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
+        if (targetMod && uploadedUrl) {
+          targetMod.test_audio_url = uploadedUrl
+          targetMod.challenge_audio_url = uploadedUrl
+          targetMod.audio_url = uploadedUrl
+        }
+      })
+    })
+
+    moduleSpeakingFiles.forEach((item) => {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, item.file.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          item.file,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, item.file.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
+        if (targetMod && uploadedUrl) {
+          targetMod.speaking_file_url = uploadedUrl
+        }
+      })
+    })
+
+    questionMediaFiles.forEach((item) => {
+      const fIdx = globalFileIndex++
+      tasks.push(async () => {
+        updateCumulativeProgress(fIdx, 0, item.file.name)
+        const uploadRes = await mediaAdminService.uploadDirectR2(
+          item.file,
+          courseFolder,
+          (_percent, loaded) => {
+            updateCumulativeProgress(fIdx, loaded, item.file.name)
+          }
+        )
+        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
+        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        if (!uploadedUrl) return
+
+        const isAudio = /\.(wav|mp3|ogg|m4a)$/i.test(item.file.name)
+        const isImage = /\.(jpe?g|png|webp|gif)$/i.test(item.file.name)
+
+        if (item.isFinalTest) {
+          const q = updatedCourseInfo.final_test_questions?.find((qu) => qu.id === item.questionId)
+          if (q) {
+            q.media_url = uploadedUrl
+            if (isImage) q.image_url = uploadedUrl
+            if (isAudio) q.audio_url = uploadedUrl
+          }
+        } else if (item.isChapterTest && item.moduleOrder !== undefined) {
+          const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
+          if (targetMod) {
+            const q1 = targetMod.test_questions?.find((qu) => qu.id === item.questionId)
+            if (q1) {
+              q1.media_url = uploadedUrl
+              if (isImage) q1.image_url = uploadedUrl
+              if (isAudio) q1.audio_url = uploadedUrl
+            }
+            const q2 = targetMod.challenge_questions?.find((qu) => qu.id === item.questionId)
+            if (q2) {
+              q2.media_url = uploadedUrl
+              if (isImage) q2.image_url = uploadedUrl
+              if (isAudio) q2.audio_url = uploadedUrl
+            }
+          }
+        }
+      })
+    })
+
     try {
       setUploadIndex(1)
       const executing: Promise<void>[] = []
@@ -369,7 +512,12 @@ export function CourseFolderImportModal({
       parsedResult.theoryFilesToUpload.length +
       parsedResult.lessonTheoryFilesToUpload.length +
       (parsedResult.courseDocumentFileToUpload ? 1 : 0) +
-      (parsedResult.courseThumbnailFileToUpload ? 1 : 0)
+      (parsedResult.courseThumbnailFileToUpload ? 1 : 0) +
+      (parsedResult.finalTestAudioFileToUpload ? 1 : 0) +
+      (parsedResult.finalTestSpeakingFileToUpload ? 1 : 0) +
+      (parsedResult.moduleAudioFilesToUpload?.length || 0) +
+      (parsedResult.moduleSpeakingFilesToUpload?.length || 0) +
+      (parsedResult.questionMediaFilesToUpload?.length || 0)
     : 0
 
   return (
@@ -572,6 +720,22 @@ export function CourseFolderImportModal({
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
                       <HelpCircle className="w-3.5 h-3.5 text-rose-600" />
                       <span>{parsedResult.totalFinalQuestionsCount} {isVi ? 'câu hỏi tốt nghiệp Final Test' : 'final test questions'}</span>
+                    </span>
+                  )}
+                  {((parsedResult.moduleAudioFilesToUpload?.length || 0) + (parsedResult.finalTestAudioFileToUpload ? 1 : 0)) > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300">
+                      <Headphones className="w-3.5 h-3.5 text-violet-600" />
+                      <span>
+                        {(parsedResult.moduleAudioFilesToUpload?.length || 0) + (parsedResult.finalTestAudioFileToUpload ? 1 : 0)} {isVi ? 'file âm thanh test' : 'test audio files'}
+                      </span>
+                    </span>
+                  )}
+                  {(parsedResult.questionMediaFilesToUpload?.length || 0) > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-pink-100 text-pink-800 dark:bg-pink-950 dark:text-pink-300">
+                      <ImageIcon className="w-3.5 h-3.5 text-pink-600" />
+                      <span>
+                        {parsedResult.questionMediaFilesToUpload.length} {isVi ? 'ảnh/audio câu hỏi' : 'question media'}
+                      </span>
                     </span>
                   )}
                 </div>
