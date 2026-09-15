@@ -72,6 +72,15 @@ export function useAdminApiCoursesQuery(params?: CourseFilterParams & { current?
   return useQuery(adminCourseQueries.apiList(params))
 }
 
+export function useAdminCourseDetailQuery(courseId?: string, enabled = true) {
+  return useQuery({
+    queryKey: [...courseAdminKeys.all, 'detail', courseId],
+    queryFn: () => (courseId ? courseService.getCourseById(courseId) : null),
+    enabled: Boolean(courseId) && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function useDeleteCourseMutation() {
   const queryClient = useQueryClient()
 

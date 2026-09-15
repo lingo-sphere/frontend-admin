@@ -1,5 +1,6 @@
 // Component tìm kiếm và lựa chọn người dùng theo phân cấp vai trò với hỗ trợ chọn nhiều bằng checkbox.
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Search, X, Loader2, ShieldCheck, GraduationCap, User, CheckSquare, Square } from 'lucide-react'
 import { userService } from '@/features/users/services/user.service'
 import type { UserProfile } from '@/features/users/schemas/user.schema'
@@ -29,29 +30,17 @@ export function CommunityUserPicker({
   allowedRoles,
   themeColor = 'indigo',
 }: CommunityUserPickerProps) {
-  const [users, setUsers] = useState<UserProfile[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isManualInput, setIsManualInput] = useState(false)
 
-  useEffect(() => {
-    let isMounted = true
-    setIsLoading(true)
-    userService
-      .getAllUsers({ limit: 200 })
-      .then((res) => {
-        if (!isMounted) return
-        const list = Array.isArray(res) ? res : res?.result || []
-        setUsers(list)
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (isMounted) setIsLoading(false)
-      })
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: users = [], isLoading } = useQuery<UserProfile[]>({
+    queryKey: ['community', 'picker-users'],
+    queryFn: async () => {
+      const res = await userService.getAllUsers({ limit: 200 })
+      return Array.isArray(res) ? res : res?.result || []
+    },
+    staleTime: 60 * 1000,
+  })
 
   const getRolePriority = (role?: string | null) => {
     const r = (role || '').toUpperCase()

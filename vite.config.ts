@@ -10,4 +10,11 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: [
+      '@tanstack/react-table',
+      '@tanstack/react-form',
+      '@tanstack/react-query',
+    ],
+  },
 })

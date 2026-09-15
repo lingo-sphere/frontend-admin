@@ -1,7 +1,8 @@
 // Modal tạo mới và chỉnh sửa Lộ trình học tập (Learning Roadmap) trong Admin.
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Compass, RotateCcw, CheckCircle2, X } from 'lucide-react'
+import { useForm, useStore } from '@tanstack/react-form'
 import { roadmapService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course as ApiCourse, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
@@ -18,25 +19,34 @@ interface RoadmapFormModalProps {
   onSuccess: () => void
 }
 
-export function RoadmapFormModal({
-  isOpen,
-  editingRoadmap,
-  courses,
-  exams,
-  onClose,
-  onSuccess,
-}: RoadmapFormModalProps) {
-  const [formTitle, setFormTitle] = useState<string>('')
-  const [formSlug, setFormSlug] = useState<string>('')
-  const [formDescription, setFormDescription] = useState<string>('')
-  const [formSkillsFocus, setFormSkillsFocus] = useState<'2SKILLS' | '4SKILLS'>('2SKILLS')
-  const [formTargetScore, setFormTargetScore] = useState<number>(650)
-  const [formMinEntryScore, setFormMinEntryScore] = useState<number>(250)
-  const [formMaxEntryScore, setFormMaxEntryScore] = useState<number>(500)
-  const [formBundlePrice, setFormBundlePrice] = useState<number>(1200000)
-  const [formOriginalPrice, setFormOriginalPrice] = useState<number>(1600000)
-  const [formIsPublished, setFormIsPublished] = useState<boolean>(true)
-  const [formStages, setFormStages] = useState<LearningRoadmapStage[]>([
+type RoadmapFormStage = Omit<LearningRoadmapStage, 'course'>
+
+interface RoadmapFormValues {
+  title: string
+  slug: string
+  description: string
+  skills_focus: '2SKILLS' | '4SKILLS'
+  target_score: number
+  min_entry_score: number
+  max_entry_score: number
+  bundle_price: number
+  original_price: number
+  is_published: boolean
+  stages: RoadmapFormStage[]
+}
+
+const initialDefaultValues: RoadmapFormValues = {
+  title: '',
+  slug: '',
+  description: '',
+  skills_focus: '2SKILLS',
+  target_score: 650,
+  min_entry_score: 250,
+  max_entry_score: 500,
+  bundle_price: 1200000,
+  original_price: 1600000,
+  is_published: true,
+  stages: [
     {
       stage_order: 1,
       stage_title: 'Chặng 1: Nền Tảng Cốt Lõi',
@@ -55,123 +65,122 @@ export function RoadmapFormModal({
       checkpoint_exam_id: '',
       passing_score: 75,
     },
-  ])
-  const [isSaving, setIsSaving] = useState<boolean>(false)
+  ],
+}
+
+export function RoadmapFormModal({
+  isOpen,
+  editingRoadmap,
+  courses,
+  exams,
+  onClose,
+  onSuccess,
+}: RoadmapFormModalProps) {
+  const form = useForm({
+    defaultValues: initialDefaultValues,
+    onSubmit: async ({ value }: { value: RoadmapFormValues }) => {
+      if (!value.title.trim()) {
+        toast.warning('Vui lòng nhập tên Lộ trình học tập!')
+        return
+      }
+
+      const hasEmptyCourse = value.stages.some((s: LearningRoadmapStage) => !s.course_id)
+      if (hasEmptyCourse) {
+        toast.warning('Vui lòng chọn khóa học cho tất cả các chặng trong lộ trình!')
+        return
+      }
+
+      try {
+        const payload: Partial<LearningRoadmap> = {
+          title: value.title.trim(),
+          slug: value.slug.trim() || undefined,
+          description: value.description.trim(),
+          skills_focus: value.skills_focus,
+          target_score: value.target_score,
+          min_entry_score: value.min_entry_score,
+          max_entry_score: value.max_entry_score,
+          bundle_price: value.bundle_price,
+          original_price: value.original_price,
+          is_published: value.is_published,
+          stages: value.stages,
+        }
+
+        if (editingRoadmap?._id) {
+          await roadmapService.updateRoadmap(editingRoadmap._id, payload)
+          toast.success('Cập nhật lộ trình học tập thành công!')
+        } else {
+          await roadmapService.createRoadmap(payload)
+          toast.success('Tạo lộ trình học tập mới thành công!')
+        }
+
+        onSuccess()
+        onClose()
+      } catch {
+        toast.error('Không thể lưu thông tin lộ trình')
+      }
+    },
+  })
 
   useEffect(() => {
     if (!isOpen) return
 
     if (editingRoadmap) {
-      setFormTitle(editingRoadmap.title || '')
-      setFormSlug(editingRoadmap.slug || '')
-      setFormDescription(editingRoadmap.description || '')
-      setFormSkillsFocus(editingRoadmap.skills_focus || '2SKILLS')
-      setFormTargetScore(editingRoadmap.target_score ?? 0)
-      setFormMinEntryScore(editingRoadmap.min_entry_score ?? 0)
-      setFormMaxEntryScore(editingRoadmap.max_entry_score ?? 0)
-      setFormBundlePrice(editingRoadmap.bundle_price ?? 0)
-      setFormOriginalPrice(editingRoadmap.original_price ?? 0)
-      setFormIsPublished(editingRoadmap.is_published ?? true)
-      setFormStages(
-        Array.isArray(editingRoadmap.stages) ? editingRoadmap.stages : []
-      )
+      form.reset({
+        title: editingRoadmap.title || '',
+        slug: editingRoadmap.slug || '',
+        description: editingRoadmap.description || '',
+        skills_focus: (editingRoadmap.skills_focus || '2SKILLS') as '2SKILLS' | '4SKILLS',
+        target_score: editingRoadmap.target_score ?? 0,
+        min_entry_score: editingRoadmap.min_entry_score ?? 0,
+        max_entry_score: editingRoadmap.max_entry_score ?? 0,
+        bundle_price: editingRoadmap.bundle_price ?? 0,
+        original_price: editingRoadmap.original_price ?? 0,
+        is_published: editingRoadmap.is_published ?? true,
+        stages: Array.isArray(editingRoadmap.stages) ? editingRoadmap.stages : [],
+      })
     } else {
-      setFormTitle('')
-      setFormSlug('')
-      setFormDescription('')
-      setFormSkillsFocus('2SKILLS')
-      setFormTargetScore(0)
-      setFormMinEntryScore(0)
-      setFormMaxEntryScore(0)
-      setFormBundlePrice(0)
-      setFormOriginalPrice(0)
-      setFormIsPublished(true)
-      setFormStages([])
+      form.reset(initialDefaultValues)
     }
   }, [isOpen, editingRoadmap])
+
+  const values = useStore(form.store, (state) => state.values)
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
 
   if (!isOpen) return null
 
   const handleAddStage = () => {
-    const nextOrder = formStages.length + 1
-    setFormStages([
-      ...formStages,
-      {
-        stage_order: nextOrder,
-        stage_title: `Chặng ${nextOrder}: Giai Đoạn Nâng Cao`,
-        stage_description: 'Mục tiêu hoàn thiện các kỹ năng trọng tâm',
-        course_id: courses[0]?._id || '',
-        target_band: `${Math.min(990, formTargetScore - 50 * (formStages.length ? 1 : 0))}+`,
-        checkpoint_exam_id: '',
-        passing_score: 75,
-      },
-    ])
+    const nextOrder = values.stages.length + 1
+    const newStage: LearningRoadmapStage = {
+      stage_order: nextOrder,
+      stage_title: `Chặng ${nextOrder}: Giai Đoạn Nâng Cao`,
+      stage_description: 'Mục tiêu hoàn thiện các kỹ năng trọng tâm',
+      course_id: courses[0]?._id || '',
+      target_band: `${Math.min(990, values.target_score - 50 * (values.stages.length ? 1 : 0))}+`,
+      checkpoint_exam_id: '',
+      passing_score: 75,
+    }
+    form.setFieldValue('stages', [...values.stages, newStage])
   }
 
   const handleRemoveStage = (index: number) => {
-    if (formStages.length <= 1) {
+    if (values.stages.length <= 1) {
       toast.warning('Lộ trình cần có ít nhất 1 chặng học!')
       return
     }
-    const updated = formStages
-      .filter((_, i) => i !== index)
-      .map((s, i) => ({ ...s, stage_order: i + 1 }))
-    setFormStages(updated)
+    const updated = values.stages
+      .filter((_: LearningRoadmapStage, i: number) => i !== index)
+      .map((s: LearningRoadmapStage, i: number) => ({ ...s, stage_order: i + 1 }))
+    form.setFieldValue('stages', updated)
   }
 
   const handleUpdateStage = (
     index: number,
     field: keyof LearningRoadmapStage,
-    value: LearningRoadmapStage[keyof LearningRoadmapStage]
+    val: LearningRoadmapStage[keyof LearningRoadmapStage]
   ) => {
-    const updated = [...formStages]
-    updated[index] = { ...updated[index], [field]: value }
-    setFormStages(updated)
-  }
-
-  const handleSaveRoadmap = async () => {
-    if (!formTitle.trim()) {
-      toast.warning('Vui lòng nhập tên Lộ trình học tập!')
-      return
-    }
-
-    const hasEmptyCourse = formStages.some((s) => !s.course_id)
-    if (hasEmptyCourse) {
-      toast.warning('Vui lòng chọn khóa học cho tất cả các chặng trong lộ trình!')
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      const payload: Partial<LearningRoadmap> = {
-        title: formTitle.trim(),
-        slug: formSlug.trim() || undefined,
-        description: formDescription.trim(),
-        skills_focus: formSkillsFocus,
-        target_score: formTargetScore,
-        min_entry_score: formMinEntryScore,
-        max_entry_score: formMaxEntryScore,
-        bundle_price: formBundlePrice,
-        original_price: formOriginalPrice,
-        is_published: formIsPublished,
-        stages: formStages,
-      }
-
-      if (editingRoadmap?._id) {
-        await roadmapService.updateRoadmap(editingRoadmap._id, payload)
-        toast.success('Cập nhật lộ trình học tập thành công!')
-      } else {
-        await roadmapService.createRoadmap(payload)
-        toast.success('Tạo lộ trình học tập mới thành công!')
-      }
-
-      onSuccess()
-      onClose()
-    } catch {
-      toast.error('Không thể lưu thông tin lộ trình')
-    } finally {
-      setIsSaving(false)
-    }
+    const updated = [...values.stages]
+    updated[index] = { ...updated[index], [field]: val }
+    form.setFieldValue('stages', updated)
   }
 
   return (
@@ -197,30 +206,30 @@ export function RoadmapFormModal({
 
         <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           <RoadmapBasicInfoSection
-            formTitle={formTitle}
-            formSlug={formSlug}
-            formDescription={formDescription}
-            formSkillsFocus={formSkillsFocus}
-            formTargetScore={formTargetScore}
-            formMinEntryScore={formMinEntryScore}
-            formMaxEntryScore={formMaxEntryScore}
-            formOriginalPrice={formOriginalPrice}
-            formBundlePrice={formBundlePrice}
-            formIsPublished={formIsPublished}
-            onTitleChange={setFormTitle}
-            onSlugChange={setFormSlug}
-            onDescriptionChange={setFormDescription}
-            onSkillsFocusChange={setFormSkillsFocus}
-            onTargetScoreChange={setFormTargetScore}
-            onMinEntryScoreChange={setFormMinEntryScore}
-            onMaxEntryScoreChange={setFormMaxEntryScore}
-            onOriginalPriceChange={setFormOriginalPrice}
-            onBundlePriceChange={setFormBundlePrice}
-            onIsPublishedChange={setFormIsPublished}
+            formTitle={values.title}
+            formSlug={values.slug}
+            formDescription={values.description}
+            formSkillsFocus={values.skills_focus}
+            formTargetScore={values.target_score}
+            formMinEntryScore={values.min_entry_score}
+            formMaxEntryScore={values.max_entry_score}
+            formOriginalPrice={values.original_price}
+            formBundlePrice={values.bundle_price}
+            formIsPublished={values.is_published}
+            onTitleChange={(val) => form.setFieldValue('title', val)}
+            onSlugChange={(val) => form.setFieldValue('slug', val)}
+            onDescriptionChange={(val) => form.setFieldValue('description', val)}
+            onSkillsFocusChange={(val) => form.setFieldValue('skills_focus', val)}
+            onTargetScoreChange={(val) => form.setFieldValue('target_score', val)}
+            onMinEntryScoreChange={(val) => form.setFieldValue('min_entry_score', val)}
+            onMaxEntryScoreChange={(val) => form.setFieldValue('max_entry_score', val)}
+            onOriginalPriceChange={(val) => form.setFieldValue('original_price', val)}
+            onBundlePriceChange={(val) => form.setFieldValue('bundle_price', val)}
+            onIsPublishedChange={(val) => form.setFieldValue('is_published', val)}
           />
 
           <RoadmapStagesListSection
-            formStages={formStages}
+            formStages={values.stages}
             courses={courses}
             exams={exams}
             onAddStage={handleAddStage}
@@ -239,11 +248,11 @@ export function RoadmapFormModal({
           </button>
           <button
             type="button"
-            disabled={isSaving}
-            onClick={handleSaveRoadmap}
+            disabled={isSubmitting}
+            onClick={() => form.handleSubmit()}
             className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
-            {isSaving ? (
+            {isSubmitting ? (
               <>
                 <RotateCcw className="w-3.5 h-3.5 animate-spin" />
                 <span>Đang Lưu...</span>
