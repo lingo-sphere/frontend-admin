@@ -1,4 +1,4 @@
-// Trang chi tiết hồ sơ học viên, xem tiến độ và quản trị hạn mức AI với TanStack Query.
+// Trang chi tiết hồ sơ học viên, xem tiến độ, lịch sử thi và quản trị hạn mức AI với TanStack Query.
 import { useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
@@ -12,7 +12,9 @@ import {
 } from '@/features/users/components/learner.profile.header'
 import { UserProfileStatsGrid } from '@/features/users/components/learner.profile.stats.grid'
 import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quota.modal'
+import { LearnerExamHistorySection } from '@/features/users/components/learner.exam.history.section'
 import type { User } from '@/features/users/types/learner.types'
+import type { UserProfile } from '@/features/users/schemas/user.schema'
 
 export function UserProfilePage() {
   const location = useLocation()
@@ -25,37 +27,43 @@ export function UserProfilePage() {
   const { mutateAsync: resetLearnerData } = useResetLearnerDataMutation()
 
   const {
-    data: profileData = null,
+    data: profileResult = null,
     refetch,
-  } = useQuery<UserProfileData | null>({
+  } = useQuery<{ profileData: UserProfileData; rawProfile: UserProfile } | null>({
     queryKey: ['learner-profile', userId],
     queryFn: async () => {
       if (!userId) return null
       const u = await userService.getProfileById(userId)
       if (!u) return null
       return {
-        id: u.user_id,
-        full_name: u.full_name,
-        email: u.email,
-        avatar_url: u.avatar_url || undefined,
-        phone: u.phone_number || undefined,
-        status: u.status,
-        is_premium: u.is_premium,
-        created_at: u.created_at
-          ? new Date(u.created_at).toLocaleDateString('vi-VN')
-          : undefined,
-        last_active: u.updated_at
-          ? new Date(u.updated_at).toLocaleDateString('vi-VN')
-          : undefined,
-        total_xp: u.total_xp ?? 0,
-        level: u.level ?? 1,
-        current_streak: u.current_streak ?? 0,
-        toeic_score: u.target_toeic_score ?? 0,
+        rawProfile: u,
+        profileData: {
+          id: u.user_id,
+          full_name: u.full_name,
+          email: u.email,
+          avatar_url: u.avatar_url || undefined,
+          phone: u.phone_number || undefined,
+          status: u.status,
+          is_premium: u.is_premium,
+          created_at: u.created_at
+            ? new Date(u.created_at).toLocaleDateString('vi-VN')
+            : undefined,
+          last_active: u.updated_at
+            ? new Date(u.updated_at).toLocaleDateString('vi-VN')
+            : undefined,
+          total_xp: u.total_xp ?? 0,
+          level: u.level ?? 1,
+          current_streak: u.current_streak ?? 0,
+          toeic_score: u.target_toeic_score ?? 0,
+        },
       }
     },
     enabled: !!userId,
     staleTime: 0,
   })
+
+  const profileData = profileResult?.profileData || null
+  const rawProfile = profileResult?.rawProfile || null
 
   const quotaUser: User | null = useMemo(() => {
     if (!profileData) return null
@@ -67,6 +75,11 @@ export function UserProfilePage() {
       status: profileData.status === 'BLOCKED' ? 'BANNED' : 'ACTIVE',
       target_toeic_score: profileData.toeic_score ?? 0,
       current_estimated_score: profileData.toeic_score ?? 0,
+      placement_test_score: rawProfile?.placement_test_score ?? undefined,
+      placement_listening_score: rawProfile?.placement_listening_score ?? undefined,
+      placement_reading_score: rawProfile?.placement_reading_score ?? undefined,
+      placement_tested_at: rawProfile?.placement_tested_at ?? undefined,
+      placement_skills_type: rawProfile?.placement_skills_type ?? undefined,
       total_xp: profileData.total_xp ?? 0,
       current_streak: profileData.current_streak ?? 0,
       avatar_url: profileData.avatar_url,
@@ -82,7 +95,7 @@ export function UserProfilePage() {
       practice_sessions: 0,
       exams_completed: 0,
     }
-  }, [profileData])
+  }, [profileData, rawProfile])
 
   if (!profileData || !quotaUser) {
     return (
@@ -128,6 +141,8 @@ export function UserProfilePage() {
       />
 
       <UserProfileStatsGrid profileData={profileData} />
+
+      <LearnerExamHistorySection userId={userId} userProfile={rawProfile} />
 
       <LearnerAiQuotaModal
         user={quotaUser}

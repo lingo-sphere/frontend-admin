@@ -1,5 +1,5 @@
 // Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
-import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw } from 'lucide-react'
+import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw, Trophy } from 'lucide-react'
 import type { User } from '@/features/users/types/learner.types'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
@@ -59,14 +59,21 @@ export function getLearnerColumns({
       key: 'target',
       title: isVi ? 'Mục tiêu & Trình độ' : 'Target & Level',
       render: (u) => (
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400">
             <Target className="w-3.5 h-3.5" />
             <span>Target {u.target_toeic_score ? `${u.target_toeic_score}+` : 0}</span>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            {isVi ? 'Ước lượng:' : 'Estimated:'} {u.current_estimated_score ?? 0}
-          </p>
+          {u.placement_test_score !== undefined && u.placement_test_score > 0 ? (
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+              <Trophy className="w-3 h-3 text-blue-500" />
+              <span>Test đầu vào: {u.placement_test_score}đ</span>
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+              {isVi ? 'Chưa test đầu vào' : 'No placement test'}
+            </p>
+          )}
         </div>
       ),
     },

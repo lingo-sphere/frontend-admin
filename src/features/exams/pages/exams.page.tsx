@@ -1,7 +1,7 @@
-// Trang quản trị ngân hàng đề thi toàn hệ thống sử dụng TanStack Query.
+// Trang quản trị ngân hàng đề thi toàn hệ thống và kết quả test đầu vào học viên.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw } from 'lucide-react'
+import { Plus, RotateCcw, BookOpen, Trophy } from 'lucide-react'
 import { type ToeicExamItem } from '@/features/exams/services/exam.service'
 import {
   useAdminExamsQuery,
@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom'
 import { ExamStatsOverview } from '@/features/exams/components/exam.stats.overview'
 import { ExamListTable } from '@/features/exams/components/exam.list.table'
 import { CreateExamModal } from '@/features/exams/components/create.exam.modal'
+import { PlacementAttemptsTable } from '@/features/exams/components/placement.attempts.table'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function ExamsPage() {
@@ -21,6 +22,7 @@ export function ExamsPage() {
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
 
+  const [activeTab, setActiveTab] = useState<'exams' | 'placements'>('exams')
   const { data: exams = [], isLoading, refetch } = useAdminExamsQuery()
   const { mutateAsync: createExam } = useCreateExamMutation()
   const { mutateAsync: updateExam } = useUpdateExamMutation()
@@ -128,52 +130,89 @@ export function ExamsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {isVi ? 'Ngân Hàng Đề Thi TOEIC' : 'TOEIC Exam Bank'}
+            {isVi ? 'Quản Lý Đề Thi & Đánh Giá Năng Lực' : 'TOEIC Exams & Assessments'}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {isVi
-              ? 'Quản lý các đề thi Full Test, Mini Test và ngân hàng câu hỏi phục vụ học viên'
-              : 'Manage Full Tests, Mini Tests, and question banks for learners'}
+              ? 'Quản lý ngân hàng đề thi TOEIC, đề test đầu vào và theo dõi kết quả làm bài của học viên'
+              : 'Manage TOEIC exam bank, placement tests, and review student test attempts'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => refetch()}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-          >
-            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
-            <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
-          </button>
+        {activeTab === 'exams' && (
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => refetch()}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
+              <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
+            </button>
 
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{isVi ? 'Thêm đề thi mới' : 'Create Exam'}</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{isVi ? 'Thêm đề thi mới' : 'Create Exam'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      <ExamStatsOverview stats={stats} />
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('exams')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'exams'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span>{isVi ? 'Ngân hàng đề thi TOEIC' : 'TOEIC Exam Bank'}</span>
+        </button>
 
-      <ExamListTable
-        exams={filteredExams}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedType={selectedType}
-        onTypeChange={setSelectedType}
-        onTogglePublish={handleTogglePublish}
-        onDeleteExam={handleDeleteExam}
-        onManageQuestions={handleManageQuestions}
-      />
+        <button
+          type="button"
+          onClick={() => setActiveTab('placements')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'placements'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>{isVi ? 'Kết quả Test đầu vào học viên' : 'Placement Test Results'}</span>
+        </button>
+      </div>
 
-      <CreateExamModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSubmit={handleCreateExam}
-      />
+      {activeTab === 'exams' ? (
+        <div className="space-y-6">
+          <ExamStatsOverview stats={stats} />
+
+          <ExamListTable
+            exams={filteredExams}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedType={selectedType}
+            onTypeChange={setSelectedType}
+            onTogglePublish={handleTogglePublish}
+            onDeleteExam={handleDeleteExam}
+            onManageQuestions={handleManageQuestions}
+          />
+
+          <CreateExamModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onSubmit={handleCreateExam}
+          />
+        </div>
+      ) : (
+        <PlacementAttemptsTable onViewLearnerProfile={(userId) => navigate(`/users/${userId}`)} />
+      )}
     </div>
   )
 }
+

@@ -1,0 +1,529 @@
+// Modal hiển thị chi tiết bài thi test đầu vào của học viên dành cho Admin.
+import { useState, useMemo } from 'react'
+import {
+  X,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Headphones,
+  BookOpen,
+  Trophy,
+  Clock,
+  Calendar,
+  Sparkles,
+  Search,
+  Filter,
+} from 'lucide-react'
+import { useAdminAttemptResultQuery } from '@/features/exams/hooks/use.exams.admin.query'
+import type { AdminAttemptAnswer, AdminAttemptQuestion } from '@/features/exams/services/exam.service'
+
+interface PlacementAttemptDetailModalProps {
+  attemptId: string | null
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function PlacementAttemptDetailModal({
+  attemptId,
+  isOpen,
+  onClose,
+}: PlacementAttemptDetailModalProps) {
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'CORRECT' | 'INCORRECT' | 'SKIPPED'>('ALL')
+  const [filterPart, setFilterPart] = useState<number | 'ALL'>('ALL')
+  const [searchQuestion, setSearchQuestion] = useState<string>('')
+
+  const { data, isLoading } = useAdminAttemptResultQuery(attemptId || '', isOpen)
+
+  const attempt = data?.attempt
+  const answers = data?.answers || []
+  const partAnalysis = data?.part_analysis || []
+  const learner = data?.learner
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds || seconds <= 0) return '0 phút'
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    if (mins === 0) return `${secs} giây`
+    return `${mins}p ${secs}s`
+  }
+
+  const formatDateTime = (dateStr?: string) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    return d.toLocaleString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }
+
+  const getScoreBand = (score: number) => {
+    if (score >= 855) return { text: 'Nâng Cao (C1)', color: 'text-purple-600 bg-purple-500/10 border-purple-500/20' }
+    if (score >= 785) return { text: 'Tự Tin Giao Tiếp (B2+)', color: 'text-indigo-600 bg-indigo-500/10 border-indigo-500/20' }
+    if (score >= 550) return { text: 'Trung Cấp (B1)', color: 'text-blue-600 bg-blue-500/10 border-blue-500/20' }
+    if (score >= 255) return { text: 'Sơ Cấp (A2)', color: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' }
+    return { text: 'Mới Bắt Đầu (A1)', color: 'text-amber-600 bg-amber-500/10 border-amber-500/20' }
+  }
+
+  const filteredAnswers = useMemo(() => {
+    return answers.filter((ans) => {
+      const qObj = typeof ans.question_id === 'object' && ans.question_id !== null
+        ? (ans.question_id as AdminAttemptQuestion)
+        : null
+
+      const isSkipped = !ans.selected_option
+      const isCorrect = ans.is_correct
+      const isIncorrect = !isCorrect && !isSkipped
+
+      if (filterStatus === 'CORRECT' && !isCorrect) return false
+      if (filterStatus === 'INCORRECT' && !isIncorrect) return false
+      if (filterStatus === 'SKIPPED' && !isSkipped) return false
+
+      if (filterPart !== 'ALL' && ans.part_number !== filterPart) return false
+
+      if (searchQuestion.trim()) {
+        const query = searchQuestion.toLowerCase().trim()
+        const textEn = qObj?.question_text_en?.toLowerCase() || ''
+        const textVi = qObj?.question_text_vi?.toLowerCase() || ''
+        const qNum = String(ans.question_number)
+        return textEn.includes(query) || textVi.includes(query) || qNum.includes(query)
+      }
+
+      return true
+    })
+  }, [answers, filterStatus, filterPart, searchQuestion])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+        
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
+              <Trophy className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  Chi Tiết Bài Test Đầu Vào
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                  {attempt?.exam_code || 'PLACEMENT'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {attempt?.exam_title || 'Đề Đánh Giá Năng Lực Đầu Vào TOEIC'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            type="button"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 space-y-3">
+              <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Đang tải dữ liệu bài làm của học viên...
+              </p>
+            </div>
+          ) : !attempt ? (
+            <div className="text-center py-16 text-slate-400 text-xs">
+              Không tìm thấy thông tin bài làm này.
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Học Viên Thực Hiện
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-sm shrink-0 shadow-xs">
+                      {learner?.avatar_url ? (
+                        <img
+                          src={learner.avatar_url}
+                          alt={learner.full_name || 'Learner'}
+                          className="w-full h-full rounded-2xl object-cover"
+                        />
+                      ) : (
+                        (learner?.full_name || learner?.email || 'HV').slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                        {learner?.full_name || 'Học viên ẩn danh'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {learner?.email || '-'}
+                      </p>
+                      {learner?.target_toeic_score ? (
+                        <p className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 mt-0.5">
+                          Target: {learner.target_toeic_score}+
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{formatDuration(attempt.total_time_seconds)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{formatDateTime(attempt.submitted_at || attempt.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2 p-4 rounded-2xl bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-purple-600/5 dark:from-blue-950/20 dark:via-indigo-950/20 dark:to-purple-950/20 border border-blue-500/20 flex flex-col justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Tổng Điểm Quy Đổi TOEIC
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-3xl font-black text-slate-900 dark:text-slate-100">
+                          {attempt.total_scaled_score}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-400">/ 990 điểm</span>
+                      </div>
+                    </div>
+
+                    <div className={`px-3 py-1 rounded-xl text-xs font-bold border ${getScoreBand(attempt.total_scaled_score).color}`}>
+                      {getScoreBand(attempt.total_scaled_score).text}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 mt-3 border-t border-slate-200/60 dark:border-slate-800">
+                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                        <Headphones className="w-3.5 h-3.5" />
+                        <span>Listening</span>
+                      </div>
+                      <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                        {attempt.listening_scaled_score} <span className="text-[10px] font-normal text-slate-400">/ 495</span>
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Reading</span>
+                      </div>
+                      <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                        {attempt.reading_scaled_score} <span className="text-[10px] font-normal text-slate-400">/ 495</span>
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Câu đúng</span>
+                      </div>
+                      <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        {attempt.correct_questions} <span className="text-[10px] font-normal text-slate-400">/ {attempt.total_questions}</span>
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-purple-600 dark:text-purple-400">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Độ chính xác</span>
+                      </div>
+                      <p className="text-base font-bold text-purple-600 dark:text-purple-400 mt-0.5">
+                        {attempt.total_questions > 0
+                          ? Math.round((attempt.correct_questions / attempt.total_questions) * 100)
+                          : 0}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {partAnalysis.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Phân Tích Từng Part (Kỹ Năng Chi Tiết)
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                    {partAnalysis.map((p) => (
+                      <div
+                        key={p.part_number}
+                        onClick={() => setFilterPart(filterPart === p.part_number ? 'ALL' : p.part_number)}
+                        className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all ${
+                          filterPart === p.part_number
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold uppercase">
+                          Part {p.part_number}
+                        </div>
+                        <div className={`text-sm font-black mt-0.5 ${filterPart === p.part_number ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}>
+                          {p.correct_count}/{p.total_questions}
+                        </div>
+                        <div className={`text-[10px] font-semibold ${filterPart === p.part_number ? 'text-blue-100' : 'text-slate-400'}`}>
+                          {p.accuracy_percent}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setFilterStatus('ALL')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterStatus === 'ALL'
+                        ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                    }`}
+                  >
+                    Tất cả ({answers.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterStatus('CORRECT')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterStatus === 'CORRECT'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Đúng ({answers.filter((a) => a.is_correct).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterStatus('INCORRECT')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterStatus === 'INCORRECT'
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
+                    }`}
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    Sai ({answers.filter((a) => !a.is_correct && a.selected_option).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterStatus('SKIPPED')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterStatus === 'SKIPPED'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                    }`}
+                  >
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    Chưa làm ({answers.filter((a) => !a.selected_option).length})
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Tìm số câu hoặc nội dung..."
+                      value={searchQuestion}
+                      onChange={(e) => setSearchQuestion(e.target.value)}
+                      className="h-8.5 pl-8 pr-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors w-48 sm:w-60"
+                    />
+                  </div>
+
+                  {filterPart !== 'ALL' && (
+                    <button
+                      onClick={() => setFilterPart('ALL')}
+                      className="h-8.5 px-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Filter className="w-3 h-3" />
+                      <span>Part {filterPart} (Xóa lọc)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {filteredAnswers.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 text-xs">
+                    Không có câu hỏi nào khớp với bộ lọc hiện tại.
+                  </div>
+                ) : (
+                  filteredAnswers.map((ans) => {
+                    const qObj = typeof ans.question_id === 'object' && ans.question_id !== null
+                      ? (ans.question_id as AdminAttemptQuestion)
+                      : null
+
+                    const isSkipped = !ans.selected_option
+                    const isCorrect = ans.is_correct
+                    const correctKey = (ans.correct_option || qObj?.correct_option || '').trim().toUpperCase()
+                    const userSelectedKey = (ans.selected_option || '').trim().toUpperCase()
+
+                    return (
+                      <div
+                        key={ans._id || ans.question_number}
+                        className={`p-5 rounded-2xl border transition-all ${
+                          isCorrect
+                            ? 'bg-emerald-500/5 border-emerald-500/30'
+                            : isSkipped
+                            ? 'bg-amber-500/5 border-amber-500/30'
+                            : 'bg-rose-500/5 border-rose-500/30'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-200/60 dark:border-slate-800/80">
+                          <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black text-xs flex items-center justify-center">
+                              {ans.question_number}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                              Part {ans.part_number}
+                            </span>
+                          </div>
+
+                          <div>
+                            {isCorrect ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                Làm đúng
+                              </span>
+                            ) : isSkipped ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                Chưa làm
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                                <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                Chưa chính xác
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {qObj?.image_url && (
+                          <div className="mt-3 max-w-md rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                            <img
+                              src={qObj.image_url}
+                              alt={`Question ${ans.question_number}`}
+                              className="w-full h-auto object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {qObj?.audio_url && (
+                          <div className="mt-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <audio controls className="w-full h-8" src={qObj.audio_url} />
+                          </div>
+                        )}
+
+                        {qObj?.question_text_en && (
+                          <p className="mt-3 text-sm font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
+                            {qObj.question_text_en}
+                          </p>
+                        )}
+
+                        {qObj?.question_text_vi && (
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 italic">
+                            ({qObj.question_text_vi})
+                          </p>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+                          {qObj?.options && qObj.options.length > 0 ? (
+                            qObj.options.map((opt) => {
+                              const optKey = (opt.key || '').toUpperCase()
+                              const isUserChosen = userSelectedKey === optKey
+                              const isOptionCorrect = correctKey === optKey
+
+                              let boxStyle = 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                              if (isUserChosen && isOptionCorrect) {
+                                boxStyle = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-200 font-bold'
+                              } else if (isUserChosen && !isOptionCorrect) {
+                                boxStyle = 'bg-rose-500/15 border-rose-500/40 text-rose-800 dark:text-rose-200 font-bold'
+                              } else if (isOptionCorrect) {
+                                boxStyle = 'bg-emerald-500/10 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold'
+                              }
+
+                              return (
+                                <div
+                                  key={optKey}
+                                  className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs transition-colors ${boxStyle}`}
+                                >
+                                  <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-black text-[11px] flex items-center justify-center shrink-0">
+                                    {optKey}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <span>{opt.text_en}</span>
+                                    {isUserChosen && (
+                                      <span className="block text-[10px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                                        👉 Học viên đã chọn
+                                      </span>
+                                    )}
+                                  </div>
+                                  {isOptionCorrect && (
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  )}
+                                </div>
+                              )
+                            })
+                          ) : (
+                            <div className="col-span-2 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between">
+                              <div>
+                                <span className="font-semibold text-slate-500 dark:text-slate-400 mr-2">Đáp án học viên:</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100">{userSelectedKey || 'Chưa làm'}</span>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-slate-500 dark:text-slate-400 mr-2">Đáp án chính xác:</span>
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">{correctKey}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {qObj?.explanation_en && (
+                          <div className="mt-4 p-3.5 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                            <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                              <span>Giải thích chi tiết & Transcript:</span>
+                            </div>
+                            <p className="leading-relaxed">{qObj.explanation_en}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-end shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+          >
+            Đóng cửa sổ
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

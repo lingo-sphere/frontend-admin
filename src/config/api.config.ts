@@ -114,6 +114,9 @@ export const API_CONFIG = {
       PASSAGES: '/exams/passages',
       QUESTIONS: '/exams/questions',
       ADD_QUESTIONS: (id: string) => `/exams/${id}/questions`,
+      ADMIN_PLACEMENT_ATTEMPTS: '/exams/admin/placement-attempts',
+      ADMIN_ATTEMPT_RESULT: (attemptId: string) => `/exams/admin/attempts/${attemptId}/result`,
+      ADMIN_USER_ATTEMPTS: (userId: string) => `/exams/admin/users/${userId}/attempts`,
     },
 
     NOTIFICATIONS: {
