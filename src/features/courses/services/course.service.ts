@@ -1,7 +1,4 @@
-/**
- * @file course.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ course
- */
+// Service xử lý các yêu cầu API quản lý khóa học, chương trình học và lộ trình học tập cho quản trị viên.
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
@@ -164,7 +161,7 @@ export const roadmapService = {
     speaking_score?: number
     writing_score?: number
     skills_type?: string
-  }): Promise<{ recommended_roadmap: any; individual_courses: Course[]; note?: string }> {
+  }): Promise<{ recommended_roadmap: LearningRoadmap & { stages: LearningRoadmapStage[] }; individual_courses: Course[]; note?: string }> {
     return api.get(API_CONFIG.ENDPOINTS.ROADMAPS.RECOMMENDATION, query as Record<string, unknown>)
   },
 }

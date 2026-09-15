@@ -122,7 +122,7 @@ export function RoadmapFormModal({
   const handleUpdateStage = (
     index: number,
     field: keyof LearningRoadmapStage,
-    value: any
+    value: LearningRoadmapStage[keyof LearningRoadmapStage]
   ) => {
     const updated = [...formStages]
     updated[index] = { ...updated[index], [field]: value }

@@ -1,7 +1,4 @@
-/**
- * @file exam.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ exam
- */
+// Service xử lý các yêu cầu API quản lý đề thi TOEIC và danh sách câu hỏi cho quản trị viên.
 
 import { api } from '@/services/api.client'
 import {
@@ -33,15 +30,11 @@ export const examAdminService = {
     return this.getExams(params)
   },
 
-  async getExamById(id: string): Promise<ToeicExamItem | null> {
-    try {
-      return await api.get<ToeicExamItem>(`/exams/${id}`, undefined, ToeicExamItemSchema)
-    } catch {
-      return null
-    }
+  async getExamById(id: string): Promise<ToeicExamItem> {
+    return api.get<ToeicExamItem>(`/exams/${id}`, undefined, ToeicExamItemSchema)
   },
 
-  async createExam(dto: CreateExamDto): Promise<ToeicExamItem> {
+  async createExam(dto: Partial<CreateExamDto>): Promise<ToeicExamItem> {
     return api.post<ToeicExamItem>('/exams', dto, ToeicExamItemSchema)
   },
 
@@ -49,12 +42,12 @@ export const examAdminService = {
     return api.put<ToeicExamItem>(`/exams/${id}`, dto, ToeicExamItemSchema)
   },
 
-  async saveExamQuestions(examId: string, questions: any[], audioUrl?: string): Promise<ToeicExamItem> {
+  async saveExamQuestions(examId: string, questions: CreateExamDto['questions'], audioUrl?: string): Promise<ToeicExamItem> {
     return this.updateExam(examId, {
       questions,
-      total_questions: questions.length,
+      total_questions: questions?.length || 0,
       ...(audioUrl ? { audio_url: audioUrl } : {}),
-    } as any)
+    })
   },
 
   async deleteExam(id: string): Promise<{ message: string }> {
