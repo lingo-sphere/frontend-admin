@@ -16,9 +16,17 @@ import {
   Mic,
   PenTool,
   Volume2,
+  Bot,
+  Lightbulb,
+  Edit3,
+  Send,
+  Loader2,
+  Mail,
 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAdminAttemptResultQuery } from '@/features/exams/hooks/use.exams.admin.query'
-import type { AdminAttemptAnswer, AdminAttemptQuestion } from '@/features/exams/services/exam.service'
+import { examService, type AdminAttemptAnswer, type AdminAttemptQuestion } from '@/features/exams/services/exam.service'
+import { toast } from '@/store/toast.store'
 
 interface PlacementAttemptDetailModalProps {
   attemptId: string | null
@@ -31,9 +39,18 @@ export function PlacementAttemptDetailModal({
   isOpen,
   onClose,
 }: PlacementAttemptDetailModalProps) {
+  const queryClient = useQueryClient()
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'CORRECT' | 'INCORRECT' | 'SKIPPED'>('ALL')
   const [filterPart, setFilterPart] = useState<number | 'ALL'>('ALL')
   const [searchQuestion, setSearchQuestion] = useState<string>('')
+
+  const [isEditingScore, setIsEditingScore] = useState(false)
+  const [editListeningScore, setEditListeningScore] = useState<number>(0)
+  const [editReadingScore, setEditReadingScore] = useState<number>(0)
+  const [editTotalScore, setEditTotalScore] = useState<number>(0)
+  const [editFeedback, setEditFeedback] = useState<string>('')
+  const [editSendEmail, setEditSendEmail] = useState<boolean>(true)
+  const [isSubmittingScore, setIsSubmittingScore] = useState<boolean>(false)
 
   const { data, isLoading } = useAdminAttemptResultQuery(attemptId || '', isOpen)
 
@@ -41,6 +58,55 @@ export function PlacementAttemptDetailModal({
   const answers = data?.answers || []
   const partAnalysis = data?.part_analysis || []
   const learner = data?.learner
+
+  const handleOpenEditScore = () => {
+    if (!attempt) return
+    setEditListeningScore(attempt.listening_scaled_score ?? 0)
+    setEditReadingScore(attempt.reading_scaled_score ?? 0)
+    setEditTotalScore(attempt.total_scaled_score ?? 0)
+    setEditFeedback(attempt.teacher_feedback || '')
+    setEditSendEmail(true)
+    setIsEditingScore(true)
+  }
+
+  const handleListeningChange = (val: number) => {
+    const clamped = Math.max(0, Math.min(495, isNaN(val) ? 0 : val))
+    setEditListeningScore(clamped)
+    setEditTotalScore(clamped + editReadingScore)
+  }
+
+  const handleReadingChange = (val: number) => {
+    const clamped = Math.max(0, Math.min(495, isNaN(val) ? 0 : val))
+    setEditReadingScore(clamped)
+    setEditTotalScore(editListeningScore + clamped)
+  }
+
+  const handleSaveScore = async () => {
+    if (!attemptId) return
+    try {
+      setIsSubmittingScore(true)
+      await examService.updateAdminAttemptScore(attemptId, {
+        listening_scaled_score: editListeningScore,
+        reading_scaled_score: editReadingScore,
+        total_scaled_score: editTotalScore,
+        teacher_feedback: editFeedback.trim(),
+        send_email: editSendEmail,
+      })
+      await queryClient.invalidateQueries({ queryKey: ['admin-attempt-result', attemptId] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-placement-attempts'] })
+      toast.success(
+        editSendEmail
+          ? 'Đã cập nhật điểm bài thi và gửi email thông báo thành công cho học viên!'
+          : 'Đã cập nhật điểm bài thi thành công!'
+      )
+      setIsEditingScore(false)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi cập nhật điểm bài thi'
+      toast.error(msg)
+    } finally {
+      setIsSubmittingScore(false)
+    }
+  }
 
   const getAudioSrc = (str?: string): string => {
     if (!str) return ''
@@ -229,9 +295,16 @@ export function PlacementAttemptDetailModal({
                 <div className="lg:col-span-2 p-4 rounded-2xl bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-purple-600/5 dark:from-blue-950/20 dark:via-indigo-950/20 dark:to-purple-950/20 border border-blue-500/20 flex flex-col justify-between">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Tổng Điểm Quy Đổi TOEIC
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Tổng Điểm Quy Đổi TOEIC
+                        </span>
+                        {attempt.is_score_manually_edited && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            Đã điều chỉnh thủ công
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-baseline gap-2 mt-1">
                         <span className="text-3xl font-black text-slate-900 dark:text-slate-100">
                           {attempt.total_scaled_score}
@@ -240,54 +313,187 @@ export function PlacementAttemptDetailModal({
                       </div>
                     </div>
 
-                    <div className={`px-3 py-1 rounded-xl text-xs font-bold border ${getScoreBand(attempt.total_scaled_score).color}`}>
-                      {getScoreBand(attempt.total_scaled_score).text}
+                    <div className="flex items-center gap-2">
+                      <div className={`px-3 py-1 rounded-xl text-xs font-bold border ${getScoreBand(attempt.total_scaled_score).color}`}>
+                        {getScoreBand(attempt.total_scaled_score).text}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenEditScore}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-colors"
+                        title="Chỉnh sửa điểm bài thi và gửi email thông báo học viên"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Chỉnh Sửa Điểm</span>
+                      </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 mt-3 border-t border-slate-200/60 dark:border-slate-800">
-                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                        <Headphones className="w-3.5 h-3.5" />
-                        <span>Listening</span>
+                  {isEditingScore ? (
+                    <div className="mt-4 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-blue-500/30 space-y-4 shadow-sm animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300">
+                          <Edit3 className="w-4 h-4 text-blue-600" />
+                          <span>Chỉnh Sửa Điểm Số & Gửi Nhận Xét Tới Học Viên</span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          Học viên: {learner?.full_name || learner?.email || 'N/A'}
+                        </span>
                       </div>
-                      <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                        {attempt.listening_scaled_score} <span className="text-[10px] font-normal text-slate-400">/ 495</span>
-                      </p>
-                    </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>Reading</span>
-                      </div>
-                      <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                        {attempt.reading_scaled_score} <span className="text-[10px] font-normal text-slate-400">/ 495</span>
-                      </p>
-                    </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
+                            Điểm Listening (0 - 495)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={495}
+                            value={editListeningScore}
+                            onChange={(e) => handleListeningChange(Number(e.target.value))}
+                            className="w-full h-9 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Câu đúng</span>
-                      </div>
-                      <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        {attempt.correct_questions} <span className="text-[10px] font-normal text-slate-400">/ {attempt.total_questions}</span>
-                      </p>
-                    </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
+                            Điểm Reading (0 - 495)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={495}
+                            value={editReadingScore}
+                            onChange={(e) => handleReadingChange(Number(e.target.value))}
+                            className="w-full h-9 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-purple-600 dark:text-purple-400">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Độ chính xác</span>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
+                            Tổng Điểm Quy Đổi (0 - 990)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={990}
+                            value={editTotalScore}
+                            onChange={(e) => setEditTotalScore(Math.max(0, Math.min(990, Number(e.target.value))))}
+                            className="w-full h-9 px-3 rounded-xl border border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 text-sm font-black text-blue-700 dark:text-blue-300 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
                       </div>
-                      <p className="text-base font-bold text-purple-600 dark:text-purple-400 mt-0.5">
-                        {attempt.total_questions > 0
-                          ? Math.round((attempt.correct_questions / attempt.total_questions) * 100)
-                          : 0}%
-                      </p>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
+                          Lời Nhận Xét & Hướng Dẫn Của Giảng Viên (Gửi kèm qua Email)
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={editFeedback}
+                          onChange={(e) => setEditFeedback(e.target.value)}
+                          placeholder="Ví dụ: Bạn làm tốt phần nghe, cần cải thiện tốc độ làm bài đọc Part 7..."
+                          className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300 font-medium">
+                          <input
+                            type="checkbox"
+                            checked={editSendEmail}
+                            onChange={(e) => setEditSendEmail(e.target.checked)}
+                            className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
+                          />
+                          <span className="flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Gửi email thông báo điểm mới tới học viên <strong>({learner?.email || 'email học viên'})</strong></span>
+                          </span>
+                        </label>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingScore(false)}
+                            disabled={isSubmittingScore}
+                            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveScore}
+                            disabled={isSubmittingScore}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs cursor-pointer transition-colors"
+                          >
+                            {isSubmittingScore ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Send className="w-3.5 h-3.5" />
+                            )}
+                            <span>{isSubmittingScore ? 'Đang cập nhật...' : 'Lưu Điểm & Gửi Email'}</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      {attempt.teacher_feedback && (
+                        <div className="mt-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                          <div className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Lời nhận xét của Giảng viên / Admin:</span>
+                          </div>
+                          <p className="leading-relaxed whitespace-pre-wrap pl-5 italic">"{attempt.teacher_feedback}"</p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 mt-3 border-t border-slate-200/60 dark:border-slate-800">
+                        <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                            <Headphones className="w-3.5 h-3.5" />
+                            <span>Listening</span>
+                          </div>
+                          <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                            {attempt.listening_scaled_score} <span className="text-[10px] font-normal text-slate-400">/ 495</span>
+                          </p>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>Reading</span>
+                          </div>
+                          <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                            {attempt.reading_scaled_score} <span className="text-[10px] font-normal text-slate-400">/ 495</span>
+                          </p>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Câu đúng</span>
+                          </div>
+                          <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                            {attempt.correct_questions} <span className="text-[10px] font-normal text-slate-400">/ {attempt.total_questions}</span>
+                          </p>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-purple-600 dark:text-purple-400">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Độ chính xác</span>
+                          </div>
+                          <p className="text-base font-bold text-purple-600 dark:text-purple-400 mt-0.5">
+                            {attempt.total_questions > 0
+                              ? Math.round((attempt.correct_questions / attempt.total_questions) * 100)
+                              : 0}%
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -603,6 +809,86 @@ export function PlacementAttemptDetailModal({
                               <div>
                                 <span className="font-semibold text-slate-500 dark:text-slate-400 mr-2">Đáp án chính xác:</span>
                                 <span className="font-bold text-emerald-600 dark:text-emerald-400">{correctKey}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {(ans.whisper_transcript || ans.ai_score !== undefined || ans.ai_feedback) && (
+                          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-indigo-500/10 border border-violet-500/20 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
+                                <Bot className="w-4 h-4 text-violet-600" />
+                                <span>Kết Quả Đánh Giá & Chấm Điểm AI (Whisper STT + AI Evaluator)</span>
+                              </div>
+                              {ans.ai_score !== undefined && (
+                                <span className="px-3 py-1 rounded-full text-xs font-black bg-violet-600 text-white shadow-xs">
+                                  Điểm AI: {ans.ai_score}/100
+                                </span>
+                              )}
+                            </div>
+
+                            {ans.whisper_transcript && (
+                              <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-violet-200/60 dark:border-violet-800/40 space-y-1">
+                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-violet-600 dark:text-violet-400">
+                                  <Volume2 className="w-3.5 h-3.5" />
+                                  <span>Văn bản nhận diện từ giọng nói học viên (Whisper STT):</span>
+                                </div>
+                                <p className="text-xs text-slate-800 dark:text-slate-200 font-medium italic pl-1">
+                                  "{ans.whisper_transcript}"
+                                </p>
+                              </div>
+                            )}
+
+                            {ans.ai_feedback && (
+                              <div className="space-y-2.5">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                  {ans.ai_feedback.pronunciation_score !== undefined && (
+                                    <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Phát âm</span>
+                                      <span className="text-xs font-black text-violet-600 dark:text-violet-400">{ans.ai_feedback.pronunciation_score}/100</span>
+                                    </div>
+                                  )}
+                                  {ans.ai_feedback.fluency_score !== undefined && (
+                                    <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Trôi chảy</span>
+                                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">{ans.ai_feedback.fluency_score}/100</span>
+                                    </div>
+                                  )}
+                                  {ans.ai_feedback.grammar_score !== undefined && (
+                                    <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Ngữ pháp</span>
+                                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">{ans.ai_feedback.grammar_score}/100</span>
+                                    </div>
+                                  )}
+                                  {ans.ai_feedback.vocabulary_score !== undefined && (
+                                    <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Từ vựng</span>
+                                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{ans.ai_feedback.vocabulary_score}/100</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {ans.ai_feedback.detailed_comment && (
+                                  <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-violet-200/60 dark:border-violet-800/40 text-xs text-slate-700 dark:text-slate-300 space-y-1">
+                                    <span className="font-bold text-violet-700 dark:text-violet-300 block">Nhận xét chi tiết từ AI:</span>
+                                    <p className="leading-relaxed whitespace-pre-wrap">{ans.ai_feedback.detailed_comment}</p>
+                                  </div>
+                                )}
+
+                                {ans.ai_feedback.improvement_tips && ans.ai_feedback.improvement_tips.length > 0 && (
+                                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                                    <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                                      <Lightbulb className="w-3.5 h-3.5" />
+                                      <span>Gợi ý cải thiện:</span>
+                                    </span>
+                                    <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+                                      {ans.ai_feedback.improvement_tips.map((tip, tIdx) => (
+                                        <li key={tIdx}>{tip}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

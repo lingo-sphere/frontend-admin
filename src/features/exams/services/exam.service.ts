@@ -38,6 +38,18 @@ export interface PlacementAttemptItem {
   submitted_at?: string
   created_at?: string
   status: string
+  teacher_feedback?: string
+  is_score_manually_edited?: boolean
+  score_edited_by?: string
+  score_edited_at?: string
+}
+
+export interface UpdateAttemptScoreDto {
+  total_scaled_score?: number
+  listening_scaled_score?: number
+  reading_scaled_score?: number
+  teacher_feedback?: string
+  send_email?: boolean
 }
 
 export interface PlacementAttemptStats {
@@ -82,6 +94,16 @@ export interface AdminAttemptAnswer {
   correct_option?: string
   is_correct: boolean
   answer_time_seconds?: number
+  whisper_transcript?: string
+  ai_score?: number
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
+  }
 }
 
 export interface AdminAttemptPartAnalysis {
@@ -179,6 +201,13 @@ export const examAdminService = {
   async getAdminUserAttempts(userId: string): Promise<PlacementAttemptItem[]> {
     return api.get<PlacementAttemptItem[]>(
       API_CONFIG.ENDPOINTS.EXAMS.ADMIN_USER_ATTEMPTS(userId)
+    )
+  },
+
+  async updateAdminAttemptScore(attemptId: string, dto: UpdateAttemptScoreDto): Promise<AdminAttemptResultDetail> {
+    return api.put<AdminAttemptResultDetail>(
+      API_CONFIG.ENDPOINTS.EXAMS.ADMIN_UPDATE_ATTEMPT_SCORE(attemptId),
+      dto
     )
   },
 }
