@@ -132,7 +132,7 @@ export interface QuizQuestionItem {
   id?: string
   question_text: string
   options: string[]
-  correct_answer: string
+  correct_answer?: string | null
   explanation?: string | null
   media_url?: string | null
   audio_url?: string | null
@@ -155,7 +155,7 @@ export interface LessonQuestion {
   id?: string
   question_text: string
   options: string[]
-  correct_answer: string
+  correct_answer?: string | null
   explanation?: string | null
   media_url?: string | null
   audio_url?: string | null
@@ -189,6 +189,8 @@ export interface Lesson {
   duration_minutes?: number | null
   content?: string | null
   is_preview?: boolean
+  theory_file_url?: string | null
+  theory_file_name?: string | null
 }
 
 export interface CourseModule {
@@ -212,6 +214,8 @@ export interface CourseModule {
   test_audio_url?: string | null
   challenge_audio_url?: string | null
   audio_url?: string | null
+  theory_file_url?: string | null
+  theory_file_name?: string | null
   lessons?: Lesson[]
   created_at?: string | null
   updated_at?: string | null
@@ -230,6 +234,8 @@ export interface Course {
   price: number
   discount_price?: number | null
   thumbnail_url?: string | null
+  document_url?: string | null
+  document_name?: string | null
   author_id?: string | null
   author_name?: string | null
   author_email?: string | null

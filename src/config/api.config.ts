@@ -13,7 +13,6 @@ export const API_CONFIG = {
     THEME: 'lingosphere-admin-theme',
   },
   ENDPOINTS: {
-
     AUTH: {
       LOGIN: '/auth/login',
       REGISTER: '/auth/register',
@@ -42,6 +41,7 @@ export const API_CONFIG = {
       SUBSCRIPTION_PLAN_BY_ID: (id: string) => `/users/subscriptions/plans/${id}`,
       MY_SUBSCRIPTION: '/users/subscriptions/my',
       SUBSCRIPTION_HISTORY: '/users/subscriptions/history',
+      RESET_DATA: (userId: string) => `/users/admin/${userId}/reset-data`,
     },
 
     ROLES: {
@@ -116,6 +116,10 @@ export const API_CONFIG = {
       PASSAGES: '/exams/passages',
       QUESTIONS: '/exams/questions',
       ADD_QUESTIONS: (id: string) => `/exams/${id}/questions`,
+      ADMIN_PLACEMENT_ATTEMPTS: '/exams/admin/placement-attempts',
+      ADMIN_ATTEMPT_RESULT: (attemptId: string) => `/exams/admin/attempts/${attemptId}/result`,
+      ADMIN_USER_ATTEMPTS: (userId: string) => `/exams/admin/users/${userId}/attempts`,
+      ADMIN_UPDATE_ATTEMPT_SCORE: (attemptId: string) => `/exams/admin/attempts/${attemptId}/score`,
     },
 
     NOTIFICATIONS: {

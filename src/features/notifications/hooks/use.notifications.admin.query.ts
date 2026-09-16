@@ -36,7 +36,7 @@ export function useNotificationsAdminQuery() {
         action_url: n.action_url,
       }))
     },
-    staleTime: 30 * 1000,
+    staleTime: 0,
   })
 }
 

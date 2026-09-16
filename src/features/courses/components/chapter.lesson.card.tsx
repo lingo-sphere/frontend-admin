@@ -12,6 +12,7 @@ import {
   ArrowUp,
   ArrowDown,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react'
 import { R2MediaUploader } from '@/features/media/components/r2.media.uploader'
 import type { CourseLesson } from '@/features/courses/components/course.basic.info.tab'
@@ -28,6 +29,7 @@ interface ChapterLessonCardProps {
   onMoveDown?: () => void
   onUpdateField: (field: keyof CourseLesson, value: string | number | boolean) => void
   onUpdateFields: (fields: Partial<CourseLesson>) => void
+  onOpenQuizStudio?: (lesson: CourseLesson) => void
   onRemove: () => void
   formatDurationDisplay: (seconds?: number, minutes?: number) => string
 }
@@ -44,6 +46,7 @@ export function ChapterLessonCard({
   onMoveDown,
   onUpdateField,
   onUpdateFields,
+  onOpenQuizStudio,
   onRemove,
   formatDurationDisplay,
 }: ChapterLessonCardProps) {
@@ -84,6 +87,24 @@ export function ChapterLessonCard({
               <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
               <span>{isVi ? 'Chưa gắn video' : 'No video'}</span>
             </span>
+          )}
+
+          {onOpenQuizStudio && (
+            <button
+              type="button"
+              onClick={() => onOpenQuizStudio(lesson)}
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/50 text-[11px] font-semibold border border-amber-200 dark:border-amber-800/60 shrink-0 transition-colors cursor-pointer"
+              title={isVi ? 'Quản lý câu hỏi ôn tập / Import ZIP cho bài học này' : 'Manage practice questions for this lesson'}
+            >
+              <HelpCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <span>
+                {lesson.questions && lesson.questions.length > 0
+                  ? `${lesson.questions.length} ${isVi ? 'câu hỏi' : 'questions'}`
+                  : isVi
+                  ? '+ Câu hỏi ôn tập'
+                  : '+ Quiz'}
+              </span>
+            </button>
           )}
 
           <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none transition-colors">
@@ -160,6 +181,58 @@ export function ChapterLessonCard({
               label={isVi ? `File Video Bài Học ${chapterIndex + 1}.${lessonIndex + 1}` : `Lesson Video File ${chapterIndex + 1}.${lessonIndex + 1}`}
               isVi={isVi}
             />
+          </div>
+
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <R2MediaUploader
+              type="document"
+              value={lesson.theory_file_url || ''}
+              fileName={lesson.theory_file_name || ''}
+              onChange={(url) => onUpdateField('theory_file_url', url)}
+              onFileNameChange={(name) => onUpdateField('theory_file_name', name)}
+              folder={`${chapterFolder}/lessons/lesson-${lessonIndex + 1}/documents`}
+              label={isVi ? `Tài liệu lý thuyết / Slide bài học ${chapterIndex + 1}.${lessonIndex + 1} (PDF, Docx, PPT...)` : `Lesson Theory Document ${chapterIndex + 1}.${lessonIndex + 1}`}
+              isVi={isVi}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/40 dark:border-amber-900/40 dark:bg-amber-950/20">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                <HelpCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                  {isVi ? 'Bộ câu hỏi ôn tập củng cố (Practice Quiz)' : 'Lesson Practice Quiz'}
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {lesson.questions && lesson.questions.length > 0
+                    ? isVi
+                      ? `Đã thiết lập ${lesson.questions.length} câu hỏi ôn tập cho học viên`
+                      : `${lesson.questions.length} questions configured`
+                    : isVi
+                    ? 'Chưa có câu hỏi. Bạn có thể thêm câu hỏi hoặc import trọn gói từ file ZIP/Excel.'
+                    : 'No questions added yet. You can add questions manually or import via ZIP/Excel.'}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onOpenQuizStudio?.(lesson)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>
+                {lesson.questions && lesson.questions.length > 0
+                  ? isVi
+                    ? 'Mở Quiz Studio'
+                    : 'Open Quiz Studio'
+                  : isVi
+                  ? 'Soạn câu hỏi / Import ZIP'
+                  : 'Add Quiz / Import ZIP'}
+              </span>
+            </button>
           </div>
 
           <div className="space-y-1">

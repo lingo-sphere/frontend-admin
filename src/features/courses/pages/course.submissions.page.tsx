@@ -1,9 +1,5 @@
-/**
- * @file course.submissions.page.tsx
- * @description Trang quản trị hiển thị danh sách bài nộp kỹ năng Speaking và Writing của học viên trong khóa học để giáo viên phúc khảo và chấm điểm
- */
-
-import { useState, useEffect, useCallback } from 'react'
+// Trang quản trị hiển thị danh sách bài nộp kỹ năng Speaking và Writing với TanStack Query.
+import { useState, useMemo, useCallback } from 'react'
 import {
   FileCheck2,
   ArrowLeft,
@@ -14,6 +10,7 @@ import {
   Volume2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
 import { progressService, type SkillSubmissionItem } from '@/features/progress/services/progress.service'
 import { CourseSubmissionItemCard } from '@/features/courses/components/course.submission.item.card'
@@ -27,78 +24,93 @@ interface CourseSubmissionsPageProps {
 
 export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) {
   const navigate = useNavigate()
-  const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
-  const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const queryClient = useQueryClient()
+
   const [filterSkill, setFilterSkill] = useState<'ALL' | 'SPEAKING' | 'WRITING'>('ALL')
   const [selectedSubmission, setSelectedSubmission] = useState<SkillSubmissionItem | null>(null)
-
   const [editScore, setEditScore] = useState<number>(0)
   const [editFeedback, setEditFeedback] = useState<string>('')
-  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false)
 
-  const fetchCourseData = useCallback(async () => {
-    if (!courseId) return
-    try {
-      const res = await courseService.getCourseById(courseId)
-      if (res) setCourseInfo(res)
-    } catch {
-      setCourseInfo(null)
-    }
-  }, [courseId])
+  const { data: courseInfo = null } = useQuery<ApiCourse | null>({
+    queryKey: ['course-detail', courseId],
+    queryFn: async () => {
+      if (!courseId) return null
+      return courseService.getCourseById(courseId).catch(() => null)
+    },
+    enabled: !!courseId,
+    staleTime: 0,
+  })
 
-  const fetchSubmissions = useCallback(async () => {
-    if (!courseId) return
-    setIsLoading(true)
-    try {
+  const {
+    data: submissions = [],
+    isLoading,
+    refetch: refetchSubmissions,
+  } = useQuery<SkillSubmissionItem[]>({
+    queryKey: ['course-submissions', courseId],
+    queryFn: async () => {
+      if (!courseId) return []
       const data = await progressService.getCourseSubmissions(courseId)
-      setSubmissions(data || [])
-    } catch {
-      toast.error('Không thể tải danh sách bài nộp của học viên.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [courseId])
+      return data || []
+    },
+    enabled: !!courseId,
+    staleTime: 0,
+  })
 
-  useEffect(() => {
-    fetchCourseData()
-    fetchSubmissions()
-  }, [fetchCourseData, fetchSubmissions])
+  const reviewMutation = useMutation({
+    mutationFn: async ({
+      submissionId,
+      score,
+      feedback,
+    }: {
+      submissionId: string
+      score: number
+      feedback: string
+    }) => {
+      return progressService.reviewSubmission(submissionId, {
+        teacher_score: score,
+        teacher_feedback: feedback || 'Giáo viên đã xác nhận và chuẩn hóa điểm số.',
+      })
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Đã cập nhật điểm thành công: ${vars.score}/100!`)
+      setSelectedSubmission(null)
+      queryClient.invalidateQueries({ queryKey: ['course-submissions', courseId] })
+      queryClient.invalidateQueries({ queryKey: ['course-learners'] })
+    },
+    onError: () => {
+      toast.error('Lỗi khi lưu điểm đánh giá của giáo viên.')
+    },
+  })
 
-  const handleOpenReview = (sub: SkillSubmissionItem) => {
+  const handleOpenReview = useCallback((sub: SkillSubmissionItem) => {
     setSelectedSubmission(sub)
     setEditScore(sub.teacher_score !== undefined ? sub.teacher_score : sub.ai_score)
     setEditFeedback(sub.teacher_feedback || '')
-  }
+  }, [])
 
-  const handleSaveReview = async (overrideScore?: number) => {
-    if (!selectedSubmission) return
-    const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
-
-    setIsSubmittingReview(true)
-    try {
-      await progressService.reviewSubmission(selectedSubmission._id, {
-        teacher_score: scoreToSave,
-        teacher_feedback: editFeedback || 'Giáo viên đã xác nhận và chuẩn hóa điểm số.',
+  const handleSaveReview = useCallback(
+    async (overrideScore?: number) => {
+      if (!selectedSubmission) return
+      const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
+      await reviewMutation.mutateAsync({
+        submissionId: selectedSubmission._id,
+        score: scoreToSave,
+        feedback: editFeedback,
       })
-      toast.success(`Đã cập nhật điểm thành công: ${scoreToSave}/100!`)
-      setSelectedSubmission(null)
-      fetchSubmissions()
-    } catch {
-      toast.error('Lỗi khi lưu điểm đánh giá của giáo viên.')
-    } finally {
-      setIsSubmittingReview(false)
-    }
-  }
+    },
+    [selectedSubmission, editScore, editFeedback, reviewMutation]
+  )
 
-  const filteredList = submissions.filter((sub) => {
-    if (filterSkill === 'ALL') return true
-    return sub.skill === filterSkill
-  })
+  const filteredList = useMemo(() => {
+    return submissions.filter((sub) => {
+      if (filterSkill === 'ALL') return true
+      return sub.skill === filterSkill
+    })
+  }, [submissions, filterSkill])
 
-  const speakingCount = submissions.filter((s) => s.skill === 'SPEAKING').length
-  const writingCount = submissions.filter((s) => s.skill === 'WRITING').length
-  const pendingCount = submissions.filter((s) => s.status !== 'TEACHER_REVIEWED').length
+  const speakingCount = useMemo(() => submissions.filter((s) => s.skill === 'SPEAKING').length, [submissions])
+  const writingCount = useMemo(() => submissions.filter((s) => s.skill === 'WRITING').length, [submissions])
+  const pendingCount = useMemo(() => submissions.filter((s) => s.status !== 'TEACHER_REVIEWED').length, [submissions])
 
   const courseTitle = courseInfo?.title || 'Khóa học'
 
@@ -149,7 +161,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
 
           <button
             type="button"
-            onClick={fetchSubmissions}
+            onClick={() => refetchSubmissions()}
             disabled={isLoading}
             className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Làm mới bài nộp"
@@ -230,7 +242,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
           submission={selectedSubmission}
           editScore={editScore}
           editFeedback={editFeedback}
-          isSubmitting={isSubmittingReview}
+          isSubmitting={reviewMutation.isPending}
           onScoreChange={setEditScore}
           onFeedbackChange={setEditFeedback}
           onClose={() => setSelectedSubmission(null)}

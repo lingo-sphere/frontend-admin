@@ -1,9 +1,5 @@
-/**
- * @file course.scores.page.tsx
- * @description Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học
- */
+// Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học.
 
-import { useState, useEffect } from 'react'
 import {
   GraduationCap,
   ArrowLeft,
@@ -16,10 +12,9 @@ import {
   FileCheck2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { courseService } from '@/features/courses/services/course.service'
+import { useAdminCourseDetailQuery } from '@/features/courses/hooks/use.courses.admin.query'
 import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
 import { StudentScoresTableRow } from '@/features/courses/components/student.scores.table.row'
-import type { Course as ApiCourse } from '@/types/api.types'
 
 interface CourseScoresPageProps {
   courseId: string
@@ -27,7 +22,7 @@ interface CourseScoresPageProps {
 
 export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
   const navigate = useNavigate()
-  const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
+  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId)
 
   const {
     data,
@@ -38,24 +33,6 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
     filteredStudents,
     fetchData,
   } = useCourseStudentScores(courseId, true)
-
-  useEffect(() => {
-    if (!courseId) return
-    let isMounted = true
-    courseService
-      .getCourseById(courseId)
-      .then((res) => {
-        if (isMounted && res) {
-          setCourseInfo(res)
-        }
-      })
-      .catch(() => {
-        if (isMounted) setCourseInfo(null)
-      })
-    return () => {
-      isMounted = false
-    }
-  }, [courseId])
 
   const totalStudents = data?.total_students || 0
   const avgProgress = data?.average_progress_percentage || 0
@@ -156,7 +133,9 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           </div>
           <div>
             <div className="text-xs text-slate-500 dark:text-slate-400">Mục tiêu đầu ra</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{courseInfo?.target_score || 650}+ TOEIC</div>
+            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
+            </div>
           </div>
         </div>
       </div>

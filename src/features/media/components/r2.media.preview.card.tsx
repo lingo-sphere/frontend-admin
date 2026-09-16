@@ -3,12 +3,14 @@
  * @description Thẻ hiển thị file media đã upload thành công kèm thumbnail, nút xem trước, đổi và xóa file
  */
 
-import { Play, CheckCircle2, Eye, RefreshCw, ExternalLink, Trash2 } from 'lucide-react'
+import { Play, CheckCircle2, Eye, RefreshCw, ExternalLink, Trash2, FileText } from 'lucide-react'
 import { resolveStreamUrl } from '@/features/media/hooks/use.r2.uploader'
 
 interface R2MediaPreviewCardProps {
   value: string
   isVideo: boolean
+  isDocument?: boolean
+  fileName?: string
   isVi: boolean
   onPreview: () => void
   onChangeFile: () => void
@@ -18,11 +20,15 @@ interface R2MediaPreviewCardProps {
 export function R2MediaPreviewCard({
   value,
   isVideo,
+  isDocument,
+  fileName,
   isVi,
   onPreview,
   onChangeFile,
   onRemove,
 }: R2MediaPreviewCardProps) {
+  const displayName = fileName || value.split('/').pop() || (isVi ? 'Tệp tin' : 'File')
+
   return (
     <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/40 dark:bg-emerald-950/20">
       <div
@@ -32,13 +38,17 @@ export function R2MediaPreviewCard({
           isVi
             ? isVideo
               ? 'Bấm để xem trước video đã tải lên'
+              : isDocument
+              ? 'Bấm để mở tài liệu đã tải lên'
               : 'Bấm để xem ảnh phóng to'
             : isVideo
             ? 'Click to preview video'
+            : isDocument
+            ? 'Click to open document'
             : 'Click to preview image'
         }
       >
-        {!isVideo && (
+        {!isVideo && !isDocument && (
           <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-black/5 dark:border-slate-800 relative">
             <img
               src={resolveStreamUrl(value)}
@@ -52,11 +62,16 @@ export function R2MediaPreviewCard({
             <Play className="w-5 h-5 fill-white group-hover:scale-110 transition-transform" />
           </div>
         )}
+        {isDocument && (
+          <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 relative group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/60 transition-colors">
+            <FileText className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          </div>
+        )}
 
         <div className="space-y-0.5 overflow-hidden">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            <span className="truncate">{value.split('/').pop() || 'media-file'}</span>
+            <span className="truncate">{displayName}</span>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 truncate">
             <span className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
@@ -77,6 +92,10 @@ export function R2MediaPreviewCard({
               ? isVi
                 ? 'Phát video xem trước'
                 : 'Play video preview'
+              : isDocument
+              ? isVi
+                ? 'Mở tài liệu'
+                : 'Open document'
               : isVi
               ? 'Xem ảnh phóng to'
               : 'View image preview'
@@ -86,6 +105,11 @@ export function R2MediaPreviewCard({
             <>
               <Play className="w-3 h-3 fill-indigo-700 dark:fill-indigo-300" />
               <span>{isVi ? 'Phát video' : 'Play'}</span>
+            </>
+          ) : isDocument ? (
+            <>
+              <ExternalLink className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-300" />
+              <span>{isVi ? 'Mở file' : 'Open'}</span>
             </>
           ) : (
             <>

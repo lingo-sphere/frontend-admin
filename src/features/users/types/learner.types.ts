@@ -7,9 +7,13 @@ export interface User {
   avatar_url?: string
   phone_number?: string
   gender: 'MALE' | 'FEMALE' | 'OTHER'
-  date_of_birth?: string
   target_toeic_score: number
   current_estimated_score: number
+  placement_test_score?: number
+  placement_listening_score?: number
+  placement_reading_score?: number
+  placement_skills_type?: string
+  placement_tested_at?: string
   learning_goal_minutes_per_day: number
   bio?: string
   status: 'ACTIVE' | 'INACTIVE' | 'BANNED'

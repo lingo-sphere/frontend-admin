@@ -71,7 +71,7 @@ export function useAdminUsersQuery(params?: Record<string, unknown>) {
     queryKey: adminUserKeys.list(params),
     queryFn: () => fetchAdminUsers(),
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 

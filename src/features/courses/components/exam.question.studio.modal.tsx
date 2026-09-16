@@ -17,6 +17,7 @@ export interface ExamQuestionStudioModalProps {
   title: string
   subtitle?: string
   is4Skills?: boolean
+  isLessonMode?: boolean
   isVi: boolean
   initialQuestions?: ExamQuestionItem[]
   initialGlobalAudioUrl?: string
@@ -29,6 +30,7 @@ export function ExamQuestionStudioModal({
   title,
   subtitle,
   is4Skills = false,
+  isLessonMode = false,
   isVi,
   initialQuestions = [],
   initialGlobalAudioUrl = '',
@@ -86,6 +88,7 @@ export function ExamQuestionStudioModal({
     isOpen,
     exam: null,
     is4Skills,
+    isLessonMode,
     initialQuestions,
     initialGlobalAudioUrl,
     isVi,
@@ -118,6 +121,7 @@ export function ExamQuestionStudioModal({
           isVi={isVi}
           is4Skills={is4Skills}
           isSystemPlacement={false}
+          isLessonMode={isLessonMode}
           questionsCount={questions.length}
           searchQuery={searchQuery}
           uploadingGlobalAudio={uploadingGlobalAudio}
@@ -128,17 +132,20 @@ export function ExamQuestionStudioModal({
           onAddQuestion={handleAddQuestion}
         />
 
-        <ExamEditorGlobalAudio
-          globalAudioUrl={globalAudioUrl}
-          isVi={isVi}
-          onRemove={handleRemoveGlobalAudio}
-        />
+        {!isLessonMode && (
+          <ExamEditorGlobalAudio
+            globalAudioUrl={globalAudioUrl}
+            isVi={isVi}
+            onRemove={handleRemoveGlobalAudio}
+          />
+        )}
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40 min-h-[350px]">
           {questions.length === 0 || isProcessingZip ? (
             <ExamZipDropzone
               isVi={isVi}
               is4Skills={is4Skills}
+              isLessonMode={isLessonMode}
               isProcessingZip={isProcessingZip}
               zipProcessStatus={zipProcessStatus}
               zipProgress={zipProgress}
@@ -157,7 +164,7 @@ export function ExamQuestionStudioModal({
                 }
               }}
               onOpenZipPicker={() => zipFileInputRef.current?.click()}
-              onDownloadSampleZip={() => downloadSampleZip(isVi, is4Skills)}
+              onDownloadSampleZip={() => downloadSampleZip(isVi, is4Skills, isLessonMode)}
             />
           ) : (
             <>

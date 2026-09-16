@@ -20,6 +20,8 @@ export interface CourseFormData {
   price: number
   discount_price: number
   thumbnail_url: string
+  document_url?: string
+  document_name?: string
   is_published: boolean
   author_id?: string
   author_name?: string
@@ -57,6 +59,8 @@ export interface CourseLesson {
   content: string
   is_preview: boolean
   lesson_order: number
+  theory_file_url?: string
+  theory_file_name?: string
   questions?: LessonQuestion[]
 }
 
@@ -65,6 +69,8 @@ export interface CourseModule {
   title: string
   description: string
   module_order: number
+  theory_file_url?: string
+  theory_file_name?: string
   created_at_timestamp?: number
   is_free_preview?: boolean
   passing_score?: number
@@ -283,6 +289,17 @@ export function CourseBasicInfoTab({
               onChange={(url) => onChange({ thumbnail_url: url })}
               folder={courseFolder || (formData.slug ? `courses/${formData.slug}` : 'courses')}
               label={isVi ? 'Ảnh Thumbnail Khóa Học' : 'Course Thumbnail'}
+              isVi={isVi}
+            />
+
+            <R2MediaUploader
+              type="document"
+              value={formData.document_url || ''}
+              fileName={formData.document_name || ''}
+              onChange={(url) => onChange({ document_url: url })}
+              onFileNameChange={(name) => onChange({ document_name: name })}
+              folder={courseFolder || (formData.slug ? `courses/${formData.slug}/documents` : 'courses/documents')}
+              label={isVi ? 'Tài liệu / Giáo trình tổng quan khóa học' : 'Course Handbook / Syllabus Document'}
               isVi={isVi}
             />
 

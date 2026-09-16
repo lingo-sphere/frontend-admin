@@ -1,5 +1,5 @@
 // Trang quản trị tiến độ học tập, bài nộp kỹ năng và thống kê học viên theo khóa học
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   GraduationCap,
@@ -48,15 +48,6 @@ export function CourseLearnersPage() {
   const [progressSortOrder, setProgressSortOrder] = useState<'asc' | 'desc' | null>(null)
   const [selectedReviewSub, setSelectedReviewSub] = useState<SkillSubmissionItem | null>(null)
 
-  useEffect(() => {
-    if (courses.length > 0) {
-      if (activeTab === 'PROGRESS' || activeTab === 'ANALYTICS') {
-        fetchProgress()
-      } else {
-        fetchSubmissions()
-      }
-    }
-  }, [courses, selectedCourseId, activeTab, fetchProgress, fetchSubmissions])
 
   const filteredStudents = useMemo(() => {
     let list = allStudentsProgress

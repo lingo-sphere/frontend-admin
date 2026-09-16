@@ -33,10 +33,10 @@ export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressD
     handleSaveReview,
   } = useLearnerProgressDetail({ courseId, userId })
 
-  const displayName = userProfile?.full_name || student?.full_name || `Học viên #${userId.slice(-6)}`
-  const displayEmail = userProfile?.email || student?.email || 'Chưa cập nhật email'
+  const displayName = userProfile?.full_name || student?.full_name || userProfile?.email || student?.email || '-'
+  const displayEmail = userProfile?.email || student?.email || '-'
   const avatarUrl = userProfile?.avatar_url || student?.avatar_url
-  const courseTitle = courseInfo?.title || student?.course_title || 'Khóa học'
+  const courseTitle = courseInfo?.title || student?.course_title || '-'
 
   const progressPct = Math.min(100, Math.max(0, student?.progress_percentage || 0))
   const completedLessons = student?.completed_lessons || 0

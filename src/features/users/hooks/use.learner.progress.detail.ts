@@ -1,7 +1,11 @@
-// Hook quản lý dữ liệu chi tiết tiến độ học tập và bài nộp kỹ năng của học viên.
-
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { progressService, type StudentProgressItem, type SkillSubmissionItem } from '@/features/progress/services/progress.service'
+// Hook quản lý dữ liệu chi tiết tiến độ học tập và bài nộp kỹ năng của học viên với TanStack Query.
+import { useState, useMemo, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  progressService,
+  type StudentProgressItem,
+  type SkillSubmissionItem,
+} from '@/features/progress/services/progress.service'
 import { courseService } from '@/features/courses/services/course.service'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
@@ -13,42 +17,31 @@ interface UseLearnerProgressDetailProps {
   userId: string
 }
 
+interface LearnerProgressDetailQueryResult {
+  student: StudentProgressItem | null
+  userProfile: UserProfile | null
+  courseInfo: ApiCourse | null
+  submissions: SkillSubmissionItem[]
+}
+
 export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgressDetailProps) {
-  const [student, setStudent] = useState<StudentProgressItem | null>(() => {
-    const cached = storage.session.get<StudentProgressItem>(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS)
-    if (cached && cached.user_id === userId) {
-      return cached
-    }
-    return null
-  })
-
-  const studentRef = useRef(student)
-  studentRef.current = student
-
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
-  const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(() => {
-    const cached = storage.session.get<StudentProgressItem>(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS)
-    if (cached && cached.user_id === userId) {
-      return false
-    }
-    return true
-  })
-
+  const queryClient = useQueryClient()
   const [selectedSubmission, setSelectedSubmission] = useState<SkillSubmissionItem | null>(null)
   const [editScore, setEditScore] = useState<number>(0)
   const [editFeedback, setEditFeedback] = useState<string>('')
-  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false)
 
-  const loadData = useCallback(async () => {
-    if (!courseId || !userId) return
-    const hasInitialData = !!studentRef.current
-    if (!hasInitialData) {
-      setIsLoading(true)
-    }
+  const initialCachedStudent = useMemo(() => {
+    const cached = storage.session.get<StudentProgressItem>(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS)
+    return cached && cached.user_id === userId ? cached : null
+  }, [userId])
 
-    try {
+  const {
+    data,
+    isLoading,
+    refetch,
+  } = useQuery<LearnerProgressDetailQueryResult>({
+    queryKey: ['learner-progress-detail', courseId, userId],
+    queryFn: async () => {
       const isAllCourse = courseId === 'all'
       const [detailRes, submissionsRes, courseRes, userProfileRes] = await Promise.all([
         !isAllCourse
@@ -63,97 +56,118 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
         userService.getProfileById(userId).catch(() => null),
       ])
 
+      let studentData: StudentProgressItem | null = null
+
       if (detailRes?.course_progress) {
         const cp = detailRes.course_progress
-        const currentStudent = studentRef.current
-        const mergedStudent: StudentProgressItem = {
+        studentData = {
           user_id: userId,
-          full_name: userProfileRes?.full_name || currentStudent?.full_name,
-          email: userProfileRes?.email || currentStudent?.email,
-          avatar_url: userProfileRes?.avatar_url || currentStudent?.avatar_url,
+          full_name: userProfileRes?.full_name || initialCachedStudent?.full_name,
+          email: userProfileRes?.email || initialCachedStudent?.email,
+          avatar_url: userProfileRes?.avatar_url || initialCachedStudent?.avatar_url,
           course_id: courseId,
-          course_title: courseRes?.title || currentStudent?.course_title,
-          progress_percentage: cp.progress_percentage ?? currentStudent?.progress_percentage ?? 0,
-          completed_lessons: cp.completed_lessons_count ?? currentStudent?.completed_lessons ?? 0,
-          total_lessons: cp.total_lessons_count ?? currentStudent?.total_lessons ?? 1,
-          baseline_score: cp.baseline_score ?? currentStudent?.baseline_score,
-          baseline_source: cp.baseline_source ?? currentStudent?.baseline_source,
-          final_test_score: cp.final_test_score ?? currentStudent?.final_test_score,
-          total_score_growth: cp.total_score_growth ?? currentStudent?.total_score_growth,
-          modules_progress: detailRes.modules_progress || currentStudent?.modules_progress || [],
-          status: cp.status ?? currentStudent?.status,
+          course_title: courseRes?.title || initialCachedStudent?.course_title,
+          progress_percentage: cp.progress_percentage ?? initialCachedStudent?.progress_percentage ?? 0,
+          completed_lessons: cp.completed_lessons_count ?? initialCachedStudent?.completed_lessons ?? 0,
+          total_lessons: cp.total_lessons_count ?? initialCachedStudent?.total_lessons ?? 1,
+          baseline_score: cp.baseline_score ?? initialCachedStudent?.baseline_score,
+          baseline_source: cp.baseline_source ?? initialCachedStudent?.baseline_source,
+          final_test_score: cp.final_test_score ?? initialCachedStudent?.final_test_score,
+          total_score_growth: cp.total_score_growth ?? initialCachedStudent?.total_score_growth,
+          modules_progress: detailRes.modules_progress || initialCachedStudent?.modules_progress || [],
+          status: cp.status ?? initialCachedStudent?.status,
         }
-        setStudent(mergedStudent)
-        storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, mergedStudent)
-      } else if (isAllCourse && !studentRef.current) {
+        storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, studentData)
+      } else if (isAllCourse) {
         const allProg = await progressService.getCourseStudentsProgress('all').catch(() => null)
         if (allProg?.students) {
           const found = allProg.students.find((s) => s.user_id === userId)
           if (found) {
-            setStudent(found)
+            studentData = found
             storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, found)
           }
         }
       }
 
-      if (Array.isArray(submissionsRes)) {
-        setSubmissions(submissionsRes)
+      if (!studentData && initialCachedStudent) {
+        studentData = initialCachedStudent
       }
 
-      if (courseRes) {
-        setCourseInfo(courseRes)
+      return {
+        student: studentData,
+        userProfile: userProfileRes,
+        courseInfo: courseRes,
+        submissions: Array.isArray(submissionsRes) ? submissionsRes : [],
       }
+    },
+    enabled: !!userId,
+    staleTime: 0,
+  })
 
-      if (userProfileRes) {
-        setUserProfile(userProfileRes)
-      }
-    } catch {
-      toast.error('Không thể tải chi tiết tiến độ học viên.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [courseId, userId])
+  const student = data?.student || initialCachedStudent
+  const userProfile = data?.userProfile || null
+  const courseInfo = data?.courseInfo || null
+  const submissions = data?.submissions || []
 
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  const reviewMutation = useMutation({
+    mutationFn: async ({
+      submissionId,
+      score,
+      feedback,
+    }: {
+      submissionId: string
+      score: number
+      feedback: string
+    }) => {
+      return progressService.reviewSubmission(submissionId, {
+        teacher_score: score,
+        teacher_feedback: feedback || 'Giáo viên đã xác nhận và chuẩn hóa điểm số.',
+      })
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Đã cập nhật điểm thành công: ${vars.score}/100!`)
+      setSelectedSubmission(null)
+      queryClient.invalidateQueries({ queryKey: ['learner-progress-detail', courseId, userId] })
+      queryClient.invalidateQueries({ queryKey: ['course-learners'] })
+    },
+    onError: () => {
+      toast.error('Lỗi khi lưu điểm đánh giá của giáo viên.')
+    },
+  })
 
-  const handleOpenReview = (sub: SkillSubmissionItem) => {
+  const handleOpenReview = useCallback((sub: SkillSubmissionItem) => {
     setSelectedSubmission(sub)
     setEditScore(sub.teacher_score !== undefined ? sub.teacher_score : sub.ai_score)
     setEditFeedback(sub.teacher_feedback || '')
-  }
+  }, [])
 
-  const handleSaveReview = async (overrideScore?: number) => {
-    if (!selectedSubmission) return
-    const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
-
-    setIsSubmittingReview(true)
-    try {
-      await progressService.reviewSubmission(selectedSubmission._id, {
-        teacher_score: scoreToSave,
-        teacher_feedback: editFeedback || 'Giáo viên đã xác nhận và chuẩn hóa điểm số.',
+  const handleSaveReview = useCallback(
+    async (overrideScore?: number) => {
+      if (!selectedSubmission) return
+      const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
+      await reviewMutation.mutateAsync({
+        submissionId: selectedSubmission._id,
+        score: scoreToSave,
+        feedback: editFeedback,
       })
-      toast.success(`Đã cập nhật điểm thành công: ${scoreToSave}/100!`)
-      setSelectedSubmission(null)
-      loadData()
-    } catch {
-      toast.error('Lỗi khi lưu điểm đánh giá của giáo viên.')
-    } finally {
-      setIsSubmittingReview(false)
-    }
-  }
+    },
+    [selectedSubmission, editScore, editFeedback, reviewMutation]
+  )
+
+  const loadData = useCallback(async () => {
+    await refetch()
+  }, [refetch])
 
   return {
     student,
     userProfile,
     courseInfo,
     submissions,
-    isLoading,
+    isLoading: isLoading && !student,
     selectedSubmission,
     editScore,
     editFeedback,
-    isSubmittingReview,
+    isSubmittingReview: reviewMutation.isPending,
     setEditScore,
     setEditFeedback,
     setSelectedSubmission,

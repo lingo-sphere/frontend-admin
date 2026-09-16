@@ -9,6 +9,7 @@ import {
 import { ChapterLessonCard } from '@/features/courses/components/chapter.lesson.card'
 import { ChapterAssessmentCard } from '@/features/courses/components/chapter.assessment.card'
 import { CourseChapterHeader } from '@/features/courses/components/course.chapter.header'
+import { R2MediaUploader } from '@/features/media/components/r2.media.uploader'
 import type { CourseModule, CourseLesson } from '@/features/courses/components/course.basic.info.tab'
 
 interface CourseChapterCardProps {
@@ -35,6 +36,7 @@ interface CourseChapterCardProps {
   ) => void
   onUpdateLessonFields: (lessonId: string, fields: Partial<CourseLesson>) => void
   onOpenStudio: () => void
+  onOpenLessonQuizStudio?: (lesson: CourseLesson) => void
   formatDurationDisplay: (seconds?: number, minutes?: number) => string
 }
 
@@ -58,6 +60,7 @@ export function CourseChapterCard({
   onUpdateLessonField,
   onUpdateLessonFields,
   onOpenStudio,
+  onOpenLessonQuizStudio,
   formatDurationDisplay,
 }: CourseChapterCardProps) {
   const modDuration = module.lessons.reduce(
@@ -144,6 +147,19 @@ export function CourseChapterCard({
                 />
               </div>
             </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <R2MediaUploader
+                type="document"
+                value={module.theory_file_url || ''}
+                fileName={module.theory_file_name || ''}
+                onChange={(url) => onUpdateModule({ theory_file_url: url })}
+                onFileNameChange={(name) => onUpdateModule({ theory_file_name: name })}
+                folder={`${chapterFolder}/documents`}
+                label={isVi ? `Tài liệu lý thuyết / Đề cương Chương ${moduleIndex + 1} (PDF, Docx, PPT...)` : `Chapter ${moduleIndex + 1} Theory Document`}
+                isVi={isVi}
+              />
+            </div>
           </div>
 
           <div className="relative pl-5 sm:pl-7 border-l-2 border-indigo-200 dark:border-indigo-900 ml-2 sm:ml-3 space-y-6">
@@ -205,6 +221,7 @@ export function CourseChapterCard({
                       onMoveDown={onMoveLessonDown ? () => onMoveLessonDown(lessonIndex) : undefined}
                       onUpdateField={(field, val) => onUpdateLessonField(lesson.id, field, val)}
                       onUpdateFields={(fields) => onUpdateLessonFields(lesson.id, fields)}
+                      onOpenQuizStudio={onOpenLessonQuizStudio}
                       onRemove={() => onRemoveLesson(lesson.id)}
                       formatDurationDisplay={formatDurationDisplay}
                     />

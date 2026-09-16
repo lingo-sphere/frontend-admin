@@ -55,6 +55,7 @@ export interface UseExamQuestionEditorParams {
   isOpen: boolean
   exam?: ToeicExamItem | null
   is4Skills?: boolean
+  isLessonMode?: boolean
   initialQuestions?: ExamQuestionItem[]
   initialGlobalAudioUrl?: string
   isVi: boolean

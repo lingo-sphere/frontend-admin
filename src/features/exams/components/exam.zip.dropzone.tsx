@@ -6,6 +6,7 @@ import { FolderArchive, Archive, Download, Loader2 } from 'lucide-react'
 interface ExamZipDropzoneProps {
   isVi: boolean
   is4Skills?: boolean
+  isLessonMode?: boolean
   isProcessingZip: boolean
   zipProcessStatus: string
   zipProgress: { current: number; total: number } | null
@@ -20,6 +21,7 @@ interface ExamZipDropzoneProps {
 export function ExamZipDropzone({
   isVi,
   is4Skills = false,
+  isLessonMode = false,
   isProcessingZip,
   zipProcessStatus,
   zipProgress,
@@ -73,23 +75,31 @@ export function ExamZipDropzone({
       <div className="max-w-md space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
           <span>
-            {is4Skills
-              ? isVi ? 'Cấu hình: TOEIC 4 Kỹ năng (Nghe, Đọc, Nói, Viết)' : 'Scope: TOEIC 4 Skills (LRSW)'
-              : isVi ? 'Cấu hình: TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe & Đọc)' : 'Scope: TOEIC 2 Skills (Listening & Reading only)'}
+            {isLessonMode
+              ? isVi ? 'Cấu hình: Câu hỏi ôn tập bài học' : 'Scope: Lesson Practice Questions'
+              : is4Skills
+                ? isVi ? 'Cấu hình: TOEIC 4 Kỹ năng (Nghe, Đọc, Nói, Viết)' : 'Scope: TOEIC 4 Skills (LRSW)'
+                : isVi ? 'Cấu hình: TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe & Đọc)' : 'Scope: TOEIC 2 Skills (Listening & Reading only)'}
           </span>
         </div>
 
         <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          {isVi ? 'Kéo thả hoặc chọn file ZIP / RAR / Excel đề thi' : 'Drag & drop or select Exam ZIP / RAR / Excel file'}
+          {isLessonMode
+            ? isVi ? 'Kéo thả hoặc chọn file ZIP / RAR / Excel câu hỏi ôn tập' : 'Drag & drop or select Quiz ZIP / RAR / Excel file'
+            : isVi ? 'Kéo thả hoặc chọn file ZIP / RAR / Excel đề thi' : 'Drag & drop or select Exam ZIP / RAR / Excel file'}
         </h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          {isVi
-            ? is4Skills
-              ? 'Gói nén ZIP / RAR gồm questions.xlsx (chứa các câu hỏi Nghe, Đọc, Nói, Viết) và thư mục media chứa audio/ảnh minh họa.'
-              : 'Gói nén ZIP / RAR gồm questions.xlsx (chỉ chấp nhận kỹ năng Nghe và Đọc) và thư mục media chứa audio/ảnh minh họa.'
-            : is4Skills
-              ? 'ZIP or RAR archive containing questions.xlsx (Listening, Reading, Speaking, Writing) and media files.'
-              : 'ZIP or RAR archive containing questions.xlsx (Listening & Reading only) and media files.'}
+          {isLessonMode
+            ? isVi
+              ? 'Gói nén ZIP / RAR gồm questions.xlsx và thư mục media chứa audio hoặc ảnh minh họa (nếu có).'
+              : 'ZIP or RAR package with questions.xlsx and media directory for audio or images.'
+            : isVi
+              ? is4Skills
+                ? 'Gói nén ZIP / RAR gồm questions.xlsx (chứa các câu hỏi Nghe, Đọc, Nói, Viết) và thư mục media chứa audio/ảnh minh họa.'
+                : 'Gói nén ZIP / RAR gồm questions.xlsx (chỉ chấp nhận kỹ năng Nghe và Đọc) và thư mục media chứa audio/ảnh minh họa.'
+              : is4Skills
+                ? 'ZIP or RAR archive containing questions.xlsx (Listening, Reading, Speaking, Writing) and media files.'
+                : 'ZIP or RAR archive containing questions.xlsx (Listening & Reading only) and media files.'}
         </p>
       </div>
 
@@ -111,9 +121,11 @@ export function ExamZipDropzone({
         >
           <Download className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           <span>
-            {isVi
-              ? is4Skills ? 'Tải Gói ZIP Mẫu 4 Kỹ Năng' : 'Tải Gói ZIP Mẫu 2 Kỹ Năng'
-              : is4Skills ? 'Download 4-Skills Sample ZIP' : 'Download 2-Skills Sample ZIP'}
+            {isLessonMode
+              ? isVi ? 'Tải Gói ZIP Mẫu Ôn Tập' : 'Download Practice Sample ZIP'
+              : isVi
+                ? is4Skills ? 'Tải Gói ZIP Mẫu 4 Kỹ Năng' : 'Tải Gói ZIP Mẫu 2 Kỹ Năng'
+                : is4Skills ? 'Download 4-Skills Sample ZIP' : 'Download 2-Skills Sample ZIP'}
           </span>
         </button>
       </div>

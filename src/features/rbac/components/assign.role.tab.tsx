@@ -1,7 +1,4 @@
-/**
- * @file assign.role.tab.tsx
- * @description Component giao diện AssignRoleTab phục vụ khu vực Quản trị Admin
- */
+// Component giao diện gán vai trò người dùng trong Quản trị Admin.
 
 import { Search, UserCheck, CheckCircle, AlertCircle } from 'lucide-react'
 import type { Role, UserProfile } from '@/types/api.types'
@@ -82,7 +79,7 @@ export function AssignRoleTab({
 
                 <div className="flex items-center gap-3">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                    {u.role || 'STUDENT'}
+                    {u.role || '-'}
                   </span>
                   {isSelected && (
                     <CheckCircle className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -111,7 +108,7 @@ export function AssignRoleTab({
                 {selectedUser.email}
               </p>
               <p className="text-[11px] text-teal-400 mt-1">
-                Vai trò hiện tại: {selectedUser.role || 'STUDENT'}
+                Vai trò hiện tại: {selectedUser.role || '-'}
               </p>
             </div>
 

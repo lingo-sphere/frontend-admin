@@ -26,9 +26,11 @@ export const resolveStreamUrl = (url: string) => {
 }
 
 interface UseR2UploaderOptions {
-  type: 'image' | 'video'
+  type: 'image' | 'video' | 'document'
   value: string
   onChange: (url: string) => void
+  fileName?: string
+  onFileNameChange?: (fileName: string) => void
   onDurationChange?: (durationMinutes: number, durationSeconds: number) => void
   folder?: string
   isVi?: boolean
@@ -38,6 +40,8 @@ export function useR2Uploader({
   type,
   value,
   onChange,
+  fileName,
+  onFileNameChange,
   onDurationChange,
   folder = 'courses',
   isVi = true,
@@ -51,8 +55,11 @@ export function useR2Uploader({
   const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   const isVideo = type === 'video'
+  const isDocument = type === 'document'
   const acceptTypes = isVideo
     ? 'video/mp4,video/webm,video/quicktime,video/x-matroska'
+    : isDocument
+    ? '.pdf,.doc,.docx,.ppt,.pptx,.zip,.rar,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip,application/x-zip-compressed'
     : 'image/png,image/jpeg,image/webp,image/gif'
 
   const readVideoDuration = (file: File): Promise<number> => {
@@ -129,14 +136,18 @@ export function useR2Uploader({
   const handleFileSelect = async (file: File) => {
     if (!file) return
 
-    const maxSize = isVideo ? 200 * 1024 * 1024 : 10 * 1024 * 1024
+    const maxSize = isVideo ? 200 * 1024 * 1024 : isDocument ? 100 * 1024 * 1024 : 10 * 1024 * 1024
     if (file.size > maxSize) {
       setError(
         isVi
-          ? `File vượt quá dung lượng cho phép (${isVideo ? '200MB' : '10MB'})`
-          : `File exceeds maximum size (${isVideo ? '200MB' : '10MB'})`
+          ? `File vượt quá dung lượng cho phép (${isVideo ? '200MB' : isDocument ? '100MB' : '10MB'})`
+          : `File exceeds maximum size (${isVideo ? '200MB' : isDocument ? '100MB' : '10MB'})`
       )
       return
+    }
+
+    if (onFileNameChange) {
+      onFileNameChange(file.name)
     }
 
     if (isVideo && onDurationChange) {
@@ -203,6 +214,9 @@ export function useR2Uploader({
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation()
     onChange('')
+    if (onFileNameChange) {
+      onFileNameChange('')
+    }
     setError(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -218,6 +232,7 @@ export function useR2Uploader({
     showPreviewModal,
     setShowPreviewModal,
     isVideo,
+    isDocument,
     acceptTypes,
     handleFileSelect,
     handleDrop,

@@ -1,6 +1,6 @@
-// Hook quản lý dữ liệu học viên, tiến độ học tập và bài nộp khóa học.
-
-import { useState, useEffect, useCallback, useMemo } from 'react'
+// Hook quản lý dữ liệu học viên, tiến độ học tập và bài nộp khóa học với TanStack Query.
+import { useState, useMemo, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
 import {
   progressService,
@@ -9,7 +9,6 @@ import {
 } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { toast } from '@/store/toast.store'
 import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
 
 export interface CourseSimple {
@@ -20,6 +19,11 @@ export interface CourseSimple {
   students_count?: number
 }
 
+interface ProgressQueryData {
+  students: StudentProgressItem[]
+  usersMap: Map<string, UserProfile>
+}
+
 export function useCourseLearnersData() {
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
@@ -27,20 +31,14 @@ export function useCourseLearnersData() {
   const isTeacher = currentRole === 'TEACHER' || currentRole === 'INSTRUCTOR' || currentRole === 'GIANG_VIEN'
   const currentUserId = user?.user_id || profile?.user_id || ''
 
-  const [courses, setCourses] = useState<CourseSimple[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
-  const [isLoadingCourses, setIsLoadingCourses] = useState<boolean>(false)
 
-  const [allStudentsProgress, setAllStudentsProgress] = useState<StudentProgressItem[]>([])
-  const [usersMap, setUsersMap] = useState<Map<string, UserProfile>>(new Map())
-  const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(false)
-
-  const [submissions, setSubmissions] = useState<SkillSubmissionItem[]>([])
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState<boolean>(false)
-
-  const fetchCourses = useCallback(async () => {
-    setIsLoadingCourses(true)
-    try {
+  const {
+    data: courses = [],
+    isLoading: isLoadingCourses,
+  } = useQuery<CourseSimple[]>({
+    queryKey: ['course-learners', 'courses', isTeacher, currentUserId],
+    queryFn: async () => {
       let loadedCourses: CourseSimple[] = []
 
       if (isTeacher) {
@@ -84,26 +82,24 @@ export function useCourseLearnersData() {
         }))
       }
 
-      setCourses(loadedCourses)
-    } catch {
-      toast.error('Không thể tải danh sách khóa học.')
-    } finally {
-      setIsLoadingCourses(false)
-    }
-  }, [isTeacher, currentUserId])
+      return loadedCourses
+    },
+    staleTime: 0,
+  })
 
-  useEffect(() => {
-    fetchCourses()
-  }, [fetchCourses])
+  const coursesKey = useMemo(() => courses.map((c) => c.id).sort().join(','), [courses])
 
-  const fetchProgress = useCallback(async () => {
-    if (courses.length === 0) {
-      setAllStudentsProgress([])
-      return
-    }
+  const {
+    data: progressData,
+    isLoading: isLoadingProgress,
+    refetch: refetchProgressQuery,
+  } = useQuery<ProgressQueryData>({
+    queryKey: ['course-learners', 'progress', selectedCourseId, coursesKey],
+    queryFn: async () => {
+      if (courses.length === 0) {
+        return { students: [], usersMap: new Map() }
+      }
 
-    setIsLoadingProgress(true)
-    try {
       const targetCourses =
         selectedCourseId === 'ALL'
           ? courses
@@ -129,7 +125,7 @@ export function useCourseLearnersData() {
       ])
 
       const mergedStudents = progressResults.flat()
-      setAllStudentsProgress(mergedStudents)
+      const map = new Map<string, UserProfile>()
 
       if (usersRes) {
         const uList: UserProfile[] = Array.isArray(usersRes)
@@ -137,27 +133,46 @@ export function useCourseLearnersData() {
           : Array.isArray(usersRes.result)
           ? usersRes.result
           : []
-        const map = new Map<string, UserProfile>()
         uList.forEach((u: UserProfile) => {
           if (u.user_id) map.set(u.user_id, u)
         })
-        setUsersMap(map)
       }
-    } catch {
-      toast.error('Không thể tải tiến độ học viên cho khóa học đã chọn.')
-    } finally {
-      setIsLoadingProgress(false)
-    }
-  }, [courses, selectedCourseId])
 
-  const fetchSubmissions = useCallback(async () => {
-    if (courses.length === 0) {
-      setSubmissions([])
-      return
-    }
+      const missingIds = mergedStudents
+        .map((s) => s.user_id)
+        .filter((uid) => uid && !map.has(uid) && !map.has(String(uid)))
 
-    setIsLoadingSubmissions(true)
-    try {
+      if (missingIds.length > 0) {
+        const profiles = await Promise.all(
+          missingIds.map((uid) => userService.getProfileById(uid).catch(() => null))
+        )
+        profiles.forEach((p, idx) => {
+          const fallbackUid = missingIds[idx]
+          if (p) {
+            map.set(fallbackUid, p)
+            if (p.user_id) map.set(p.user_id, p)
+          }
+        })
+      }
+
+      return {
+        students: mergedStudents,
+        usersMap: map,
+      }
+    },
+    enabled: courses.length > 0,
+    staleTime: 0,
+  })
+
+  const {
+    data: submissions = [],
+    isLoading: isLoadingSubmissions,
+    refetch: refetchSubmissionsQuery,
+  } = useQuery<SkillSubmissionItem[]>({
+    queryKey: ['course-learners', 'submissions', selectedCourseId, coursesKey],
+    queryFn: async () => {
+      if (courses.length === 0) return []
+
       const targetCourses =
         selectedCourseId === 'ALL'
           ? courses
@@ -178,39 +193,22 @@ export function useCourseLearnersData() {
         })
       )
 
-      setSubmissions(submissionResults.flat())
-    } catch {
-      toast.error('Không thể tải danh sách bài nộp kỹ năng.')
-    } finally {
-      setIsLoadingSubmissions(false)
-    }
-  }, [courses, selectedCourseId])
+      return submissionResults.flat()
+    },
+    enabled: courses.length > 0,
+    staleTime: 0,
+  })
 
-  useEffect(() => {
-    if (allStudentsProgress.length === 0) return
+  const allStudentsProgress = useMemo(() => progressData?.students || [], [progressData])
+  const usersMap = useMemo(() => progressData?.usersMap || new Map<string, UserProfile>(), [progressData])
 
-    const missingIds = allStudentsProgress
-      .map((s) => s.user_id)
-      .filter((uid) => uid && !usersMap.has(uid) && !usersMap.has(String(uid)))
+  const fetchProgress = useCallback(async () => {
+    await refetchProgressQuery()
+  }, [refetchProgressQuery])
 
-    if (missingIds.length === 0) return
-
-    Promise.all(
-      missingIds.map((uid) => userService.getProfileById(uid).catch(() => null))
-    ).then((profiles) => {
-      setUsersMap((prev) => {
-        const next = new Map(prev)
-        profiles.forEach((p, idx) => {
-          const fallbackUid = missingIds[idx]
-          if (p) {
-            next.set(fallbackUid, p)
-            if (p.user_id) next.set(p.user_id, p)
-          }
-        })
-        return next
-      })
-    })
-  }, [allStudentsProgress, usersMap])
+  const fetchSubmissions = useCallback(async () => {
+    await refetchSubmissionsQuery()
+  }, [refetchSubmissionsQuery])
 
   const stats = useMemo(() => {
     const totalStudents = allStudentsProgress.length
@@ -220,7 +218,9 @@ export function useCourseLearnersData() {
         )
       : 0
     const totalSubmissions = submissions.length
-    const pendingReviews = submissions.filter((s) => !s.is_teacher_reviewed && s.status !== 'TEACHER_REVIEWED').length
+    const pendingReviews = submissions.filter(
+      (s) => !s.is_teacher_reviewed && s.status !== 'TEACHER_REVIEWED'
+    ).length
 
     return { totalStudents, avgProgress, totalSubmissions, pendingReviews }
   }, [allStudentsProgress, submissions])

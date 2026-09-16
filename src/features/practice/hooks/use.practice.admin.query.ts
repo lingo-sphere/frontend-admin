@@ -11,7 +11,7 @@ export function usePracticeSetsQuery() {
       const data = await practiceService.getAllPracticeSets()
       return Array.isArray(data) ? data : []
     },
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 

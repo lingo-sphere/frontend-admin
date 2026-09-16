@@ -10,18 +10,25 @@ interface LearnerReminderStatusCardsProps {
   totalEmailsSent: number
 }
 
-function formatDaysOfWeek(days: number[] = []): string {
+function formatDaysOfWeek(days: Array<number | string> = []): string {
   if (!days || days.length === 0) return 'Mặc định (20:00 Thứ Bảy)'
-  const dayLabels: Record<number, string> = {
-    1: 'Thứ 2',
-    2: 'Thứ 3',
-    3: 'Thứ 4',
-    4: 'Thứ 5',
-    5: 'Thứ 6',
-    6: 'Thứ 7',
-    0: 'Chủ Nhật',
+  const dayLabels: Record<string, string> = {
+    '1': 'Thứ 2',
+    '2': 'Thứ 3',
+    '3': 'Thứ 4',
+    '4': 'Thứ 5',
+    '5': 'Thứ 6',
+    '6': 'Thứ 7',
+    '0': 'Chủ Nhật',
+    'T2': 'Thứ 2',
+    'T3': 'Thứ 3',
+    'T4': 'Thứ 4',
+    'T5': 'Thứ 5',
+    'T6': 'Thứ 6',
+    'T7': 'Thứ 7',
+    'CN': 'Chủ Nhật',
   }
-  return days.map((d) => dayLabels[d] || `T${d}`).join(', ')
+  return days.map((d) => dayLabels[String(d)] || String(d)).join(', ')
 }
 
 function formatDateTime(val: unknown): string {

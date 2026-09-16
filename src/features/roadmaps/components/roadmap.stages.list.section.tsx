@@ -11,7 +11,7 @@ interface RoadmapStagesListSectionProps {
   exams: ToeicExamItem[]
   onAddStage: () => void
   onRemoveStage: (index: number) => void
-  onUpdateStage: (index: number, field: keyof LearningRoadmapStage, value: any) => void
+  onUpdateStage: (index: number, field: keyof LearningRoadmapStage, value: LearningRoadmapStage[keyof LearningRoadmapStage]) => void
 }
 
 export function RoadmapStagesListSection({
@@ -133,7 +133,7 @@ export function RoadmapStagesListSection({
                 >
                   <option value="">-- Chọn bài thi hoặc bỏ trống --</option>
                   {exams.map((ex) => (
-                    <option key={ex._id || ex.id} value={ex._id || ex.id}>
+                    <option key={ex._id || ''} value={ex._id || ''}>
                       {ex.title}
                     </option>
                   ))}

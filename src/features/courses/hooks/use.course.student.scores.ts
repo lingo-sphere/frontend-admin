@@ -1,9 +1,6 @@
-/**
- * @file use.course.student.scores.ts
- * @description Custom hook quản lý tải danh sách học viên, nạp hồ sơ người dùng và tìm kiếm bảng điểm trong khóa học
- */
-
-import { useState, useEffect, useCallback, useMemo } from 'react'
+// Hook quản lý tải danh sách học viên, hồ sơ người dùng và tìm kiếm bảng điểm với TanStack Query.
+import { useState, useMemo, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   progressService,
   type CourseStudentsProgressResponse,
@@ -11,78 +8,72 @@ import {
 } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 import type { UserProfile } from '@/types/api.types'
-import { toast } from '@/store/toast.store'
+
+interface CourseStudentScoresData {
+  progressResponse: CourseStudentsProgressResponse | null
+  usersMap: Map<string, UserProfile>
+}
 
 export function useCourseStudentScores(courseId: string, isOpen: boolean) {
-  const [data, setData] = useState<CourseStudentsProgressResponse | null>(null)
-  const [usersMap, setUsersMap] = useState<Map<string, UserProfile>>(new Map())
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [searchTerm, setSearchTerm] = useState<string>('')
 
-  const fetchData = useCallback(async () => {
-    if (!courseId) return
-    setIsLoading(true)
-    try {
+  const {
+    data: queryResult,
+    isLoading,
+    refetch,
+  } = useQuery<CourseStudentScoresData>({
+    queryKey: ['course-student-scores', courseId],
+    queryFn: async () => {
+      if (!courseId) {
+        return { progressResponse: null, usersMap: new Map() }
+      }
+
       const [progressRes, usersRes] = await Promise.all([
         progressService.getCourseStudentsProgress(courseId),
         userService.getAllUsers({ limit: 100 }).catch(() => null),
       ])
 
-      setData(progressRes)
-
+      const map = new Map<string, UserProfile>()
       if (usersRes) {
         const uList: UserProfile[] = Array.isArray(usersRes)
           ? usersRes
           : Array.isArray(usersRes.result)
           ? usersRes.result
           : []
-        const map = new Map<string, UserProfile>()
         uList.forEach((u: UserProfile) => {
           if (u.user_id) map.set(u.user_id, u)
         })
-        setUsersMap(map)
       }
-    } catch {
-      toast.error('Không thể tải dữ liệu bảng điểm học viên.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [courseId])
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchData()
-    } else {
-      setData(null)
-      setSearchTerm('')
-    }
-  }, [isOpen, fetchData])
+      const students = progressRes?.students || []
+      const missingIds = students
+        .map((s) => s.user_id)
+        .filter((uid) => uid && !map.has(uid) && !map.has(String(uid)))
 
-  useEffect(() => {
-    if (!data?.students || data.students.length === 0) return
-
-    const missingIds = data.students
-      .map((s) => s.user_id)
-      .filter((uid) => uid && !usersMap.has(uid) && !usersMap.has(String(uid)))
-
-    if (missingIds.length === 0) return
-
-    Promise.all(
-      missingIds.map((uid) => userService.getProfileById(uid).catch(() => null))
-    ).then((profiles) => {
-      setUsersMap((prev) => {
-        const next = new Map(prev)
+      if (missingIds.length > 0) {
+        const profiles = await Promise.all(
+          missingIds.map((uid) => userService.getProfileById(uid).catch(() => null))
+        )
         profiles.forEach((p, idx) => {
           const fallbackUid = missingIds[idx]
           if (p) {
-            next.set(fallbackUid, p)
-            if (p.user_id) next.set(String(p.user_id), p)
+            map.set(fallbackUid, p)
+            if (p.user_id) map.set(String(p.user_id), p)
           }
         })
-        return next
-      })
-    })
-  }, [data?.students, usersMap])
+      }
+
+      return {
+        progressResponse: progressRes,
+        usersMap: map,
+      }
+    },
+    enabled: isOpen && !!courseId,
+    staleTime: 0,
+  })
+
+  const data = queryResult?.progressResponse || null
+  const usersMap = queryResult?.usersMap || new Map<string, UserProfile>()
 
   const filteredStudents: StudentProgressItem[] = useMemo(() => {
     if (!data?.students) return []
@@ -96,6 +87,10 @@ export function useCourseStudentScores(courseId: string, isOpen: boolean) {
       return name.includes(term) || email.includes(term) || st.user_id.toLowerCase().includes(term)
     })
   }, [data?.students, searchTerm, usersMap])
+
+  const fetchData = useCallback(async () => {
+    await refetch()
+  }, [refetch])
 
   return {
     data,

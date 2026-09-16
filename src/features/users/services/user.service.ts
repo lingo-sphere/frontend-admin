@@ -54,6 +54,13 @@ export const userService = {
     )
   },
 
+  async resetLearnerData(userId: string): Promise<{ success: boolean; message: string }> {
+    return api.post<{ success: boolean; message: string }>(
+      API_CONFIG.ENDPOINTS.USERS.RESET_DATA(userId),
+      {},
+    )
+  },
+
   async getSystemAnalytics(): Promise<SystemAnalyticsOverview> {
     return api.get<SystemAnalyticsOverview>(
       API_CONFIG.ENDPOINTS.USERS.ADMIN_ANALYTICS,

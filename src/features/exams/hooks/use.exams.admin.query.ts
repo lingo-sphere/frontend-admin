@@ -11,7 +11,7 @@ export const adminExamQueries = {
       queryFn: () => examAdminService.getExams(params),
       enabled,
       placeholderData: keepPreviousData,
-      staleTime: 60 * 1000,
+      staleTime: 0,
     }),
 }
 
@@ -64,5 +64,33 @@ export function useDeleteExamMutation() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
     },
+  })
+}
+
+export function useAdminPlacementAttemptsQuery(params?: Record<string, unknown>, enabled = true) {
+  return useQuery({
+    queryKey: examAdminKeys.placementAttempts(params),
+    queryFn: () => examAdminService.getPlacementAttempts(params),
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 0,
+  })
+}
+
+export function useAdminAttemptResultQuery(attemptId: string, enabled = true) {
+  return useQuery({
+    queryKey: examAdminKeys.attemptResult(attemptId),
+    queryFn: () => examAdminService.getAdminAttemptResult(attemptId),
+    enabled: Boolean(attemptId && enabled),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useAdminUserAttemptsQuery(userId: string, enabled = true) {
+  return useQuery({
+    queryKey: examAdminKeys.userAttempts(userId),
+    queryFn: () => examAdminService.getAdminUserAttempts(userId),
+    enabled: Boolean(userId && enabled),
+    staleTime: 0,
   })
 }

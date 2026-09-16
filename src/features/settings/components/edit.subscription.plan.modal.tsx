@@ -76,8 +76,9 @@ export function EditSubscriptionPlanModal({
       }
       await onSave(updatedData)
       onClose()
-    } catch (err: any) {
-      setErrorMsg(err?.message || (isVietnamese ? 'Cập nhật thất bại. Vui lòng thử lại!' : 'Update failed. Please retry!'))
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : (isVietnamese ? 'Cập nhật thất bại. Vui lòng thử lại!' : 'Update failed. Please retry!')
+      setErrorMsg(message)
     } finally {
       setIsSubmitting(false)
     }
