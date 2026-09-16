@@ -19,6 +19,7 @@ export interface ExamQuestionItem {
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
+  [key: string]: unknown
 }
 
 export interface RawExamQuestion {

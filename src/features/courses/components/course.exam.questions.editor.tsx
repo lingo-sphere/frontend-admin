@@ -42,7 +42,9 @@ export function CourseExamQuestionsEditor({
     initialExam.is_system_placement || initialExam.type === 'DIAGNOSTIC_TEST' || !initialExam.course_id
   )
 
-  const currentEditingId = initialExam._id || initialExam.id
+  const currentEditingIds = useMemo(() => {
+    return new Set([initialExam._id, initialExam.id, initialExam.code].filter(Boolean) as string[])
+  }, [initialExam])
 
   const published2SkillsExam = useMemo(() => {
     return existingExams.find(
@@ -50,9 +52,9 @@ export function CourseExamQuestionsEditor({
         (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
         (e.placement_type === '2SKILLS' || e.skills_enabled === 'LR') &&
         e.is_published &&
-        (e._id || e.id) !== currentEditingId
+        (isCreateMode || (!currentEditingIds.has(e._id) && !currentEditingIds.has(e.id) && (!e.code || !currentEditingIds.has(e.code))))
     )
-  }, [existingExams, currentEditingId])
+  }, [existingExams, currentEditingIds, isCreateMode])
 
   const published4SkillsExam = useMemo(() => {
     return existingExams.find(
@@ -60,9 +62,9 @@ export function CourseExamQuestionsEditor({
         (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
         (e.placement_type === '4SKILLS' || e.skills_enabled === 'ALL' || e.skills_enabled === 'FULL') &&
         e.is_published &&
-        (e._id || e.id) !== currentEditingId
+        (isCreateMode || (!currentEditingIds.has(e._id) && !currentEditingIds.has(e.id) && (!e.code || !currentEditingIds.has(e.code))))
     )
-  }, [existingExams, currentEditingId])
+  }, [existingExams, currentEditingIds, isCreateMode])
 
   const currentActiveConflict = isSystemPlacement
     ? formPlacementSkills === '2SKILLS'
