@@ -1,9 +1,9 @@
 // Trang quản trị danh sách người dùng quản trị và giảng viên trong giao diện Admin.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { Plus, RotateCcw } from 'lucide-react'
 import { DataTable } from '@/components/data.table'
-import { useAdminStore } from '@/store/admin.store'
 import { toast } from '@/store/toast.store'
 import type { AdminUser, FilterRole, FilterStatus } from '@/features/users/helpers/admin.user.helper'
 import { AdminUserStatsOverview } from '@/features/users/components/admin.user.stats.overview'
@@ -14,7 +14,7 @@ import { useAdminUsersQuery, useUpdateAdminUserStatusMutation } from '@/features
 export function AdminUsersPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const { data: admins = [], isLoading, refetch } = useAdminUsersQuery()
   const { mutateAsync: updateStatusMutate } = useUpdateAdminUserStatusMutation()
@@ -98,10 +98,10 @@ export function AdminUsersPage() {
   const columns = useMemo(() => {
     return getAdminUserColumns({
       isVi,
-      onEditUser: (userId) => setActiveNavItem(`admin-user-edit:${userId}`),
+      onEditUser: (userId) => navigate(`/admins/${userId}/edit`),
       onOpenStatusModal: handleStatusChange,
     })
-  }, [isVi, setActiveNavItem])
+  }, [isVi, navigate])
 
   return (
     <div className="space-y-6">
@@ -136,7 +136,7 @@ export function AdminUsersPage() {
               <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
             </button>
             <button
-              onClick={() => setActiveNavItem('admin-user-create')}
+              onClick={() => navigate('/admins/create')}
               className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />

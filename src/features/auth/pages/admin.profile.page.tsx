@@ -1,15 +1,13 @@
-/**
- * @file admin.profile.page.tsx
- * @description Trang quản trị AdminProfilePage trong giao diện Admin
- */
+// Trang quan tri ho so ca nhan, cap nhat thong tin va bao mat tai khoan quan tri.
 
+import { useNavigate } from 'react-router-dom'
 import { authService } from '@/features/auth/services/auth.service'
 import { userService } from '@/features/users/services/user.service'
-import { useAdminStore } from '@/store/admin.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
-import { CheckCircle2, ChevronLeft, Loader2 } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
 
 import { AdminProfileHeader } from '@/features/auth/components/admin.profile.header'
 import { AdminProfileInfoForm } from '@/features/auth/components/admin.profile.info.form'
@@ -18,7 +16,7 @@ import type { AdminProfileData } from '@/features/auth/helpers/admin.profile.hel
 import { evaluatePasswordStrength } from '@/features/auth/helpers/admin.profile.helper'
 
 export function AdminProfilePage() {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const authUser = useAuthStore((state) => state.user)
   const authProfile = useAuthStore((state) => state.profile)
@@ -192,7 +190,7 @@ export function AdminProfilePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('dashboard')}
+            onClick={() => navigate('/dashboard')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
             title="Quay lại Tổng quan"
@@ -240,27 +238,16 @@ export function AdminProfilePage() {
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => setActiveNavItem('dashboard')}
-            className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
-          >
-            Hủy / Quay lại
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="flex items-center gap-2 h-11 px-7 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-xs font-bold text-white shadow-md shadow-blue-600/30 transition-all cursor-pointer"
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4" />
-            )}
-            <span>{isSaving ? 'Đang lưu thay đổi...' : 'Lưu Thay Đổi Hồ Sơ'}</span>
-          </button>
-        </div>
+        <StickyFormActionBar
+          title={profileData.name || profileData.email}
+          statusText="Tài khoản:"
+          badgeText={profileData.role === 'ADMIN' ? 'Quản trị viên' : 'Giảng viên'}
+          cancelText="Quay Lại"
+          saveText="Lưu Thay Đổi Hồ Sơ"
+          savingText="Đang lưu thay đổi..."
+          isSubmitting={isSaving}
+          onCancel={() => navigate('/dashboard')}
+        />
       </form>
     </div>
   )

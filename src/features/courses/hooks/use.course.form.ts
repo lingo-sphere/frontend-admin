@@ -1,20 +1,22 @@
-/**
- * @file use.course.form.ts
- * @description Custom hook quản lý state form tạo/sửa khóa học, nạp dữ liệu, validation và gửi API
- */
+// Custom hook quan ly state form tao va sua khoa hoc, dong bo tai lieu va cau hoi luyen tap.
 
 import { useState, useEffect, type FormEvent } from 'react'
-import type { CourseFormData } from '@/features/courses/components/course.basic.info.tab'
+import { useNavigate, useLocation } from 'react-router-dom'
+import type { CourseFormData, CourseLesson, CourseModule } from '@/features/courses/components/course.basic.info.tab'
 import { courseService } from '@/features/courses/services/course.service'
 import { mediaService } from '@/features/media/services/media.service'
-import { useAdminStore } from '@/store/admin.store'
+import { pathToNavItem, navItemToPath } from '@/routes/navigation'
 import { authStore, useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { validateCourseFormData } from '@/features/courses/helpers/course.helper'
+import { queryClient } from '@/config/query.config'
+import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
 
 export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
-  const activeNavItem = useAdminStore((state) => state.activeNavItem)
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const activeNavItem = pathToNavItem(pathname)
+  const setActiveNavItem = (target: string) => navigate(navItemToPath(target))
   const currentUser = useAuthStore((state) => state.user)
   const currentProfile = useAuthStore((state) => state.profile)
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
@@ -63,6 +65,8 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       price: 0,
       discount_price: 0,
       thumbnail_url: '',
+      document_url: '',
+      document_name: '',
       is_published: true,
       author_id: profile?.user_id || user?.user_id,
       author_name: resolvedName,
@@ -191,6 +195,8 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
             speaking_file_url: (m.speaking_file_url || '') as string,
             writing_prompt: (m.writing_prompt || '') as string,
             writing_file_url: (m.writing_file_url || '') as string,
+            theory_file_url: (m.theory_file_url || '') as string,
+            theory_file_name: (m.theory_file_name || '') as string,
             created_at_timestamp: m.created_at
               ? new Date(m.created_at as string).getTime()
               : Date.now() + mIdx * 1000,
@@ -198,6 +204,9 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
               id: (l._id || l.id || `les-${lIdx}`) as string,
               title: (l.title || '') as string,
               video_url: (l.video_url || '') as string,
+              theory_file_url: (l.theory_file_url || '') as string,
+              theory_file_name: (l.theory_file_name || '') as string,
+              questions: (Array.isArray(l.questions) ? l.questions : []) as CourseLesson['questions'],
               duration_minutes:
                 typeof l.duration_minutes === 'number'
                   ? l.duration_minutes
@@ -235,6 +244,8 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           discount_price:
             typeof course.discount_price === 'number' ? course.discount_price : 0,
           thumbnail_url: (course.thumbnail_url || '') as string,
+          document_url: (course.document_url || '') as string,
+          document_name: (course.document_name || '') as string,
           is_published:
             typeof course.is_published === 'boolean' ? course.is_published : true,
           author_id: course.author_id as string | undefined,
@@ -259,8 +270,10 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           modules: mappedModules,
         })
       }
-    } catch {
-      toast.error('Không thể tải thông tin khóa học')
+    } catch (err: unknown) {
+      console.error('Failed to load course details:', err)
+      const msg = err instanceof Error ? err.message : 'Không thể tải thông tin khóa học'
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }
@@ -287,6 +300,8 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         price: Number(formData.price),
         discount_price: Number(formData.discount_price),
         thumbnail_url: formData.thumbnail_url,
+        document_url: formData.document_url || '',
+        document_name: formData.document_name || '',
         is_published: formData.is_published,
         author_id: formData.author_id || currentUser?.user_id,
         author_name: formData.author_name || 'Đội ngũ Giảng viên LingoSphere',
@@ -310,6 +325,8 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           description: m.description,
           order_index: mIdx + 1,
           module_order: mIdx + 1,
+          theory_file_url: m.theory_file_url || '',
+          theory_file_name: m.theory_file_name || '',
           passing_score:
             Number(m.passing_score) ||
             Number(m.post_mini_passing_score) ||
@@ -339,6 +356,9 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
             title: l.title,
             lesson_type: l.video_url ? 'VIDEO' : 'READING',
             video_url: l.video_url || '',
+            theory_file_url: l.theory_file_url || '',
+            theory_file_name: l.theory_file_name || '',
+            questions: l.questions || [],
             duration_minutes:
               typeof l.duration_minutes === 'number' && l.duration_minutes > 0
                 ? l.duration_minutes
@@ -363,6 +383,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
 
       const allMediaUrls: string[] = []
       if (formData.thumbnail_url) allMediaUrls.push(formData.thumbnail_url)
+      if (formData.document_url) allMediaUrls.push(formData.document_url)
       if (formData.final_test_audio_url) allMediaUrls.push(formData.final_test_audio_url)
       if (formData.final_test_speaking_file_url)
         allMediaUrls.push(formData.final_test_speaking_file_url)
@@ -374,6 +395,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         })
       }
       formData.modules.forEach((mod) => {
+        if (mod.theory_file_url) allMediaUrls.push(mod.theory_file_url)
         if (mod.test_audio_url) allMediaUrls.push(mod.test_audio_url)
         if (mod.challenge_audio_url) allMediaUrls.push(mod.challenge_audio_url)
         if (mod.audio_url) allMediaUrls.push(mod.audio_url)
@@ -384,6 +406,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         })
         mod.lessons.forEach((les) => {
           if (les.video_url) allMediaUrls.push(les.video_url)
+          if (les.theory_file_url) allMediaUrls.push(les.theory_file_url)
         })
       })
 
@@ -402,6 +425,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã tạo khóa học mới "${formData.title}" thành công!`)
       }
 
+      await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
       setActiveNavItem('courses')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Lưu khóa học thất bại'

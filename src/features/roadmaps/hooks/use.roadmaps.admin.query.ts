@@ -15,7 +15,7 @@ export const adminRoadmapQueries = {
       },
       enabled,
       placeholderData: keepPreviousData,
-      staleTime: 90 * 1000,
+      staleTime: 0,
     }),
 }
 

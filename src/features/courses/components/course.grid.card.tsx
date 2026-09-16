@@ -122,7 +122,7 @@ export function CourseGridCard({
               </span>
               <div className="inline-flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400 mt-0.5">
                 <Target className="w-3 h-3 shrink-0" />
-                <span>{course.target_score}+</span>
+                <span>{course.target_score ? `${course.target_score}+` : '-'}</span>
               </div>
             </div>
             <div>

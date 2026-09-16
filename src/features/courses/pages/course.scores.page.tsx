@@ -1,9 +1,5 @@
-/**
- * @file course.scores.page.tsx
- * @description Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học
- */
+// Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học.
 
-import { useState, useEffect } from 'react'
 import {
   GraduationCap,
   ArrowLeft,
@@ -15,19 +11,18 @@ import {
   CheckCircle2,
   FileCheck2,
 } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
-import { courseService } from '@/features/courses/services/course.service'
+import { useNavigate } from 'react-router-dom'
+import { useAdminCourseDetailQuery } from '@/features/courses/hooks/use.courses.admin.query'
 import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
 import { StudentScoresTableRow } from '@/features/courses/components/student.scores.table.row'
-import type { Course as ApiCourse } from '@/types/api.types'
 
 interface CourseScoresPageProps {
   courseId: string
 }
 
 export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
-  const [courseInfo, setCourseInfo] = useState<ApiCourse | null>(null)
+  const navigate = useNavigate()
+  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId)
 
   const {
     data,
@@ -38,24 +33,6 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
     filteredStudents,
     fetchData,
   } = useCourseStudentScores(courseId, true)
-
-  useEffect(() => {
-    if (!courseId) return
-    let isMounted = true
-    courseService
-      .getCourseById(courseId)
-      .then((res) => {
-        if (isMounted && res) {
-          setCourseInfo(res)
-        }
-      })
-      .catch(() => {
-        if (isMounted) setCourseInfo(null)
-      })
-    return () => {
-      isMounted = false
-    }
-  }, [courseId])
 
   const totalStudents = data?.total_students || 0
   const avgProgress = data?.average_progress_percentage || 0
@@ -70,7 +47,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setActiveNavItem('courses')}
+            onClick={() => navigate('/courses')}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -100,7 +77,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
-            onClick={() => setActiveNavItem(`course-submissions:${courseId}`)}
+            onClick={() => navigate(`/courses/${courseId}/submissions`)}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
           >
             <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -156,7 +133,9 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           </div>
           <div>
             <div className="text-xs text-slate-500 dark:text-slate-400">Mục tiêu đầu ra</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{courseInfo?.target_score || 650}+ TOEIC</div>
+            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,8 @@
  * @description Component giao diện PageRouter phục vụ khu vực Quản trị Admin
  */
 
-import { useAdminStore } from '@/store/admin.store'
+import { useLocation } from 'react-router-dom'
+import { pathToNavItem } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { DashboardPage } from '@/features/dashboard/pages/dashboard.page'
 import { LearnersPage } from '@/features/users/pages/learners.page'
@@ -87,7 +88,8 @@ const pageMap: Record<string, React.ComponentType> = {
 }
 
 export function PageRouter() {
-  const activeNavItem = useAdminStore((state) => state.activeNavItem)
+  const { pathname } = useLocation()
+  const activeNavItem = pathToNavItem(pathname)
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
   const hasPermission = useAuthStore((state) => state.hasPermission)

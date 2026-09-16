@@ -17,7 +17,7 @@ export async function fetchAdminCourses(
     slug: c.slug || '',
     description: c.description || '',
     thumbnail_url: c.thumbnail_url || '',
-    target_score: c.target_score || 500,
+    target_score: c.target_score ?? 0,
     category: (c.category as Course['category']) || 'TOEIC_2_SKILLS',
     level: (c.level as Course['level']) || 'BEGINNER',
     total_modules: c.total_modules || 0,
@@ -26,11 +26,11 @@ export async function fetchAdminCourses(
     discount_price: typeof c.discount_price === 'number' ? c.discount_price : undefined,
     is_published: c.is_published ?? true,
     author_id: c.author_id || '',
-    author_name: c.author_name || 'Đội ngũ Giảng viên LingoSphere',
-    created_at: c.created_at || new Date().toISOString(),
+    author_name: c.author_name || '',
+    created_at: c.created_at || '',
     enrollments: c.students_count || 0,
-    completed_count: Math.round((c.students_count || 0) * 0.4),
-    avg_progress: 58,
+    completed_count: 0,
+    avg_progress: 0,
   }))
 }
 
@@ -41,7 +41,7 @@ export const adminCourseQueries = {
       queryKey: courseAdminKeys.list(queryParams),
       queryFn: () => fetchAdminCourses(queryParams),
       placeholderData: keepPreviousData,
-      staleTime: 90 * 1000,
+      staleTime: 0,
     })
   },
   apiList: (params?: CourseFilterParams & { current?: number; pageSize?: number }) => {
@@ -52,7 +52,7 @@ export const adminCourseQueries = {
         const res = await courseService.getAllCourses(queryParams)
         return Array.isArray(res) ? res : (res?.result || [])
       },
-      staleTime: 90 * 1000,
+      staleTime: 0,
     })
   },
 }
@@ -70,6 +70,15 @@ export function prefetchAdminCourses(
 
 export function useAdminApiCoursesQuery(params?: CourseFilterParams & { current?: number; pageSize?: number }) {
   return useQuery(adminCourseQueries.apiList(params))
+}
+
+export function useAdminCourseDetailQuery(courseId?: string, enabled = true) {
+  return useQuery({
+    queryKey: [...courseAdminKeys.all, 'detail', courseId],
+    queryFn: () => (courseId ? courseService.getCourseById(courseId) : null),
+    enabled: Boolean(courseId) && enabled,
+    staleTime: 0,
+  })
 }
 
 export function useDeleteCourseMutation() {

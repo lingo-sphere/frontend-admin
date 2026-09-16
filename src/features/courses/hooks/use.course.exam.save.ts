@@ -5,6 +5,9 @@ import { examAdminService, type ToeicExamItem, type CreateExamDto } from '@/feat
 import { mediaAdminService } from '@/features/media/services/media.service'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { queryClient } from '@/config/query.config'
+import { examAdminKeys } from '@/features/exams/keys/exam.admin.keys'
+import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 
 export interface UseCourseExamSaveParams {
@@ -61,8 +64,8 @@ export function useCourseExamSave({
     }
     return (
       formTitle !== (initialExam.title || '') ||
-      formDuration !== (initialExam.duration_minutes || 60) ||
-      formPassingScore !== (initialExam.passing_score || 500) ||
+      formDuration !== (initialExam.duration_minutes ?? 0) ||
+      formPassingScore !== (initialExam.passing_score ?? 0) ||
       formDescription !== (initialExam.description || '') ||
       formIsPublished !== (initialExam.is_published ?? true) ||
       formPlacementSkills !== (initialExam.placement_type || (initialExam.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS'))
@@ -120,11 +123,17 @@ export function useCourseExamSave({
     setIsSavingAll(true)
     try {
       if (isCreateMode) {
+        const generatedCode = isSystemPlacement
+          ? `placement_${formPlacementSkills.toLowerCase()}_${Date.now()}`
+          : `exam_${Date.now()}`
+
         const createPayload: CreateExamDto = {
           title: trimmedTitle,
+          code: generatedCode,
           course_id: undefined,
           course_title: 'Toàn Hệ Thống',
           type: 'DIAGNOSTIC_TEST',
+          exam_type: 'DIAGNOSTIC_TEST',
           is_system_placement: true,
           skills_enabled: formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR',
           placement_type: formPlacementSkills,
@@ -153,6 +162,9 @@ export function useCourseExamSave({
             ? `Đã tạo thành công bài thi "${trimmedTitle}" với ${questions.length} câu hỏi!`
             : `Created exam "${trimmedTitle}" with ${questions.length} questions!`
         )
+        await queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
+        await queryClient.invalidateQueries({ queryKey: ['course-exams-aggregated'] })
+        await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
         onBack()
       } else {
         const examId = initialExam._id || initialExam.id || ''
@@ -204,6 +216,9 @@ export function useCourseExamSave({
             ? `Đã lưu thành công bài thi "${trimmedTitle}" với ${questions.length} câu hỏi!`
             : `Saved exam "${trimmedTitle}" with ${questions.length} questions!`
         )
+        await queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
+        await queryClient.invalidateQueries({ queryKey: ['course-exams-aggregated'] })
+        await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
         storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
         onBack()
       }

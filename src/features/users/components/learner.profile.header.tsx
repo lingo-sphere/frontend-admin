@@ -1,5 +1,6 @@
 // Component hiển thị thông tin tiêu đề và hành động hồ sơ học viên.
-import { Crown, Mail, Calendar, Sparkles } from 'lucide-react'
+import { Crown, Mail, Calendar, Sparkles, RotateCcw } from 'lucide-react'
+import { Popconfirm } from '@/components/popconfirm'
 
 export interface UserProfileData {
   id: string
@@ -29,9 +30,10 @@ export interface UserProfileData {
 interface UserProfileHeaderProps {
   profileData: UserProfileData
   onOpenAiQuota?: () => void
+  onResetData?: () => Promise<void> | void
 }
 
-export function UserProfileHeader({ profileData, onOpenAiQuota }: UserProfileHeaderProps) {
+export function UserProfileHeader({ profileData, onOpenAiQuota, onResetData }: UserProfileHeaderProps) {
   const name = profileData.full_name || profileData.email.split('@')[0]
 
   return (
@@ -83,16 +85,38 @@ export function UserProfileHeader({ profileData, onOpenAiQuota }: UserProfileHea
         </div>
       </div>
 
-      {onOpenAiQuota && (
-        <button
-          type="button"
-          onClick={onOpenAiQuota}
-          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white shadow-md shadow-purple-600/20 transition-all cursor-pointer shrink-0 self-center sm:self-start"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>Hạn Mức & Reset AI</span>
-        </button>
-      )}
+      <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-center sm:self-start">
+        {onOpenAiQuota && (
+          <button
+            type="button"
+            onClick={onOpenAiQuota}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white shadow-md shadow-purple-600/20 transition-all cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Hạn Mức & Reset AI</span>
+          </button>
+        )}
+
+        {onResetData && (
+          <Popconfirm
+            title="Khởi tạo lại toàn bộ dữ liệu học tập?"
+            description="Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp, lượt thi TOEIC và đơn hàng của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên."
+            okText="Khởi tạo lại dữ liệu"
+            cancelText="Hủy"
+            okType="danger"
+            placement="bottomRight"
+            onConfirm={onResetData}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reset Dữ Liệu Học Viên</span>
+            </button>
+          </Popconfirm>
+        )}
+      </div>
     </div>
   )
 }

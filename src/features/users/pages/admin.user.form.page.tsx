@@ -1,15 +1,15 @@
-/**
- * @file admin.user.form.page.tsx
- * @description Trang quản trị AdminUserFormPage trong giao diện Admin
- */
+// Trang quan tri tao moi va cap nhat tai khoan quan tri vien hoac giang vien.
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, Save } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
 import { AdminUserAccountForm } from '@/features/users/components/admin.user.account.form'
 import { AdminUserRoleSelector } from '@/features/users/components/admin.user.role.selector'
+import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
+import { queryClient } from '@/config/query.config'
+import { adminUserKeys } from '@/features/users/keys/admin.user.keys'
 
 interface AdminUserFormData {
   email: string
@@ -24,7 +24,7 @@ interface AdminUserFormPageProps {
 }
 
 export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const isEditing = !!editUserId
 
   const [formData, setFormData] = useState<AdminUserFormData>({
@@ -100,10 +100,16 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         })
         toast.success('Tạo tài khoản quản trị viên mới thành công!')
       }
-      setActiveNavItem('admins')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi lưu thông tin'
-      toast.error(msg)
+      await queryClient.invalidateQueries({ queryKey: adminUserKeys.all })
+      navigate('/admins')
+    } catch (err: unknown) {
+      const errorMsg =
+        err && typeof err === 'object' && 'response' in err && (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : err instanceof Error
+            ? err.message
+            : 'Có lỗi xảy ra khi lưu thông tin'
+      toast.error(errorMsg || 'Có lỗi xảy ra khi lưu thông tin')
     } finally {
       setIsSubmitting(false)
     }
@@ -121,7 +127,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('admins')}
+            onClick={() => navigate('/admins')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >
@@ -157,23 +163,16 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           onStatusChange={(status) => setFormData((prev) => ({ ...prev, status }))}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => setActiveNavItem('admins')}
-            className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 h-11 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isSubmitting ? 'Đang lưu...' : isEditing ? 'Cập nhật tài khoản' : 'Tạo tài khoản'}</span>
-          </button>
-        </div>
+        <StickyFormActionBar
+          title={formData.full_name || formData.email || (isEditing ? 'Tài khoản' : 'Tài khoản mới')}
+          statusText={isEditing ? 'Đang chỉnh sửa:' : 'Đang tạo mới:'}
+          badgeText={formData.role === 'ADMIN' ? 'Quản trị viên' : 'Giảng viên'}
+          cancelText="Hủy Bỏ"
+          saveText={isEditing ? 'Cập Nhật Tài Khoản' : 'Tạo Tài Khoản'}
+          savingText="Đang lưu..."
+          isSubmitting={isSubmitting}
+          onCancel={() => navigate('/admins')}
+        />
       </form>
     </div>
   )

@@ -1,0 +1,372 @@
+// Bảng danh sách kết quả bài kiểm tra đầu vào và bộ lọc nâng cao cho quản trị viên.
+import { useState, useMemo } from 'react'
+import {
+  Search,
+  RotateCcw,
+  Eye,
+  Trophy,
+  Headphones,
+  BookOpen,
+  CheckCircle2,
+  Users,
+  Flame,
+  Award,
+} from 'lucide-react'
+import { useAdminPlacementAttemptsQuery } from '@/features/exams/hooks/use.exams.admin.query'
+import type { PlacementAttemptItem } from '@/features/exams/services/exam.service'
+import { PlacementAttemptDetailModal } from '@/features/exams/components/placement.attempt.detail.modal'
+import { useDebounce } from '@/hooks/use.debounce'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
+
+interface PlacementAttemptsTableProps {
+  onViewLearnerProfile?: (userId: string) => void
+}
+
+export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemptsTableProps) {
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
+  const [scoreBracket, setScoreBracket] = useState<string>('ALL')
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
+  const [sortKey, setSortKey] = useState<string | null>('submitted_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>('desc')
+  const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
+
+  const queryParams = useMemo(() => {
+    let minScore: number | undefined
+    let maxScore: number | undefined
+
+    if (scoreBracket === '0-250') {
+      minScore = 0
+      maxScore = 250
+    } else if (scoreBracket === '255-500') {
+      minScore = 255
+      maxScore = 500
+    } else if (scoreBracket === '505-750') {
+      minScore = 505
+      maxScore = 750
+    } else if (scoreBracket === '755-990') {
+      minScore = 755
+      maxScore = 990
+    }
+
+    return {
+      page: currentPage,
+      limit: pageSize,
+      search: debouncedSearch.trim() || undefined,
+      minScore,
+      maxScore,
+      sortBy: sortKey === 'learner' ? 'user_id' : sortKey || undefined,
+      sortOrder: sortOrder || undefined,
+    }
+  }, [currentPage, pageSize, debouncedSearch, scoreBracket, sortKey, sortOrder])
+
+  const { data, isLoading, refetch } = useAdminPlacementAttemptsQuery(queryParams)
+
+  const items = data?.result || []
+  const stats = data?.stats
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds || seconds <= 0) return '0 phút'
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    if (mins === 0) return `${secs}s`
+    return `${mins}p ${secs}s`
+  }
+
+  const formatDateTime = (dateStr?: string) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    return d.toLocaleString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }
+
+  const getScoreBadge = (score: number) => {
+    if (score >= 855) return { label: 'C1 Nâng Cao', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20' }
+    if (score >= 785) return { label: 'B2+ Giao Tiếp', color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' }
+    if (score >= 550) return { label: 'B1 Trung Cấp', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' }
+    if (score >= 255) return { label: 'A2 Sơ Cấp', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' }
+    return { label: 'A1 Bắt Đầu', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' }
+  }
+
+  const columns: DataTableColumn<PlacementAttemptItem>[] = useMemo(
+    () => [
+      {
+        key: 'learner',
+        title: 'Học viên',
+        sortable: true,
+        render: (item) => (
+          <div
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => onViewLearnerProfile?.(item.user_id)}
+          >
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-2xs">
+              {item.learner_avatar_url ? (
+                <img
+                  src={item.learner_avatar_url}
+                  alt={item.learner_name}
+                  className="w-full h-full rounded-xl object-cover"
+                />
+              ) : (
+                (item.learner_name || item.learner_email || 'HV').slice(0, 2).toUpperCase()
+              )}
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {item.learner_name}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{item.learner_email}</p>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'exam',
+        title: 'Bài kiểm tra',
+        render: (item) => (
+          <div className="space-y-0.5">
+            <p className="font-medium text-slate-900 dark:text-slate-100 text-xs">
+              {item.exam_title}
+            </p>
+            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+              {item.exam_code}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'total_scaled_score',
+        title: 'Điểm TOEIC',
+        sortable: true,
+        render: (item) => {
+          const badge = getScoreBadge(item.total_scaled_score)
+          return (
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-base font-black text-slate-900 dark:text-slate-100">
+                  {item.total_scaled_score}
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400">/ 990</span>
+              </div>
+              <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.color}`}>
+                {badge.label}
+              </span>
+            </div>
+          )
+        },
+      },
+      {
+        key: 'skills',
+        title: 'Kỹ năng (L / R)',
+        render: (item) => (
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold text-blue-600 dark:text-blue-400">
+              <Headphones className="w-3.5 h-3.5" />
+              <span>{item.listening_scaled_score} <span className="text-[10px] text-slate-400 font-normal">/ 495</span></span>
+            </div>
+            <div className="flex items-center gap-1.5 font-semibold text-indigo-600 dark:text-indigo-400">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>{item.reading_scaled_score} <span className="text-[10px] text-slate-400 font-normal">/ 495</span></span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'accuracy',
+        title: 'Độ chính xác',
+        render: (item) => {
+          const pct = item.total_questions > 0
+            ? Math.round((item.correct_questions / item.total_questions) * 100)
+            : 0
+          return (
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{item.correct_questions}/{item.total_questions}</span>
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {pct}% chính xác
+              </p>
+            </div>
+          )
+        },
+      },
+      {
+        key: 'duration',
+        title: 'Thời gian làm',
+        render: (item) => (
+          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+            {formatDuration(item.total_time_seconds)}
+          </span>
+        ),
+      },
+      {
+        key: 'submitted_at',
+        title: 'Ngày nộp bài',
+        sortable: true,
+        render: (item) => (
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {formatDateTime(item.submitted_at || item.created_at)}
+          </span>
+        ),
+      },
+      {
+        key: 'actions',
+        title: 'Thao tác',
+        align: 'right',
+        render: (item) => (
+          <button
+            type="button"
+            onClick={() => setSelectedAttemptId(item._id || item.attempt_id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Xem bài làm</span>
+          </button>
+        ),
+      },
+    ],
+    [onViewLearnerProfile]
+  )
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              Tổng lượt test đầu vào
+            </span>
+            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              {stats?.total_attempts ?? data?.meta?.total ?? 0}
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
+            <Trophy className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              Điểm trung bình toàn bài
+            </span>
+            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+              {stats?.avg_total_score ?? 0} <span className="text-xs font-normal text-slate-400">/ 990</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
+            <Flame className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              Điểm TB Listening / Reading
+            </span>
+            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <span className="text-blue-600">{stats?.avg_listening_score ?? 0}</span>
+              <span className="text-slate-400 font-normal mx-1">/</span>
+              <span className="text-indigo-600">{stats?.avg_reading_score ?? 0}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+            <Award className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              Điểm cao nhất / Thấp nhất
+            </span>
+            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <span className="text-emerald-600">{stats?.highest_score ?? 0}</span>
+              <span className="text-slate-400 font-normal mx-1">/</span>
+              <span className="text-amber-600">{stats?.lowest_score ?? 0}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <DataTable<PlacementAttemptItem>
+        title="Danh Sách Lượt Làm Bài Test Đầu Vào"
+        subtitle="Theo dõi điểm số quy đổi ETS, thời gian nộp và chi tiết câu trả lời của từng học viên"
+        isLoading={isLoading}
+        columns={columns}
+        data={items}
+        rowKey={(item) => item._id || item.attempt_id}
+        sortKey={sortKey}
+        sortOrder={sortOrder}
+        onSortChange={(k, o) => {
+          setSortKey(k)
+          setSortOrder(o)
+          setCurrentPage(1)
+        }}
+        onResetFilters={() => {
+          setSearchTerm('')
+          setScoreBracket('ALL')
+          setSortKey('submitted_at')
+          setSortOrder('desc')
+          setCurrentPage(1)
+        }}
+        extraActions={
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
+            <span>Làm mới</span>
+          </button>
+        }
+        filterSlot={
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Tìm theo tên học viên, email hoặc mã đề..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full h-10 pl-9 pr-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs"
+              />
+            </div>
+
+            <select
+              value={scoreBracket}
+              onChange={(e) => {
+                setScoreBracket(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="h-10 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-2xs cursor-pointer"
+            >
+              <option value="ALL">Mọi mức điểm TOEIC</option>
+              <option value="0-250">0 - 250 (A1 - Mới bắt đầu)</option>
+              <option value="255-500">255 - 500 (A2 - Sơ cấp)</option>
+              <option value="505-750">505 - 750 (B1 - Trung cấp)</option>
+              <option value="755-990">755 - 990 (B2+/C1 - Nâng cao)</option>
+            </select>
+          </div>
+        }
+      />
+
+      <PlacementAttemptDetailModal
+        attemptId={selectedAttemptId}
+        isOpen={Boolean(selectedAttemptId)}
+        onClose={() => setSelectedAttemptId(null)}
+      />
+    </div>
+  )
+}

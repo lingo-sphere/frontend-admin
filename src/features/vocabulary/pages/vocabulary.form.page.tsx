@@ -1,15 +1,15 @@
-/**
- * @file vocabulary.form.page.tsx
- * @description Trang quản trị VocabularyFormPage trong giao diện Admin
- */
+// Trang quan tri tao moi va chinh sua tu vung kem quan ly ngu nghia trong Admin.
 
-import { useState } from 'react'
-import { ChevronLeft, Save } from 'lucide-react'
-import { useAdminStore } from '@/store/admin.store'
+import { useState, useEffect } from 'react'
+import { ChevronLeft } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
 import { VocabularyBasicInfoForm } from '@/features/vocabulary/components/vocabulary.basic.info.form'
 import { VocabularyMeaningsForm, type Meaning } from '@/features/vocabulary/components/vocabulary.meanings.form'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
+import { queryClient } from '@/config/query.config'
+import { vocabAdminKeys } from '@/features/vocabulary/keys/vocabulary.admin.keys'
 
 export function VocabularyFormPage({
   editWordId,
@@ -18,7 +18,7 @@ export function VocabularyFormPage({
   editWordId?: string
   editId?: string
 }) {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const currentEditId = editWordId || editId
   const isEditing = !!currentEditId
 
@@ -39,6 +39,39 @@ export function VocabularyFormPage({
     },
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Tải dữ liệu cũ khi ở chế độ chỉnh sửa (isEditing)
+  useEffect(() => {
+    if (currentEditId) {
+      vocabularyService
+        .getLexicalItemById(currentEditId)
+        .then((data) => {
+          if (data) {
+            setWord(data.word || '')
+            setWordType(data.word_type || 'NOUN')
+            setCefrLevel(data.cefr_level || 'B1')
+            setPronunciationUs(data.pronunciation_us || '')
+            setPronunciationUk(data.pronunciation_uk || '')
+            setAudioUrlUs(data.audio_url_us || '')
+            if (data.meanings && data.meanings.length > 0) {
+              setMeanings(
+                data.meanings.map((m, idx) => ({
+                  id: `mean-${idx}-${Date.now()}`,
+                  part_of_speech: m.part_of_speech || data.word_type || 'NOUN',
+                  definition_en: m.definition_en || '',
+                  definition_vi: m.definition_vi || '',
+                  short_meaning_vi: m.short_meaning_vi || '',
+                  examples: m.examples && m.examples.length > 0 ? m.examples : [''],
+                }))
+              )
+            }
+          }
+        })
+        .catch(() => {
+          toast.error('Không thể tải thông tin từ vựng')
+        })
+    }
+  }, [currentEditId])
 
   const addMeaning = () => {
     setMeanings([
@@ -94,7 +127,10 @@ export function VocabularyFormPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!word.trim()) return
+    if (!word.trim()) {
+      toast.error('Vui lòng nhập từ vựng')
+      return
+    }
 
     setIsSubmitting(true)
     try {
@@ -117,12 +153,14 @@ export function VocabularyFormPage({
         audio_url_us: audioUrlUs || undefined,
         meanings: formattedMeanings,
       })
+
       toast.success(
         isEditing
           ? 'Cập nhật từ vựng thành công!'
           : 'Thêm từ vựng mới vào từ điển thành công!'
       )
-      setActiveNavItem('vocabulary')
+      await queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
+      navigate('/vocabulary')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu từ vựng'
       toast.error(msg)
@@ -136,7 +174,7 @@ export function VocabularyFormPage({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('vocabulary')}
+            onClick={() => navigate('/vocabulary')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >
@@ -181,23 +219,16 @@ export function VocabularyFormPage({
           onRemoveExample={removeExample}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => setActiveNavItem('vocabulary')}
-            className="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 h-11 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isSubmitting ? 'Đang lưu...' : isEditing ? 'Cập nhật từ vựng' : 'Lưu từ vựng'}</span>
-          </button>
-        </div>
+        <StickyFormActionBar
+          title={word.trim() || (isEditing ? 'Từ vựng' : 'Từ vựng mới')}
+          statusText={isEditing ? 'Đang chỉnh sửa:' : 'Đang tạo mới:'}
+          badgeText={wordType}
+          cancelText="Hủy Bỏ"
+          saveText={isEditing ? 'Cập Nhật Từ Vựng' : 'Lưu Từ Vựng'}
+          savingText="Đang lưu..."
+          isSubmitting={isSubmitting}
+          onCancel={() => navigate('/vocabulary')}
+        />
       </form>
     </div>
   )

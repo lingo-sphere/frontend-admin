@@ -1,12 +1,8 @@
-/**
- * @file vocabulary.import.page.tsx
- * @description Trang quản trị VocabularyImportPage trong giao diện Admin
- */
-
+// Trang quan tri VocabularyImportPage trong giao dien Admin.
 import { useState } from 'react'
 import { ChevronLeft, Download } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import { useAdminStore } from '@/store/admin.store'
 import { toast } from '@/store/toast.store'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { VocabularyImportDropzone } from '@/features/vocabulary/components/vocabulary.import.dropzone'
@@ -14,9 +10,11 @@ import {
   VocabularyImportHistoryTable,
   type ImportBatch,
 } from '@/features/vocabulary/components/vocabulary.import.history.table'
+import { queryClient } from '@/config/query.config'
+import { vocabAdminKeys } from '@/features/vocabulary/keys/vocabulary.admin.keys'
 
 export function VocabularyImportPage() {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [importType, setImportType] = useState<'CSV' | 'JSON' | 'EXCEL'>('EXCEL')
   const [isImporting, setIsImporting] = useState(false)
@@ -115,6 +113,7 @@ export function VocabularyImportPage() {
       }
       setHistory((prev) => [newBatch, ...prev])
       setSelectedFile(null)
+      await queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
       toast.success(`Đã nạp thành công ${successCount}/${rows.length} từ vựng vào hệ thống!`)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi nhập tệp từ vựng'
@@ -129,7 +128,7 @@ export function VocabularyImportPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveNavItem('vocabulary')}
+            onClick={() => navigate('/vocabulary')}
             className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >

@@ -1,5 +1,5 @@
-// Quản lý ban điều hành và phân quyền chi tiết cho phó nhóm phòng chat
-import { useState } from 'react'
+// Quản lý ban điều hành và phân quyền chi tiết cho phó nhóm phòng chat với phân trang DataTable.
+import { useState, useMemo } from 'react'
 import {
   ShieldCheck,
   UserPlus,
@@ -7,12 +7,14 @@ import {
   Edit3,
   Check,
   X,
+  Search,
 } from 'lucide-react'
 import type {
   AdminCommunityMember,
   AdminModeratorPermissions,
   SetModeratorPayload,
 } from '@/features/community/types/community.admin.types'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { ConfirmModal } from '@/components/confirm.modal'
 import {
   CommunityModeratorModal,
@@ -22,7 +24,7 @@ import {
 interface CommunityModeratorsTabProps {
   moderators: AdminCommunityMember[]
   isLoading: boolean
-  onSetModerator: (payload: SetModeratorPayload) => Promise<void>
+  onSetModerator: (payload: SetModeratorPayload | SetModeratorPayload[]) => Promise<void>
   onRemoveModerator: (userId: string) => Promise<void>
 }
 
@@ -32,6 +34,11 @@ export function CommunityModeratorsTab({
   onSetModerator,
   onRemoveModerator,
 }: CommunityModeratorsTabProps) {
+  const [filterText, setFilterText] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState('')
   const [selectedPermissions, setSelectedPermissions] = useState<AdminModeratorPermissions>(
@@ -39,6 +46,34 @@ export function CommunityModeratorsTab({
   )
   const [removeTargetUserId, setRemoveTargetUserId] = useState<string | null>(null)
   const [isRemoving, setIsRemoving] = useState(false)
+
+  const safeModerators = Array.isArray(moderators) ? moderators : []
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    setSearchQuery(filterText.trim().toLowerCase())
+    setCurrentPage(1)
+  }
+
+  const handleResetFilters = () => {
+    setFilterText('')
+    setSearchQuery('')
+    setCurrentPage(1)
+  }
+
+  const filteredModerators = useMemo(() => {
+    if (!searchQuery) return safeModerators
+    return safeModerators.filter(
+      (m) =>
+        m.user_name.toLowerCase().includes(searchQuery) ||
+        m.user_id.toLowerCase().includes(searchQuery)
+    )
+  }, [safeModerators, searchQuery])
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredModerators.slice(start, start + pageSize)
+  }, [filteredModerators, currentPage, pageSize])
 
   const handleOpenAdd = () => {
     setSelectedUserId('')
@@ -63,6 +98,136 @@ export function CommunityModeratorsTab({
     }
   }
 
+  const columns: DataTableColumn<AdminCommunityMember>[] = [
+    {
+      key: 'moderator',
+      title: 'Phó nhóm',
+      width: '260px',
+      render: (mod) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
+            {mod.user_avatar ? (
+              <img src={mod.user_avatar} alt={mod.user_name} className="w-full h-full object-cover" />
+            ) : (
+              mod.user_name.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div>
+            <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+              {mod.user_name}
+            </div>
+            <div className="text-[11px] text-slate-400 font-mono">
+              User ID: {mod.user_id}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'message_perms',
+      title: 'Quyền kiểm duyệt tin',
+      render: (mod) => (
+        <div className="flex flex-col gap-1 text-[11px]">
+          <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_delete_messages ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+            {mod.moderator_permissions?.can_delete_messages ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            Xóa tin nhắn
+          </span>
+          <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_pin_messages ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+            {mod.moderator_permissions?.can_pin_messages ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            Ghim tin nhắn
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'sanction_perms',
+      title: 'Quyền kỷ luật học viên',
+      render: (mod) => (
+        <div className="flex flex-col gap-1 text-[11px]">
+          <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_mute_members ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+            {mod.moderator_permissions?.can_mute_members ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            Tắt tiếng (Mute)
+          </span>
+          <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_kick_members ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+            {mod.moderator_permissions?.can_kick_members ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            Kick phòng (Cooldown)
+          </span>
+          <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_ban_members ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+            {mod.moderator_permissions?.can_ban_members ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            Cấm vĩnh viễn (Blacklist)
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'room_perms',
+      title: 'Quyền cấu hình phòng',
+      render: (mod) => (
+        <span className={`inline-flex items-center gap-1 text-[11px] ${mod.moderator_permissions?.can_toggle_room_chat ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+          {mod.moderator_permissions?.can_toggle_room_chat ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+          Bật/Tắt chat phòng
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      title: 'Thao tác',
+      align: 'right',
+      render: (mod) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={() => handleOpenEdit(mod)}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Chỉnh sửa quyền"
+          >
+            <Edit3 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setRemoveTargetUserId(mod.user_id)}
+            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            title="Tước quyền phó nhóm"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ]
+
+  const filterSlot = (
+    <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3 w-full">
+      <div className="relative flex-1 min-w-[200px] sm:max-w-xs">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          placeholder="Tìm theo tên hoặc User ID..."
+          className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 transition-all"
+        />
+      </div>
+      <button
+        type="submit"
+        className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors cursor-pointer"
+      >
+        Tìm kiếm
+      </button>
+    </form>
+  )
+
+  const extraActions = (
+    <button
+      type="button"
+      onClick={handleOpenAdd}
+      className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-sm shadow-indigo-600/30 transition-all cursor-pointer"
+    >
+      <UserPlus className="w-4 h-4" />
+      <span>Bổ nhiệm phó nhóm</span>
+    </button>
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -75,120 +240,28 @@ export function CommunityModeratorsTab({
             Phó nhóm hỗ trợ quản lý trật tự, xóa tin nhắn rác và xử lý thành viên vi phạm trong phòng chat
           </p>
         </div>
-
-        <button
-          onClick={handleOpenAdd}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Bổ nhiệm phó nhóm</span>
-        </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-xs uppercase font-bold border-b border-slate-100 dark:border-slate-800">
-              <tr>
-                <th className="px-5 py-3">Phó nhóm</th>
-                <th className="px-5 py-3">Quyền kiểm duyệt tin</th>
-                <th className="px-5 py-3">Quyền kỷ luật học viên</th>
-                <th className="px-5 py-3">Quyền cấu hình phòng</th>
-                <th className="px-5 py-3 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-              {moderators.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center text-slate-400">
-                    {isLoading ? 'Đang tải danh sách...' : 'Chưa có phó nhóm nào được bổ nhiệm'}
-                  </td>
-                </tr>
-              ) : (
-                moderators.map((mod) => (
-                  <tr key={mod.user_id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-xs overflow-hidden flex-shrink-0">
-                          {mod.user_avatar ? (
-                            <img src={mod.user_avatar} alt={mod.user_name} className="w-full h-full object-cover" />
-                          ) : (
-                            mod.user_name.charAt(0).toUpperCase()
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">
-                            {mod.user_name}
-                          </div>
-                          <div className="text-[11px] text-slate-400 font-mono">
-                            User ID: {mod.user_id}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1 text-[11px]">
-                        <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_delete_messages ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          {mod.moderator_permissions?.can_delete_messages ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                          Xóa tin nhắn
-                        </span>
-                        <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_pin_messages ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          {mod.moderator_permissions?.can_pin_messages ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                          Ghim tin nhắn
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1 text-[11px]">
-                        <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_mute_members ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          {mod.moderator_permissions?.can_mute_members ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                          Tắt tiếng học viên (Mute)
-                        </span>
-                        <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_kick_members ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          {mod.moderator_permissions?.can_kick_members ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                          Kick khỏi phòng (Có Cooldown)
-                        </span>
-                        <span className={`inline-flex items-center gap-1 ${mod.moderator_permissions?.can_ban_members ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          {mod.moderator_permissions?.can_ban_members ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                          Cấm vĩnh viễn (Blacklist)
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <span className={`inline-flex items-center gap-1 text-[11px] ${mod.moderator_permissions?.can_toggle_room_chat ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                        {mod.moderator_permissions?.can_toggle_room_chat ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                        Bật/Tắt chat phòng
-                      </span>
-                    </td>
-
-                    <td className="px-5 py-4 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1">
-                        <button
-                          onClick={() => handleOpenEdit(mod)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                          title="Chỉnh sửa quyền"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setRemoveTargetUserId(mod.user_id)}
-                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                          title="Tước quyền phó nhóm"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable<AdminCommunityMember>
+        columns={columns}
+        data={paginatedData}
+        rowKey={(m) => m.user_id}
+        isLoading={isLoading}
+        emptyText="Chưa có phó nhóm nào được bổ nhiệm"
+        filterSlot={filterSlot}
+        extraActions={extraActions}
+        onResetFilters={handleResetFilters}
+        pagination={{
+          currentPage,
+          pageSize,
+          totalItems: filteredModerators.length,
+          onPageChange: setCurrentPage,
+          onPageSizeChange: (size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          },
+        }}
+      />
 
       <CommunityModeratorModal
         isOpen={isModalOpen}

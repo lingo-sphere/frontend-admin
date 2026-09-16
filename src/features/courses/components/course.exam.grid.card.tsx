@@ -4,7 +4,7 @@ import { BookOpen, Clock, Edit3, Trash2, Sparkles, Layers, Check, AlertCircle } 
 import { Popconfirm } from '@/components/popconfirm'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 
-export const getExamTypeBadge = (type?: string, exam?: ToeicExamItem) => {
+export const getExamTypeBadge = (type?: string | null, exam?: ToeicExamItem) => {
   if (exam?.is_system_placement || type === 'DIAGNOSTIC_TEST') {
     const is4Skills = exam?.placement_type === '4SKILLS' || exam?.skills_enabled === 'ALL'
     return {

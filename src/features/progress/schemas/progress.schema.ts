@@ -1,7 +1,4 @@
-/**
- * @file progress.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ progress
- */
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ progress trong Admin.
 
 import { z } from 'zod'
 
@@ -18,7 +15,7 @@ export const StudentModuleProgressSchema = z.object({
 }).passthrough()
 
 export const LearnerStudyScheduleSchema = z.object({
-  days_of_week: z.array(z.number()).default([]),
+  days_of_week: z.array(z.union([z.number(), z.string()])).default([]),
   reminder_time: z.string().default('19:30'),
   duration_minutes: z.number().default(45),
   is_active: z.boolean().default(true),

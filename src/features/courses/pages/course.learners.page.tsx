@@ -1,5 +1,5 @@
 // Trang quản trị tiến độ học tập, bài nộp kỹ năng và thống kê học viên theo khóa học
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   GraduationCap,
@@ -12,7 +12,7 @@ import { LearnerSubmissionReviewModal } from '@/features/courses/components/lear
 import { CourseLearnersStatsBar } from '@/features/courses/components/course.learners.stats.bar'
 import { CourseProgressTableTab } from '@/features/courses/components/course.progress.table.tab'
 import { createCourseProgressColumns } from '@/features/courses/components/course.progress.columns'
-import { useAdminStore } from '@/store/admin.store'
+import { useNavigate } from 'react-router-dom'
 import {
   useCourseLearnersData,
 } from '@/features/courses/hooks/use.course.learners.data'
@@ -22,7 +22,7 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 export function CourseLearnersPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const {
     isTeacher,
@@ -48,15 +48,6 @@ export function CourseLearnersPage() {
   const [progressSortOrder, setProgressSortOrder] = useState<'asc' | 'desc' | null>(null)
   const [selectedReviewSub, setSelectedReviewSub] = useState<SkillSubmissionItem | null>(null)
 
-  useEffect(() => {
-    if (courses.length > 0) {
-      if (activeTab === 'PROGRESS' || activeTab === 'ANALYTICS') {
-        fetchProgress()
-      } else {
-        fetchSubmissions()
-      }
-    }
-  }, [courses, selectedCourseId, activeTab, fetchProgress, fetchSubmissions])
 
   const filteredStudents = useMemo(() => {
     let list = allStudentsProgress
@@ -145,18 +136,18 @@ export function CourseLearnersPage() {
     (st: StudentProgressItem) => {
       const targetCourseId = st.course_id || (selectedCourseId !== 'ALL' ? selectedCourseId : 'all')
       storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, st)
-      setActiveNavItem(`learner-progress:${targetCourseId}:${st.user_id}`)
+      navigate(`/course-learners/${targetCourseId}/students/${st.user_id}`)
     },
-    [selectedCourseId, setActiveNavItem]
+    [selectedCourseId, navigate]
   )
 
   const handleSelectReminderHistory = useCallback(
     (st: StudentProgressItem) => {
       const targetCourseId = st.course_id || (selectedCourseId !== 'ALL' ? selectedCourseId : 'all')
       storage.session.set(STORAGE_KEYS.ACTIVE_STUDENT_PROGRESS, st)
-      setActiveNavItem(`learner-reminders:${targetCourseId}:${st.user_id}`)
+      navigate(`/course-learners/${targetCourseId}/reminders/${st.user_id}`)
     },
-    [selectedCourseId, setActiveNavItem]
+    [selectedCourseId, navigate]
   )
 
   const progressColumns = useMemo(

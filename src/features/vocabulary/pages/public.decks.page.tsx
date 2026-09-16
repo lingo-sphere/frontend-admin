@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Plus, RotateCcw, Layers3 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
-import type { FlashcardDeck } from '@/types/api.types'
+import type { FlashcardDeck } from '@/features/vocabulary/services/vocabulary.service'
 import { PublicDeckCard } from '@/features/vocabulary/components/public.deck.card'
 import { CreatePublicDeckModal } from '@/features/vocabulary/components/create.public.deck.modal'
 import { Pagination } from '@/components/pagination'
@@ -51,7 +51,7 @@ export function PublicDecksPage() {
 
   const filteredDecks = useMemo(() => {
     return decks.filter(
-      (d) =>
+      (d: FlashcardDeck) =>
         (d.title || d.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()))
     )
@@ -132,7 +132,7 @@ export function PublicDecksPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paginatedDecks.map((deck) => (
+          {paginatedDecks.map((deck: FlashcardDeck) => (
             <PublicDeckCard key={deck._id} deck={deck} onDelete={handleDeleteDeck} />
           ))}
         </div>

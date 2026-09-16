@@ -1,5 +1,5 @@
 // Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
-import { Target, Sparkles, Flame, Crown, Ban, CheckCircle } from 'lucide-react'
+import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw, Trophy } from 'lucide-react'
 import type { User } from '@/features/users/types/learner.types'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
@@ -10,6 +10,7 @@ interface GetLearnerColumnsOptions {
   onViewProfile?: (userId: string) => void
   onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
   onOpenAiQuotaModal?: (user: User) => void
+  onResetData?: (user: User) => Promise<void> | void
 }
 
 export function getLearnerColumns({
@@ -18,6 +19,7 @@ export function getLearnerColumns({
   onViewProfile,
   onOpenStatusModal,
   onOpenAiQuotaModal,
+  onResetData,
 }: GetLearnerColumnsOptions): DataTableColumn<User>[] {
   const handleView = onViewProfile || onViewDetails || (() => {})
   return [
@@ -57,14 +59,21 @@ export function getLearnerColumns({
       key: 'target',
       title: isVi ? 'Mục tiêu & Trình độ' : 'Target & Level',
       render: (u) => (
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400">
             <Target className="w-3.5 h-3.5" />
-            <span>Target {u.target_toeic_score || 650}+</span>
+            <span>Target {u.target_toeic_score ? `${u.target_toeic_score}+` : 0}</span>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            {isVi ? 'Ước lượng:' : 'Estimated:'} {u.current_estimated_score || 450}
-          </p>
+          {u.placement_test_score !== undefined && u.placement_test_score > 0 ? (
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+              <Trophy className="w-3 h-3 text-blue-500" />
+              <span>Test đầu vào: {u.placement_test_score}đ</span>
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+              {isVi ? 'Chưa test đầu vào' : 'No placement test'}
+            </p>
+          )}
         </div>
       ),
     },
@@ -75,11 +84,11 @@ export function getLearnerColumns({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <Sparkles className="w-3.5 h-3.5 fill-amber-500" />
-            {(u.total_xp || 0).toLocaleString()} XP
+            {(u.total_xp ?? 0).toLocaleString()} XP
           </span>
           <span className="flex items-center gap-1 text-xs font-semibold text-rose-500">
             <Flame className="w-3.5 h-3.5 fill-rose-500" />
-            {u.current_streak || 0} {isVi ? 'ngày' : 'days'}
+            {u.current_streak ?? 0} {isVi ? 'ngày' : 'days'}
           </span>
         </div>
       ),
@@ -177,6 +186,29 @@ export function getLearnerColumns({
                   type="button"
                 >
                   <CheckCircle className="w-3.5 h-3.5" />
+                </button>
+              </Popconfirm>
+            )}
+            {onResetData && (
+              <Popconfirm
+                title={isVi ? 'Khởi tạo lại dữ liệu học tập?' : 'Reset learner learning data?'}
+                description={
+                  isVi
+                    ? 'Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp và điểm thi của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên.'
+                    : 'Clear course enrollments, lesson progress, submissions, and test scores. Login credentials remain intact.'
+                }
+                okText={isVi ? 'Khởi tạo lại' : 'Reset'}
+                cancelText={isVi ? 'Hủy' : 'Cancel'}
+                okType="danger"
+                placement="topRight"
+                onConfirm={() => onResetData(u)}
+              >
+                <button
+                  className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
+                  title={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập' : 'Reset learner data'}
+                  type="button"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               </Popconfirm>
             )}

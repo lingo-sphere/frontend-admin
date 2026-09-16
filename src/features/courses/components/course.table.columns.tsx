@@ -60,7 +60,7 @@ export function getCourseColumns({
             </p>
             <div className="flex items-center gap-2 mt-1">
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-600 dark:text-teal-400">
-                <Target className="w-3 h-3" /> Target {course.target_score}+
+                <Target className="w-3 h-3" /> {course.target_score ? `Target ${course.target_score}+` : 'Target -'}
               </span>
             </div>
           </div>

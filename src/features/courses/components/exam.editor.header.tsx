@@ -16,6 +16,7 @@ interface ExamEditorHeaderProps {
   isVi: boolean
   is4Skills: boolean
   isSystemPlacement: boolean
+  isLessonMode?: boolean
   questionsCount: number
   searchQuery: string
   uploadingGlobalAudio: boolean
@@ -31,6 +32,7 @@ export function ExamEditorHeader({
   isVi,
   is4Skills,
   isSystemPlacement,
+  isLessonMode = false,
   questionsCount,
   searchQuery,
   uploadingGlobalAudio,
@@ -50,32 +52,44 @@ export function ExamEditorHeader({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                {isVi ? 'Soạn Ngân Hàng Câu Hỏi Đề Thi' : 'Exam Question Bank Editor'}
+                {isLessonMode
+                  ? isVi ? 'Bộ Câu Hỏi Ôn Tập Bài Học' : 'Lesson Practice Questions'
+                  : isVi ? 'Soạn Ngân Hàng Câu Hỏi Đề Thi' : 'Exam Question Bank Editor'}
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                 {questionsCount} câu hỏi
               </span>
-              {isSystemPlacement ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                  {isVi ? 'Đầu vào hệ thống' : 'System Placement'}
+              {isLessonMode ? (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  {isVi ? 'Ôn tập củng cố' : 'Practice Quiz'}
                 </span>
               ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                  {isVi ? 'Bài thi khóa học' : 'Course Exam'}
-                </span>
-              )}
-              {is4Skills ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                  4 Kỹ năng (LRSW)
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
-                  2 Kỹ năng (LR)
-                </span>
+                <>
+                  {isSystemPlacement ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                      {isVi ? 'Đầu vào hệ thống' : 'System Placement'}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      {isVi ? 'Bài thi khóa học' : 'Course Exam'}
+                    </span>
+                  )}
+                  {is4Skills ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                      4 Kỹ năng (LRSW)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                      2 Kỹ năng (LR)
+                    </span>
+                  )}
+                </>
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">
-              {exam.title} {exam.course_title ? `• ${exam.course_title}` : ''}
+              {isLessonMode
+                ? exam.course_title || exam.title
+                : `${exam.title} ${exam.course_title ? `• ${exam.course_title}` : ''}`}
             </p>
           </div>
         </div>
@@ -104,69 +118,82 @@ export function ExamEditorHeader({
         </div>
 
         <div className="flex items-center gap-2 justify-end flex-wrap">
-          <button
-            type="button"
-            onClick={onOpenGlobalAudioPicker}
-            disabled={uploadingGlobalAudio}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title={
-              isVi
-                ? 'Upload file nghe chung cho toàn đề thi'
-                : 'Upload global audio file'
-            }
-          >
-            <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
-            <span>
-              {uploadingGlobalAudio
-                ? isVi
-                  ? 'Đang tải...'
-                  : 'Uploading...'
-                : globalAudioUrl
-                  ? isVi
-                    ? 'Đổi Audio Đề'
-                    : 'Change Audio'
-                  : isVi
-                    ? 'Gắn Audio Đề'
-                    : 'Set Audio'}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onAddQuestion('LISTENING')}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ {isVi ? 'Nghe' : 'Listening'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onAddQuestion('READING')}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 text-violet-700 dark:text-violet-300 text-xs font-bold transition-colors cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ {isVi ? 'Đọc' : 'Reading'}</span>
-          </button>
-
-          {is4Skills && (
+          {isLessonMode ? (
+            <button
+              type="button"
+              onClick={() => onAddQuestion()}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Thêm câu hỏi' : 'Add Question'}</span>
+            </button>
+          ) : (
             <>
               <button
                 type="button"
-                onClick={() => onAddQuestion('SPEAKING')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-700 dark:text-teal-300 text-xs font-bold transition-colors cursor-pointer"
+                onClick={onOpenGlobalAudioPicker}
+                disabled={uploadingGlobalAudio}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                title={
+                  isVi
+                    ? 'Upload file nghe chung cho toàn đề thi'
+                    : 'Upload global audio file'
+                }
               >
-                <Mic className="w-3.5 h-3.5 text-teal-600" />
-                <span>+ {isVi ? 'Nói' : 'Speaking'}</span>
+                <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {uploadingGlobalAudio
+                    ? isVi
+                      ? 'Đang tải...'
+                      : 'Uploading...'
+                    : globalAudioUrl
+                      ? isVi
+                        ? 'Đổi Audio Đề'
+                        : 'Change Audio'
+                      : isVi
+                        ? 'Gắn Audio Đề'
+                        : 'Set Audio'}
+                </span>
               </button>
+
               <button
                 type="button"
-                onClick={() => onAddQuestion('WRITING')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold transition-colors cursor-pointer"
+                onClick={() => onAddQuestion('LISTENING')}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors cursor-pointer"
               >
-                <PenTool className="w-3.5 h-3.5 text-blue-600" />
-                <span>+ {isVi ? 'Viết' : 'Writing'}</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ {isVi ? 'Nghe' : 'Listening'}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => onAddQuestion('READING')}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 text-violet-700 dark:text-violet-300 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ {isVi ? 'Đọc' : 'Reading'}</span>
+              </button>
+
+              {is4Skills && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onAddQuestion('SPEAKING')}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-700 dark:text-teal-300 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-teal-600" />
+                    <span>+ {isVi ? 'Nói' : 'Speaking'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onAddQuestion('WRITING')}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <PenTool className="w-3.5 h-3.5 text-blue-600" />
+                    <span>+ {isVi ? 'Viết' : 'Writing'}</span>
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>

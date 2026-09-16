@@ -1,7 +1,17 @@
-// Component giao diện DataTable phục vụ khu vực Quản trị Admin.
+// Component giao diện DataTable được vận hành bởi TanStack Table phục vụ khu vực Quản trị Admin.
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type VisibilityState,
+  createColumnHelper,
+} from '@tanstack/react-table'
 import {
   TableControls,
   type TableDensity,
@@ -10,15 +20,20 @@ import {
 import { Pagination } from '@/components/pagination'
 import { Loader2, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
 
+export { createColumnHelper }
+export type { ColumnDef }
+
 export interface DataTableColumn<T> {
   key: string
   title: React.ReactNode
   render?: (record: T, index: number) => React.ReactNode
   dataIndex?: keyof T
   width?: string
+  minWidth?: string
   align?: 'left' | 'center' | 'right'
   hidden?: boolean
   sortable?: boolean
+  sticky?: 'left' | 'right'
 }
 
 export interface DataTableProps<T> {
@@ -88,64 +103,6 @@ export function DataTable<T extends object>({
   const activeSortKey = sortKey !== undefined ? sortKey : internalSortKey
   const activeSortOrder = sortOrder !== undefined ? sortOrder : internalSortOrder
 
-  const handleHeaderClick = (colKey: string, isSortable?: boolean) => {
-    if (!isSortable) return
-    let nextOrder: 'asc' | 'desc' = 'asc'
-
-    if (activeSortKey === colKey && activeSortOrder) {
-      nextOrder = activeSortOrder === 'asc' ? 'desc' : 'asc'
-    } else {
-      if (data && data.length >= 2) {
-        const col = columns.find((c) => c.key === colKey)
-        const getVal = (item: T): unknown => {
-          if (!item) return ''
-          if (col?.dataIndex && item[col.dataIndex] !== undefined) {
-            return item[col.dataIndex]
-          }
-          const rec = item as Record<string, unknown>
-          if (colKey === 'user' || colKey === 'learner') return rec.full_name || rec.email
-          if (colKey === 'info' || colKey === 'course') return rec.title || rec.name
-          if (colKey === 'price') return rec.price ?? 0
-          if (colKey === 'created_at') return rec.created_at
-          if (colKey === 'updated_at') return rec.updated_at
-          return rec[colKey]
-        }
-
-        const first = getVal(data[0])
-        const last = getVal(data[data.length - 1])
-
-        if (first !== undefined && first !== null && last !== undefined && last !== null) {
-          let isCurrentAsc = false
-          if (typeof first === 'number' && typeof last === 'number') {
-            isCurrentAsc = first <= last
-          } else {
-            const strFirst = String(first).trim().toLowerCase()
-            const strLast = String(last).trim().toLowerCase()
-            const timeFirst = Date.parse(strFirst)
-            const timeLast = Date.parse(strLast)
-            if (!isNaN(timeFirst) && !isNaN(timeLast) && strFirst.length > 8) {
-              isCurrentAsc = timeFirst <= timeLast
-            } else {
-              isCurrentAsc = strFirst.localeCompare(strLast) <= 0
-            }
-          }
-          nextOrder = isCurrentAsc ? 'desc' : 'asc'
-        } else {
-          nextOrder = 'desc'
-        }
-      } else {
-        nextOrder = 'desc'
-      }
-    }
-
-    if (onSortChange) {
-      onSortChange(colKey, nextOrder)
-    } else {
-      setInternalSortKey(colKey)
-      setInternalSortOrder(nextOrder)
-    }
-  }
-
   const [density, setDensity] = useState<TableDensity>('middle')
 
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
@@ -156,12 +113,75 @@ export function DataTable<T extends object>({
     }))
   )
 
-  const visibleColumns = useMemo(() => {
-    const visibleKeys = new Set(
-      columnOptions.filter((c) => c.visible).map((c) => c.key)
-    )
-    return columns.filter((col) => visibleKeys.has(col.key))
-  }, [columns, columnOptions])
+  const columnVisibility = useMemo<VisibilityState>(() => {
+    const visibility: VisibilityState = {}
+    columnOptions.forEach((c) => {
+      visibility[c.key] = c.visible
+    })
+    return visibility
+  }, [columnOptions])
+
+  const tanstackColumns = useMemo<ColumnDef<T>[]>(() => {
+    return columns.map((col) => {
+      const def: ColumnDef<T> = {
+        id: col.key,
+        header: () => col.title,
+        cell: (info) => {
+          const row = info.row.original
+          if (col.render) {
+            return col.render(row, info.row.index)
+          }
+          if (col.dataIndex) {
+            const val = row[col.dataIndex]
+            return val !== undefined && val !== null ? String(val) : ''
+          }
+          const rec = row as Record<string, unknown>
+          const val = rec[col.key]
+          return val !== undefined && val !== null ? String(val) : ''
+        },
+        enableSorting: Boolean(col.sortable),
+      }
+      return def
+    })
+  }, [columns])
+
+  const sorting = useMemo<SortingState>(() => {
+    if (!activeSortKey || !activeSortOrder) return []
+    return [{ id: activeSortKey, desc: activeSortOrder === 'desc' }]
+  }, [activeSortKey, activeSortOrder])
+
+  const table = useReactTable({
+    data,
+    columns: tanstackColumns,
+    state: {
+      sorting,
+      columnVisibility,
+    },
+    onSortingChange: (updater) => {
+      const nextSorting = typeof updater === 'function' ? updater(sorting) : updater
+      if (nextSorting.length > 0) {
+        const item = nextSorting[0]
+        const order = item.desc ? 'desc' : 'asc'
+        if (onSortChange) {
+          onSortChange(item.id, order)
+        } else {
+          setInternalSortKey(item.id)
+          setInternalSortOrder(order)
+        }
+      } else {
+        if (onSortChange) {
+          onSortChange('', null)
+        } else {
+          setInternalSortKey(null)
+          setInternalSortOrder(null)
+        }
+      }
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: onSortChange ? undefined : getSortedRowModel(),
+    manualSorting: Boolean(onSortChange),
+    manualPagination: true,
+  })
 
   const getCellPadding = () => {
     if (density === 'compact') return 'py-2 px-4'
@@ -175,7 +195,6 @@ export function DataTable<T extends object>({
 
   return (
     <div className="space-y-4">
-
       {(title || extraActions) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -237,55 +256,73 @@ export function DataTable<T extends object>({
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60">
-                  {visibleColumns.map((col) => (
-                    <th
-                      key={col.key}
-                      style={{ width: col.width }}
-                      onClick={() => handleHeaderClick(col.key, col.sortable)}
-                      className={`py-3.5 px-4 whitespace-nowrap ${
-                        col.align === 'right'
-                          ? 'text-right'
-                          : col.align === 'center'
-                          ? 'text-center'
-                          : 'text-left'
-                      } ${
-                        col.sortable
-                          ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
-                          : ''
-                      }`}
-                    >
-                      <div
-                        className={`inline-flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
-                          col.align === 'right'
-                            ? 'justify-end'
-                            : col.align === 'center'
-                            ? 'justify-center'
-                            : 'justify-start'
-                        }`}
-                      >
-                        <span className="tracking-tight whitespace-nowrap">{col.title}</span>
-                        {col.sortable && (
-                          <span className="shrink-0 transition-colors">
-                            {activeSortKey === col.key && activeSortOrder === 'asc' ? (
-                              <ArrowUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
-                            ) : activeSortKey === col.key && activeSortOrder === 'desc' ? (
-                              <ArrowDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
-                            ) : (
-                              <ChevronsUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60">
+                    {headerGroup.headers.map((header) => {
+                      const col = columns.find((c) => c.key === header.id)
+                      const isStickyRight = col?.sticky === 'right'
+                      const isStickyLeft = col?.sticky === 'left'
+                      const isSortable = header.column.getCanSort()
+                      const sortState = header.column.getIsSorted()
+
+                      return (
+                        <th
+                          key={header.id}
+                          style={{ width: col?.width, minWidth: col?.minWidth }}
+                          onClick={header.column.getToggleSortingHandler()}
+                          className={`py-3.5 px-3.5 whitespace-nowrap ${
+                            col?.align === 'right'
+                              ? 'text-right'
+                              : col?.align === 'center'
+                              ? 'text-center'
+                              : 'text-left'
+                          } ${
+                            isSortable
+                              ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
+                              : ''
+                          } ${
+                            isStickyRight
+                              ? 'sticky right-0 bg-slate-50/95 dark:bg-slate-950/95 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.4)]'
+                              : isStickyLeft
+                              ? 'sticky left-0 bg-slate-50/95 dark:bg-slate-950/95 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_6px_-2px_rgba(0,0,0,0.4)]'
+                              : ''
+                          }`}
+                        >
+                          <div
+                            className={`inline-flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
+                              col?.align === 'right'
+                                ? 'justify-end'
+                                : col?.align === 'center'
+                                ? 'justify-center'
+                                : 'justify-start'
+                            }`}
+                          >
+                            <span className="tracking-tight whitespace-nowrap">
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </span>
+                            {isSortable && (
+                              <span className="shrink-0 transition-colors">
+                                {sortState === 'asc' ? (
+                                  <ArrowUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
+                                ) : sortState === 'desc' ? (
+                                  <ArrowDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
+                                ) : (
+                                  <ChevronsUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
+                                )}
+                              </span>
                             )}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
+                          </div>
+                        </th>
+                      )
+                    })}
+                  </tr>
+                ))}
               </thead>
               <tbody className="text-slate-700 dark:text-slate-200 text-xs">
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={visibleColumns.length}
+                      colSpan={table.getVisibleLeafColumns().length || 1}
                       className="py-16 text-center text-slate-400"
                     >
                       <div className="flex flex-col items-center justify-center gap-2">
@@ -294,43 +331,51 @@ export function DataTable<T extends object>({
                       </div>
                     </td>
                   </tr>
-                ) : data.length === 0 ? (
+                ) : table.getRowModel().rows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={visibleColumns.length}
+                      colSpan={table.getVisibleLeafColumns().length || 1}
                       className="py-16 text-center text-slate-400"
                     >
                       {resolvedEmptyText}
                     </td>
                   </tr>
                 ) : (
-                  data.map((record, index) => (
+                  table.getRowModel().rows.map((row) => (
                     <tr
-                      key={rowKey(record)}
-                      onClick={() => onRowClick && onRowClick(record)}
-                      className={`border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100 ${
+                      key={rowKey(row.original)}
+                      onClick={() => onRowClick && onRowClick(row.original)}
+                      className={`group border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100 ${
                         onRowClick ? 'cursor-pointer' : ''
                       }`}
                     >
-                      {visibleColumns.map((col) => (
-                        <td
-                          key={col.key}
-                          style={{ width: col.width }}
-                          className={`${getCellPadding()} ${
-                            col.align === 'right'
-                              ? 'text-right'
-                              : col.align === 'center'
-                              ? 'text-center'
-                              : 'text-left'
-                          }`}
-                        >
-                          {col.render
-                            ? col.render(record, index)
-                            : col.dataIndex
-                            ? String(record[col.dataIndex] ?? '')
-                            : null}
-                        </td>
-                      ))}
+                      {row.getVisibleCells().map((cell) => {
+                        const col = columns.find((c) => c.key === cell.column.id)
+                        const isStickyRight = col?.sticky === 'right'
+                        const isStickyLeft = col?.sticky === 'left'
+
+                        return (
+                          <td
+                            key={cell.id}
+                            style={{ width: col?.width, minWidth: col?.minWidth }}
+                            className={`${getCellPadding()} ${
+                              col?.align === 'right'
+                                ? 'text-right'
+                                : col?.align === 'center'
+                                ? 'text-center'
+                                : 'text-left'
+                            } ${
+                              isStickyRight
+                                ? 'sticky right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.4)] transition-colors'
+                                : isStickyLeft
+                                ? 'sticky left-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_6px_-2px_rgba(0,0,0,0.4)] transition-colors'
+                                : ''
+                            }`}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        )
+                      })}
                     </tr>
                   ))
                 )}

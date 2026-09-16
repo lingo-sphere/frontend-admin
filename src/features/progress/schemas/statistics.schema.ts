@@ -1,7 +1,4 @@
-/**
- * @file statistics.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ statistics
- */
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ statistics trong Admin.
 
 import { z } from 'zod'
 

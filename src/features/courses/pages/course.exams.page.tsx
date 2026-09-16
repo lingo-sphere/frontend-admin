@@ -7,14 +7,14 @@ import { CourseExamStatsOverview } from '@/features/courses/components/course.ex
 import { CourseExamFilterBar } from '@/features/courses/components/course.exam.filter.bar'
 import { CourseExamHeaderActions } from '@/features/courses/components/course.exam.header.actions'
 import { CourseExamGridCard } from '@/features/courses/components/course.exam.grid.card'
+import { useNavigate } from 'react-router-dom'
 import { getCourseExamColumns } from '@/features/courses/components/course.exam.table.columns'
 import { useCourseExams } from '@/features/courses/hooks/use.course.exams'
-import { useAdminStore } from '@/store/admin.store'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function CourseExamsPage() {
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
 
   const {
     isVi,
@@ -51,7 +51,7 @@ export function CourseExamsPage() {
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    setActiveNavItem(`course-exam-questions:${exam._id || exam.id}`)
+    navigate(`/course-exams/${exam._id || exam.id}/questions`)
   }
 
   const columns = useMemo(
@@ -62,7 +62,7 @@ export function CourseExamsPage() {
         onOpenEdit: handleManageQuestions,
         onDelete: handleDeleteExam,
       }),
-    [isVi, handleTogglePublish, handleDeleteExam, setActiveNavItem]
+    [isVi, handleTogglePublish, handleDeleteExam, navigate]
   )
 
   return (
@@ -127,7 +127,7 @@ export function CourseExamsPage() {
               setCurrentPage(1)
             }}
             onRefresh={loadData}
-            onOpenCreateModal={() => setActiveNavItem('course-exam-create')}
+            onOpenCreateModal={() => navigate('/course-exams/create')}
           />
         }
         filterSlot={

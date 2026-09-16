@@ -11,13 +11,13 @@ export function usePlatformAnalytics() {
   const toeicQuery = useQuery<TOEICAnalyticsOverviewResponse>({
     queryKey: progressAdminKeys.toeicOverview(),
     queryFn: () => statisticsService.getToeicAnalyticsOverview(),
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 
   const aiQuery = useQuery<AiMetricsResponse>({
     queryKey: progressAdminKeys.aiMetrics(),
     queryFn: () => statisticsService.getAiMetrics(),
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 
   return {

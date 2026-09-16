@@ -7,8 +7,8 @@ import { PermissionsListTab } from '@/features/rbac/components/permissions.list.
 import { AssignRoleTab } from '@/features/rbac/components/assign.role.tab'
 import { PermissionModal } from '@/features/rbac/components/permission.modal'
 import {
-  usePermissionsQuery,
-  useRolesQuery,
+  useAllPermissionsQuery,
+  useAllRolesQuery,
   useRbacUsersQuery,
   useCreatePermissionMutation,
   useUpdatePermissionMutation,
@@ -18,19 +18,34 @@ import {
 
 type PermTabType = 'permissions' | 'assign'
 
+const RBAC_MODULES = [
+  'AUTH',
+  'USERS',
+  'COURSES',
+  'EXAMS',
+  'PRACTICE',
+  'PROGRESS',
+  'COMMUNITY',
+  'NOTIFICATIONS',
+  'MEDIA',
+  'AI',
+  'ROLES',
+  'PERMISSIONS',
+]
+
 export function PermissionsPage() {
   const [activeTab, setActiveTab] = useState<PermTabType>('permissions')
 
-  const { data: permissions = [], isLoading: isPermsLoading, refetch: refetchPerms } = usePermissionsQuery()
-  const { data: roles = [], isLoading: isRolesLoading, refetch: refetchRoles } = useRolesQuery()
-  const { data: users = [], isLoading: isUsersLoading, refetch: refetchUsers } = useRbacUsersQuery()
+  const { data: allRoles = [], isLoading: isRolesLoading, refetch: refetchRoles } = useAllRolesQuery(activeTab === 'assign')
+  const { data: users = [], isLoading: isUsersLoading, refetch: refetchUsers } = useRbacUsersQuery(activeTab === 'assign')
+  const [isPermModalOpen, setIsPermModalOpen] = useState(false)
+  const { data: allPermissions = [] } = useAllPermissionsQuery(isPermModalOpen)
 
   const { mutateAsync: createPermMutate } = useCreatePermissionMutation()
   const { mutateAsync: updatePermMutate } = useUpdatePermissionMutation()
   const { mutateAsync: deletePermMutate } = useDeletePermissionMutation()
   const { mutateAsync: assignRoleMutate } = useAssignRoleMutation()
 
-  const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [editingPerm, setEditingPerm] = useState<Permission | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -39,10 +54,12 @@ export function PermissionsPage() {
   const [assignRoleName, setAssignRoleName] = useState('ADMIN')
   const [isAssigning, setIsAssigning] = useState(false)
 
-  const isLoading = isPermsLoading || isRolesLoading || isUsersLoading
+  const isLoading = activeTab === 'assign' ? (isRolesLoading || isUsersLoading) : false
 
   const handleRefresh = async () => {
-    await Promise.all([refetchPerms(), refetchRoles(), refetchUsers()])
+    if (activeTab === 'assign') {
+      await Promise.all([refetchRoles(), refetchUsers()])
+    }
   }
 
   const handleOpenCreatePerm = () => {
@@ -114,10 +131,6 @@ export function PermissionsPage() {
     }
   }
 
-  const availableModules = Array.from(
-    new Set(permissions.map((p) => (p.module ? p.module : 'GENERAL').toUpperCase())),
-  )
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -154,7 +167,7 @@ export function PermissionsPage() {
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
-          <span>Danh Sách Quyền Hạn ({permissions.length})</span>
+          <span>Danh Sách Quyền Hạn</span>
         </button>
 
         <button
@@ -172,7 +185,6 @@ export function PermissionsPage() {
 
       {activeTab === 'permissions' && (
         <PermissionsListTab
-          permissions={permissions}
           onOpenCreatePerm={handleOpenCreatePerm}
           onOpenEditPerm={handleOpenEditPerm}
           onDeletePerm={handleDeletePerm}
@@ -188,7 +200,7 @@ export function PermissionsPage() {
           onUserSearchChange={setUserSearch}
           selectedUser={selectedUser}
           onSelectUser={setSelectedUser}
-          roles={roles}
+          roles={allRoles}
           assignRoleName={assignRoleName}
           onRoleNameChange={setAssignRoleName}
           onAssignRole={handleAssignRole}
@@ -202,8 +214,8 @@ export function PermissionsPage() {
         editingPerm={editingPerm}
         onSave={handleSavePerm}
         isSubmitting={isSubmitting}
-        availableModules={availableModules}
-        existingPermissions={permissions}
+        availableModules={RBAC_MODULES}
+        existingPermissions={allPermissions}
       />
     </div>
   )

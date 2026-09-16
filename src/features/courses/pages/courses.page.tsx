@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { Plus, RotateCcw, GraduationCap, FileCheck2 } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
 import { DataTable } from '@/components/data.table'
-import { useAdminStore } from '@/store/admin.store'
 import { usePermission } from '@/features/rbac/hooks/use.permission'
 import { Can } from '@/components/can'
 import { toast } from '@/store/toast.store'
@@ -26,7 +26,7 @@ import type { FilterCategory, FilterLevel, FilterStatus } from '@/features/cours
 export function CoursesPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
-  const setActiveNavItem = useAdminStore((state) => state.setActiveNavItem)
+  const navigate = useNavigate()
   const { can } = usePermission()
   const queryClient = useQueryClient()
 
@@ -57,10 +57,15 @@ export function CoursesPage() {
     const published = courses.filter((c) => c.is_published).length
     const totalStudents = courses.reduce((acc, c) => acc + (c.enrollments || 0), 0)
 
-    const scores = courses.map((c) => c.target_score).filter(Boolean)
-    const minScore = scores.length ? Math.min(...scores) : 450
-    const maxScore = scores.length ? Math.max(...scores) : 850
-    const targetBand = scores.length > 1 && minScore !== maxScore ? `${minScore} - ${maxScore}+` : `${maxScore || 750}+`
+    const scores = courses
+      .map((c) => c.target_score)
+      .filter((s): s is number => typeof s === 'number' && s > 0)
+    let targetBand = '-'
+    if (scores.length > 0) {
+      const minScore = Math.min(...scores)
+      const maxScore = Math.max(...scores)
+      targetBand = minScore !== maxScore ? `${minScore} - ${maxScore}+` : `${maxScore}+`
+    }
 
     return { total, published, totalStudents, targetBand }
   }, [courses])
@@ -124,7 +129,7 @@ export function CoursesPage() {
   }
 
   const handleEditCourse = (courseId: string) => {
-    setActiveNavItem(`course-edit:${courseId}`)
+    navigate(`/courses/${courseId}/edit`)
   }
 
   const handleDeleteCourse = async (courseId: string) => {
@@ -143,10 +148,10 @@ export function CoursesPage() {
       canDelete: can('DELETE', '/courses/:id'),
       onEdit: handleEditCourse,
       onDelete: handleDeleteCourse,
-      onViewSubmissions: (course) => setActiveNavItem(`course-submissions:${course.id}`),
-      onViewStudentScores: (course) => setActiveNavItem(`course-scores:${course.id}`),
+      onViewSubmissions: (course) => navigate(`/courses/${course.id}/submissions`),
+      onViewStudentScores: (course) => navigate(`/courses/${course.id}/scores`),
     })
-  }, [isVi, can, setActiveNavItem])
+  }, [isVi, can, navigate])
 
   return (
     <div className="space-y-6">
@@ -173,8 +178,8 @@ export function CoursesPage() {
             canDelete={can('DELETE', '/courses/:id')}
             onEdit={handleEditCourse}
             onDelete={handleDeleteCourse}
-            onViewSubmissions={(c) => setActiveNavItem(`course-submissions:${c.id}`)}
-            onViewScores={(c) => setActiveNavItem(`course-scores:${c.id}`)}
+            onViewSubmissions={(c) => navigate(`/courses/${c.id}/submissions`)}
+            onViewScores={(c) => navigate(`/courses/${c.id}/scores`)}
           />
         )}
         sortKey={sortKey}
@@ -188,14 +193,14 @@ export function CoursesPage() {
         extraActions={
           <>
             <button
-              onClick={() => setActiveNavItem('course-learners')}
+              onClick={() => navigate('/course-learners')}
               className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
             >
               <GraduationCap className="w-4 h-4" />
               <span>{isVi ? 'Quản lý học viên' : 'Learners'}</span>
             </button>
             <button
-              onClick={() => setActiveNavItem('course-exams')}
+              onClick={() => navigate('/course-exams')}
               className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
             >
               <FileCheck2 className="w-4 h-4" />
@@ -210,7 +215,7 @@ export function CoursesPage() {
             </button>
             <Can do="POST" on="/courses">
               <button
-                onClick={() => setActiveNavItem('course-create')}
+                onClick={() => navigate('/courses/create')}
                 className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />

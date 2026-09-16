@@ -141,7 +141,11 @@ function classifySkill(strVal: string): 'LISTENING' | 'READING' | 'SPEAKING' | '
   return 'UNKNOWN'
 }
 
-export async function downloadSampleZip(isVi = true, is4Skills = false): Promise<void> {
+export async function downloadSampleZip(
+  isVi = true,
+  is4Skills = false,
+  isLessonMode = false
+): Promise<void> {
   try {
     const zip = new JSZip()
 
@@ -226,7 +230,22 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
       },
     ]
 
-    const sampleQuestions = is4Skills ? allSampleQuestions : allSampleQuestions.slice(0, 4)
+    const sampleQuestions = isLessonMode
+      ? allSampleQuestions.slice(0, 3).map((q, idx) => ({
+          STT: idx + 1,
+          'Câu hỏi': q['Câu hỏi'],
+          'Lựa chọn A': q['Lựa chọn A'],
+          'Lựa chọn B': q['Lựa chọn B'],
+          'Lựa chọn C': q['Lựa chọn C'],
+          'Lựa chọn D': q['Lựa chọn D'],
+          'Đáp án đúng': q['Đáp án đúng'],
+          'File Audio': idx === 0 ? 'audio_q1.wav' : '',
+          'File Ảnh': idx === 0 ? 'image_q1.jpg' : '',
+          'Lời giải': q['Lời giải'],
+        }))
+      : is4Skills
+        ? allSampleQuestions
+        : allSampleQuestions.slice(0, 4)
 
     const worksheet = XLSX.utils.json_to_sheet(sampleQuestions)
     const workbook = XLSX.utils.book_new()
@@ -234,15 +253,30 @@ export async function downloadSampleZip(isVi = true, is4Skills = false): Promise
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     zip.file('questions.xlsx', excelBuffer)
 
-    const skillGuideline = is4Skills
-      ? '   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)'
-      : '   - Cot "Ky nang": Nghe hoac Doc (Listening hoac Reading)\n   - LUU Y: De thi 2 ky nang TUYET DOI KHONG chua ky nang Noi (Speaking) va Viet (Writing)!'
+    const skillGuideline = isLessonMode
+      ? ''
+      : is4Skills
+        ? '   - Cot "Ky nang": Nghe, Doc, Noi, hoac Viet (Listening, Reading, Speaking, Writing)\n'
+        : '   - Cot "Ky nang": Nghe hoac Doc (Listening hoac Reading)\n   - LUU Y: De thi 2 ky nang TUYET DOI KHONG chua ky nang Noi (Speaking) va Viet (Writing)!\n'
 
-    const readmeText = `=== HUONG DAN SOAN DE THI GOI ZIP CHO LINGOSPHERE ===
+    const readmeText = isLessonMode
+      ? `=== HUONG DAN SOAN BO CAU HOI ON TAP BAI HOC CHO LINGOSPHERE ===
 1. File questions.xlsx:
    - Cot "STT": So thu tu cau hoi (1, 2, 3...)
-${skillGuideline}
-   - Cot "Cau hoi": Noi dung cau hoi hoac de bai
+   - Cot "Cau hoi": Noi dung cau hoi on tap
+   - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
+   - Cot "Dap an dung": A, B, C hoac D
+   - Cot "File Audio": (Tuy chon) Ten file audio rieng cho cau hoi
+   - Cot "File Anh": (Tuy chon) Ten file hinh anh minh hoa
+   - Cot "Loi giai": Giai thich dap an chi tiet
+
+2. Thu muc media:
+   - Dat cac file audio (mp3, wav, m4a) va hinh anh (jpg, png, webp) vao thu muc "audios/" va "images/" hoac ngay thu muc goc.
+`
+      : `=== HUONG DAN SOAN DE THI GOI ZIP CHO LINGOSPHERE ===
+1. File questions.xlsx:
+   - Cot "STT": So thu tu cau hoi (1, 2, 3...)
+${skillGuideline}   - Cot "Cau hoi": Noi dung cau hoi hoac de bai
    - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
    - Cot "Dap an dung": A, B, C hoac D
    - Cot "File Audio": Ten file audio trong goi zip (audio_q1.wav, audio_q2.wav...)
@@ -258,21 +292,26 @@ ${skillGuideline}
     const dummyPngBase64 =
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
     zip.file('images/image_q1.jpg', dummyPngBase64, { base64: true })
-    zip.file('images/image_q4.png', dummyPngBase64, { base64: true })
+    if (!isLessonMode) {
+      zip.file('images/image_q4.png', dummyPngBase64, { base64: true })
+    }
 
     const sampleQ1Audio = createSampleAudioBytes(2, 440)
-    const sampleQ2Audio = createSampleAudioBytes(2, 554)
-
     zip.file('audios/audio_q1.wav', sampleQ1Audio)
-    zip.file('audios/audio_q2.wav', sampleQ2Audio)
+    if (!isLessonMode) {
+      const sampleQ2Audio = createSampleAudioBytes(2, 554)
+      zip.file('audios/audio_q2.wav', sampleQ2Audio)
+    }
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     const downloadUrl = URL.createObjectURL(zipBlob)
     const a = document.createElement('a')
     a.href = downloadUrl
-    a.download = is4Skills
-      ? 'GOI_DE_THI_MAU_TOEIC_4_KY_NANG.zip'
-      : 'GOI_DE_THI_MAU_TOEIC_2_KY_NANG.zip'
+    a.download = isLessonMode
+      ? 'GOI_CAU_HOI_ON_TAP_BAI_HOC_MAU.zip'
+      : is4Skills
+        ? 'GOI_DE_THI_MAU_TOEIC_4_KY_NANG.zip'
+        : 'GOI_DE_THI_MAU_TOEIC_2_KY_NANG.zip'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -288,7 +327,8 @@ export async function parseAndUploadZipExam(
   file: File,
   isVi: boolean,
   onProgress?: (status: string, current?: number, total?: number) => void,
-  is4Skills = false
+  is4Skills = false,
+  isLessonMode = false
 ): Promise<ParseZipResult> {
   const isDirectExcel = /\.(xlsx|xls|csv)$/i.test(file.name)
   const isZip = /\.(zip)$/i.test(file.name)
@@ -381,67 +421,69 @@ export async function parseAndUploadZipExam(
     throw new Error(isVi ? 'File Excel câu hỏi không có dòng dữ liệu nào!' : 'Question sheet is empty!')
   }
 
-  onProgress?.(isVi ? 'Đang kiểm tra tính tương thích cột kỹ năng...' : 'Validating skills compatibility...')
+  if (!isLessonMode) {
+    onProgress?.(isVi ? 'Đang kiểm tra tính tương thích cột kỹ năng...' : 'Validating skills compatibility...')
 
-  const invalidSkillDetails: string[] = []
+    const invalidSkillDetails: string[] = []
 
-  for (let idx = 0; idx < rawRows.length; idx++) {
-    const row = rawRows[idx]
-    let rowStt: string | number = idx + 1
-    let explicitSkillStr = ''
-    let explicitPartStr = ''
+    for (let idx = 0; idx < rawRows.length; idx++) {
+      const row = rawRows[idx]
+      let rowStt: string | number = idx + 1
+      let explicitSkillStr = ''
+      let explicitPartStr = ''
 
-    for (const [colName, val] of Object.entries(row)) {
-      const norm = normalizeKey(colName)
-      const strVal = String(val ?? '').trim()
-      if (!strVal) continue
+      for (const [colName, val] of Object.entries(row)) {
+        const norm = normalizeKey(colName)
+        const strVal = String(val ?? '').trim()
+        if (!strVal) continue
 
-      if (norm.includes('stt') || norm === 'no' || norm === 'number') {
-        rowStt = strVal
-      } else if (norm.includes('kynang') || norm.includes('skill')) {
-        explicitSkillStr = strVal
-      } else if (norm.includes('part') || norm.includes('phan') || norm.includes('loai') || norm.includes('type')) {
-        explicitPartStr = strVal
+        if (norm.includes('stt') || norm === 'no' || norm === 'number') {
+          rowStt = strVal
+        } else if (norm.includes('kynang') || norm.includes('skill')) {
+          explicitSkillStr = strVal
+        } else if (norm.includes('part') || norm.includes('phan') || norm.includes('loai') || norm.includes('type')) {
+          explicitPartStr = strVal
+        }
+      }
+
+      const testValues = [explicitSkillStr, explicitPartStr].filter(Boolean)
+      for (const val of testValues) {
+        const classified = classifySkill(val)
+        if (!is4Skills) {
+          if (classified === 'SPEAKING' || classified === 'WRITING' || classified === 'UNKNOWN') {
+            const excelLine = idx + 2
+            invalidSkillDetails.push(
+              isVi
+                ? `Dòng ${excelLine} (STT ${rowStt}: "${val}")`
+                : `Row ${excelLine} (No. ${rowStt}: "${val}")`
+            )
+            break
+          }
+        } else {
+          if (classified === 'UNKNOWN') {
+            const excelLine = idx + 2
+            invalidSkillDetails.push(
+              isVi
+                ? `Dòng ${excelLine} (STT ${rowStt}: "${val}")`
+                : `Row ${excelLine} (No. ${rowStt}: "${val}")`
+            )
+            break
+          }
+        }
       }
     }
 
-    const testValues = [explicitSkillStr, explicitPartStr].filter(Boolean)
-    for (const val of testValues) {
-      const classified = classifySkill(val)
-      if (!is4Skills) {
-        if (classified === 'SPEAKING' || classified === 'WRITING' || classified === 'UNKNOWN') {
-          const excelLine = idx + 2
-          invalidSkillDetails.push(
-            isVi
-              ? `Dòng ${excelLine} (STT ${rowStt}: "${val}")`
-              : `Row ${excelLine} (No. ${rowStt}: "${val}")`
-          )
-          break
-        }
-      } else {
-        if (classified === 'UNKNOWN') {
-          const excelLine = idx + 2
-          invalidSkillDetails.push(
-            isVi
-              ? `Dòng ${excelLine} (STT ${rowStt}: "${val}")`
-              : `Row ${excelLine} (No. ${rowStt}: "${val}")`
-          )
-          break
-        }
-      }
+    if (invalidSkillDetails.length > 0) {
+      const errorMsg = !is4Skills
+        ? isVi
+          ? `Khóa học / Đề thi này áp dụng TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe và Đọc). File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Hệ thống đã từ chối tải lên và không lưu media lên hệ thống lưu trữ R2. Vui lòng chỉnh sửa file chỉ gồm kỹ năng Nghe và Đọc!`
+          : `This course / exam is configured for TOEIC 2 Skills (Listening & Reading only). Uploaded file contains unsupported skills: ${invalidSkillDetails.join(', ')}. No media was uploaded to R2. Please ensure the file only contains Listening and Reading!`
+        : isVi
+          ? `File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Đề thi 4 Kỹ năng chỉ hỗ trợ các kỹ năng: Nghe, Đọc, Nói, Viết!`
+          : `Uploaded file contains invalid skills: ${invalidSkillDetails.join(', ')}. Only Listening, Reading, Speaking, and Writing are supported!`
+
+      throw new Error(errorMsg)
     }
-  }
-
-  if (invalidSkillDetails.length > 0) {
-    const errorMsg = !is4Skills
-      ? isVi
-        ? `Khóa học / Đề thi này áp dụng TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe và Đọc). File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Hệ thống đã từ chối tải lên và không lưu media lên hệ thống lưu trữ R2. Vui lòng chỉnh sửa file chỉ gồm kỹ năng Nghe và Đọc!`
-        : `This course / exam is configured for TOEIC 2 Skills (Listening & Reading only). Uploaded file contains unsupported skills: ${invalidSkillDetails.join(', ')}. No media was uploaded to R2. Please ensure the file only contains Listening and Reading!`
-      : isVi
-        ? `File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Đề thi 4 Kỹ năng chỉ hỗ trợ các kỹ năng: Nghe, Đọc, Nói, Viết!`
-        : `Uploaded file contains invalid skills: ${invalidSkillDetails.join(', ')}. Only Listening, Reading, Speaking, and Writing are supported!`
-
-    throw new Error(errorMsg)
   }
 
   const uploadedMap: Record<string, string> = {}
@@ -483,6 +525,7 @@ export async function parseAndUploadZipExam(
           uploadedMap[normalizeKey(baseNameNoExt)] = publicUrl
 
           if (
+            !isLessonMode &&
             isAudio &&
             !detectedGlobalAudioUrl &&
             (name.includes('full') ||
