@@ -6,16 +6,52 @@
 export interface LexicalItem {
   id: string
   word: string
+  word_lowercase?: string
+  slug?: string
+  // word_type = part_of_speech (ở cấp Meaning, không phải LexicalItem)
   word_type?: string
+  lexical_type?: 'word' | 'phrase' | 'phrasal_verb' | 'idiom' | 'collocation' | string
   cefr_level?: string
-  pronunciation_us?: string
-  pronunciation_uk?: string
+  pronunciation?: string
   audio_url_us?: string
+  audio_url_uk?: string
+  syllables?: number
+  stress_pattern?: string
+  frequency_rank?: number
+  is_root_word?: boolean
+  is_irregular?: boolean
+  is_active?: boolean
+  is_verified?: boolean
+  source?: string
   meanings_count?: number
   examples_count?: number
-  status?: string
-  is_verified?: boolean
+  // Optional detailed meanings (từ detail API)
+  meanings?: Array<{
+    meaning_order: number
+    part_of_speech: string
+    definition_en?: string  // Backend vẫn trả về cho compatibility
+    definition_vi: string
+    short_meaning_vi?: string
+    examples?: Array<{ sentence_en: string; sentence_vi?: string }>
+    synonyms?: string[]
+    antonyms?: string[]
+    is_primary?: boolean
+  }>
   created_at?: string
+  updated_at?: string
+}
+
+export const lexicalTypeLabels: Record<string, { vi: string; en: string }> = {
+  word: { vi: 'Từ đơn', en: 'Word' },
+  phrase: { vi: 'Cụm từ', en: 'Phrase' },
+  phrasal_verb: { vi: 'Cụm động từ', en: 'Phrasal Verb' },
+  idiom: { vi: 'Thành ngữ', en: 'Idiom' },
+  collocation: { vi: 'Cặp từ', en: 'Collocation' },
+}
+
+export const sourceLabels: Record<string, { vi: string; en: string }> = {
+  curated: { vi: 'Biên soạn', en: 'Curated' },
+  ingested: { vi: 'Nhập tự động', en: 'AI Ingested' },
 }
 
 export interface Topic {
@@ -54,6 +90,28 @@ export interface FlashcardDeck {
   is_featured?: boolean
   is_premium?: boolean
   created_at?: string
+}
+
+export interface IpaSymbol {
+  id: string
+  symbol: string
+  symbol_type?: 'VOWEL' | 'CONSONANT' | 'DIPHTHONG' | string
+  description_en?: string
+  description_vi?: string
+  example_word?: string
+  example_word_ipa?: string
+  audio_url?: string
+  example_audio_url?: string
+  related_symbols?: string[]
+  cefr_min_level?: string
+  status?: string
+  created_at?: string
+}
+
+export const ipaSymbolTypeLabels: Record<string, { vi: string; en: string; color: string }> = {
+  VOWEL: { vi: 'Nguyên âm', en: 'Vowel', color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+  CONSONANT: { vi: 'Phụ âm', en: 'Consonant', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  DIPHTHONG: { vi: 'Nguyên âm đôi', en: 'Diphthong', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
 }
 
 export interface VocabularyStats {

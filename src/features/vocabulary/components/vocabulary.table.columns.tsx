@@ -3,131 +3,290 @@
  * @description Component giao diện vocabulary-table-columns phục vụ khu vực Quản trị Admin
  */
 
-import { Volume2, Edit2, Trash2 } from 'lucide-react'
-import type { LexicalItem } from '@/features/vocabulary/data/vocabulary.data'
-import { wordTypeLabels } from '@/features/vocabulary/data/vocabulary.data'
-import type { DataTableColumn } from '@/components/data.table'
-import { Popconfirm } from '@/components/popconfirm'
-import { playAudio } from '@/features/vocabulary/helpers/vocabulary.helper'
+import {
+  Volume2,
+  Edit2,
+  Trash2,
+  AudioLines,
+  Hash,
+  Zap,
+  Star,
+  BookMarked,
+  Globe,
+  Eye,
+} from "lucide-react";
+import type { LexicalItem } from "@/features/vocabulary/data/vocabulary.data";
+import {
+  lexicalTypeLabels,
+  sourceLabels,
+} from "@/features/vocabulary/data/vocabulary.data";
+import type { DataTableColumn } from "@/components/data.table";
+import { Popconfirm } from "@/components/popconfirm";
+import { playAudio } from "@/features/vocabulary/helpers/vocabulary.helper";
 
 interface GetVocabularyColumnsOptions {
-  isVi?: boolean
-  onEditWord: (wordId: string) => void
-  onDeleteWord: (wordId: string) => Promise<void> | void
+  isVi?: boolean;
+  onEditWord: (wordId: string) => void;
+  onDeleteWord: (wordId: string) => Promise<void> | void;
+  onViewDetail?: (wordId: string) => void;
 }
 
 export function getVocabularyColumns({
   isVi = true,
   onEditWord,
   onDeleteWord,
+  onViewDetail,
 }: GetVocabularyColumnsOptions): DataTableColumn<LexicalItem>[] {
   return [
     {
-      key: 'word',
-      title: isVi ? 'Từ vựng & Phát âm' : 'Word & Phonetics',
+      key: "word",
+      title: isVi ? "Từ vựng & Phát âm" : "Word & Phonetics",
       sortable: true,
+      width: "w-[280px]",
       render: (w) => (
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => playAudio(w.audio_url_us)}
-            className="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-            title={isVi ? 'Nghe phát âm US' : 'Play US audio'}
-          >
-            <Volume2 className="w-4 h-4" />
-          </button>
-          <div>
-            <p className="font-bold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
-              {w.word}
-            </p>
-            <p className="font-mono text-xs text-slate-400">
-              {w.pronunciation_us ? `/${w.pronunciation_us}/` : '—'}
-            </p>
+          <div className="flex items-center gap-1">
+            {w.audio_url_us && (
+              <button
+                onClick={() => playAudio(w.audio_url_us)}
+                className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                title={isVi ? "Nghe phát âm US" : "Play US audio"}
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {w.audio_url_uk && (
+              <button
+                onClick={() => playAudio(w.audio_url_uk)}
+                className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                title={isVi ? "Nghe phát âm UK" : "Play UK audio"}
+              >
+                <AudioLines className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetail?.(w.id);
+                }}
+                className="font-bold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer truncate text-left"
+              >
+                {w.word}
+              </button>
+              {w.is_irregular && (
+                <span
+                  className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 shrink-0"
+                  title={isVi ? "Từ bất quy tắc" : "Irregular word"}
+                >
+                  {isVi ? "BTQ" : "IRR"}
+                </span>
+              )}
+              {w.is_root_word && (
+                <span
+                  className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 shrink-0"
+                  title={isVi ? "Từ gốc" : "Root word"}
+                >
+                  ROOT
+                </span>
+              )}
+            </div>
+            {w.pronunciation && (
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="font-mono text-xs text-slate-400">
+                  /{w.pronunciation}/
+                </p>
+              </div>
+            )}
           </div>
         </div>
       ),
     },
     {
-      key: 'type',
-      title: isVi ? 'Từ loại' : 'Part of Speech',
+      key: "lexical_type",
+      title: isVi ? "Loại từ" : "Lexical Type",
+      width: "w-[120px]",
       render: (w) => {
-        const typeInfo = w.word_type ? wordTypeLabels[w.word_type] : undefined
+        const typeInfo = w.lexical_type
+          ? lexicalTypeLabels[w.lexical_type]
+          : undefined;
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-            {typeInfo ? (isVi ? typeInfo.vi : typeInfo.en) : w.word_type || '—'}
+          <span className="px-2 py-1 rounded-md text-xs font-medium bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400">
+            {typeInfo
+              ? isVi
+                ? typeInfo.vi
+                : typeInfo.en
+              : w.lexical_type || "word"}
           </span>
-        )
+        );
       },
     },
+    // NOTE: word_type (Part of Speech) được hiển thị trong mỗi Meaning, không phải ở cấp LexicalItem
     {
-      key: 'cefr',
-      title: isVi ? 'Trình độ CEFR' : 'CEFR Level',
+      key: "cefr",
+      title: isVi ? "CEFR" : "CEFR",
+      width: "w-[70px]",
       sortable: true,
       render: (w) => (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-          {w.cefr_level || 'A1'}
+          {w.cefr_level || "A1"}
         </span>
       ),
     },
     {
-      key: 'content',
-      title: isVi ? 'Nghĩa & Ví dụ' : 'Definitions & Examples',
+      key: "phonetics",
+      title: isVi ? "Âm tiết" : "Syllables",
+      width: "w-[80px]",
+      render: (w) => (
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+          <Hash className="w-3 h-3 text-slate-400" />
+          <span>{w.syllables || 1}</span>
+          {w.stress_pattern && (
+            <span className="text-slate-400">/{w.stress_pattern}</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "frequency",
+      title: isVi ? "Tần suất" : "Freq",
+      width: "w-[70px]",
+      sortable: true,
+      render: (w) => (
+        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+          <Star className="w-3 h-3 text-amber-400" />
+          <span>{w.frequency_rank ? `#${w.frequency_rank}` : "—"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "content",
+      title: isVi ? "Nghĩa & Ví dụ" : "Definitions",
+      width: "w-[120px]",
       render: (w) => (
         <div className="text-xs text-slate-600 dark:text-slate-400">
-          <span>
-            {w.meanings_count || 1} {isVi ? 'định nghĩa' : 'meanings'}
+          <span className="font-medium">
+            {w.meanings_count || 1} {isVi ? "định nghĩa" : "defs"}
           </span>
           <span className="mx-1.5">•</span>
           <span>
-            {w.examples_count || 0} {isVi ? 'ví dụ câu' : 'examples'}
+            {w.examples_count || 0} {isVi ? "ví dụ" : "exs"}
           </span>
         </div>
       ),
     },
     {
-      key: 'status',
-      title: isVi ? 'Trạng thái' : 'Status',
+      key: "source",
+      title: isVi ? "Nguồn" : "Source",
+      width: "w-[100px]",
+      render: (w) => {
+        const sourceInfo = w.source ? sourceLabels[w.source] : undefined;
+        return (
+          <div className="flex items-center gap-1">
+            <Globe className="w-3 h-3 text-slate-400" />
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {sourceInfo
+                ? isVi
+                  ? sourceInfo.vi
+                  : sourceInfo.en
+                : w.source || "curated"}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      title: isVi ? "Trạng thái" : "Status",
+      width: "w-[100px]",
       render: (w) => (
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-            w.is_verified
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-          }`}
-        >
-          {w.is_verified ? (isVi ? 'Đã kiểm duyệt' : 'Verified') : (isVi ? 'Chờ duyệt' : 'Pending')}
+        <div className="flex flex-col gap-1">
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border w-fit ${
+              w.is_verified
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+            }`}
+          >
+            {w.is_verified
+              ? isVi
+                ? "Đã duyệt"
+                : "Verified"
+              : isVi
+              ? "Chờ duyệt"
+              : "Pending"}
+          </span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-medium border w-fit ${
+              w.is_active
+                ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20"
+                : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-700"
+            }`}
+          >
+            {w.is_active
+              ? isVi
+                ? "Hoạt động"
+                : "Active"
+              : isVi
+              ? "Khóa"
+              : "Inactive"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "created_at",
+      title: isVi ? "Ngày tạo" : "Created",
+      width: "w-[100px]",
+      sortable: true,
+      render: (w) => (
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {w.created_at
+            ? new Date(w.created_at).toLocaleDateString(
+                isVi ? "vi-VN" : "en-US",
+                {
+                  day: "2-digit",
+                  month: "short",
+                  year: "2-digit",
+                }
+              )
+            : "—"}
         </span>
       ),
     },
     {
-      key: 'actions',
-      title: isVi ? 'Thao tác' : 'Actions',
-      align: 'right',
+      key: "actions",
+      title: isVi ? "Thao tác" : "Actions",
+      width: "w-[80px]",
+      align: "right",
       render: (w) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => onEditWord(w.id)}
             className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title={isVi ? 'Chỉnh sửa từ vựng' : 'Edit vocabulary'}
+            title={isVi ? "Chỉnh sửa từ vựng" : "Edit vocabulary"}
             type="button"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           <Popconfirm
-            title={isVi ? 'Xóa từ vựng này?' : 'Delete this word?'}
+            title={isVi ? "Xóa từ vựng này?" : "Delete this word?"}
             description={
               isVi
-                ? 'Hành động này không thể hoàn tác.'
-                : 'This action cannot be undone.'
+                ? "Hành động này không thể hoàn tác."
+                : "This action cannot be undone."
             }
-            okText={isVi ? 'Xóa' : 'Delete'}
-            cancelText={isVi ? 'Hủy' : 'Cancel'}
+            okText={isVi ? "Xóa" : "Delete"}
+            cancelText={isVi ? "Hủy" : "Cancel"}
             okType="danger"
             placement="topRight"
             onConfirm={() => onDeleteWord(w.id)}
           >
             <button
               className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-              title={isVi ? 'Xóa từ vựng' : 'Delete word'}
+              title={isVi ? "Xóa từ vựng" : "Delete word"}
               type="button"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -136,5 +295,5 @@ export function getVocabularyColumns({
         </div>
       ),
     },
-  ]
+  ];
 }

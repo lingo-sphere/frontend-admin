@@ -1,6 +1,6 @@
 // Trang quan tri tao moi va chinh sua tu vung kem quan ly ngu nghia trong Admin.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
@@ -39,6 +39,39 @@ export function VocabularyFormPage({
     },
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Tải dữ liệu cũ khi ở chế độ chỉnh sửa (isEditing)
+  useEffect(() => {
+    if (currentEditId) {
+      vocabularyService
+        .getLexicalItemById(currentEditId)
+        .then((data) => {
+          if (data) {
+            setWord(data.word || '')
+            setWordType(data.word_type || 'NOUN')
+            setCefrLevel(data.cefr_level || 'B1')
+            setPronunciationUs(data.pronunciation_us || '')
+            setPronunciationUk(data.pronunciation_uk || '')
+            setAudioUrlUs(data.audio_url_us || '')
+            if (data.meanings && data.meanings.length > 0) {
+              setMeanings(
+                data.meanings.map((m, idx) => ({
+                  id: `mean-${idx}-${Date.now()}`,
+                  part_of_speech: m.part_of_speech || data.word_type || 'NOUN',
+                  definition_en: m.definition_en || '',
+                  definition_vi: m.definition_vi || '',
+                  short_meaning_vi: m.short_meaning_vi || '',
+                  examples: m.examples && m.examples.length > 0 ? m.examples : [''],
+                }))
+              )
+            }
+          }
+        })
+        .catch(() => {
+          toast.error('Không thể tải thông tin từ vựng')
+        })
+    }
+  }, [currentEditId])
 
   const addMeaning = () => {
     setMeanings([
@@ -94,7 +127,10 @@ export function VocabularyFormPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!word.trim()) return
+    if (!word.trim()) {
+      toast.error('Vui lòng nhập từ vựng')
+      return
+    }
 
     setIsSubmitting(true)
     try {
@@ -117,6 +153,7 @@ export function VocabularyFormPage({
         audio_url_us: audioUrlUs || undefined,
         meanings: formattedMeanings,
       })
+
       toast.success(
         isEditing
           ? 'Cập nhật từ vựng thành công!'

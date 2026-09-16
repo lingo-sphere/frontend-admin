@@ -192,9 +192,34 @@ function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): 
 
 export const api = {
   async get<T>(url: string, params?: Record<string, unknown>, schema?: ZodType<T>): Promise<T> {
-    const res = await apiClient.get<ApiResponse<T> | T>(url, { params })
-    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
-    return parseWithSchema<T>(raw, schema, url)
+    const res = await apiClient.get<any>(url, { params })
+
+    // Handle multiple response formats
+    const responseData = res.data
+    let raw: unknown
+
+    if (Array.isArray(responseData)) {
+      raw = responseData
+    } else if (responseData && typeof responseData === 'object') {
+      // Paginated response from TransformInterceptor
+      if ('items' in responseData && Array.isArray((responseData as any).items)) {
+        raw = responseData
+      }
+      // Standard response
+      else if ('data' in responseData) {
+        if (Array.isArray((responseData as any).data)) {
+          raw = (responseData as any).data
+        } else {
+          raw = (responseData as any).data
+        }
+      } else {
+        raw = responseData
+      }
+    } else {
+      raw = responseData
+    }
+
+    return parseWithSchema<T>(raw as T, schema, url)
   },
 
   async post<T>(url: string, data?: unknown, schema?: ZodType<T>): Promise<T> {
