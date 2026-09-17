@@ -1,6 +1,6 @@
 // Tien ich phan tich giai nen goi zip va rar de thi va tai len media len he thong luu tru.
 
-import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
+import type { ExamQuestionItem } from '@/features/courses/types/exam.question.types'
 import { mediaAdminService } from '@/features/media/services/media.service'
 import { toast } from '@/store/toast.store'
 import JSZip from 'jszip'
