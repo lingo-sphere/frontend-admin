@@ -31,7 +31,7 @@ export function Pagination({
   pageText,
   onPrefetchPage,
 }: PaginationProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
   const [jumpValue, setJumpValue] = useState('')
@@ -90,7 +90,11 @@ export function Pagination({
     <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4 py-3 text-[13px] text-slate-600 dark:text-slate-300 select-none">
       {showTotal && totalItems !== undefined && (
         <div className="mr-auto text-xs text-slate-500 dark:text-slate-400">
-          Hiển thị <strong>{totalItems}</strong> bản ghi
+          {isVi ? (
+            <>Hiển thị <strong>{totalItems}</strong> bản ghi</>
+          ) : (
+            <>Showing <strong>{totalItems}</strong> records</>
+          )}
         </div>
       )}
 
@@ -102,7 +106,7 @@ export function Pagination({
               ? 'opacity-35 pointer-events-none text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-900/50'
               : 'text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400'
           }`}
-          title="Trang trước"
+          title={t('common.previousPage')}
         >
           <ChevronLeft className="w-4 h-4 stroke-[1.75]" />
         </li>
@@ -139,7 +143,7 @@ export function Pagination({
               ? 'opacity-35 pointer-events-none text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-900/50'
               : 'text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400'
           }`}
-          title="Trang sau"
+          title={t('common.nextPage')}
         >
           <ChevronRight className="w-4 h-4 stroke-[1.75]" />
         </li>

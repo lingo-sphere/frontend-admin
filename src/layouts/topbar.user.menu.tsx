@@ -1,6 +1,7 @@
-// Admin user profile dropdown menu with navigation shortcuts and sign out trigger.
+// Menu hồ sơ người dùng quản trị viên trên thanh điều hướng topbar.
 
 import type { RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, User as UserIcon, Shield, LogOut } from 'lucide-react'
 import type { UserProfile, AuthUser } from '@/types/api.types'
 
@@ -29,8 +30,8 @@ export function TopbarUserMenu({
   onNavigateProfile,
   onNavigateSettings,
   onTriggerLogout,
-  isVietnamese,
 }: TopbarUserMenuProps) {
+  const { t } = useTranslation()
   const avatarUrl = profile?.avatar_url
   const fullName = profile?.full_name || user?.full_name || profile?.email || user?.email || ''
   const email = profile?.email || user?.email || ''
@@ -70,7 +71,7 @@ export function TopbarUserMenu({
             {fullName}
           </span>
           <span className="text-[11px] font-semibold text-teal-600 dark:text-teal-400">
-            {role === 'ADMIN' ? (isVietnamese ? 'Quản trị viên' : 'Administrator') : role}
+            {role === 'ADMIN' ? t('header.adminRole') : role}
           </span>
         </div>
         <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -104,7 +105,7 @@ export function TopbarUserMenu({
             type="button"
           >
             <UserIcon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-            <span>{isVietnamese ? 'Hồ sơ cá nhân' : 'My Profile'}</span>
+            <span>{t('header.myProfile')}</span>
           </button>
 
           <button
@@ -113,7 +114,7 @@ export function TopbarUserMenu({
             type="button"
           >
             <Shield className="w-3.5 h-3.5 text-teal-500 dark:text-teal-400" />
-            <span>{isVietnamese ? 'Cài đặt hệ thống' : 'System Settings'}</span>
+            <span>{t('header.systemSettings')}</span>
           </button>
 
           <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
@@ -124,7 +125,7 @@ export function TopbarUserMenu({
             type="button"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>{isVietnamese ? 'Đăng xuất' : 'Sign Out'}</span>
+            <span>{t('auth.logout')}</span>
           </button>
         </div>
       )}

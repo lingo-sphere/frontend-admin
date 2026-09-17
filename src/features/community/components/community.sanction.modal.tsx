@@ -1,11 +1,12 @@
-// Modal kỷ luật học viên gồm cấm vĩnh viễn, tắt tiếng và trục xuất có thời gian chờ
+// Modal kỷ luật học viên gồm cấm vĩnh viễn, tắt tiếng và trục xuất có thời gian chờ.
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Ban, VolumeX, ShieldAlert, X, Loader2, Clock, Check } from 'lucide-react'
 import { CommunityUserPicker } from '@/features/community/components/community.user.picker'
 import {
   CommunitySanctionDurationPicker,
-  MUTE_DURATION_OPTIONS,
-  KICK_COOLDOWN_OPTIONS,
+  getMuteDurationLabel,
+  getKickCooldownLabel,
 } from '@/features/community/components/community.sanction.duration.picker'
 import type { UserProfile } from '@/features/users/schemas/user.schema'
 import type { SanctionActionType } from '@/features/community/types/community.admin.types'
@@ -40,6 +41,7 @@ export function CommunitySanctionModal({
   initialTargetUser,
   onSanction,
 }: CommunitySanctionModalProps) {
+  const { t } = useTranslation()
   const [action, setAction] = useState<SanctionActionType>('MUTE')
   const [targetUserId, setTargetUserId] = useState('')
   const [selectedLearner, setSelectedLearner] = useState<UserProfile | null>(null)
@@ -119,11 +121,11 @@ export function CommunitySanctionModal({
   const getActionSubmitText = () => {
     switch (action) {
       case 'BAN':
-        return 'Xác nhận cấm vĩnh viễn'
+        return t('community.confirmBan')
       case 'MUTE':
-        return `Xác nhận tắt tiếng (${MUTE_DURATION_OPTIONS.find((o) => o.value === muteDuration)?.label})`
+        return t('community.confirmMute', { duration: getMuteDurationLabel(muteDuration, t) })
       case 'KICK':
-        return `Xác nhận trục xuất (${KICK_COOLDOWN_OPTIONS.find((o) => o.value === kickCooldown)?.label})`
+        return t('community.confirmKick', { duration: getKickCooldownLabel(kickCooldown, t) })
     }
   }
 
@@ -143,10 +145,10 @@ export function CommunitySanctionModal({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Kỷ luật học viên vi phạm
+                {t('community.sanctionModalTitle')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Áp dụng chế tài đối với thành viên phòng chat cộng đồng
+                {t('community.sanctionModalSubtitle')}
               </p>
             </div>
           </div>
@@ -193,7 +195,7 @@ export function CommunitySanctionModal({
                   </div>
                 </div>
                 <span className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 flex-shrink-0">
-                  Từ tin nhắn
+                  {t('community.fromMessage')}
                 </span>
               </div>
             ) : (
@@ -212,7 +214,7 @@ export function CommunitySanctionModal({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Hình thức kỷ luật:
+                {t('community.actionTypeLabel')}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -228,8 +230,8 @@ export function CommunitySanctionModal({
                     <Ban className="w-4 h-4 text-rose-600" />
                     {action === 'BAN' && <Check className="w-3.5 h-3.5 text-rose-600" />}
                   </div>
-                  <span className="text-xs font-bold">Cấm vĩnh viễn</span>
-                  <span className="text-[10px] text-slate-400 line-clamp-1">Chặn vào phòng</span>
+                  <span className="text-xs font-bold">{t('community.banLabel')}</span>
+                  <span className="text-[10px] text-slate-400 line-clamp-1">{t('community.banSub')}</span>
                 </button>
 
                 <button
@@ -245,8 +247,8 @@ export function CommunitySanctionModal({
                     <VolumeX className="w-4 h-4 text-amber-600" />
                     {action === 'MUTE' && <Check className="w-3.5 h-3.5 text-amber-600" />}
                   </div>
-                  <span className="text-xs font-bold">Tắt tiếng</span>
-                  <span className="text-[10px] text-slate-400 line-clamp-1">Khóa chat tạm thời</span>
+                  <span className="text-xs font-bold">{t('community.muteLabel')}</span>
+                  <span className="text-[10px] text-slate-400 line-clamp-1">{t('community.muteSub')}</span>
                 </button>
 
                 <button
@@ -262,8 +264,8 @@ export function CommunitySanctionModal({
                     <Clock className="w-4 h-4 text-orange-600" />
                     {action === 'KICK' && <Check className="w-3.5 h-3.5 text-orange-600" />}
                   </div>
-                  <span className="text-xs font-bold">Trục xuất</span>
-                  <span className="text-[10px] text-slate-400 line-clamp-1">Đuổi & Cooldown</span>
+                  <span className="text-xs font-bold">{t('community.kickLabel')}</span>
+                  <span className="text-[10px] text-slate-400 line-clamp-1">{t('community.kickSub')}</span>
                 </button>
               </div>
             </div>
@@ -278,14 +280,14 @@ export function CommunitySanctionModal({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Lý do kỷ luật vi phạm (Bắt buộc):
+                {t('community.reasonLabel')}
               </label>
               <textarea
                 required
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Ví dụ: Spam tin nhắn, phát ngôn thô tục hoặc quảng cáo không đúng nơi quy định..."
+                placeholder={t('community.reasonPlaceholder')}
                 className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
               />
             </div>
@@ -298,7 +300,7 @@ export function CommunitySanctionModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
             >
-              Hủy bỏ
+              {t('common.cancel')}
             </button>
             <button
               type="submit"

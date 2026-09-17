@@ -1,8 +1,4 @@
-/**
- * @file sidebar.tsx
- * @description Admin navigation sidebar component with collapsible layout, permission checks, and multi-level routing
- */
-
+// Thanh điều hướng thanh bên Admin hỗ trợ thu gọn và phân quyền truy cập.
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PanelLeftClose, Shield } from 'lucide-react'
@@ -158,7 +154,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       ...group,
       label: groupLabel,
       items: group.items.map((item) => {
-        const itemKey = `nav.${toCamelCase(item.id)}`
+        const itemKey = item.id === 'community' ? 'nav.communityNav' : `nav.${toCamelCase(item.id)}`
         const itemTranslated = t(itemKey)
         const itemLabel =
           itemTranslated && itemTranslated !== itemKey ? itemTranslated : item.label
@@ -167,7 +163,10 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           ...item,
           label: itemLabel,
           children: item.children?.map((child) => {
-            const childKey = `nav.${toCamelCase(child.id)}`
+            const childKey =
+              child.id === 'progress' && item.id === 'progress'
+                ? 'nav.progressLingosphere'
+                : `nav.${toCamelCase(child.id)}`
             const childTranslated = t(childKey)
             const childLabel =
               childTranslated && childTranslated !== childKey
@@ -190,7 +189,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         <button
           onClick={() => handleNavigate('dashboard')}
           type="button"
-          title={isVietnamese ? 'Về trang Tổng quan (Dashboard)' : 'Go to Dashboard'}
+          title={isVietnamese ? 'Về trang Tổng quan' : 'Go to Dashboard'}
           className={`w-full shrink-0 flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-all ${
             sidebarCollapsed && !mobile ? 'justify-center' : ''
           }`}
@@ -206,7 +205,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
                 <p className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">
-                  Admin Console
+                  {t('common.adminConsole')}
                 </p>
               </div>
             </div>
@@ -241,7 +240,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           >
             <PanelLeftClose className="w-4 h-4 shrink-0" />
             {!sidebarCollapsed && (
-              <span>{isVietnamese ? 'Thu gọn menu' : 'Collapse'}</span>
+              <span>{t('nav.collapseMenu')}</span>
             )}
           </button>
         )}

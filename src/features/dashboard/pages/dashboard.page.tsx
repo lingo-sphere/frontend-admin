@@ -138,7 +138,7 @@ export function DashboardPage() {
 
           <button
             onClick={fetchDashboardData}
-            title="Làm mới dữ liệu"
+            title={isVietnamese ? 'Làm mới dữ liệu' : 'Refresh data'}
             className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-xs cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isLoadingStats ? 'animate-spin text-teal-500' : 'text-slate-400'}`} />
@@ -208,7 +208,9 @@ export function DashboardPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">User & Auth Gateway</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">24ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
+                24ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
+              </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
@@ -216,7 +218,9 @@ export function DashboardPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Course & Curriculum Service</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">38ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
+                38ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
+              </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
@@ -224,7 +228,9 @@ export function DashboardPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Vocabulary & Spaced Repetition</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">19ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
+                19ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
+              </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
@@ -232,7 +238,9 @@ export function DashboardPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">AI Assessment (Gemini 2.5)</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">240ms · Online</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
+                240ms · {isVietnamese ? 'Trực tuyến' : 'Online'}
+              </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
@@ -240,7 +248,9 @@ export function DashboardPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">TOEIC Exam Engine</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">32ms · Healthy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
+                32ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
+              </span>
             </div>
           </div>
         </div>

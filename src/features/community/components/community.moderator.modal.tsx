@@ -1,5 +1,6 @@
 // Modal thiết lập phó nhóm phòng chat và cấu hình phân quyền kiểm duyệt chi tiết với hỗ trợ chọn nhiều người dùng bằng checkbox.
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from '@/store/toast.store'
 import {
   ShieldCheck,
@@ -35,57 +36,6 @@ export const DEFAULT_MODERATOR_PERMISSIONS: AdminModeratorPermissions = {
   can_pin_messages: true,
 }
 
-const PERMISSION_CONFIG: {
-  key: keyof AdminModeratorPermissions
-  title: string
-  description: string
-  icon: typeof Trash2
-  color: string
-}[] = [
-  {
-    key: 'can_delete_messages',
-    title: 'Xóa tin nhắn vi phạm',
-    description: 'Xóa các tin nhắn rác hoặc vi phạm tiêu chuẩn phòng chat',
-    icon: Trash2,
-    color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/40',
-  },
-  {
-    key: 'can_pin_messages',
-    title: 'Ghim tin nhắn quan trọng',
-    description: 'Ghim hoặc bỏ ghim thông báo, quy tắc lên đầu phòng chat',
-    icon: Pin,
-    color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/40',
-  },
-  {
-    key: 'can_mute_members',
-    title: 'Cấm phát ngôn (Mute)',
-    description: 'Tắt tiếng tạm thời đối với học viên spam nội dung',
-    icon: VolumeX,
-    color: 'text-orange-500 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-900/40',
-  },
-  {
-    key: 'can_kick_members',
-    title: 'Đuổi khỏi phòng (Kick)',
-    description: 'Đuổi học viên ra khỏi phòng chat kèm thời gian chờ',
-    icon: UserMinus,
-    color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900/40',
-  },
-  {
-    key: 'can_ban_members',
-    title: 'Cấm vĩnh viễn (Ban)',
-    description: 'Đưa học viên vào danh sách đen, chặn quyền trò chuyện',
-    icon: Ban,
-    color: 'text-rose-600 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/40',
-  },
-  {
-    key: 'can_toggle_room_chat',
-    title: 'Khóa / mở chat toàn phòng',
-    description: 'Bật hoặc tắt tính năng trò chuyện của toàn bộ phòng học',
-    icon: Lock,
-    color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900/40',
-  },
-]
-
 export function CommunityModeratorModal({
   isOpen,
   onClose,
@@ -93,6 +43,7 @@ export function CommunityModeratorModal({
   initialPermissions,
   onSave,
 }: CommunityModeratorModalProps) {
+  const { t } = useTranslation()
   const [targetUserIdInput, setTargetUserIdInput] = useState(initialUserId)
   const [permissions, setPermissions] = useState<AdminModeratorPermissions>(
     initialPermissions || DEFAULT_MODERATOR_PERMISSIONS
@@ -108,6 +59,51 @@ export function CommunityModeratorModal({
       setIsSubmitting(false)
     }
   }, [isOpen, initialUserId, initialPermissions])
+
+  const permissionConfig = useMemo(() => [
+    {
+      key: 'can_delete_messages' as const,
+      title: t('community.permTitleDeleteMsg'),
+      description: t('community.permDescDeleteMsg'),
+      icon: Trash2,
+      color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/40',
+    },
+    {
+      key: 'can_pin_messages' as const,
+      title: t('community.permTitlePinMsg'),
+      description: t('community.permDescPinMsg'),
+      icon: Pin,
+      color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/40',
+    },
+    {
+      key: 'can_mute_members' as const,
+      title: t('community.permTitleMute'),
+      description: t('community.permDescMute'),
+      icon: VolumeX,
+      color: 'text-orange-500 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-900/40',
+    },
+    {
+      key: 'can_kick_members' as const,
+      title: t('community.permTitleKick'),
+      description: t('community.permDescKick'),
+      icon: UserMinus,
+      color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900/40',
+    },
+    {
+      key: 'can_ban_members' as const,
+      title: t('community.permTitleBan'),
+      description: t('community.permDescBan'),
+      icon: Ban,
+      color: 'text-rose-600 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/40',
+    },
+    {
+      key: 'can_toggle_room_chat' as const,
+      title: t('community.permTitleToggleChat'),
+      description: t('community.permDescToggleChat'),
+      icon: Lock,
+      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900/40',
+    },
+  ], [t])
 
   if (!isOpen) return null
 
@@ -136,7 +132,7 @@ export function CommunityModeratorModal({
           .filter(Boolean)
 
     if (targetIds.length === 0) {
-      toast.error('Vui lòng chọn ít nhất một người dùng để bổ nhiệm làm phó nhóm')
+      toast.error(t('community.selectAtLeastOne'))
       return
     }
 
@@ -144,7 +140,7 @@ export function CommunityModeratorModal({
       const role = (learner.role || '').toUpperCase()
       const isAllowed = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR', 'TEACHER'].includes(role)
       if (!isAllowed) {
-        toast.error(`Tài khoản ${learner.full_name} không phải Quản trị viên hoặc Giáo viên`)
+        toast.error(t('community.invalidRole', { name: learner.full_name }))
         return
       }
     }
@@ -174,7 +170,7 @@ export function CommunityModeratorModal({
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-indigo-600" />
-            <span>Thiết lập phó nhóm & phân quyền</span>
+            <span>{t('community.modModalTitle')}</span>
           </h3>
           <button
             onClick={onClose}
@@ -199,15 +195,18 @@ export function CommunityModeratorModal({
             <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Tùy chọn phân quyền chi tiết
+                  {t('community.detailedPerms')}
                 </span>
                 <span className="text-[11px] font-medium text-slate-400">
-                  {Object.values(permissions).filter(Boolean).length} / {PERMISSION_CONFIG.length} quyền kích hoạt
+                  {t('community.permsActiveCount', {
+                    active: Object.values(permissions).filter(Boolean).length,
+                    total: permissionConfig.length,
+                  })}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {PERMISSION_CONFIG.map((perm) => {
+                {permissionConfig.map((perm) => {
                   const isEnabled = Boolean(permissions[perm.key])
                   const Icon = perm.icon
 
@@ -269,7 +268,7 @@ export function CommunityModeratorModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              Hủy bỏ
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -277,10 +276,10 @@ export function CommunityModeratorModal({
               className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 shadow-sm transition-all cursor-pointer"
             >
               {isSubmitting
-                ? 'Đang lưu...'
+                ? t('community.saving')
                 : selectedCount > 1
-                ? `Lưu bổ nhiệm (${selectedCount} người)`
-                : 'Lưu bổ nhiệm'}
+                ? t('community.saveModMultiple', { count: selectedCount })
+                : t('community.saveModSingle')}
             </button>
           </div>
         </form>

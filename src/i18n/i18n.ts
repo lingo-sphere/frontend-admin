@@ -1,8 +1,4 @@
-/**
- * @file i18n.ts
- * @description Mã nguồn thành phần index.ts
- */
-
+// Cấu hình quốc tế hóa i18next hỗ trợ đa ngôn ngữ cho ứng dụng Quản trị Admin.
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
@@ -21,13 +17,17 @@ i18n
   .init({
     resources,
     fallbackLng: 'vi',
+    supportedLngs: ['vi', 'en'],
+    load: 'languageOnly',
     interpolation: {
       escapeValue: false,
     },
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng',
     },
   })
 
 export default i18n
+

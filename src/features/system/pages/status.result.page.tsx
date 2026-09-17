@@ -1,7 +1,7 @@
-// Trang giao diện thông báo trạng thái 403 và 404 sử dụng Ant Design Result cho hệ thống Quản trị.
-
+// Trang giao diện thông báo trạng thái 403, 404 và 500 sử dụng Ant Design Result hỗ trợ đa ngôn ngữ
 import { Result, Button } from 'antd'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 interface StatusResultPageProps {
   status: '403' | '404' | '500'
@@ -16,17 +16,18 @@ export function StatusResultPage({
   title,
   subTitle,
   backUrl = '/dashboard',
-  backText = 'Quay lại Trang chủ',
+  backText,
 }: StatusResultPageProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
-  const defaultTitle = status === '403' ? '403' : status === '404' ? '404' : '500'
+  const defaultTitle = status === '403' ? t('errors.forbidden') : status === '404' ? t('errors.notFound') : t('errors.serverError')
   const defaultSubTitle =
     status === '403'
-      ? 'Xin lỗi, bạn không có quyền truy cập vào trang này.'
+      ? t('errors.forbiddenDesc')
       : status === '404'
-        ? 'Xin lỗi, trang bạn truy cập không tồn tại hoặc đã bị gỡ bỏ.'
-        : 'Đã xảy ra sự cố hệ thống khi xử lý yêu cầu.'
+        ? t('errors.notFoundDesc')
+        : t('errors.serverErrorDesc')
 
   return (
     <div className="flex min-h-[70vh] w-full items-center justify-center p-4">
@@ -38,10 +39,10 @@ export function StatusResultPage({
           <Button
             type="primary"
             size="large"
-            className="font-semibold"
+            className="font-semibold cursor-pointer"
             onClick={() => navigate(backUrl)}
           >
-            {backText}
+            {backText || t('common.back')}
           </Button>
         }
       />

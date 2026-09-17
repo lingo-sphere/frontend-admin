@@ -1,9 +1,7 @@
-/**
- * @file login.page.tsx
- * @description Trang quản trị LoginPage trong giao diện Admin
- */
+// Trang quản trị LoginPage trong giao diện Admin.
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Eye,
   EyeOff,
@@ -20,6 +18,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('admin@lingosphere.local')
   const [password, setPassword] = useState('admin123')
   const [showPassword, setShowPassword] = useState(false)
@@ -33,7 +32,7 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
-      setErrorMessage('Vui lòng nhập đầy đủ Email và Mật khẩu')
+      setErrorMessage(t('auth.requiredEmailPassword'))
       return
     }
 
@@ -42,11 +41,11 @@ export function LoginPage() {
 
     try {
       await login({ email, password, rememberMe })
-      toast.success('Đăng nhập thành công! Chào mừng bạn quay trở lại.', 'Xác thực thành công')
+      toast.success(t('auth.loginSuccess'))
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công. Vui lòng thử lại.'
+      const msg = err instanceof Error ? err.message : t('auth.loginFailed')
       setErrorMessage(msg)
-      toast.error(msg, 'Đăng nhập thất bại')
+      toast.error(msg)
     } finally {
       setIsSubmitting(false)
     }
@@ -75,7 +74,7 @@ export function LoginPage() {
               LingoSphere <span className="text-indigo-600 dark:text-indigo-400">Admin</span>
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-              Hệ thống Quản trị & Điều hành Nền tảng Học tiếng Anh
+              {t('auth.loginSubtitle')}
             </p>
           </div>
         </div>
@@ -90,7 +89,7 @@ export function LoginPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Email Quản trị viên
+              {t('auth.email')}
             </label>
             <div className="flex items-center w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 focus-within:border-indigo-600 focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all gap-3">
               <Mail className="w-4 h-4 text-slate-400 shrink-0" />
@@ -108,13 +107,13 @@ export function LoginPage() {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Mật khẩu
+                {t('auth.password')}
               </label>
               <button
                 type="button"
                 className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors cursor-pointer"
               >
-                Quên mật khẩu?
+                {t('auth.forgotPassword')}
               </button>
             </div>
             <div className="flex items-center w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 focus-within:border-indigo-600 focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all gap-3">
@@ -131,7 +130,7 @@ export function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 transition-colors shrink-0 cursor-pointer"
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -146,7 +145,7 @@ export function LoginPage() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded bg-slate-100 border-slate-300 text-indigo-600 focus:ring-indigo-500/30 accent-indigo-600 cursor-pointer"
               />
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Ghi nhớ đăng nhập</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('auth.rememberMe')}</span>
             </label>
           </div>
 
@@ -158,11 +157,11 @@ export function LoginPage() {
             {isSubmitting ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Đang xác thực...</span>
+                <span>{t('auth.authenticating')}</span>
               </>
             ) : (
               <>
-                <span>Đăng nhập Quản trị</span>
+                <span>{t('auth.loginButton')}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -173,9 +172,9 @@ export function LoginPage() {
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Tài khoản Demo nhanh:</span>
+              <span>{t('auth.demoAccounts')}</span>
             </p>
-            <span className="text-[10px] text-slate-400 font-medium">Bấm để tự điền</span>
+            <span className="text-[10px] text-slate-400 font-medium">{t('auth.clickToAutofill')}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -223,7 +222,7 @@ export function LoginPage() {
                     <GraduationCap className="w-3 h-3" />
                   </div>
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Giáo Viên
+                    {t('auth.teacher')}
                   </span>
                 </div>
                 {selectedRole === 'teacher' ? (

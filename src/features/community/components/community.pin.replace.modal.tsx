@@ -1,5 +1,6 @@
-// Modal chọn thay thế tin nhắn khi phòng chat đã đạt tối đa 3 tin nhắn ghim
+// Modal chọn thay thế tin nhắn khi phòng chat đã đạt tối đa 3 tin nhắn ghim.
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Pin, X, CheckCircle2, Circle, Loader2, ArrowRight } from 'lucide-react'
 import type { AdminChatMessage } from '@/features/community/types/community.admin.types'
 
@@ -18,6 +19,9 @@ export function CommunityPinReplaceModal({
   pinnedMessages,
   onConfirmReplace,
 }: CommunityPinReplaceModalProps) {
+  const { t, i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -76,10 +80,10 @@ export function CommunityPinReplaceModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Đã đạt giới hạn 3 tin nhắn ghim
+                {t('community.pinLimitReachedTitle')}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Vui lòng chọn 1 tin nhắn cũ bên dưới để bỏ ghim và thay thế
+                {t('community.pinLimitReachedSubtitle')}
               </p>
             </div>
           </div>
@@ -95,9 +99,9 @@ export function CommunityPinReplaceModal({
 
         <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 space-y-1.5">
           <div className="flex items-center justify-between text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
-            <span>Tin nhắn mới muốn ghim:</span>
+            <span>{t('community.newMsgToPin')}</span>
             <span className="font-normal font-mono opacity-80">
-              {new Date(targetMessage.created_at).toLocaleTimeString('vi-VN')}
+              {new Date(targetMessage.created_at).toLocaleTimeString(isVi ? 'vi-VN' : 'en-US')}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -123,7 +127,7 @@ export function CommunityPinReplaceModal({
 
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            Chọn 1 tin nhắn cũ để bỏ ghim ({pinnedMessages.length}/3 đang ghim):
+            {t('community.selectOldPinLabel', { count: pinnedMessages.length })}
           </label>
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
             {pinnedMessages.map((msg) => {
@@ -156,7 +160,7 @@ export function CommunityPinReplaceModal({
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">
-                        {new Date(msg.created_at).toLocaleTimeString('vi-VN')}
+                        {new Date(msg.created_at).toLocaleTimeString(isVi ? 'vi-VN' : 'en-US')}
                       </span>
                     </div>
                     <p className="text-xs text-amber-700 dark:text-amber-300 font-medium break-words line-clamp-2">
@@ -176,7 +180,7 @@ export function CommunityPinReplaceModal({
             onClick={onClose}
             className="h-10 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors disabled:opacity-50 cursor-pointer"
           >
-            Hủy bỏ
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -188,7 +192,7 @@ export function CommunityPinReplaceModal({
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <span>Thay thế ghim</span>
+                <span>{t('community.replacePin')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}

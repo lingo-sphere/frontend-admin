@@ -1,5 +1,6 @@
 // Quản lý danh sách đen, học viên bị cấm hoặc phạt tắt tiếng trong cộng đồng với phân trang DataTable.
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Ban, VolumeX, ShieldAlert, CheckCircle, Clock, UserX, Search } from 'lucide-react'
 import type { AdminCommunityMember } from '@/features/community/types/community.admin.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
@@ -20,6 +21,9 @@ export function CommunitySanctionsTab({
   onUnbanMember,
   onUnmuteMember,
 }: CommunitySanctionsTabProps) {
+  const { t, i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const [filterText, setFilterText] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -93,7 +97,7 @@ export function CommunitySanctionsTab({
   const columns: DataTableColumn<AdminCommunityMember>[] = [
     {
       key: 'member',
-      title: 'Học viên vi phạm',
+      title: t('community.colViolator'),
       width: '240px',
       render: (member) => (
         <div className="flex items-center gap-3">
@@ -117,7 +121,7 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'sanction_type',
-      title: 'Hình thức chế tài',
+      title: t('community.colSanctionType'),
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         const kicked = isKickedActive(member.kicked_cooldown_until)
@@ -126,19 +130,19 @@ export function CommunitySanctionsTab({
             {member.is_banned && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 w-fit">
                 <Ban className="w-3 h-3" />
-                CẤM VĨNH VIỄN
+                {t('community.badgeBan')}
               </span>
             )}
             {muted && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 w-fit">
                 <VolumeX className="w-3 h-3" />
-                TẮT TIẾNG
+                {t('community.badgeMute')}
               </span>
             )}
             {kicked && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-900 w-fit">
                 <Clock className="w-3 h-3" />
-                COOLDOWN KICK
+                {t('community.badgeKick')}
               </span>
             )}
           </div>
@@ -147,15 +151,15 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'reason',
-      title: 'Lý do xử lý',
+      title: t('community.colReason'),
       render: (member) => (
         <div className="max-w-xs">
           <p className="text-xs text-slate-700 dark:text-slate-300 break-words">
-            {member.banned_reason || 'Vi phạm điều khoản cộng đồng'}
+            {member.banned_reason || t('community.reasonDefault')}
           </p>
           {member.banned_by && (
             <span className="text-[10px] text-slate-400">
-              Bởi Admin/Mod ID: {member.banned_by.slice(-6)}
+              {t('community.byAdminMod', { id: member.banned_by.slice(-6) })}
             </span>
           )}
         </div>
@@ -163,20 +167,20 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'duration',
-      title: 'Thời hạn hiệu lực',
+      title: t('community.colDuration'),
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         const kicked = isKickedActive(member.kicked_cooldown_until)
         return (
           <span className="text-xs font-mono text-slate-500 whitespace-nowrap">
             {member.is_banned ? (
-              <span className="text-rose-600 font-semibold">Vô thời hạn</span>
+              <span className="text-rose-600 font-semibold">{t('community.durationIndefinite')}</span>
             ) : muted && member.muted_until ? (
-              <span>Đến {new Date(member.muted_until).toLocaleString('vi-VN')}</span>
+              <span>{t('community.durationUntil', { time: new Date(member.muted_until).toLocaleString(isVi ? 'vi-VN' : 'en-US') })}</span>
             ) : kicked && member.kicked_cooldown_until ? (
-              <span>Đến {new Date(member.kicked_cooldown_until).toLocaleString('vi-VN')}</span>
+              <span>{t('community.durationUntil', { time: new Date(member.kicked_cooldown_until).toLocaleString(isVi ? 'vi-VN' : 'en-US') })}</span>
             ) : (
-              <span>Đã hết hạn</span>
+              <span>{t('community.durationExpired')}</span>
             )}
           </span>
         )
@@ -184,7 +188,7 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'actions',
-      title: 'Thao tác',
+      title: t('community.colActions'),
       align: 'right',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
@@ -197,7 +201,7 @@ export function CommunitySanctionsTab({
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                <span>Gỡ cấm</span>
+                <span>{t('community.unban')}</span>
               </button>
             )}
             {muted && (
@@ -207,7 +211,7 @@ export function CommunitySanctionsTab({
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                <span>Mở khóa chat</span>
+                <span>{t('community.unmute')}</span>
               </button>
             )}
           </div>
@@ -224,7 +228,7 @@ export function CommunitySanctionsTab({
           type="text"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          placeholder="Tìm tên, User ID hoặc lý do..."
+          placeholder={t('community.searchSanctionsPlaceholder')}
           className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-rose-500 transition-all"
         />
       </div>
@@ -232,7 +236,7 @@ export function CommunitySanctionsTab({
         type="submit"
         className="h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors cursor-pointer"
       >
-        Tìm kiếm
+        {t('community.searchButton')}
       </button>
     </form>
   )
@@ -244,7 +248,7 @@ export function CommunitySanctionsTab({
       className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white shadow-sm shadow-rose-600/30 transition-all cursor-pointer"
     >
       <UserX className="w-4 h-4" />
-      <span>Kỷ luật học viên</span>
+      <span>{t('community.disciplineLearner')}</span>
     </button>
   )
 
@@ -254,10 +258,10 @@ export function CommunitySanctionsTab({
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-            <span>Kỷ Luật & Danh Sách Đen (Sanctions & Blacklist)</span>
+            <span>{t('community.sanctionsTitle')}</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Danh sách các học viên vi phạm quy tắc phòng chat bị cấm vĩnh viễn, tắt tiếng hoặc đang trong thời gian cooldown
+            {t('community.sanctionsDesc')}
           </p>
         </div>
       </div>
@@ -267,7 +271,7 @@ export function CommunitySanctionsTab({
         data={paginatedData}
         rowKey={(m) => m.user_id}
         isLoading={isLoading}
-        emptyText="Hiện không có học viên nào bị kỷ luật"
+        emptyText={t('community.emptySanctions')}
         filterSlot={filterSlot}
         extraActions={extraActions}
         onResetFilters={handleResetFilters}
@@ -287,11 +291,11 @@ export function CommunitySanctionsTab({
         isOpen={Boolean(unbanTargetUserId)}
         onClose={() => setUnbanTargetUserId(null)}
         onConfirm={handleConfirmUnban}
-        title="Gỡ cấm học viên"
-        message="Học viên này sẽ được phép truy cập lại phòng chat cộng đồng nếu họ đáp ứng đủ điều kiện (mua khóa học hoặc gói PRO)."
+        title={t('community.unbanConfirmTitle')}
+        message={t('community.unbanConfirmMessage')}
         type="success"
-        confirmText="Xác nhận gỡ cấm"
-        cancelText="Hủy bỏ"
+        confirmText={t('community.confirmUnban')}
+        cancelText={t('common.cancel')}
         isLoading={isProcessing}
       />
 
@@ -299,11 +303,11 @@ export function CommunitySanctionsTab({
         isOpen={Boolean(unmuteTargetUserId)}
         onClose={() => setUnmuteTargetUserId(null)}
         onConfirm={handleConfirmUnmute}
-        title="Mở khóa chat cho học viên"
-        message="Học viên sẽ có thể gửi tin nhắn trở lại ngay lập tức."
+        title={t('community.unmuteConfirmTitle')}
+        message={t('community.unmuteConfirmMessage')}
         type="success"
-        confirmText="Mở khóa chat"
-        cancelText="Hủy bỏ"
+        confirmText={t('community.confirmUnmute')}
+        cancelText={t('common.cancel')}
         isLoading={isProcessing}
       />
     </div>

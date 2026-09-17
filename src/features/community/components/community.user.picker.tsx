@@ -1,5 +1,6 @@
 // Component tìm kiếm và lựa chọn người dùng theo phân cấp vai trò với hỗ trợ chọn nhiều bằng checkbox.
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Search, X, Loader2, ShieldCheck, GraduationCap, User, CheckSquare, Square } from 'lucide-react'
 import { userService } from '@/features/users/services/user.service'
@@ -30,6 +31,7 @@ export function CommunityUserPicker({
   allowedRoles,
   themeColor = 'indigo',
 }: CommunityUserPickerProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [isManualInput, setIsManualInput] = useState(false)
 
@@ -53,20 +55,20 @@ export function CommunityUserPicker({
     const r = (role || '').toUpperCase()
     if (r === 'ADMIN' || r === 'SUPER_ADMIN') {
       return {
-        label: 'Quản trị viên',
+        label: t('community.roleAdmin'),
         icon: ShieldCheck,
         className: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-900',
       }
     }
     if (r === 'INSTRUCTOR' || r === 'TEACHER') {
       return {
-        label: 'Giáo viên',
+        label: t('community.roleTeacher'),
         icon: GraduationCap,
         className: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900',
       }
     }
     return {
-      label: 'Học viên',
+      label: t('community.roleLearner'),
       icon: User,
       className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900',
     }
@@ -192,7 +194,7 @@ export function CommunityUserPicker({
             onChangeManualUserId('')
           }}
           className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0 ml-2"
-          title="Bỏ chọn người dùng"
+          title={t('community.deselectUserTooltip')}
         >
           <X className="w-4 h-4" />
         </button>
@@ -204,7 +206,7 @@ export function CommunityUserPicker({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          {multiple ? 'Chọn người dùng (chọn một hoặc nhiều)' : 'Chọn người dùng'}
+          {multiple ? t('community.userPickerTitleMultiple') : t('community.userPickerTitleSingle')}
         </span>
         <button
           type="button"
@@ -214,7 +216,7 @@ export function CommunityUserPicker({
           }}
           className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
         >
-          {isManualInput ? 'Chọn từ danh sách có sẵn' : 'Nhập User ID thủ công'}
+          {isManualInput ? t('community.pickFromList') : t('community.enterManualId')}
         </button>
       </div>
 
@@ -224,7 +226,7 @@ export function CommunityUserPicker({
           required
           value={manualUserId}
           onChange={(e) => onChangeManualUserId(e.target.value)}
-          placeholder={multiple ? 'Nhập User ID (phân cách bằng dấu phẩy nếu nhiều người)...' : 'Nhập chính xác User ID người dùng...'}
+          placeholder={multiple ? t('community.manualIdPlaceholderMultiple') : t('community.manualIdPlaceholderSingle')}
           className={`w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 ${activeBorderColor} font-mono`}
         />
       ) : (
@@ -242,13 +244,13 @@ export function CommunityUserPicker({
                   <Square className="w-4 h-4 text-slate-400" />
                 )}
                 <span>
-                  {isAllSelected ? 'Bỏ chọn tất cả' : `Chọn tất cả (${sortedAndFilteredUsers.length})`}
+                  {isAllSelected ? t('community.deselectAll') : t('community.selectAll', { count: sortedAndFilteredUsers.length })}
                 </span>
               </button>
 
               {selectedUsers.length > 0 && (
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                  Đã chọn: {selectedUsers.length} người
+                  {t('community.selectedCount', { count: selectedUsers.length })}
                 </span>
               )}
             </div>
@@ -283,7 +285,7 @@ export function CommunityUserPicker({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên, email hoặc User ID..."
+              placeholder={t('community.searchUserPlaceholder')}
               className={`w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 ${activeBorderColor}`}
             />
           </div>
@@ -292,11 +294,11 @@ export function CommunityUserPicker({
             {isLoading ? (
               <div className="p-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-                <span>Đang tải danh sách người dùng...</span>
+                <span>{t('community.loadingUsers')}</span>
               </div>
             ) : sortedAndFilteredUsers.length === 0 ? (
               <div className="p-6 text-center text-xs text-slate-400">
-                Không tìm thấy người dùng phù hợp
+                {t('community.noUsersFound')}
               </div>
             ) : (
               sortedAndFilteredUsers.map((u) => {
@@ -358,15 +360,15 @@ export function CommunityUserPicker({
                     <div className="shrink-0 ml-2">
                       {isDisabled ? (
                         <span className="text-[10px] text-slate-400 italic">
-                          Không khả dụng
+                          {t('community.notAvailable')}
                         </span>
                       ) : !multiple ? (
                         <span className={`text-[11px] font-semibold ${activeTextColor} hover:underline`}>
-                          Chọn
+                          {t('community.select')}
                         </span>
                       ) : isSelected ? (
                         <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-                          Đã chọn
+                          {t('community.selected')}
                         </span>
                       ) : null}
                     </div>

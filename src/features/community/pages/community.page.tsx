@@ -1,5 +1,6 @@
-// Trang quản trị trung tâm kênh chat cộng đồng, phân quyền phó nhóm và kỷ luật vi phạm
+// Trang quản trị trung tâm kênh chat cộng đồng, phân quyền phó nhóm và kỷ luật vi phạm.
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MessageSquare, ShieldCheck, ShieldAlert, RefreshCw } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import { communityAdminService } from '@/features/community/services/community.admin.service'
@@ -28,6 +29,7 @@ import {
 } from '@/features/community/components/community.sanction.modal'
 
 export function CommunityPage() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'MONITOR' | 'MODERATORS' | 'SANCTIONS'>('MONITOR')
   const [isSanctionModalOpen, setIsSanctionModalOpen] = useState(false)
   const [sanctionTargetUser, setSanctionTargetUser] = useState<SanctionTargetUser | null>(null)
@@ -55,18 +57,18 @@ export function CommunityPage() {
   const handleUpdateRoomSettings = async (payload: UpdateRoomSettingPayload) => {
     try {
       await updateRoomSettingsMutate(payload)
-      toast.success('Đã cập nhật cấu hình phòng chat thành công')
+      toast.success(t('community.updateRoomSuccess'))
     } catch {
-      toast.error('Không thể cập nhật cấu hình phòng chat')
+      toast.error(t('community.updateRoomError'))
     }
   }
 
   const handleDeleteMessage = async (messageId: string) => {
     try {
       await deleteMessageMutate(messageId)
-      toast.success('Đã xóa tin nhắn vi phạm thành công')
+      toast.success(t('community.deleteMessageSuccess'))
     } catch {
-      toast.error('Không thể xóa tin nhắn')
+      toast.error(t('community.deleteMessageError'))
     }
   }
 
@@ -77,9 +79,9 @@ export function CommunityPage() {
       } else {
         await unpinMessageMutate(messageId)
       }
-      toast.success(isPinned ? 'Đã ghim tin nhắn lên đầu phòng chat' : 'Đã bỏ ghim tin nhắn')
+      toast.success(isPinned ? t('community.pinSuccess') : t('community.unpinSuccess'))
     } catch {
-      toast.error(isPinned ? 'Không thể ghim tin nhắn' : 'Không thể bỏ ghim tin nhắn')
+      toast.error(isPinned ? t('community.pinError') : t('community.unpinError'))
     }
   }
 
@@ -90,11 +92,11 @@ export function CommunityPage() {
       refetchMods()
       toast.success(
         list.length > 1
-          ? `Đã bổ nhiệm thành công ${list.length} phó nhóm!`
-          : 'Đã bổ nhiệm và cập nhật quyền phó nhóm thành công'
+          ? t('community.setModeratorSuccessMultiple', { count: list.length })
+          : t('community.setModeratorSuccessSingle')
       )
     } catch {
-      toast.error('Không thể thiết lập quyền phó nhóm')
+      toast.error(t('community.setModeratorError'))
     }
   }
 
@@ -102,9 +104,9 @@ export function CommunityPage() {
     try {
       await communityAdminService.removeModerator(userId)
       refetchMods()
-      toast.success('Đã tước quyền phó nhóm thành công')
+      toast.success(t('community.removeModeratorSuccess'))
     } catch {
-      toast.error('Không thể tước quyền phó nhóm')
+      toast.error(t('community.removeModeratorError'))
     }
   }
 
@@ -132,7 +134,7 @@ export function CommunityPage() {
           user_name: data.user_name,
           user_avatar: data.user_avatar,
         })
-        toast.success('Đã cấm học viên tham gia cộng đồng thành công')
+        toast.success(t('community.banSuccess'))
       } else if (action === 'MUTE') {
         await communityAdminService.muteMember({
           target_user_id: data.target_user_id,
@@ -141,7 +143,7 @@ export function CommunityPage() {
           user_name: data.user_name,
           user_avatar: data.user_avatar,
         })
-        toast.success('Đã tắt tiếng học viên thành công')
+        toast.success(t('community.muteSuccess'))
       } else if (action === 'KICK') {
         await communityAdminService.kickMember({
           target_user_id: data.target_user_id,
@@ -150,11 +152,11 @@ export function CommunityPage() {
           user_name: data.user_name,
           user_avatar: data.user_avatar,
         })
-        toast.success('Đã trục xuất học viên khỏi phòng chat thành công')
+        toast.success(t('community.kickSuccess'))
       }
       refetchBanned()
     } catch {
-      toast.error('Không thể thực hiện biện pháp kỷ luật học viên')
+      toast.error(t('community.sanctionError'))
     }
   }
 
@@ -162,9 +164,9 @@ export function CommunityPage() {
     try {
       await communityAdminService.unbanMember(userId)
       refetchBanned()
-      toast.success('Đã gỡ lệnh cấm tham gia phòng chat cho học viên')
+      toast.success(t('community.unbanSuccess'))
     } catch {
-      toast.error('Không thể gỡ cấm cho học viên')
+      toast.error(t('community.unbanError'))
     }
   }
 
@@ -172,9 +174,9 @@ export function CommunityPage() {
     try {
       await communityAdminService.unmuteMember(userId)
       refetchBanned()
-      toast.success('Đã mở khóa chat cho học viên')
+      toast.success(t('community.unmuteSuccess'))
     } catch {
-      toast.error('Không thể mở khóa chat')
+      toast.error(t('community.unmuteError'))
     }
   }
 
@@ -184,10 +186,10 @@ export function CommunityPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <MessageSquare className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-            <span>Quản Lý Kênh Chat Cộng Đồng</span>
+            <span>{t('community.pageTitle')}</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Theo dõi thảo luận trực tiếp, phân quyền ban điều hành và xử lý kỷ luật vi phạm
+            {t('community.pageSubtitle')}
           </p>
         </div>
 
@@ -197,7 +199,7 @@ export function CommunityPage() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer self-start sm:self-auto shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>Làm mới toàn bộ</span>
+          <span>{t('community.refreshAll')}</span>
         </button>
       </div>
 
@@ -211,7 +213,7 @@ export function CommunityPage() {
           }`}
         >
           <MessageSquare className="w-4 h-4" />
-          <span>Giám sát & Điều khiển</span>
+          <span>{t('community.tabMonitor')}</span>
         </button>
 
         <button
@@ -223,7 +225,7 @@ export function CommunityPage() {
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Phó nhóm ({moderators.length})</span>
+          <span>{t('community.tabModerators', { count: moderators.length })}</span>
         </button>
 
         <button
@@ -235,7 +237,7 @@ export function CommunityPage() {
           }`}
         >
           <ShieldAlert className="w-4 h-4" />
-          <span>Kỷ luật & Danh sách đen ({bannedMembers.length})</span>
+          <span>{t('community.tabSanctions', { count: bannedMembers.length })}</span>
         </button>
       </div>
 
