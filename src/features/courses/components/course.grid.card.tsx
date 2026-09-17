@@ -2,9 +2,9 @@
 
 import { BookOpen, Edit2, Trash2, Headphones, GraduationCap, Target, BookMarked, Users } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
-import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
+import { categoryLabels } from '@/features/courses/data/courses.data'
 import { Popconfirm } from '@/components/popconfirm'
-import { getCategoryBadgeClass, getLevelBadgeClass } from '@/features/courses/helpers/course.helper'
+import { getCategoryBadgeClass } from '@/features/courses/helpers/course.helper'
 import { formatCurrency, formatNumber } from '@/lib/format'
 
 interface CourseGridCardProps {
@@ -75,13 +75,11 @@ export function CourseGridCard({
             >
               {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
             </span>
-            <span
-              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border backdrop-blur-md shadow-xs ${getLevelBadgeClass(
-                course.level
-              )}`}
-            >
-              {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
-            </span>
+            {course.target_score ? (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold border backdrop-blur-md shadow-xs bg-teal-500/20 text-teal-100 border-teal-500/30">
+                🎯 {course.target_score}+
+              </span>
+            ) : null}
           </div>
 
           <div className="absolute top-3 right-3">

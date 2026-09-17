@@ -61,7 +61,6 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       slug: '',
       description: '',
       category: 'TOEIC_2_SKILLS',
-      level: 'BEGINNER',
       target_score: 500,
       price: 0,
       discount_price: 0,
@@ -228,7 +227,6 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           slug: (course.slug || '') as string,
           description: (course.description || '') as string,
           category: (course.category || 'TOEIC_2_SKILLS') as CourseFormData['category'],
-          level: (course.level || 'BEGINNER') as CourseFormData['level'],
           target_score: typeof course.target_score === 'number' ? course.target_score : 500,
           price: typeof course.price === 'number' ? course.price : 0,
           discount_price:
@@ -325,7 +323,6 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         slug: finalCourseInfo.slug || formData.slug,
         description: finalCourseInfo.description || formData.description,
         category: finalCourseInfo.category || formData.category,
-        level: finalCourseInfo.level || formData.level,
         target_score: Number(finalCourseInfo.target_score ?? formData.target_score),
         price: Number(finalCourseInfo.price ?? formData.price),
         discount_price: Number(finalCourseInfo.discount_price ?? formData.discount_price),

@@ -1,10 +1,10 @@
 // Component cấu hình cột bảng dữ liệu danh sách khóa học cho Quản trị Admin
 import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones, GraduationCap } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
-import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
+import { categoryLabels } from '@/features/courses/data/courses.data'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
-import { getCategoryBadgeClass, getLevelBadgeClass } from '@/features/courses/helpers/course.helper'
+import { getCategoryBadgeClass } from '@/features/courses/helpers/course.helper'
 import { formatCurrency, formatNumber } from '@/lib/format'
 
 interface GetCourseColumnsOptions {
@@ -58,11 +58,6 @@ export function getCourseColumns({
             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 max-w-md">
               {course.description}
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-600 dark:text-teal-400">
-                <Target className="w-3 h-3" /> {course.target_score ? `Target ${course.target_score}+` : 'Target -'}
-              </span>
-            </div>
           </div>
         </div>
       ),
@@ -80,15 +75,13 @@ export function getCourseColumns({
       ),
     },
     {
-      key: 'level',
-      title: isVi ? 'Trình độ' : 'Level',
+      key: 'target_score',
+      title: isVi ? 'Mục tiêu điểm' : 'Target Score',
       sortable: true,
       render: (course) => (
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border whitespace-nowrap shadow-2xs ${getLevelBadgeClass(course.level)}`}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
-          <span>{levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}</span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap shadow-2xs bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/60">
+          <Target className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+          <span>{course.target_score ? `${course.target_score}+ Điểm` : 'Chưa đặt'}</span>
         </span>
       ),
     },

@@ -21,7 +21,7 @@ import { CourseStatsOverview } from '@/features/courses/components/course.stats.
 import { CourseFilterBar } from '@/features/courses/components/course.filter.bar'
 import { CourseGridCard } from '@/features/courses/components/course.grid.card'
 import { getCourseColumns } from '@/features/courses/components/course.table.columns'
-import type { FilterCategory, FilterLevel, FilterStatus } from '@/features/courses/helpers/course.helper'
+import type { FilterCategory, FilterStatus } from '@/features/courses/helpers/course.helper'
 
 export function CoursesPage() {
   const { i18n } = useTranslation()
@@ -35,7 +35,6 @@ export function CoursesPage() {
 
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('ALL')
-  const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
     const saved = storage.get<'table' | 'grid'>(STORAGE_KEYS.COURSES_VIEW_MODE)
@@ -76,13 +75,12 @@ export function CoursesPage() {
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchCategory = filterCategory === 'ALL' || c.category === filterCategory
-      const matchLevel = filterLevel === 'ALL' || c.level === filterLevel
       const matchStatus =
         filterStatus === 'ALL' ||
         (filterStatus === 'PUBLISHED' && c.is_published) ||
         (filterStatus === 'DRAFT' && !c.is_published)
 
-      return matchSearch && matchCategory && matchLevel && matchStatus
+      return matchSearch && matchCategory && matchStatus
     })
 
     if (!sortKey || !sortOrder) return list
@@ -98,10 +96,10 @@ export function CoursesPage() {
         const comp = a.category.localeCompare(b.category)
         return sortOrder === 'asc' ? comp : -comp
       }
-      if (sortKey === 'level') {
-        const levelWeight: Record<string, number> = { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 3 }
-        const diff = (levelWeight[a.level] || 0) - (levelWeight[b.level] || 0)
-        return sortOrder === 'asc' ? diff : -diff
+      if (sortKey === 'target_score') {
+        const scoreA = a.target_score || 0
+        const scoreB = b.target_score || 0
+        return sortOrder === 'asc' ? scoreA - scoreB : scoreB - scoreA
       }
       if (sortKey === 'price') {
         const getEffectivePrice = (item: Course) => (item.discount_price && item.discount_price > 0 ? item.discount_price : item.price || 0)
@@ -111,7 +109,7 @@ export function CoursesPage() {
       }
       return 0
     })
-  }, [courses, searchQuery, filterCategory, filterLevel, filterStatus, sortKey, sortOrder])
+  }, [courses, searchQuery, filterCategory, filterStatus, sortKey, sortOrder])
 
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
@@ -121,7 +119,6 @@ export function CoursesPage() {
   const handleResetFilters = () => {
     setSearchQuery('')
     setFilterCategory('ALL')
-    setFilterLevel('ALL')
     setFilterStatus('ALL')
     setSortKey(null)
     setSortOrder(null)
@@ -230,8 +227,6 @@ export function CoursesPage() {
             onSearchChange={setSearchQuery}
             filterCategory={filterCategory}
             onCategoryChange={setFilterCategory}
-            filterLevel={filterLevel}
-            onLevelChange={setFilterLevel}
             filterStatus={filterStatus}
             onStatusChange={setFilterStatus}
           />

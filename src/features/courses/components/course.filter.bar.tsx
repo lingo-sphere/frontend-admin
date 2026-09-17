@@ -1,12 +1,9 @@
-/**
- * @file course.filter.bar.tsx
- * @description Component giao diện CourseFilterBar phục vụ khu vực Quản trị Admin
- */
+// Component giao diện thanh bộ lọc khóa học trong Quản trị Admin.
 
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'
-import type { FilterCategory, FilterLevel, FilterStatus } from '@/features/courses/helpers/course.helper'
+import type { FilterCategory, FilterStatus } from '@/features/courses/helpers/course.helper'
 import { CustomSelect } from '@/components/custom.select'
 
 interface CourseFilterBarProps {
@@ -14,8 +11,6 @@ interface CourseFilterBarProps {
   onSearchChange: (val: string) => void
   filterCategory: FilterCategory
   onCategoryChange: (val: FilterCategory) => void
-  filterLevel: FilterLevel
-  onLevelChange: (val: FilterLevel) => void
   filterStatus: FilterStatus
   onStatusChange: (val: FilterStatus) => void
 }
@@ -25,8 +20,6 @@ export function CourseFilterBar({
   onSearchChange,
   filterCategory,
   onCategoryChange,
-  filterLevel,
-  onLevelChange,
   filterStatus,
   onStatusChange,
 }: CourseFilterBarProps) {
@@ -37,13 +30,6 @@ export function CourseFilterBar({
     { value: 'ALL', label: isVi ? 'Tất cả danh mục' : 'All Categories' },
     { value: 'TOEIC_2_SKILLS', label: isVi ? 'TOEIC 2 Kỹ Năng' : 'TOEIC 2 Skills' },
     { value: 'TOEIC_4_SKILLS', label: isVi ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 4 Skills' },
-  ], [isVi])
-
-  const levelOptions = useMemo(() => [
-    { value: 'ALL', label: isVi ? 'Tất cả trình độ' : 'All Levels' },
-    { value: 'BEGINNER', label: isVi ? 'Sơ cấp (A1 - A2)' : 'Beginner (A1 - A2)' },
-    { value: 'INTERMEDIATE', label: isVi ? 'Trung cấp (B1 - B2)' : 'Intermediate (B1 - B2)' },
-    { value: 'ADVANCED', label: isVi ? 'Nâng cao (C1)' : 'Advanced (C1)' },
   ], [isVi])
 
   const statusOptions = useMemo(() => [
@@ -78,13 +64,6 @@ export function CourseFilterBar({
         onChange={(val) => onCategoryChange(val as FilterCategory)}
         options={categoryOptions}
         className="w-48"
-      />
-
-      <CustomSelect
-        value={filterLevel}
-        onChange={(val) => onLevelChange(val as FilterLevel)}
-        options={levelOptions}
-        className="w-44"
       />
 
       <CustomSelect

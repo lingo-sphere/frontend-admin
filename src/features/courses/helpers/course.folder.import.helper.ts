@@ -206,17 +206,6 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   }
   const category: 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS' = rawCategory
 
-  const rawLevel = String(findValue(infoRaw, ['level', 'trình độ']) || '').trim().toUpperCase()
-  if (!rawLevel) {
-    throw new Error('File Excel thiếu thông tin "level" (Trình độ) trong sheet Course_Info.')
-  }
-  if (rawLevel !== 'BEGINNER' && rawLevel !== 'INTERMEDIATE' && rawLevel !== 'ADVANCED') {
-    throw new Error(
-      `Trình độ khóa học (level) "${rawLevel}" không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: BEGINNER, INTERMEDIATE hoặc ADVANCED.`
-    )
-  }
-  const level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' = rawLevel
-
   const rawTargetScore = findValue(infoRaw, ['target_score', 'mục tiêu'])
   if (rawTargetScore === undefined || rawTargetScore === null || String(rawTargetScore).trim() === '') {
     throw new Error('File Excel thiếu thông tin "target_score" (Điểm mục tiêu) trong sheet Course_Info.')
@@ -431,7 +420,6 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     title,
     slug,
     category,
-    level,
     target_score,
     price,
     discount_price,

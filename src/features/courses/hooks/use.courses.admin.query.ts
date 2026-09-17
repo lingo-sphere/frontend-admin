@@ -19,7 +19,6 @@ export async function fetchAdminCourses(
     thumbnail_url: c.thumbnail_url || '',
     target_score: c.target_score ?? 0,
     category: (c.category as Course['category']) || 'TOEIC_2_SKILLS',
-    level: (c.level as Course['level']) || 'BEGINNER',
     total_modules: c.total_modules || 0,
     total_lessons: c.total_lessons || 0,
     price: c.price || 0,

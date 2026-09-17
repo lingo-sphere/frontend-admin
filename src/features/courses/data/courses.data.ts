@@ -11,7 +11,6 @@ export interface Course {
   thumbnail_url?: string
   target_score: number
   category: 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
   total_modules: number
   total_lessons: number
   price: number
@@ -45,12 +44,6 @@ export const categoryLabels: Record<string, { vi: string; en: string }> = {
 export const categoryColors: Record<string, { bg: string; text: string }> = {
   TOEIC_2_SKILLS: { bg: 'var(--info-soft)', text: 'var(--info)' },
   TOEIC_4_SKILLS: { bg: 'var(--success-soft)', text: 'var(--success)' },
-}
-
-export const levelLabels: Record<string, { vi: string; en: string }> = {
-  BEGINNER: { vi: 'Sơ cấp', en: 'Beginner' },
-  INTERMEDIATE: { vi: 'Trung cấp', en: 'Intermediate' },
-  ADVANCED: { vi: 'Nâng cao', en: 'Advanced' },
 }
 
 export const statusLabels: Record<string, { vi: string; en: string }> = {

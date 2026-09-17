@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect } from 'react'
 import { NumberInput } from '@/components/number.input'
-import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
+import { categoryLabels } from '@/features/courses/data/courses.data'
 import { R2MediaUploader } from '@/features/media/components/r2.media.uploader'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 import type { QuizQuestionItem } from '@/features/courses/schemas/course.schema'
@@ -16,7 +16,6 @@ export interface CourseFormData {
   slug: string
   description: string
   category: string
-  level: string
   target_score: number
   price: number
   discount_price: number
@@ -114,13 +113,6 @@ export function CourseBasicInfoTab({
     }))
   }, [isVi])
 
-  const levelOptions: SelectOption[] = useMemo(() => {
-    return Object.entries(levelLabels).map(([key, label]) => ({
-      value: key,
-      label: isVi ? label.vi : label.en,
-    }))
-  }, [isVi])
-
   useEffect(() => {
     if (!formData.author_name && (profile || user)) {
       const userPayload = user as unknown as Record<string, unknown>
@@ -209,21 +201,6 @@ export function CourseBasicInfoTab({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {isVi ? 'Trình độ phù hợp' : 'Level'}
-                </label>
-                <CustomSelect
-                  options={levelOptions}
-                  value={formData.level}
-                  onChange={(val) => onChange({ level: val })}
-                  placeholder={isVi ? 'Chọn trình độ...' : 'Select level...'}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Mục tiêu điểm' : 'Target Score'}
                 </label>
                 <NumberInput
@@ -236,7 +213,9 @@ export function CourseBasicInfoTab({
                   className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Giá gốc (VNĐ)' : 'Price (VND)'}

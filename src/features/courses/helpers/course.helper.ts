@@ -3,7 +3,6 @@
 import type { CourseFormData } from '@/features/courses/components/course.basic.info.tab'
 
 export type FilterCategory = 'ALL' | 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
-export type FilterLevel = 'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type FilterStatus = 'ALL' | 'PUBLISHED' | 'DRAFT'
 
 export const getCategoryBadgeClass = (category: string): string => {
@@ -14,19 +13,6 @@ export const getCategoryBadgeClass = (category: string): string => {
       return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/60'
     default:
       return 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/60'
-  }
-}
-
-export const getLevelBadgeClass = (level: string): string => {
-  switch (level) {
-    case 'BEGINNER':
-      return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/50'
-    case 'INTERMEDIATE':
-      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/50'
-    case 'ADVANCED':
-      return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/50'
-    default:
-      return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
   }
 }
 
@@ -80,14 +66,6 @@ export function validateCourseFormData(formData: Partial<CourseFormData>, isVi: 
     return isVi
       ? 'Thể loại khóa học không hợp lệ. Vui lòng chọn TOEIC 2 Kỹ Năng hoặc TOEIC 4 Kỹ Năng'
       : 'Invalid course category. Must be TOEIC 2 Skills or TOEIC 4 Skills'
-  }
-  if (
-    !formData.level ||
-    (formData.level !== 'BEGINNER' && formData.level !== 'INTERMEDIATE' && formData.level !== 'ADVANCED')
-  ) {
-    return isVi
-      ? 'Trình độ khóa học không hợp lệ. Vui lòng chọn Sơ cấp, Trung cấp hoặc Nâng cao'
-      : 'Invalid course level. Must be Beginner, Intermediate, or Advanced'
   }
   if (formData.target_score !== undefined && formData.target_score !== null) {
     const score = Number(formData.target_score)

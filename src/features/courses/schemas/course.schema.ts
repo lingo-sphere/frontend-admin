@@ -101,7 +101,6 @@ export const CourseBaseSchema = z.object({
   slug: z.string().optional(),
   description: z.string().default(''),
   category: z.string().default('TOEIC'),
-  level: z.string().default('BEGINNER'),
   target_score: z.number().nullable().optional(),
   price: z.number().default(0),
   discount_price: z.number().nullable().optional(),

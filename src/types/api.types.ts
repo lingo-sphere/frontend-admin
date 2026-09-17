@@ -125,7 +125,6 @@ export interface Role {
 }
 
 export type CourseCategory = 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
-export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type CourseApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED' | 'DRAFT'
 
 export interface QuizQuestionItem {
@@ -229,7 +228,6 @@ export interface Course {
   slug?: string
   description: string
   category: CourseCategory | string
-  level: CourseLevel | string
   target_score?: number | null
   price: number
   discount_price?: number | null
