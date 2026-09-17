@@ -1,13 +1,16 @@
 // Trang quan tri tao moi va chinh sua khoa hoc kem tinh nang nhap nhanh tu thu muc.
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CourseBasicInfoTab } from '@/features/courses/components/course.basic.info.tab'
 import { CourseCurriculumManager } from '@/features/courses/components/course.curriculum.manager'
 import { VideoPreviewModal } from '@/components/video.preview.modal'
 import { useCourseForm } from '@/features/courses/hooks/use.course.form'
 import { CourseFormHeader } from '@/features/courses/components/course.form.header'
-import { CourseFolderImportModal } from '@/features/courses/components/course.folder.import.modal'
+import {
+  CourseFolderImportModal,
+  type CourseFolderImportModalRef,
+} from '@/features/courses/components/course.folder.import.modal'
 import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
 
 interface CourseFormPageProps {
@@ -18,6 +21,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false)
+  const folderImportModalRef = useRef<CourseFolderImportModalRef>(null)
 
   const {
     formData,
@@ -67,7 +71,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         totalLessons={totalLessons}
         totalDuration={totalDuration}
         onBack={() => setActiveNavItem('courses')}
-        onOpenFolderImport={!isEditMode ? () => setIsFolderModalOpen(true) : undefined}
+        onOpenFolderImport={!isEditMode ? () => folderImportModalRef.current?.openPicker() : undefined}
       />
 
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between space-y-6">
@@ -121,7 +125,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       )}
 
       <CourseFolderImportModal
+        ref={folderImportModalRef}
         isOpen={isFolderModalOpen}
+        onOpen={() => setIsFolderModalOpen(true)}
         onClose={() => setIsFolderModalOpen(false)}
         onApply={(importedInfo, importedModules, pending) => {
           setFormData((prev) => ({

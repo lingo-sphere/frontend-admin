@@ -1,6 +1,6 @@
 // Modal nhap nhanh khoa hoc tu thu muc chua file Excel va video bai giang cung tai lieu PDF.
 
-import { useState, useRef, type DragEvent, type ChangeEvent } from 'react'
+import { useState, useRef, forwardRef, useImperativeHandle, type DragEvent, type ChangeEvent } from 'react'
 import {
   X,
   FolderUp,
@@ -17,7 +17,23 @@ import {
   FileText,
   Headphones,
   ImageIcon,
+  RotateCcw,
 } from 'lucide-react'
+
+interface FileSystemHandleLike {
+  kind: 'file' | 'directory'
+  name: string
+}
+
+interface FileSystemFileHandleLike extends FileSystemHandleLike {
+  kind: 'file'
+  getFile: () => Promise<File>
+}
+
+interface FileSystemDirectoryHandleLike extends FileSystemHandleLike {
+  kind: 'directory'
+  values: () => AsyncIterable<FileSystemHandleLike>
+}
 import {
   parseCourseFolder,
   type ParsedFolderResult,
@@ -32,8 +48,13 @@ import { toast } from '@/store/toast.store'
 
 export type { PendingFolderUploads }
 
+export interface CourseFolderImportModalRef {
+  openPicker: () => void
+}
+
 interface CourseFolderImportModalProps {
   isOpen: boolean
+  onOpen?: () => void
   onClose: () => void
   onApply: (
     courseInfo: Partial<CourseFormData>,
@@ -44,13 +65,20 @@ interface CourseFolderImportModalProps {
   courseFolder?: string
 }
 
-export function CourseFolderImportModal({
-  isOpen,
-  onClose,
-  onApply,
-  isVi,
-  courseFolder = 'courses',
-}: CourseFolderImportModalProps) {
+export const CourseFolderImportModal = forwardRef<
+  CourseFolderImportModalRef,
+  CourseFolderImportModalProps
+>(function CourseFolderImportModal(
+  {
+    isOpen,
+    onOpen,
+    onClose,
+    onApply,
+    isVi,
+    courseFolder = 'courses',
+  },
+  ref
+) {
   const [isDragging, setIsDragging] = useState(false)
   const [isParsing, setIsParsing] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -62,7 +90,78 @@ export function CourseFolderImportModal({
 
   const folderInputRef = useRef<HTMLInputElement | null>(null)
 
-  if (!isOpen) return null
+  const collectFilesFromDirectoryHandle = async (
+    dirHandle: FileSystemDirectoryHandleLike,
+    path = ''
+  ): Promise<File[]> => {
+    const files: File[] = []
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === 'file') {
+        const file = await (entry as FileSystemFileHandleLike).getFile()
+        const relativePath = path ? `${path}/${file.name}` : file.name
+        try {
+          Object.defineProperty(file, 'webkitRelativePath', {
+            value: relativePath,
+            writable: true,
+            configurable: true,
+          })
+        } catch {}
+        files.push(file)
+      } else if (entry.kind === 'directory') {
+        const subFiles = await collectFilesFromDirectoryHandle(
+          entry as FileSystemDirectoryHandleLike,
+          path ? `${path}/${entry.name}` : entry.name
+        )
+        files.push(...subFiles)
+      }
+    }
+    return files
+  }
+
+  const handleClose = () => {
+    if (isUploading) return
+    setParsedResult(null)
+    setError(null)
+    setIsParsing(false)
+    onClose()
+  }
+
+  const handlePickFolder = async (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    if (isParsing || isUploading) return
+
+    if (typeof window !== 'undefined' && 'showDirectoryPicker' in window) {
+      try {
+        const picker = (window as unknown as {
+          showDirectoryPicker: (options?: { id?: string; mode?: 'read' }) => Promise<FileSystemDirectoryHandleLike>
+        }).showDirectoryPicker
+        const dirHandle = await picker({ mode: 'read' })
+        onOpen?.()
+        setIsParsing(true)
+        setError(null)
+        const files = await collectFilesFromDirectoryHandle(dirHandle)
+        await processFiles(files)
+        return
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return
+        }
+        setIsParsing(false)
+        const msg = err instanceof Error ? err.message : 'Không thể đọc thư mục'
+        setError(msg)
+        toast.error(msg)
+        return
+      }
+    }
+
+    folderInputRef.current?.click()
+  }
+
+  useImperativeHandle(ref, () => ({
+    openPicker: () => {
+      handlePickFolder()
+    },
+  }))
 
   const collectFilesFromDataTransfer = async (items: DataTransferItemList): Promise<File[]> => {
     const files: File[] = []
@@ -158,16 +257,20 @@ export function CourseFolderImportModal({
 
     if (e.dataTransfer?.items) {
       const files = await collectFilesFromDataTransfer(e.dataTransfer.items)
+      onOpen?.()
       await processFiles(files)
-    } else if (e.dataTransfer?.files) {
+    } else if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      onOpen?.()
       await processFiles(Array.from(e.dataTransfer.files))
     }
   }
 
   const handleFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
+      onOpen?.()
       await processFiles(Array.from(e.target.files))
     }
+    e.target.value = ''
   }
 
   const totalFilesToUploadCount = parsedResult
@@ -203,7 +306,7 @@ export function CourseFolderImportModal({
         ? `Đã nạp toàn bộ cấu trúc vào Form! ${totalFilesToUploadCount} tệp (video & tài liệu) sẽ được tự động tải lên R2 khi bạn nhấn "Lưu Khóa Học".`
         : `Curriculum loaded into Form! ${totalFilesToUploadCount} files will be automatically uploaded to R2 when saving.`
     )
-    onClose()
+    handleClose()
   }
 
   const handleUploadAndApply = async () => {
@@ -260,7 +363,7 @@ export function CourseFolderImportModal({
             : `Successfully uploaded ${totalFilesToUploadCount} files to R2! Click Save Course to complete.`
         )
       }
-      onClose()
+      handleClose()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Tải lên tài nguyên thất bại'
       setError(msg)
@@ -271,144 +374,166 @@ export function CourseFolderImportModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isUploading) {
-          onClose()
-        }
-      }}
-    >
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
-              <FolderUp className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                {isVi ? 'Nhập khóa học nhanh từ Thư mục' : 'Import Course from Folder'}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isVi
-                  ? 'Quét file Excel cấu hình, tự động khớp video & upload trực tiếp lên Cloudflare R2'
-                  : 'Parse Excel config, auto match videos and upload directly to Cloudflare R2'}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isUploading}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <>
+      <input
+        ref={folderInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFileInputChange}
+        {...({ webkitdirectory: '', directory: '' } as Record<string, string>)}
+      />
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {!parsedResult && (
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => !isParsing && folderInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-3xl p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-4 ${
-                isDragging
-                  ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30'
-                  : 'border-slate-300 dark:border-slate-700 hover:border-indigo-400 bg-slate-50/50 dark:bg-slate-950/30'
-              }`}
-            >
-              <input
-                ref={folderInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileInputChange}
-                {...({ webkitdirectory: '', directory: '' } as Record<string, string>)}
-              />
-
-              <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/10">
-                {isParsing ? (
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                ) : (
-                  <FolderUp className="w-8 h-8" />
-                )}
-              </div>
-
-              <div className="space-y-1.5 max-w-md">
-                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
-                  {isParsing
-                    ? isVi
-                      ? 'Đang đọc và phân tích cấu trúc khóa học...'
-                      : 'Analyzing folder and files...'
-                    : isVi
-                    ? 'Kéo thả thư mục khóa học hoặc bấm để chọn'
-                    : 'Drag and drop course folder or click to choose'}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {isVi
-                    ? 'Thư mục cần chứa file Excel (.xlsx) cấu hình khóa học cùng toàn bộ video bài giảng (.mp4) và tài liệu (.pdf).'
-                    : 'Folder must contain course Excel file (.xlsx) along with video files (.mp4) and documents (.pdf).'}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 dark:text-slate-500 pt-2">
-                <span className="flex items-center gap-1.5">
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>File Excel 4 sheet (.xlsx)</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1.5">
-                  <Film className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Video bài giảng (.mp4, .webm)</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-sky-500" />
-                  <span>Tài liệu PDF bài học & chương</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1.5">
-                  <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Đề thi & câu hỏi ôn tập</span>
-                </span>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-3 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300">
-              <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {parsedResult && (
-            <div className="space-y-6">
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 p-4 sm:p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                      {isVi ? 'Thông tin khóa học nhận diện' : 'Detected Course Information'}
-                    </span>
-                    <h4 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-indigo-500" />
-                      <span>{parsedResult.courseInfo.title}</span>
-                    </h4>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setParsedResult(null)
-                      setError(null)
-                    }}
-                    disabled={isUploading}
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 underline cursor-pointer"
-                  >
-                    {isVi ? 'Chọn thư mục khác' : 'Change folder'}
-                  </button>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isUploading) {
+              handleClose()
+            }
+          }}
+        >
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+                  <FolderUp className="w-5 h-5" />
                 </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                    {isVi ? 'Nhập khóa học nhanh từ Thư mục' : 'Import Course from Folder'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {isVi
+                      ? 'Quét file Excel cấu hình, tự động khớp video & upload trực tiếp lên Cloudflare R2'
+                      : 'Parse Excel config, auto match videos and upload directly to Cloudflare R2'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isUploading}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {isParsing && (
+                <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/10">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  </div>
+                  <div className="space-y-1.5 max-w-md">
+                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                      {isVi
+                        ? 'Đang đọc và phân tích cấu trúc khóa học...'
+                        : 'Analyzing folder and files...'}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isVi
+                        ? 'Hệ thống đang đọc file Excel và khớp nối video, tài liệu PDF...'
+                        : 'Scanning Excel configuration and matching course media...'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!isParsing && error && (
+                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-3 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300">
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {!isParsing && !parsedResult && (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={handlePickFolder}
+                  className={`relative border-2 border-dashed rounded-3xl p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-4 ${
+                    isDragging
+                      ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30'
+                      : 'border-slate-300 dark:border-slate-700 hover:border-indigo-400 bg-slate-50/50 dark:bg-slate-950/30'
+                  }`}
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/10">
+                    <FolderUp className="w-8 h-8" />
+                  </div>
+
+                  <div className="space-y-1.5 max-w-md">
+                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                      {isVi
+                        ? 'Kéo thả thư mục khóa học hoặc bấm để chọn'
+                        : 'Drag and drop course folder or click to choose'}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isVi
+                        ? 'Thư mục cần chứa file Excel (.xlsx) cấu hình khóa học cùng toàn bộ video bài giảng (.mp4) và tài liệu (.pdf).'
+                        : 'Folder must contain course Excel file (.xlsx) along with video files (.mp4) and documents (.pdf).'}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={handlePickFolder}
+                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <FolderUp className="w-4 h-4" />
+                      <span>{isVi ? 'Chọn thư mục khóa học' : 'Select Course Folder'}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 dark:text-slate-500 pt-2">
+                    <span className="flex items-center gap-1.5">
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>File Excel 4 sheet (.xlsx)</span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Film className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Video bài giảng (.mp4, .webm)</span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-sky-500" />
+                      <span>Tài liệu PDF bài học & chương</span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Đề thi & câu hỏi ôn tập</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!isParsing && parsedResult && (
+                <div className="space-y-6">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 p-4 sm:p-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                          {isVi ? 'Thông tin khóa học nhận diện' : 'Detected Course Information'}
+                        </span>
+                        <h4 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-indigo-500" />
+                          <span>{parsedResult.courseInfo.title}</span>
+                        </h4>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handlePickFolder}
+                        disabled={isUploading}
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 underline cursor-pointer"
+                      >
+                        {isVi ? 'Chọn thư mục khác' : 'Change folder'}
+                      </button>
+                    </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
@@ -592,7 +717,17 @@ export function CourseFolderImportModal({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handlePickFolder}
+                disabled={isUploading}
+                className="px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{isVi ? 'Chọn lại thư mục' : 'Re-select'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClose}
                 disabled={isUploading}
                 className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
               >
@@ -640,5 +775,7 @@ export function CourseFolderImportModal({
         )}
       </div>
     </div>
-  )
-}
+  )}
+</>
+)
+})
