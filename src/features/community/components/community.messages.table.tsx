@@ -19,6 +19,7 @@ import { CustomSelect } from '@/components/custom.select'
 import { ConfirmModal } from '@/components/confirm.modal'
 import { CommunityPinReplaceModal } from '@/features/community/components/community.pin.replace.modal'
 import type { SanctionTargetUser } from '@/features/community/components/community.sanction.modal'
+import { toast } from '@/store/toast.store'
 
 interface CommunityMessagesTableProps {
   messages: AdminChatMessage[]
@@ -70,13 +71,15 @@ export function CommunityMessagesTable({
     setCurrentPage(1)
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilterText('')
     setStatusFilter('ALL')
     setSearchQuery({ text: '', status: 'ALL' })
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await onRefresh()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc tin nhắn' : 'Message filters reset')
   }
 
   const filteredMessages = useMemo(() => {
@@ -142,7 +145,7 @@ export function CommunityMessagesTable({
     try {
       await onTogglePin(messageId, isPinned)
     } finally {
-      setIsPinningId(null)
+      setPinningId(null)
     }
   }
 

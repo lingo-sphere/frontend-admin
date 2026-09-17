@@ -265,6 +265,7 @@ export function CommunityPage() {
           isLoading={isLoading}
           onSetModerator={handleSetModerator}
           onRemoveModerator={handleRemoveModerator}
+          onRefresh={loadData}
         />
       )}
 
@@ -275,6 +276,7 @@ export function CommunityPage() {
           onOpenSanctionModal={() => handleOpenSanctionModal()}
           onUnbanMember={handleUnbanMember}
           onUnmuteMember={handleUnmuteMember}
+          onRefresh={loadData}
         />
       )}
 

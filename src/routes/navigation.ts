@@ -158,3 +158,88 @@ export function pathToNavItem(pathname: string): string {
   if (pathname === '/404' || pathname === '/not-found') return 'not-found'
   return 'not-found'
 }
+
+export function getEffectiveNavId(navItem: string): string {
+  if (
+    navItem === 'courses' ||
+    navItem === 'courses-list' ||
+    navItem === 'course-create' ||
+    navItem.startsWith('course-edit:') ||
+    navItem.startsWith('course-form:') ||
+    navItem.startsWith('course-scores:') ||
+    navItem.startsWith('course-submissions:')
+  ) {
+    return 'courses-list'
+  }
+
+  if (
+    navItem === 'course-learners' ||
+    navItem.startsWith('learner-progress:') ||
+    navItem.startsWith('learner-reminders:')
+  ) {
+    return 'course-learners'
+  }
+
+  if (
+    navItem === 'course-exams' ||
+    navItem === 'course-exam-create' ||
+    navItem.startsWith('course-exam-questions:')
+  ) {
+    return 'course-exams'
+  }
+
+  if (navItem === 'users' || navItem === 'users-list' || navItem.startsWith('user-profile:')) {
+    return 'users-list'
+  }
+
+  if (
+    navItem === 'admins' ||
+    navItem === 'admin-user-create' ||
+    navItem.startsWith('admin-user-edit:') ||
+    navItem.startsWith('admin-user-form:')
+  ) {
+    return 'admins'
+  }
+
+  if (
+    navItem === 'vocabulary' ||
+    navItem === 'vocab-create' ||
+    navItem === 'vocabulary-form' ||
+    navItem === 'vocabulary-import' ||
+    navItem.startsWith('vocab-edit:') ||
+    navItem.startsWith('vocabulary-form:')
+  ) {
+    return 'vocabulary'
+  }
+
+  if (navItem === 'practice' || navItem === 'practice-exercises') {
+    return 'practice-exercises'
+  }
+
+  if (navItem === 'toeic-tests' || navItem === 'exams') {
+    return 'toeic-tests'
+  }
+
+  if (navItem === 'analytics-posthog' || navItem === 'posthog') {
+    return 'analytics-posthog'
+  }
+
+  if (navItem === 'monitoring-betterstack' || navItem === 'betterstack') {
+    return 'monitoring-betterstack'
+  }
+
+  if (navItem === 'settings' || navItem === 'settings-plans') {
+    return 'settings-plans'
+  }
+
+  if (navItem === 'settings-ai' || navItem === 'ai-management' || navItem === 'ai') {
+    return 'settings-ai'
+  }
+
+  if (navItem === 'admin-profile' || navItem.startsWith('admin-profile:')) {
+    return 'admin-profile'
+  }
+
+  return navItem
+}
+

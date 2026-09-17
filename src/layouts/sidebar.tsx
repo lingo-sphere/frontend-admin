@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PanelLeftClose, Shield } from 'lucide-react'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
-import { pathToNavItem, navItemToPath } from '@/routes/navigation'
+import { pathToNavItem, navItemToPath, getEffectiveNavId } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { navGroups, type NavGroup, type NavItem } from '@/layouts/sidebar.nav.config'
@@ -18,7 +18,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const isVietnamese = i18n.language === 'vi'
   const location = useLocation()
   const navigate = useNavigate()
-  const activeNavItem = pathToNavItem(location.pathname)
+  const activeNavItem = getEffectiveNavId(pathToNavItem(location.pathname))
   const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useAdminLayout()
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)

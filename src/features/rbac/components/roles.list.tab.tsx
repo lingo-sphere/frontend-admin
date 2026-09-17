@@ -7,6 +7,7 @@ import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 import { useRolesQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
+import { toast } from '@/store/toast.store'
 
 interface RolesListTabProps {
   onOpenEditRole: (role: Role) => void
@@ -37,18 +38,20 @@ export function RolesListTab({
     }
   }, [currentPage, pageSize, debouncedName])
 
-  const { data, isLoading: isQueryLoading } = useRolesQuery(queryParams)
+  const { data, isLoading: isQueryLoading, refetch } = useRolesQuery(queryParams)
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setCurrentPage(1)
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilterName('')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await refetch()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc vai trò' : 'Role filters reset')
   }
 
   const formatDate = (dateStr?: string) => {

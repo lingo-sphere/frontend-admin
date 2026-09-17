@@ -1,5 +1,6 @@
 // Bảng danh sách kết quả bài kiểm tra đầu vào và bộ lọc nâng cao cho quản trị viên.
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Search,
   RotateCcw,
@@ -17,12 +18,15 @@ import type { PlacementAttemptItem } from '@/features/exams/services/exam.servic
 import { PlacementAttemptDetailModal } from '@/features/exams/components/placement.attempt.detail.modal'
 import { useDebounce } from '@/hooks/use.debounce'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { toast } from '@/store/toast.store'
 
 interface PlacementAttemptsTableProps {
   onViewLearnerProfile?: (userId: string) => void
 }
 
 export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemptsTableProps) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const [searchTerm, setSearchTerm] = useState<string>('')
   const debouncedSearch = useDebounce(searchTerm, 300)
   const [scoreBracket, setScoreBracket] = useState<string>('ALL')
@@ -312,12 +316,14 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
           setSortOrder(o)
           setCurrentPage(1)
         }}
-        onResetFilters={() => {
+        onResetFilters={async () => {
           setSearchTerm('')
           setScoreBracket('ALL')
           setSortKey('submitted_at')
           setSortOrder('desc')
           setCurrentPage(1)
+          await refetch()
+          toast.success(isVi ? 'Đã đặt lại bộ lọc bài kiểm tra' : 'Test attempt filters reset')
         }}
         extraActions={
           <button

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Plus, RotateCcw } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import type { Course } from '@/features/courses/data/courses.data'
 import { DataTable } from '@/components/data.table'
 import { usePermission } from '@/features/rbac/hooks/use.permission'
@@ -31,6 +32,7 @@ export function CoursesPage() {
   const queryClient = useQueryClient()
 
   const { data: courses = [], isLoading, refetch } = useAdminCoursesQuery()
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const { mutateAsync: deleteCourseMutate } = useDeleteCourseMutation()
 
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -116,13 +118,15 @@ export function CoursesPage() {
     return filteredCourses.slice(start, start + itemsPerPage)
   }, [filteredCourses, currentPage, itemsPerPage])
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSearchQuery('')
     setFilterCategory('ALL')
     setFilterStatus('ALL')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await refetch()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc khóa học' : 'Course filters reset')
   }
 
   const handleEditCourse = (courseId: string) => {
@@ -190,10 +194,11 @@ export function CoursesPage() {
         extraActions={
           <>
             <button
-              onClick={() => refetch()}
-              className="flex items-center gap-2 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+              onClick={() => handleRefresh()}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
             >
-              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
+              <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`} />
               <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
             </button>
             <Can do="POST" on="/courses">

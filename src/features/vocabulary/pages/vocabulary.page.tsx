@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet, Volume2 } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { DataTable } from '@/components/data.table'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
@@ -41,7 +42,7 @@ export function VocabularyPage() {
     page: currentPage,
     limit: pageSize,
     q: searchWord || undefined,
-    l: filterLevel !== 'ALL' ? filterLevel : undefined,
+    cefr_level: filterLevel !== 'ALL' ? filterLevel : undefined,
   })
 
   const { data: topics = [], isLoading: isTopicsLoading, refetch: refetchTopics } = useVocabularyTopicsQuery()
@@ -51,13 +52,12 @@ export function VocabularyPage() {
 
   const isLoading = isWordsLoading || isTopicsLoading || isDecksLoading || isIpaLoading
 
-  // Extract items và total từ response
   const words: LexicalItem[] = wordsResponse?.items || []
   const totalWords: number = wordsResponse?.total || 0
 
-  const handleRefresh = async () => {
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(async () => {
     await Promise.all([refetchWords(), refetchTopics(), refetchDecks(), refetchIpa()])
-  }
+  })
 
   const handleEditIpaSymbol = (_symbol: IpaSymbol) => {
     toast.info(isVi ? 'Vào chi tiết IPA để chỉnh sửa mô tả.' : 'Open IPA detail to edit description.')
@@ -72,10 +72,12 @@ export function VocabularyPage() {
     }
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSearchWord('')
     setFilterLevel('ALL')
     setCurrentPage(1)
+    await refetchWords()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc và tải lại từ vựng' : 'Vocabulary filters reset')
   }
 
   const columns = useMemo(() => {
@@ -109,10 +111,11 @@ export function VocabularyPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={handleRefresh}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer disabled:opacity-60"
           >
-            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-500' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-teal-500' : ''}`} />
             <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
           <button
@@ -197,6 +200,7 @@ export function VocabularyPage() {
           rowKey={(w) => w.id}
           isLoading={isLoading}
           onRowClick={(word) => setDetailModalId(word.id)}
+          onResetFilters={handleResetFilters}
           filterSlot={
             <VocabularyFilterBar
               searchWord={searchWord}

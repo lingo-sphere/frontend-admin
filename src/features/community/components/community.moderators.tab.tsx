@@ -21,12 +21,14 @@ import {
   CommunityModeratorModal,
   DEFAULT_MODERATOR_PERMISSIONS,
 } from '@/features/community/components/community.moderator.modal'
+import { toast } from '@/store/toast.store'
 
 interface CommunityModeratorsTabProps {
   moderators: AdminCommunityMember[]
   isLoading: boolean
   onSetModerator: (payload: SetModeratorPayload | SetModeratorPayload[]) => Promise<void>
   onRemoveModerator: (userId: string) => Promise<void>
+  onRefresh?: () => void | Promise<void>
 }
 
 export function CommunityModeratorsTab({
@@ -34,8 +36,10 @@ export function CommunityModeratorsTab({
   isLoading,
   onSetModerator,
   onRemoveModerator,
+  onRefresh,
 }: CommunityModeratorsTabProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const [filterText, setFilterText] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -57,10 +61,14 @@ export function CommunityModeratorsTab({
     setCurrentPage(1)
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilterText('')
     setSearchQuery('')
     setCurrentPage(1)
+    if (onRefresh) {
+      await onRefresh()
+    }
+    toast.success(isVi ? 'Đã đặt lại bộ lọc ban điều hành' : 'Moderator filters reset')
   }
 
   const filteredModerators = useMemo(() => {

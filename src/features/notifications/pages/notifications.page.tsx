@@ -9,6 +9,7 @@ import {
   Send,
   CalendarCheck,
 } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
 import { Pagination } from '@/components/pagination'
 import { NotificationFilterBar } from '@/features/notifications/components/notification.filter.bar'
@@ -30,6 +31,7 @@ export function NotificationsPage() {
   const isVietnamese = i18n.language === 'vi'
 
   const { data: notifications = [], isLoading, refetch } = useNotificationsAdminQuery()
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const {
     markAsRead,
     togglePin,
@@ -170,11 +172,12 @@ export function NotificationsPage() {
           </button>
 
           <button
-            onClick={() => refetch()}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing}
+            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-60"
             title="Làm mới thông báo"
           >
-            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
 
           <button

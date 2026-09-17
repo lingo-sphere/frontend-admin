@@ -206,7 +206,11 @@ export function useCourseExams() {
     return { total, published, totalAttempts, avgScore }
   }, [filteredExams])
 
-  const handleResetFilters = useCallback(() => {
+  const loadData = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
+  const handleResetFilters = useCallback(async () => {
     setSearchQuery('')
     setSelectedCourseId('ALL')
     setTypeFilter('ALL')
@@ -214,7 +218,9 @@ export function useCourseExams() {
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
-  }, [])
+    await loadData()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc bài thi' : 'Exam filters reset')
+  }, [loadData, isVi])
 
   const handleDeleteExam = useCallback(
     async (examId?: string) => {
@@ -255,10 +261,6 @@ export function useCourseExams() {
     },
     [exams, isVi, togglePublishMutation]
   )
-
-  const loadData = useCallback(async () => {
-    await refetch()
-  }, [refetch])
 
   return {
     isVi,

@@ -1,6 +1,7 @@
 // Trang quản trị các vai trò và quyền hạn RBAC trong giao diện Admin.
 import { useState } from 'react'
 import { Shield, Sparkles, Plus, RotateCcw } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { roleService } from '@/features/rbac/services/role.service'
@@ -24,7 +25,10 @@ export function RolesPage() {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [isSeeding, setIsSeeding] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(
+    () => queryClient.invalidateQueries({ queryKey: rbacKeys.roles() })
+  )
 
   const { data: allPermissions = [] } = useAllPermissionsQuery(isRoleModalOpen)
 
@@ -33,15 +37,6 @@ export function RolesPage() {
   const deleteRoleMutation = useDeleteRoleMutation()
 
   const isSubmitting = createRoleMutation.isPending || updateRoleMutation.isPending
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await queryClient.invalidateQueries({ queryKey: rbacKeys.roles() })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   const handleSeedRBAC = async () => {
     setIsSeeding(true)
@@ -131,8 +126,9 @@ export function RolesPage() {
           </button>
 
           <button
-            onClick={handleRefresh}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 active:scale-95 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing || isSeeding}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 active:scale-95 transition-colors cursor-pointer disabled:opacity-60"
             title={isVi ? 'Làm mới' : 'Refresh'}
           >
             <RotateCcw className={`w-4 h-4 ${isRefreshing || isSeeding ? 'animate-spin text-blue-600' : ''}`} />

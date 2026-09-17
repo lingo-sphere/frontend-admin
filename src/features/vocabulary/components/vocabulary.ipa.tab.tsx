@@ -1,8 +1,4 @@
-/**
- * @file vocabulary.ipa.tab.tsx
- * @description Tab IPA symbols - dùng DataTable chung
- */
-
+// Component giao diện quản lý ký tự IPA trong từ vựng phục vụ khu vực Quản trị Admin.
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
@@ -32,11 +28,9 @@ export function VocabularyIpaTab({ onEditIpaSymbol }: VocabularyIpaTabProps) {
   const [sortKey, setSortKey] = useState<string | null>('symbol')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>('asc')
 
-  // Detail modal
   const [detailSymbol, setDetailSymbol] = useState<IpaSymbol | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
-  // Edit modal
   const [editSymbol, setEditSymbol] = useState<IpaSymbol | null>(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
 
@@ -98,12 +92,14 @@ export function VocabularyIpaTab({ onEditIpaSymbol }: VocabularyIpaTabProps) {
     }
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSearchSymbol('')
     setFilterType('ALL')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await refetch()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc ký tự IPA' : 'IPA filters reset')
   }
 
   const columns = useMemo(
@@ -113,8 +109,7 @@ export function VocabularyIpaTab({ onEditIpaSymbol }: VocabularyIpaTabProps) {
         onViewSymbol: handleView,
         onEditSymbol: handleEdit,
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isVi]
+    [isVi, handleView, handleEdit]
   )
 
   const typeOptions: { value: string; label: string }[] = [

@@ -11,6 +11,7 @@ import {
   List,
   ChevronDown,
 } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 
 export type TableDensity = 'compact' | 'middle' | 'comfortable'
 
@@ -27,7 +28,7 @@ interface TableControlsProps {
   onColumnsChange?: (columns: ColumnOption[]) => void
   viewMode?: 'table' | 'grid'
   onViewModeChange?: (mode: 'table' | 'grid') => void
-  onResetFilters?: () => void
+  onResetFilters?: () => void | Promise<void>
   totalCount?: number
 }
 
@@ -43,6 +44,8 @@ export function TableControls({
 }: TableControlsProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+
+  const { isReloading: isResetting, trigger: handleReset } = useReloadAnimation(onResetFilters, 800)
 
   const [showDensityDropdown, setShowDensityDropdown] = useState(false)
   const [showColumnDropdown, setShowColumnDropdown] = useState(false)
@@ -231,11 +234,12 @@ export function TableControls({
       {onResetFilters && (
         <button
           type="button"
-          onClick={onResetFilters}
-          className="h-9 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+          onClick={() => handleReset()}
+          disabled={isResetting}
+          className="h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60"
           title={isVi ? 'Đặt lại bộ lọc về mặc định' : 'Reset filters to default'}
         >
-          <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+          <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`} />
           <span>{isVi ? 'Đặt lại' : 'Reset'}</span>
         </button>
       )}

@@ -5,6 +5,7 @@ import { Ban, VolumeX, ShieldAlert, CheckCircle, Clock, UserX, Search } from 'lu
 import type { AdminCommunityMember } from '@/features/community/types/community.admin.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { ConfirmModal } from '@/components/confirm.modal'
+import { toast } from '@/store/toast.store'
 
 interface CommunitySanctionsTabProps {
   bannedMembers: AdminCommunityMember[]
@@ -12,6 +13,7 @@ interface CommunitySanctionsTabProps {
   onOpenSanctionModal: () => void
   onUnbanMember: (userId: string) => Promise<void>
   onUnmuteMember: (userId: string) => Promise<void>
+  onRefresh?: () => void | Promise<void>
 }
 
 export function CommunitySanctionsTab({
@@ -20,6 +22,7 @@ export function CommunitySanctionsTab({
   onOpenSanctionModal,
   onUnbanMember,
   onUnmuteMember,
+  onRefresh,
 }: CommunitySanctionsTabProps) {
   const { t, i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -41,10 +44,14 @@ export function CommunitySanctionsTab({
     setCurrentPage(1)
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilterText('')
     setSearchQuery('')
     setCurrentPage(1)
+    if (onRefresh) {
+      await onRefresh()
+    }
+    toast.success(isVi ? 'Đã đặt lại bộ lọc kỷ luật' : 'Sanction filters reset')
   }
 
   const filteredMembers = useMemo(() => {

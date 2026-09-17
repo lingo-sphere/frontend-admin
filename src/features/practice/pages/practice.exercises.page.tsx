@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
 import type { PracticeSet } from '@/types/api.types'
 import { usePracticeSetsQuery } from '@/features/practice/hooks/use.practice.admin.query'
@@ -16,6 +17,7 @@ export function PracticeExercisesPage() {
   const isVi = i18n.language === 'vi'
 
   const { data: serverSets = [], isLoading, refetch } = usePracticeSetsQuery()
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const [practiceSets, setPracticeSets] = useState<PracticeSet[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
@@ -101,10 +103,11 @@ export function PracticeExercisesPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => refetch()}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer disabled:opacity-60"
           >
-            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowAddModal(true)}

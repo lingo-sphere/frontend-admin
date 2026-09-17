@@ -143,18 +143,6 @@ export function PermissionsPage() {
             Quản lý danh mục quyền hạn endpoint API và gán phân quyền cho từng thành viên hệ thống
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          {activeTab === 'permissions' && (
-            <button
-              onClick={handleOpenCreatePerm}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
-            >
-              <KeyRound className="w-4 h-4" />
-              <span>Thêm Quyền Hạn</span>
-            </button>
-          )}
-        </div>
       </div>
 
       <div className="flex border-b border-slate-200 dark:border-slate-800">
