@@ -76,6 +76,19 @@ export function validateCourseFormData(formData: Partial<CourseFormData>, isVi: 
       ? 'Đường dẫn rút gọn (Slug) không hợp lệ. Chỉ chấp nhận chữ thường, số và dấu gạch ngang (VD: khoa-hoc-toeic-550)'
       : 'Invalid slug format. Use lowercase letters, numbers, and hyphens (e.g. toeic-550-course)'
   }
+  if (!formData.category || (formData.category !== 'TOEIC_2_SKILLS' && formData.category !== 'TOEIC_4_SKILLS')) {
+    return isVi
+      ? 'Thể loại khóa học không hợp lệ. Vui lòng chọn TOEIC 2 Kỹ Năng hoặc TOEIC 4 Kỹ Năng'
+      : 'Invalid course category. Must be TOEIC 2 Skills or TOEIC 4 Skills'
+  }
+  if (
+    !formData.level ||
+    (formData.level !== 'BEGINNER' && formData.level !== 'INTERMEDIATE' && formData.level !== 'ADVANCED')
+  ) {
+    return isVi
+      ? 'Trình độ khóa học không hợp lệ. Vui lòng chọn Sơ cấp, Trung cấp hoặc Nâng cao'
+      : 'Invalid course level. Must be Beginner, Intermediate, or Advanced'
+  }
   if (formData.target_score !== undefined && formData.target_score !== null) {
     const score = Number(formData.target_score)
     if (isNaN(score) || score < 10 || score > 990) {

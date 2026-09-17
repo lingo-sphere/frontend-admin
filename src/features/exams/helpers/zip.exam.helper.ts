@@ -143,11 +143,21 @@ function extractExamWorkbookData(workbook: XLSX.WorkBook): {
         normKey.includes('thoiluong') ||
         normKey.includes('thoigian')
       ) {
-        const num = parseInt(val.replace(/\D/g, ''), 10)
-        if (!isNaN(num) && num > 0) parsedDuration = num
+        const num = Number(val)
+        if (!Number.isInteger(num) || num <= 0) {
+          throw new Error(
+            `Thời gian làm bài (duration_minutes) "${val}" trong sheet Exam_Info không hợp lệ theo chuẩn Backend. Phải là số nguyên phút lớn hơn 0.`
+          )
+        }
+        parsedDuration = num
       } else if (normKey.includes('passing') || normKey.includes('diemdat') || normKey.includes('passingscore')) {
-        const num = parseInt(val.replace(/\D/g, ''), 10)
-        if (!isNaN(num) && num > 0) parsedPassingScore = num
+        const num = Number(val)
+        if (!Number.isInteger(num) || num < 0 || num > 100) {
+          throw new Error(
+            `Điểm đạt (passing_score) "${val}" trong sheet Exam_Info không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 100.`
+          )
+        }
+        parsedPassingScore = num
       } else if (normKey.includes('description') || normKey.includes('mota')) {
         parsedDesc = val
       }
@@ -182,6 +192,10 @@ function extractExamWorkbookData(workbook: XLSX.WorkBook): {
 }
 
 function classifySkill(strVal: string): 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'UNKNOWN' {
+  const upper = strVal.trim().toUpperCase()
+  if (upper === 'LISTENING' || upper === 'READING' || upper === 'SPEAKING' || upper === 'WRITING') {
+    return upper
+  }
   const norm = normalizeKey(strVal)
   const lower = strVal.toLowerCase().trim()
 
@@ -794,8 +808,15 @@ export async function parseAndUploadZipExam(
           !norm.includes('answerc') &&
           !norm.includes('answerd'))
       ) {
-        const cleaned = strVal.toUpperCase().replace(/[^ABCD]/g, '')
-        if (cleaned) correctLetter = cleaned[0]
+        const rawAns = strVal.toUpperCase().trim()
+        if (rawAns && !['A', 'B', 'C', 'D'].includes(rawAns)) {
+          throw new Error(
+            isVi
+              ? `Đáp án đúng "${rawAns}" tại câu hỏi số ${idx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`
+              : `Correct answer "${rawAns}" at question ${idx + 1} is invalid. Only A, B, C, or D are supported.`
+          )
+        }
+        if (rawAns) correctLetter = rawAns
       } else if (norm.includes('luachona') || norm.includes('optiona') || norm === 'a' || norm === 'dapana') {
         optA = strVal
       } else if (norm.includes('luachonb') || norm.includes('optionb') || norm === 'b' || norm === 'dapanb') {

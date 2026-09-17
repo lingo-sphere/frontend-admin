@@ -186,16 +186,72 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[finalTestsSheetName] || {})
     : []
 
-  const title = String(findValue(infoRaw, ['title', 'tên khóa học']) || excelFile.name.replace(/\.[^/.]+$/, '').replace(/^\d+_/, '').replace(/_/g, ' ')).trim()
+  const rawTitle = findValue(infoRaw, ['title', 'tên khóa học'])
+  const title = String(rawTitle || '').trim()
+  if (!title) {
+    throw new Error('File Excel thiếu thông tin "title" (Tên khóa học) trong sheet Course_Info.')
+  }
+
   const rawSlug = String(findValue(infoRaw, ['slug', 'đường dẫn rút gọn']) || '').trim()
   const slug = rawSlug ? generateSlug(rawSlug) : generateSlug(title)
-  const rawCategory = String(findValue(infoRaw, ['category', 'thể loại']) || 'TOEIC_2_SKILLS').trim()
-  const category = rawCategory.includes('4') ? 'TOEIC_4_SKILLS' : 'TOEIC_2_SKILLS'
-  const rawLevel = String(findValue(infoRaw, ['level', 'trình độ']) || 'BEGINNER').trim().toUpperCase()
-  const level = rawLevel === 'INTERMEDIATE' || rawLevel === 'ADVANCED' ? rawLevel : 'BEGINNER'
-  const target_score = Number(findValue(infoRaw, ['target_score', 'mục tiêu']) || 500)
-  const price = Number(findValue(infoRaw, ['price', 'giá gốc']) || 0)
-  const discount_price = Number(findValue(infoRaw, ['discount_price', 'giá khuyến mãi']) || 0)
+
+  const rawCategory = String(findValue(infoRaw, ['category', 'thể loại']) || '').trim().toUpperCase()
+  if (!rawCategory) {
+    throw new Error('File Excel thiếu thông tin "category" (Thể loại) trong sheet Course_Info.')
+  }
+  if (rawCategory !== 'TOEIC_2_SKILLS' && rawCategory !== 'TOEIC_4_SKILLS') {
+    throw new Error(
+      `Thể loại khóa học (category) "${rawCategory}" không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TOEIC_2_SKILLS hoặc TOEIC_4_SKILLS.`
+    )
+  }
+  const category: 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS' = rawCategory
+
+  const rawLevel = String(findValue(infoRaw, ['level', 'trình độ']) || '').trim().toUpperCase()
+  if (!rawLevel) {
+    throw new Error('File Excel thiếu thông tin "level" (Trình độ) trong sheet Course_Info.')
+  }
+  if (rawLevel !== 'BEGINNER' && rawLevel !== 'INTERMEDIATE' && rawLevel !== 'ADVANCED') {
+    throw new Error(
+      `Trình độ khóa học (level) "${rawLevel}" không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: BEGINNER, INTERMEDIATE hoặc ADVANCED.`
+    )
+  }
+  const level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' = rawLevel
+
+  const rawTargetScore = findValue(infoRaw, ['target_score', 'mục tiêu'])
+  if (rawTargetScore === undefined || rawTargetScore === null || String(rawTargetScore).trim() === '') {
+    throw new Error('File Excel thiếu thông tin "target_score" (Điểm mục tiêu) trong sheet Course_Info.')
+  }
+  const target_score = Number(rawTargetScore)
+  if (!Number.isInteger(target_score) || target_score < 0 || target_score > 990) {
+    throw new Error(
+      `Điểm mục tiêu (target_score) "${rawTargetScore}" không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 990.`
+    )
+  }
+
+  const rawPrice = findValue(infoRaw, ['price', 'giá gốc'])
+  if (rawPrice === undefined || rawPrice === null || String(rawPrice).trim() === '') {
+    throw new Error('File Excel thiếu thông tin "price" (Giá gốc) trong sheet Course_Info.')
+  }
+  const price = Number(rawPrice)
+  if (!Number.isInteger(price) || price < 0) {
+    throw new Error(`Giá khóa học (price) "${rawPrice}" không hợp lệ theo chuẩn Backend. Phải là số nguyên không âm (>= 0).`)
+  }
+
+  const rawDiscountPrice = findValue(infoRaw, ['discount_price', 'giá khuyến mãi'])
+  let discount_price = 0
+  if (rawDiscountPrice !== undefined && rawDiscountPrice !== null && String(rawDiscountPrice).trim() !== '') {
+    const numDiscount = Number(rawDiscountPrice)
+    if (!Number.isInteger(numDiscount) || numDiscount < 0) {
+      throw new Error(
+        `Giá khuyến mãi (discount_price) "${rawDiscountPrice}" không hợp lệ theo chuẩn Backend. Phải là số nguyên không âm (>= 0).`
+      )
+    }
+    if (price > 0 && numDiscount > price) {
+      throw new Error(`Giá khuyến mãi (${numDiscount}) không được lớn hơn giá gốc (${price}).`)
+    }
+    discount_price = numDiscount
+  }
+
   const authState = authStore.getState()
   const currentProfile = authState.profile
   const currentUser = authState.user
@@ -211,13 +267,57 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   const author_title =
     authorRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
   const author_bio = currentProfile?.bio || ''
-  const description = String(findValue(infoRaw, ['description', 'mô tả']) || `Khóa học ${title} chất lượng cao chuẩn quốc tế trên LingoSphere.`).trim()
-  const final_test_passing_score = Number(findValue(infoRaw, ['final_test_passing_score', 'điểm đạt kiểm tra cuối khóa', 'cuối khóa']) || 70)
-  const final_test_duration_minutes = Number(findValue(infoRaw, ['final_test_duration_minutes', 'thời lượng thi tốt nghiệp', 'thời lượng kiểm tra cuối khóa']) || 60)
+
+  const description = String(
+    findValue(infoRaw, ['description', 'mô tả']) || `Khóa học ${title} chất lượng cao chuẩn quốc tế trên LingoSphere.`
+  ).trim()
+
+  const rawFinalPassing = findValue(infoRaw, ['final_test_passing_score', 'điểm đạt kiểm tra cuối khóa', 'cuối khóa'])
+  if (rawFinalPassing === undefined || rawFinalPassing === null || String(rawFinalPassing).trim() === '') {
+    throw new Error(
+      'File Excel thiếu thông tin "final_test_passing_score" (Điểm đạt bài thi cuối khóa) trong sheet Course_Info.'
+    )
+  }
+  const final_test_passing_score = Number(rawFinalPassing)
+  if (!Number.isInteger(final_test_passing_score) || final_test_passing_score < 0 || final_test_passing_score > 100) {
+    throw new Error(
+      `Điểm đạt bài thi cuối khóa (final_test_passing_score) "${rawFinalPassing}" không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 100.`
+    )
+  }
+
+  const rawFinalDuration = findValue(infoRaw, [
+    'final_test_duration_minutes',
+    'thời lượng thi tốt nghiệp',
+    'thời lượng kiểm tra cuối khóa',
+  ])
+  if (rawFinalDuration === undefined || rawFinalDuration === null || String(rawFinalDuration).trim() === '') {
+    throw new Error(
+      'File Excel thiếu thông tin "final_test_duration_minutes" (Thời lượng bài thi cuối khóa) trong sheet Course_Info.'
+    )
+  }
+  const final_test_duration_minutes = Number(rawFinalDuration)
+  if (!Number.isInteger(final_test_duration_minutes) || final_test_duration_minutes <= 0) {
+    throw new Error(
+      `Thời lượng bài thi cuối khóa (final_test_duration_minutes) "${rawFinalDuration}" không hợp lệ theo chuẩn Backend. Phải là số nguyên lớn hơn 0.`
+    )
+  }
+
   const final_test_speaking_prompt = String(findValue(infoRaw, ['final_test_speaking_prompt', 'đề thi nói cuối khóa']) || '').trim()
   const final_test_writing_prompt = String(findValue(infoRaw, ['final_test_writing_prompt', 'đề thi viết cuối khóa']) || '').trim()
-  const rawIsPublished = String(findValue(infoRaw, ['is_published', 'xuất bản']) || 'TRUE').toUpperCase()
-  const is_published = rawIsPublished !== 'FALSE'
+
+  const rawIsPublished = findValue(infoRaw, ['is_published', 'xuất bản'])
+  if (rawIsPublished === undefined || rawIsPublished === null || String(rawIsPublished).trim() === '') {
+    throw new Error('File Excel thiếu thông tin "is_published" (Trạng thái xuất bản) trong sheet Course_Info.')
+  }
+  const strPub = String(rawIsPublished).trim().toUpperCase()
+  let is_published = true
+  if (strPub === 'TRUE' || strPub === '1') {
+    is_published = true
+  } else if (strPub === 'FALSE' || strPub === '0') {
+    is_published = false
+  } else {
+    throw new Error(`Trạng thái xuất bản (is_published) "${rawIsPublished}" không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TRUE hoặc FALSE.`)
+  }
 
   const rawThumbnailName = String(
     findValue(infoRaw, [
@@ -290,8 +390,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? row['C'] ?? '').trim()
     const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? row['D'] ?? '').trim()
     const options = [optA, optB, optC, optD].filter(Boolean)
-    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
-    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? '').trim().toUpperCase()
+    if (rawAnswer && !['A', 'B', 'C', 'D'].includes(rawAnswer)) {
+      throw new Error(`Đáp án đúng "${rawAnswer}" tại câu hỏi tốt nghiệp số ${ftIdx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`)
+    }
+    const correct_answer = rawAnswer || 'A'
     const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
     const mediaFilename = String(
       row['File hình ảnh / âm thanh (media_filename)'] ??
@@ -329,9 +432,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     slug,
     category,
     level,
-    target_score: isNaN(target_score) ? 500 : target_score,
-    price: isNaN(price) ? 0 : price,
-    discount_price: isNaN(discount_price) ? 0 : discount_price,
+    target_score,
+    price,
+    discount_price,
     author_id,
     author_name,
     author_title,
@@ -339,8 +442,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     author_avatar: author_avatar || undefined,
     author_bio: author_bio || undefined,
     description,
-    final_test_passing_score: isNaN(final_test_passing_score) ? 70 : final_test_passing_score,
-    final_test_duration_minutes: isNaN(final_test_duration_minutes) ? 60 : final_test_duration_minutes,
+    final_test_passing_score,
+    final_test_duration_minutes,
     final_test_speaking_prompt: final_test_speaking_prompt || undefined,
     final_test_writing_prompt: final_test_writing_prompt || undefined,
     final_test_questions: finalTestQuestions,
@@ -350,7 +453,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   const chapterTestsByModule = new Map<number, QuizQuestionItem[]>()
   chapterTestsRaw.forEach((row, qIdx) => {
-    const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? row['Chương'] ?? 1)
+    const rawMOrder = row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? row['Chương'] ?? 1
+    const mOrder = Number(rawMOrder)
+    if (!Number.isInteger(mOrder) || mOrder < 1) {
+      throw new Error(`Thứ tự chương (module_order) "${rawMOrder}" tại câu hỏi kiểm tra chương số ${qIdx + 1} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const qText = String(row['Câu hỏi trắc nghiệm (question_text)'] ?? row['question_text'] ?? row['Câu hỏi'] ?? '').trim()
     if (!qText) return
     const optA = String(row['Đáp án A (option_a)'] ?? row['option_a'] ?? row['A'] ?? '').trim()
@@ -358,8 +465,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? row['C'] ?? '').trim()
     const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? row['D'] ?? '').trim()
     const options = [optA, optB, optC, optD].filter(Boolean)
-    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
-    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? '').trim().toUpperCase()
+    if (rawAnswer && !['A', 'B', 'C', 'D'].includes(rawAnswer)) {
+      throw new Error(`Đáp án đúng "${rawAnswer}" tại câu hỏi kiểm tra chương ${mOrder} số ${qIdx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`)
+    }
+    const correct_answer = rawAnswer || 'A'
     const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
     const mediaFilename = String(
       row['File hình ảnh / âm thanh (media_filename)'] ??
@@ -400,8 +510,16 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   const lessonQuizzesByModuleAndLesson = new Map<string, LessonQuestion[]>()
   lessonQuizzesRaw.forEach((row, lqIdx) => {
-    const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1)
-    const lOrder = Number(row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? 1)
+    const rawMOrder = row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1
+    const mOrder = Number(rawMOrder)
+    if (!Number.isInteger(mOrder) || mOrder < 1) {
+      throw new Error(`Thứ tự chương (module_order) "${rawMOrder}" tại câu hỏi ôn tập số ${lqIdx + 1} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
+    const rawLOrder = row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? 1
+    const lOrder = Number(rawLOrder)
+    if (!Number.isInteger(lOrder) || lOrder < 1) {
+      throw new Error(`Thứ tự bài học (lesson_order) "${rawLOrder}" tại câu hỏi ôn tập số ${lqIdx + 1} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const key = `${mOrder}-${lOrder}`
     const qText = String(row['Câu hỏi ôn tập (question_text)'] ?? row['question_text'] ?? '').trim()
     if (!qText) return
@@ -410,8 +528,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? '').trim()
     const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? '').trim()
     const options = [optA, optB, optC, optD].filter(Boolean)
-    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? 'A').trim().toUpperCase()
-    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? '').trim().toUpperCase()
+    if (rawAnswer && !['A', 'B', 'C', 'D'].includes(rawAnswer)) {
+      throw new Error(`Đáp án đúng "${rawAnswer}" tại câu hỏi ôn tập bài học ${mOrder}.${lOrder} số ${lqIdx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`)
+    }
+    const correct_answer = rawAnswer || 'A'
     const explanation = String(row['Lời giải thích (explanation)'] ?? row['explanation'] ?? '').trim()
 
     const item: LessonQuestion = {
@@ -450,20 +571,54 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   for (let idx = 0; idx < lessonsRaw.length; idx++) {
     const row = lessonsRaw[idx]
-    const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1)
+    const rawMOrder = row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1
+    const mOrder = Number(rawMOrder)
+    if (!Number.isInteger(mOrder) || mOrder < 1) {
+      throw new Error(`Thứ tự chương (module_order) "${rawMOrder}" tại bài học dòng ${idx + 2} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const mTitle = String(row['Tên chương (module_title)'] ?? row['module_title'] ?? `Chương ${mOrder}`).trim()
     const mDesc = String(row['Mô tả chương (module_description)'] ?? row['module_description'] ?? '').trim()
     const mTheory = findRowString(row, ['module_theory_file', 'tài liệu chương', 'tài liệu lý thuyết', 'theory_file', 'tài liệu'])
-    const mPassing = Number(row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score'] ?? 70)
-    const mDuration = Number(row['Thời lượng test chương (module_test_duration_minutes)'] ?? row['module_test_duration_minutes'] ?? (category === 'TOEIC_4_SKILLS' ? 20 : 15))
+
+    const rawMPassing = row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score']
+    let mPassing = 70
+    if (rawMPassing !== undefined && rawMPassing !== null && String(rawMPassing).trim() !== '') {
+      const num = Number(rawMPassing)
+      if (!Number.isInteger(num) || num < 0 || num > 100) {
+        throw new Error(`Điểm đạt test chương "${rawMPassing}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 100.`)
+      }
+      mPassing = num
+    }
+
+    const rawMDuration = row['Thời lượng test chương (module_test_duration_minutes)'] ?? row['module_test_duration_minutes']
+    let mDuration = category === 'TOEIC_4_SKILLS' ? 20 : 15
+    if (rawMDuration !== undefined && rawMDuration !== null && String(rawMDuration).trim() !== '') {
+      const num = Number(rawMDuration)
+      if (!Number.isInteger(num) || num <= 0) {
+        throw new Error(`Thời lượng test chương "${rawMDuration}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Phải là số nguyên lớn hơn 0.`)
+      }
+      mDuration = num
+    }
     const mSpeakingPrompt = findRowString(row, ['module_speaking_prompt', 'đề kiểm tra nói'])
     const mWritingPrompt = findRowString(row, ['module_writing_prompt', 'đề kiểm tra viết'])
 
-    const lOrder = Number(row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1)
+    const rawLOrder = row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1
+    const lOrder = Number(rawLOrder)
+    if (!Number.isInteger(lOrder) || lOrder < 1) {
+      throw new Error(`Thứ tự bài học (lesson_order) "${rawLOrder}" tại bài học dòng ${idx + 2} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const lTitle = String(row['Tên bài học (lesson_title)'] ?? row['lesson_title'] ?? `Bài học ${mOrder}.${lOrder}`).trim()
     const videoFilename = String(row['Tên file video (video_filename)'] ?? row['video_filename'] ?? '').trim()
-    const rawPreview = String(row['Học thử miễn phí (is_free_preview)'] ?? row['is_free_preview'] ?? 'FALSE').toUpperCase()
-    const isFree = rawPreview === 'TRUE' || rawPreview === '1'
+
+    const rawPreview = String(row['Học thử miễn phí (is_free_preview)'] ?? row['is_free_preview'] ?? 'FALSE').trim().toUpperCase()
+    let isFree = false
+    if (rawPreview === 'TRUE' || rawPreview === '1') {
+      isFree = true
+    } else if (rawPreview === 'FALSE' || rawPreview === '0') {
+      isFree = false
+    } else {
+      throw new Error(`Cấu hình học thử (is_free_preview) "${rawPreview}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TRUE hoặc FALSE.`)
+    }
     const lTheoryFile = findRowString(row, ['lesson_theory_file', 'file lý thuyết bài học', 'lý thuyết bài học', 'tài liệu bài học', 'theory'])
     const lTheoryText = String(row['Tóm tắt lý thuyết bài học (lesson_theory_text)'] ?? row['lesson_theory_text'] ?? '').trim()
 
@@ -507,8 +662,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       moduleTitle: mTitle,
       moduleDescription: mDesc,
       moduleTheoryFile: mTheory,
-      modulePassingScore: isNaN(mPassing) ? 70 : mPassing,
-      moduleDurationMinutes: isNaN(mDuration) ? 15 : mDuration,
+      modulePassingScore: mPassing,
+      moduleDurationMinutes: mDuration,
       moduleSpeakingPrompt: mSpeakingPrompt || undefined,
       moduleWritingPrompt: mWritingPrompt || undefined,
       lessonOrder: lOrder,
@@ -528,8 +683,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
         title: mTitle,
         description: mDesc,
         theoryFile: mTheory,
-        passingScore: isNaN(mPassing) ? 70 : mPassing,
-        durationMinutes: isNaN(mDuration) ? 15 : mDuration,
+        passingScore: mPassing,
+        durationMinutes: mDuration,
         speakingPrompt: mSpeakingPrompt || undefined,
         writingPrompt: mWritingPrompt || undefined,
         lessons: [],
