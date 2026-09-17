@@ -1,10 +1,7 @@
-/**
- * @file course.exam.header.actions.tsx
- * @description Các thao tác hành động trên header bảng: chọn khóa học, làm mới dữ liệu và tạo bài thi mới
- */
+// Các thao tác hành động trên header bảng: chọn khóa học và làm mới dữ liệu bài thi khóa học.
 
 import { useMemo } from 'react'
-import { RotateCcw, Plus } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 
@@ -23,7 +20,6 @@ interface CourseExamHeaderActionsProps {
   selectedCourseId: string
   onSelectCourseId: (courseId: string) => void
   onRefresh: () => void
-  onOpenCreateModal: () => void
 }
 
 export function CourseExamHeaderActions({
@@ -34,23 +30,16 @@ export function CourseExamHeaderActions({
   selectedCourseId,
   onSelectCourseId,
   onRefresh,
-  onOpenCreateModal,
 }: CourseExamHeaderActionsProps) {
   const courseOptions: SelectOption[] = useMemo(() => {
     const list: SelectOption[] = [
       {
         value: 'ALL',
         label: isVi
-          ? `Tất cả bài thi (Khóa học & Hệ thống)`
-          : `All Exams (${exams.length})`,
+          ? `Tất cả khóa học (${exams.length} bài)`
+          : `All Courses (${exams.length})`,
         badge: String(exams.length),
         badgeClass: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
-      },
-      {
-        value: 'GLOBAL_SYSTEM',
-        label: isVi ? 'Bài Test Năng Lực Đầu Vào' : 'System Placement Tests',
-        badge: isVi ? 'Hệ thống' : 'System',
-        badgeClass: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
       },
     ]
 
@@ -75,7 +64,7 @@ export function CourseExamHeaderActions({
           options={courseOptions}
           size="md"
           showSearch={courses.length > 5}
-          placeholder={isVi ? 'Chọn khóa học / bài thi...' : 'Select course...'}
+          placeholder={isVi ? 'Chọn khóa học...' : 'Select course...'}
         />
       </div>
 
@@ -86,15 +75,6 @@ export function CourseExamHeaderActions({
         className="flex items-center justify-center p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
       >
         <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
-      </button>
-
-      <button
-        type="button"
-        onClick={onOpenCreateModal}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer shrink-0"
-      >
-        <Plus className="w-4 h-4" />
-        <span>{isVi ? 'Tạo bài thi mới' : 'Add New Exam'}</span>
       </button>
     </>
   )

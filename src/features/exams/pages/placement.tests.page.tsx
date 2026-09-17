@@ -1,0 +1,502 @@
+// Trang quản lý chuyên biệt 2 đề thi đánh giá năng lực đầu vào hệ thống và kết quả làm bài của học viên.
+
+import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import {
+  Trophy,
+  Award,
+  Users,
+  Headphones,
+  BookOpen,
+  Mic,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  FileText,
+  RotateCcw,
+  ShieldCheck,
+  Edit3,
+  Flame,
+  AlertCircle,
+  Plus,
+} from 'lucide-react'
+import { useAdminExamsQuery, useUpdateExamMutation, useAdminPlacementAttemptsQuery } from '@/features/exams/hooks/use.exams.admin.query'
+import { PlacementAttemptsTable } from '@/features/exams/components/placement.attempts.table'
+import type { ToeicExamItem } from '@/features/exams/services/exam.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { toast } from '@/store/toast.store'
+
+type TabType = 'system-exams' | 'student-attempts'
+
+export function PlacementTestsPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+  const navigate = useNavigate()
+
+  const [activeTab, setActiveTab] = useState<TabType>('system-exams')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const { data: allExams = [], isLoading: isLoadingExams, refetch: refetchExams } = useAdminExamsQuery()
+  const updateExamMutation = useUpdateExamMutation()
+
+  const { data: attemptsData, refetch: refetchAttempts } = useAdminPlacementAttemptsQuery({
+    page: 1,
+    limit: 1,
+  })
+  const stats = attemptsData?.stats
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([refetchExams(), refetchAttempts()])
+      toast.success(isVi ? 'Đã làm mới dữ liệu đề thi đầu vào!' : 'Placement test data refreshed!')
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const placementExams = useMemo(() => {
+    return allExams.filter((e) => {
+      const raw = e as Record<string, unknown>
+      return Boolean(
+        e.is_system_placement ||
+        raw.is_system_placement ||
+        e.type === 'DIAGNOSTIC_TEST' ||
+        raw.exam_type === 'DIAGNOSTIC_TEST'
+      )
+    })
+  }, [allExams])
+
+  const twoSkillsExam = useMemo(() => {
+    return (
+      placementExams.find(
+        (e) =>
+          e.skills_enabled === 'LR' ||
+          e.placement_type === '2SKILLS' ||
+          (e.title && e.title.includes('2 Kỹ Năng'))
+      ) || placementExams[0]
+    )
+  }, [placementExams])
+
+  const fourSkillsExam = useMemo(() => {
+    return (
+      placementExams.find(
+        (e) =>
+          e.skills_enabled === 'ALL' ||
+          e.placement_type === '4SKILLS' ||
+          e.skills_enabled === 'LRWS' ||
+          (e.title && e.title.includes('4 Kỹ Năng'))
+      ) || (placementExams.length > 1 ? placementExams[1] : undefined)
+    )
+  }, [placementExams])
+
+  const handleManageQuestions = (exam: ToeicExamItem) => {
+    storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
+    navigate(`/course-exams/${exam._id || exam.id}/questions`)
+  }
+
+  const handleTogglePublish = async (exam: ToeicExamItem, nextStatus: boolean) => {
+    const examId = exam._id || exam.id
+    if (!examId) return
+
+    try {
+      await updateExamMutation.mutateAsync({
+        id: examId,
+        dto: { is_published: nextStatus },
+      })
+      toast.success(
+        nextStatus
+          ? (isVi ? 'Đã xuất bản bài thi đầu vào công khai!' : 'Placement test published!')
+          : (isVi ? 'Đã chuyển bài thi về bản nháp / ẩn khỏi hệ thống!' : 'Placement test set to draft!')
+      )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (isVi ? 'Không thể cập nhật trạng thái xuất bản bài thi.' : 'Failed to update status.')
+      toast.error(msg)
+    }
+  }
+
+  const handleViewLearnerProfile = (userId: string) => {
+    navigate(`/users/${userId}`)
+  }
+
+  const renderExamCard = (
+    exam: ToeicExamItem | undefined,
+    type: '2SKILLS' | '4SKILLS',
+    defaultTitle: string,
+    description: string
+  ) => {
+    const isTwoSkills = type === '2SKILLS'
+    const qCount = exam
+      ? Array.isArray(exam.questions) && exam.questions.length > 0
+        ? exam.questions.length
+        : exam.total_questions || (isTwoSkills ? 30 : 40)
+      : isTwoSkills
+      ? 30
+      : 40
+
+    const duration = exam?.duration_minutes || (isTwoSkills ? 45 : 60)
+    const isPublished = exam?.is_published ?? true
+    const totalAttempts = exam?.total_attempts || 0
+    const avgScore = exam?.avg_score || 0
+
+    return (
+      <div className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all">
+        <div
+          className={`h-2 w-full ${
+            isTwoSkills
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
+              : 'bg-gradient-to-r from-purple-500 to-fuchsia-600'
+          }`}
+        />
+
+        <div className="p-6 space-y-5 flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
+                  isTwoSkills
+                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900'
+                    : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900'
+                }`}
+              >
+                {isTwoSkills ? <Headphones className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      isTwoSkills
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                        : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
+                    }`}
+                  >
+                    {isTwoSkills ? (
+                      <>
+                        <Headphones className="w-3 h-3" />
+                        <span>{isVi ? '2 Kỹ Năng (LR)' : '2 Skills (LR)'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-3 h-3" />
+                        <span>{isVi ? '4 Kỹ Năng (Full Skills)' : '4 Skills (Full Skills)'}</span>
+                      </>
+                    )}
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                      isPublished
+                        ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isPublished ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                      }`}
+                    />
+                    {isPublished
+                      ? (isVi ? 'Đang công khai' : 'Published')
+                      : (isVi ? 'Bản nháp / Ẩn' : 'Draft / Hidden')}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1 line-clamp-1">
+                  {exam?.title || defaultTitle}
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed min-h-[36px]">
+            {description}
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>{isVi ? 'Thời gian' : 'Duration'}</span>
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {duration} {isVi ? 'phút' : 'mins'}
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                <span>{isVi ? 'Số câu hỏi' : 'Questions'}</span>
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {qCount} {isVi ? 'câu' : 'qs'}
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                <span>{isVi ? 'Lượt thi' : 'Attempts'}</span>
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {totalAttempts.toLocaleString()}
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Award className="w-3 h-3" />
+                <span>{isVi ? 'Điểm TB' : 'Avg Score'}</span>
+              </div>
+              <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                {avgScore > 0 ? `${avgScore}/990` : '-'}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              {isVi ? 'Trạng thái phát hành:' : 'Publish status:'}
+            </span>
+            {exam ? (
+              <button
+                type="button"
+                onClick={() => handleTogglePublish(exam, !isPublished)}
+                disabled={updateExamMutation.isPending}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  isPublished ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                    isPublished ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            ) : (
+              <span className="text-amber-500 font-semibold text-xs">
+                {isVi ? 'Chưa khởi tạo' : 'Not created'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div className="text-[11px] text-slate-400 font-mono truncate">
+            {exam?._id || exam?.id ? `ID: ${exam._id || exam.id}` : (isVi ? 'Sẵn sàng cấu hình' : 'Ready to setup')}
+          </div>
+
+          {exam ? (
+            <button
+              type="button"
+              onClick={() => handleManageQuestions(exam)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Soạn câu hỏi & Cấu hình' : 'Edit Questions & Config'}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/course-exams/new/questions')}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Khởi tạo đề thi mới' : 'Initialize Exam'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              {isVi ? 'Quản Lý Đề Thi Đầu Vào Hệ Thống' : 'System Placement Tests Management'}
+            </h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {isVi ? 'Hệ Thống Đánh Giá Năng Lực' : 'Diagnostic Engine'}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {isVi
+              ? 'Quản lý 2 đề thi đầu vào tiêu chuẩn (2 Kỹ năng LR & 4 Kỹ năng Full Skills), theo dõi thống kê và phân tích kết quả bài làm học viên'
+              : 'Manage the 2 official placement tests (2 Skills LR & 4 Skills Full Skills), monitor stats and student attempt performance'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            title={isVi ? 'Làm mới dữ liệu' : 'Refresh Data'}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors cursor-pointer shrink-0"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing || isLoadingExams ? 'animate-spin text-indigo-500' : ''}`} />
+            <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/practice/placement-tests/create')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isVi ? 'Tạo bài thi mới' : 'Add New Exam'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900">
+            <Trophy className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+              {isVi ? 'Tổng lượt thi' : 'Total Attempts'}
+            </p>
+            <p className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {stats ? stats.total_attempts.toLocaleString() : '0'}
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900">
+            <Users className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+              {isVi ? 'Học viên tham gia' : 'Learners Evaluated'}
+            </p>
+            <p className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {stats ? stats.unique_learners_count.toLocaleString() : '0'}
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-900">
+            <Award className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+              {isVi ? 'Điểm TB toàn hệ thống' : 'System Avg Score'}
+            </p>
+            <p className="text-lg font-black text-purple-600 dark:text-purple-400">
+              {stats && stats.avg_total_score > 0 ? `${stats.avg_total_score} / 990` : '-'}
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900">
+            <Flame className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+              {isVi ? 'Điểm cao nhất' : 'Highest Score'}
+            </p>
+            <p className="text-lg font-black text-amber-600 dark:text-amber-400">
+              {stats && stats.highest_score > 0 ? `${stats.highest_score} / 990` : '-'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('system-exams')}
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'system-exams'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>{isVi ? '2 Đề Thi Đầu Vào Hệ Thống' : 'System Placement Tests'}</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+            2
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('student-attempts')}
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'student-attempts'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>{isVi ? 'Kết Quả Làm Bài Học Viên' : 'Learner Attempt Results'}</span>
+          {stats && stats.total_attempts > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              {stats.total_attempts}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'system-exams' && (
+        <div className="space-y-6">
+          <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-blue-900 dark:text-blue-200 space-y-1">
+              <p className="font-bold">
+                {isVi
+                  ? 'Quy tắc xuất bản bài thi đầu vào hệ thống:'
+                  : 'System Placement Publishing Policy:'}
+              </p>
+              <p className="leading-relaxed opacity-90">
+                {isVi
+                  ? 'Hệ thống duy trì duy nhất 1 bài thi Công khai cho loại 2 Kỹ Năng (Listening & Reading) và 1 bài thi Công khai cho loại 4 Kỹ Năng (Full Skills). Học viên sau khi hoàn thành bài test sẽ nhận được gợi ý khóa học cá nhân hóa tương ứng với trình độ CEFR/ETS đạt được.'
+                  : 'The system maintains exactly 1 active public test for 2 Skills (LR) and 1 for 4 Skills (Full). Learners completing the test receive personalized course recommendations matched to their achieved CEFR/ETS score bracket.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {renderExamCard(
+              twoSkillsExam,
+              '2SKILLS',
+              isVi
+                ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 2 Kỹ Năng (LR)'
+                : 'TOEIC 2-Skill Placement Test (Listening & Reading)',
+              isVi
+                ? 'Đánh giá tốc độ và độ chính xác của 2 kỹ năng Nghe hiểu & Đọc hiểu theo thang điểm 10 - 990. Tự động phân loại trình độ A1 - C1 và đề xuất khóa học tương ứng.'
+                : 'Assess speed and accuracy for Listening & Reading on the 10 - 990 ETS scale. Automatically classifies learners into A1 - C1 and recommends suitable courses.'
+            )}
+
+            {renderExamCard(
+              fourSkillsExam,
+              '4SKILLS',
+              isVi
+                ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 4 Kỹ Năng (Full Skills)'
+                : 'TOEIC 4-Skill Comprehensive Placement Test (L-R-S-W)',
+              isVi
+                ? 'Khảo sát toàn diện 4 kỹ năng Nghe, Đọc kèm công nghệ AI phân tích ngữ âm, độ lưu loát phần Nói (Speaking) và ngữ pháp cấu trúc phần Viết (Writing).'
+                : 'Comprehensive 4-skill evaluation with AI speech analysis for pronunciation, fluency in Speaking, and grammar structure analysis in Writing.'
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'student-attempts' && (
+        <div className="animate-in fade-in duration-150">
+          <PlacementAttemptsTable onViewLearnerProfile={handleViewLearnerProfile} />
+        </div>
+      )}
+    </div>
+  )
+}

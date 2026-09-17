@@ -154,8 +154,12 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
 
   const handleBack = useCallback(() => {
     storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
-    navigate('/course-exams')
-  }, [navigate])
+    if (exam?.is_system_placement) {
+      navigate('/practice/placement-tests')
+    } else {
+      navigate('/course-exams')
+    }
+  }, [navigate, exam?.is_system_placement])
 
   if (isLoading && !exam) {
     return (

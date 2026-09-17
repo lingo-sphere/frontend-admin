@@ -37,6 +37,7 @@ import { AdminProfilePage } from '@/features/auth/pages/admin.profile.page'
 import { RolesPage } from '@/features/rbac/pages/roles.page'
 import { PermissionsPage } from '@/features/rbac/pages/permissions.page'
 import { ExamsPage } from '@/features/exams/pages/exams.page'
+import { PlacementTestsPage } from '@/features/exams/pages/placement.tests.page'
 import { MediaStoragePage } from '@/features/media/pages/media.storage.page'
 import { ForbiddenPage, NotFoundPage } from '@/features/system/pages/status.result.page'
 
@@ -62,6 +63,7 @@ const pageMap: Record<string, React.ComponentType> = {
   'practice-speaking': PracticeSpeakingPage,
   'practice-writing': PracticeWritingPage,
   'toeic-tests': ExamsPage,
+  'placement-tests': PlacementTestsPage,
   exams: ExamsPage,
   'media-storage': MediaStoragePage,
   media: MediaStoragePage,
@@ -131,8 +133,12 @@ export function PageRouter() {
       }
     }
 
-    if (activeNavItem === 'toeic-tests') {
-      if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS')) {
+    if (
+      activeNavItem === 'toeic-tests' ||
+      activeNavItem === 'placement-tests' ||
+      activeNavItem === 'placement-test-create'
+    ) {
+      if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS') && !hasModulePermission('PRACTICE')) {
         return <ForbiddenPage />
       }
     }
@@ -187,7 +193,7 @@ export function PageRouter() {
     return <CourseSubmissionsPage courseId={courseId} />
   }
 
-  if (activeNavItem === 'course-exam-create') {
+  if (activeNavItem === 'course-exam-create' || activeNavItem === 'placement-test-create') {
     return <CourseExamQuestionsPage examId="new" />
   }
 

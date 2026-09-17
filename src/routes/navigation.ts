@@ -58,6 +58,8 @@ export function navItemToPath(navItem: string): string {
   if (navItem === 'practice-speaking') return '/practice/speaking'
   if (navItem === 'practice-writing') return '/practice/writing'
   if (navItem === 'toeic-tests') return '/practice/exams'
+  if (navItem === 'placement-tests') return '/practice/placement-tests'
+  if (navItem === 'placement-test-create') return '/practice/placement-tests/create'
   if (navItem === 'community') return '/community'
   if (navItem === 'public-decks') return '/public-decks'
   if (navItem === 'progress') return '/progress'
@@ -139,6 +141,8 @@ export function pathToNavItem(pathname: string): string {
   if (pathname === '/practice/speaking') return 'practice-speaking'
   if (pathname === '/practice/writing') return 'practice-writing'
   if (pathname === '/practice/exams') return 'toeic-tests'
+  if (pathname === '/practice/placement-tests/create' || pathname === '/placement-tests/create') return 'placement-test-create'
+  if (pathname === '/practice/placement-tests' || pathname === '/placement-tests') return 'placement-tests'
   if (pathname === '/community') return 'community'
   if (pathname === '/public-decks') return 'public-decks'
   if (pathname === '/progress') return 'progress'
@@ -218,6 +222,10 @@ export function getEffectiveNavId(navItem: string): string {
 
   if (navItem === 'toeic-tests' || navItem === 'exams') {
     return 'toeic-tests'
+  }
+
+  if (navItem === 'placement-tests' || navItem === 'placement-test-create') {
+    return 'placement-tests'
   }
 
   if (navItem === 'analytics-posthog' || navItem === 'posthog') {

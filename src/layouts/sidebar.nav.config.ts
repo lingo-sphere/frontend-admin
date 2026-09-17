@@ -88,6 +88,7 @@ export const navGroups: NavGroup[] = [
           { id: 'practice-speaking', label: 'Luyện nói' },
           { id: 'practice-writing', label: 'Luyện viết' },
           { id: 'toeic-tests', label: 'Đề thi TOEIC' },
+          { id: 'placement-tests', label: 'Đề thi đầu vào' },
         ],
       },
       { id: 'media-storage', icon: Layers3, label: 'Kho tài nguyên' },

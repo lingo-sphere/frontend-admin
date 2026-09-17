@@ -4,7 +4,7 @@ import { examAdminService, type ToeicExamItem } from '@/features/exams/services/
 import { courseService } from '@/features/courses/services/course.service'
 import { progressService, type StudentProgressItem } from '@/features/progress/services/progress.service'
 import type { CourseSelectItem } from '@/features/courses/components/course.exam.header.actions'
-import type { Course } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 interface FetchAggregatedParams {
   isTeacher: boolean
@@ -181,22 +181,32 @@ class CourseExamAggregatorService {
     apiExams.forEach((e) => {
       const eid = e._id || e.id || ''
       if (eid && !seenIds.has(eid)) {
-        seenIds.add(eid)
         const rawExam = e as Record<string, unknown>
         const resolvedType =
           (rawExam.exam_type as string) ||
           e.type ||
           (e.is_system_placement ? 'DIAGNOSTIC_TEST' : 'FULL_TEST')
 
-        let courseTitle = 'Toàn Hệ Thống'
-        if (!e.is_system_placement && resolvedType !== 'DIAGNOSTIC_TEST' && e.course_id) {
-          const matched = allowedCourses.find(
-            (c) => c.id === e.course_id || (c as unknown as { _id?: string })._id === e.course_id
-          )
-          courseTitle = matched?.title || e.course_title || 'Khóa học'
-        } else if (e.course_title) {
-          courseTitle = e.course_title
+        const isSystemPlacement = Boolean(
+          e.is_system_placement ||
+          rawExam.is_system_placement ||
+          resolvedType === 'DIAGNOSTIC_TEST'
+        )
+
+        if (isSystemPlacement || !e.course_id) {
+          return
         }
+
+        const matched = allowedCourses.find(
+          (c) => c.id === e.course_id || (c as unknown as { _id?: string })._id === e.course_id
+        )
+
+        if (isTeacher && !matched) {
+          return
+        }
+
+        seenIds.add(eid)
+        const courseTitle = matched?.title || e.course_title || 'Khóa học'
 
         const qCount =
           Array.isArray(e.questions) && e.questions.length > 0

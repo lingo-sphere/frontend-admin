@@ -88,8 +88,8 @@ export function CourseExamsPage() {
         }
         subtitle={
           isVi
-            ? 'Soạn thảo và quản lý các bài kiểm tra đánh giá năng lực đầu vào hệ thống, bài thử thách từng chương (Challenge), và bài thi tốt nghiệp kết thúc khóa học'
-            : 'Author and manage system placement tests, chapter challenge tests, and final course graduation exams'
+            ? 'Soạn thảo và quản lý các bài thử thách từng chương (Challenge) và bài thi tốt nghiệp kết thúc khóa học'
+            : 'Author and manage chapter challenge tests and final course graduation exams'
         }
         isLoading={isLoading}
         columns={columns}
@@ -127,7 +127,6 @@ export function CourseExamsPage() {
               setCurrentPage(1)
             }}
             onRefresh={loadData}
-            onOpenCreateModal={() => navigate('/course-exams/create')}
           />
         }
         filterSlot={

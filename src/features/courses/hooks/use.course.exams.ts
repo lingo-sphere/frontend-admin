@@ -130,10 +130,8 @@ export function useCourseExams() {
 
   const filteredExams = useMemo(() => {
     const list = exams.filter((e) => {
-      const isSystemPlacement = e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id
       const matchCourse =
-        selectedCourseId === 'ALL' ||
-        (selectedCourseId === 'GLOBAL_SYSTEM' ? isSystemPlacement : e.course_id === selectedCourseId)
+        selectedCourseId === 'ALL' || e.course_id === selectedCourseId
 
       const isChallengeType = e.type === 'CHALLENGE_TEST' || e.type === 'POST_MINI_TEST' || e.type === 'PRE_TEST'
       const matchType =
