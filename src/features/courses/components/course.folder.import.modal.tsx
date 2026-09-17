@@ -240,7 +240,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, courseThumbFile.size, courseThumbFile.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        const uploadedUrl = uploadRes.file_url
         if (uploadedUrl) {
           updatedCourseInfo.thumbnail_url = uploadedUrl
         }
@@ -259,7 +259,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, courseDocFile.size, courseDocFile.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        const uploadedUrl = uploadRes.file_url
         if (uploadedUrl) {
           updatedCourseInfo.document_url = uploadedUrl
           updatedCourseInfo.document_name = courseDocFile.name
@@ -279,7 +279,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, finalTestAudioFile.size, finalTestAudioFile.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        const uploadedUrl = uploadRes.file_url
         if (uploadedUrl) {
           updatedCourseInfo.final_test_audio_url = uploadedUrl
         }
@@ -298,7 +298,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, finalTestSpeakingFile.size, finalTestSpeakingFile.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url
+        const uploadedUrl = uploadRes.file_url
         if (uploadedUrl) {
           updatedCourseInfo.final_test_speaking_file_url = uploadedUrl
         }
@@ -325,7 +325,7 @@ export function CourseFolderImportModal({
 
         updateCumulativeProgress(fIdx, item.file.size, item.file.name)
 
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url || uploadRes?.public_url
+        const uploadedUrl = uploadRes.file_url
         if (uploadedUrl) {
           for (const mod of updatedModules) {
             const targetLes = mod.lessons.find((l) => l.id === item.lessonId || (mod.module_order === item.moduleOrder && l.lesson_order === item.lessonOrder))
@@ -352,7 +352,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url || uploadRes?.public_url
+        const uploadedUrl = uploadRes.file_url
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod && uploadedUrl) {
           targetMod.theory_file_url = uploadedUrl
@@ -373,7 +373,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url || uploadRes?.public_url
+        const uploadedUrl = uploadRes.file_url
         if (uploadedUrl) {
           for (const mod of updatedModules) {
             const targetLes = mod.lessons.find((l) => l.id === item.lessonId || (mod.module_order === item.moduleOrder && l.lesson_order === item.lessonOrder))
@@ -399,7 +399,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url || uploadRes?.public_url
+        const uploadedUrl = uploadRes.file_url
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod && uploadedUrl) {
           targetMod.test_audio_url = uploadedUrl
@@ -421,7 +421,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url || uploadRes?.public_url
+        const uploadedUrl = uploadRes.file_url
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod && uploadedUrl) {
           targetMod.speaking_file_url = uploadedUrl
@@ -441,7 +441,7 @@ export function CourseFolderImportModal({
           }
         )
         updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes?.file_url || uploadRes?.url || uploadRes?.public_url
+        const uploadedUrl = uploadRes.file_url
         if (!uploadedUrl) return
 
         const isAudio = /\.(wav|mp3|ogg|m4a)$/i.test(item.file.name)

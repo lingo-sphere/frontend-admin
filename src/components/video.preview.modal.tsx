@@ -1,7 +1,4 @@
-/**
- * @file video.preview.modal.tsx
- * @description YouTube-styled video preview modal supporting HLS stream playback, keyboard shortcuts, and full-screen view
- */
+// Modal xem trước video bài học phong cách YouTube cao cấp cho quản trị viên.
 
 import { useEffect } from 'react'
 import Hls from 'hls.js'
@@ -208,6 +205,7 @@ export function VideoPreviewModal({
         }`}
         onClick={(e) => e.stopPropagation()}
         onMouseMove={resetControlsTimer}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <div
           className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent transition-opacity duration-200 ${
@@ -255,6 +253,8 @@ export function VideoPreviewModal({
                 ref={videoRef}
                 playsInline
                 autoPlay
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full h-full object-contain bg-black cursor-pointer"
                 onClick={togglePlay}
                 onDoubleClick={(e) => {

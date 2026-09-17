@@ -1,7 +1,4 @@
-/**
- * @file use.r2.uploader.ts
- * @description Custom hook quản lý trạng thái tải lên media lên Cloudflare R2, đọc thời lượng video và theo dõi tiến trình
- */
+// Custom hook quản lý trạng thái tải lên media trực tiếp lên Cloudflare R2, đọc thời lượng video và theo dõi tiến trình.
 
 import { useState, useRef, useEffect } from 'react'
 import { mediaService } from '@/features/media/services/media.service'
@@ -169,7 +166,7 @@ export function useR2Uploader({
     setUploadBytes({ loaded: 0, total: file.size })
 
     try {
-      const response = await mediaService.uploadFile(
+      const response = await mediaService.uploadDirectR2(
         file,
         folder,
         (percent, loaded, total) => {
@@ -180,8 +177,7 @@ export function useR2Uploader({
       setUploadProgress(100)
       setUploadBytes({ loaded: file.size, total: file.size })
 
-      const uploadedUrl =
-        response?.file_url || response?.url || response?.public_url
+      const uploadedUrl = response.file_url
 
       if (uploadedUrl) {
         onChange(uploadedUrl)
