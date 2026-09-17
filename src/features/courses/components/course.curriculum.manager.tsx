@@ -185,8 +185,8 @@ export function CourseCurriculumManager({
           isVi={isVi}
           initialQuestions={studioModalState.questions}
           initialGlobalAudioUrl={studioModalState.globalAudioUrl}
-          onSave={(q, audioUrl) => {
-            handleApplyQuestions(studioModalState.moduleId, q, audioUrl)
+          onSave={(q, audioUrl, meta) => {
+            handleApplyQuestions(studioModalState.moduleId, q, audioUrl, meta)
           }}
         />
       )}

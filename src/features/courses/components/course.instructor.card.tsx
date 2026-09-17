@@ -1,7 +1,4 @@
-/**
- * @file course.instructor.card.tsx
- * @description Card hiển thị thông tin Giảng viên / Quản trị viên phụ trách khóa học kèm modal phóng to avatar
- */
+// Card hien thi thong tin Giang vien / Quan tri vien phu trach khoa hoc.
 
 import { useState } from 'react'
 import { UserCheck, X } from 'lucide-react'

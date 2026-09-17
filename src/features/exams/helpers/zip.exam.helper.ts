@@ -85,6 +85,100 @@ export interface ParseZipResult {
   totalQuestions: number
   audioCount: number
   imageCount: number
+  examInfo?: {
+    title?: string
+    duration_minutes?: number
+    passing_score?: number
+    description?: string
+  }
+}
+
+function extractExamWorkbookData(workbook: XLSX.WorkBook): {
+  rawRows: Record<string, unknown>[]
+  examInfo?: {
+    title?: string
+    duration_minutes?: number
+    passing_score?: number
+    description?: string
+  }
+} {
+  let examInfo: { title?: string; duration_minutes?: number; passing_score?: number; description?: string } | undefined = undefined
+
+  const infoSheetName = workbook.SheetNames.find((name) =>
+    /exam.*info|thong.*tin.*de|de.*thi.*info|general.*info|cau.*hinh/i.test(normalizeKey(name))
+  )
+
+  if (infoSheetName) {
+    const infoSheet = workbook.Sheets[infoSheetName]
+    const infoRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(infoSheet, { defval: '' })
+
+    let parsedTitle = ''
+    let parsedDuration = 0
+    let parsedPassingScore = 0
+    let parsedDesc = ''
+
+    for (const r of infoRows) {
+      let key = ''
+      let val = ''
+      for (const [k, v] of Object.entries(r)) {
+        const normK = normalizeKey(k)
+        const strV = String(v ?? '').trim()
+        if (normK.includes('truong') || normK.includes('field') || normK.includes('key') || normK === 'ten') {
+          key = strV
+        } else if (normK.includes('giatri') || normK.includes('value') || normK.includes('val')) {
+          val = strV
+        }
+      }
+      if (!key && Object.values(r).length >= 2) {
+        const vals = Object.values(r)
+        key = String(vals[0] ?? '').trim()
+        val = String(vals[1] ?? '').trim()
+      }
+
+      const normKey = normalizeKey(key)
+      if (normKey.includes('title') || normKey.includes('tieude') || normKey.includes('tende')) {
+        parsedTitle = val
+      } else if (
+        normKey.includes('duration') ||
+        normKey.includes('thoiluong') ||
+        normKey.includes('thoigian')
+      ) {
+        const num = parseInt(val.replace(/\D/g, ''), 10)
+        if (!isNaN(num) && num > 0) parsedDuration = num
+      } else if (normKey.includes('passing') || normKey.includes('diemdat') || normKey.includes('passingscore')) {
+        const num = parseInt(val.replace(/\D/g, ''), 10)
+        if (!isNaN(num) && num > 0) parsedPassingScore = num
+      } else if (normKey.includes('description') || normKey.includes('mota')) {
+        parsedDesc = val
+      }
+    }
+
+    if (parsedTitle || parsedDuration > 0 || parsedPassingScore > 0 || parsedDesc) {
+      examInfo = {
+        title: parsedTitle || undefined,
+        duration_minutes: parsedDuration > 0 ? parsedDuration : undefined,
+        passing_score: parsedPassingScore > 0 ? parsedPassingScore : undefined,
+        description: parsedDesc || undefined,
+      }
+    }
+  }
+
+  let questionSheetName = workbook.SheetNames.find((name) =>
+    /question|cau.*hoi|danh.*sach.*cau/i.test(normalizeKey(name))
+  )
+
+  if (!questionSheetName && infoSheetName) {
+    questionSheetName = workbook.SheetNames.find((name) => name !== infoSheetName)
+  }
+
+  if (!questionSheetName) {
+    questionSheetName = workbook.SheetNames[0]
+  }
+
+  const worksheet = workbook.Sheets[questionSheetName]
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+
+  return { rawRows, examInfo }
 }
 
 function classifySkill(strVal: string): 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'UNKNOWN' {
@@ -247,9 +341,54 @@ export async function downloadSampleZip(
         ? allSampleQuestions
         : allSampleQuestions.slice(0, 4)
 
-    const worksheet = XLSX.utils.json_to_sheet(sampleQuestions)
+    const examInfoRows = [
+      {
+        'Trường thông tin (Field)': 'Tiêu đề đề thi (title)',
+        'Giá trị cấu hình (Value)': isLessonMode
+          ? 'Bài ôn tập kiến thức bài học'
+          : is4Skills
+            ? 'Đề thi TOEIC 4 Kỹ năng Mẫu'
+            : 'Đề thi TOEIC 2 Kỹ năng Mẫu',
+      },
+      {
+        'Trường thông tin (Field)': 'Thời gian làm bài (phút) (duration_minutes)',
+        'Giá trị cấu hình (Value)': isLessonMode ? 15 : is4Skills ? 140 : 120,
+      },
+      {
+        'Trường thông tin (Field)': 'Điểm đạt (passing_score)',
+        'Giá trị cấu hình (Value)': 70,
+      },
+      {
+        'Trường thông tin (Field)': 'Mô tả đề thi (description)',
+        'Giá trị cấu hình (Value)': isLessonMode
+          ? 'Bộ câu hỏi trắc nghiệm ôn tập và củng cố kiến thức bài học.'
+          : is4Skills
+            ? 'Đề thi đánh giá năng lực toàn diện 4 kỹ năng Nghe, Đọc, Nói, Viết.'
+            : 'Đề thi đánh giá năng lực 2 kỹ năng Nghe và Đọc theo cấu trúc chuẩn.',
+      },
+    ]
+
+    const infoWorksheet = XLSX.utils.json_to_sheet(examInfoRows)
+    infoWorksheet['!cols'] = [{ wch: 45 }, { wch: 70 }]
+
+    const questionsWorksheet = XLSX.utils.json_to_sheet(sampleQuestions)
+    questionsWorksheet['!cols'] = [
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 60 },
+      { wch: 35 },
+      { wch: 35 },
+      { wch: 35 },
+      { wch: 35 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 50 },
+    ]
+
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions')
+    XLSX.utils.book_append_sheet(workbook, infoWorksheet, 'Exam_Info')
+    XLSX.utils.book_append_sheet(workbook, questionsWorksheet, 'Questions')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     zip.file('questions.xlsx', excelBuffer)
 
@@ -261,7 +400,10 @@ export async function downloadSampleZip(
 
     const readmeText = isLessonMode
       ? `=== HUONG DAN SOAN BO CAU HOI ON TAP BAI HOC CHO LINGOSPHERE ===
-1. File questions.xlsx:
+1. File questions.xlsx gồm 2 Sheet:
+   Sheet 1: "Exam_Info"
+   - Tiêu đề, Thời gian làm bài (phút), Điểm đạt, Mô tả bài ôn tập.
+   Sheet 2: "Questions"
    - Cot "STT": So thu tu cau hoi (1, 2, 3...)
    - Cot "Cau hoi": Noi dung cau hoi on tap
    - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
@@ -274,7 +416,15 @@ export async function downloadSampleZip(
    - Dat cac file audio (mp3, wav, m4a) va hinh anh (jpg, png, webp) vao thu muc "audios/" va "images/" hoac ngay thu muc goc.
 `
       : `=== HUONG DAN SOAN DE THI GOI ZIP CHO LINGOSPHERE ===
-1. File questions.xlsx:
+1. File questions.xlsx gồm 2 Sheet:
+   Sheet 1: "Exam_Info"
+   - "Tiêu đề đề thi (title)": Tên đề thi
+   - "Thời gian làm bài (phút) (duration_minutes)": Thời lượng thi (120 phút cho 2 kỹ năng, 140 phút cho 4 kỹ năng)
+   - "Điểm đạt (passing_score)": Điểm đạt (%)
+   - "Mô tả đề thi (description)": Giới thiệu tóm tắt về đề thi
+   * LƯU Ý: Khi nạp ZIP lên hệ thống, thời gian làm bài sẽ tự động điền vào form, bạn vẫn có thể chỉnh sửa trực tiếp trên giao diện!
+
+   Sheet 2: "Questions"
    - Cot "STT": So thu tu cau hoi (1, 2, 3...)
 ${skillGuideline}   - Cot "Cau hoi": Noi dung cau hoi hoac de bai
    - Cot "Lua chon A/B/C/D": Cac phuong an trac nghiem
@@ -349,6 +499,14 @@ export async function parseAndUploadZipExam(
   }
 
   let rawRows: Record<string, unknown>[] = []
+  let detectedExamInfo:
+    | {
+        title?: string
+        duration_minutes?: number
+        passing_score?: number
+        description?: string
+      }
+    | undefined = undefined
   let getMediaBuffer: (name: string) => Promise<ArrayBuffer | null> = async () => null
   let distinctMediaNames: string[] = []
 
@@ -356,16 +514,20 @@ export async function parseAndUploadZipExam(
     onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
     const excelBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(excelBuffer, { type: 'array' })
-    const firstSheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[firstSheetName]
-    rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+    const extracted = extractExamWorkbookData(workbook)
+    rawRows = extracted.rawRows
+    if (extracted.examInfo) {
+      detectedExamInfo = extracted.examInfo
+    }
   } else if (isRar) {
     const rarData = await extractRarExamArchive(file, isVi, (status) => onProgress?.(status))
     onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
     const workbook = XLSX.read(rarData.excelBuffer, { type: 'array' })
-    const firstSheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[firstSheetName]
-    rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+    const extracted = extractExamWorkbookData(workbook)
+    rawRows = extracted.rawRows
+    if (extracted.examInfo) {
+      detectedExamInfo = extracted.examInfo
+    }
     distinctMediaNames = rarData.distinctMediaNames
     getMediaBuffer = async (name: string) => rarData.mediaBuffers.get(name) || null
   } else {
@@ -391,9 +553,11 @@ export async function parseAndUploadZipExam(
     onProgress?.(isVi ? 'Đang phân tích bảng câu hỏi Excel...' : 'Parsing question spreadsheet...')
     const excelBuffer = await excelEntry.async('arraybuffer')
     const workbook = XLSX.read(excelBuffer, { type: 'array' })
-    const firstSheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[firstSheetName]
-    rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' })
+    const extracted = extractExamWorkbookData(workbook)
+    rawRows = extracted.rawRows
+    if (extracted.examInfo) {
+      detectedExamInfo = extracted.examInfo
+    }
 
     const zipMediaEntries: Record<string, JSZip.JSZipObject> = {}
     for (const [path, entry] of Object.entries(zip.files)) {
@@ -713,5 +877,6 @@ export async function parseAndUploadZipExam(
     totalQuestions: parsedQuestions.length,
     audioCount: audioLinkedCount,
     imageCount: imageLinkedCount,
+    examInfo: detectedExamInfo,
   }
 }

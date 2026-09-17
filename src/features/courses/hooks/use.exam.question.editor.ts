@@ -29,6 +29,7 @@ export function useExamQuestionEditor({
   initialGlobalAudioUrl,
   isVi,
   onExamUpdated,
+  onExamMetaLoaded,
   onSave,
   onClose,
 }: UseExamQuestionEditorParams) {
@@ -47,6 +48,12 @@ export function useExamQuestionEditor({
 
   const [questions, setQuestions] = useState<ExamQuestionItem[]>(() => initialBundle.qs)
   const [globalAudioUrl, setGlobalAudioUrl] = useState<string>(() => initialBundle.audio)
+  const [importedExamMeta, setImportedExamMeta] = useState<{
+    title?: string
+    duration_minutes?: number
+    passing_score?: number
+    description?: string
+  } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
 
@@ -364,6 +371,10 @@ export function useExamQuestionEditor({
         sessionUploadedUrlsRef.current.add(result.globalAudioUrl)
         setGlobalAudioUrl(result.globalAudioUrl)
       }
+      if (result.examInfo) {
+        setImportedExamMeta(result.examInfo)
+        onExamMetaLoaded?.(result.examInfo)
+      }
       result.questions.forEach((q) => {
         if (q.media_url) sessionUploadedUrlsRef.current.add(q.media_url)
         if (q.image_url) sessionUploadedUrlsRef.current.add(q.image_url)
@@ -389,7 +400,7 @@ export function useExamQuestionEditor({
     if (onSave) {
       setIsSaving(true)
       try {
-        await onSave(questions, globalAudioUrl)
+        await onSave(questions, globalAudioUrl, importedExamMeta || undefined)
         syncSavedState(questions, globalAudioUrl)
         onClose()
       } finally {

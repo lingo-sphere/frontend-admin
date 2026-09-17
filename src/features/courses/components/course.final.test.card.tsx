@@ -114,10 +114,16 @@ export function CourseFinalTestCard({ formData, onChange, isVi }: CourseFinalTes
           isVi={isVi}
           initialQuestions={(formData.final_test_questions || []) as ExamQuestionItem[]}
           initialGlobalAudioUrl={formData.final_test_audio_url || ''}
-          onSave={(q, audioUrl) => {
+          onSave={(q, audioUrl, meta) => {
             onChange({
               final_test_questions: q,
               final_test_audio_url: audioUrl || '',
+              ...(meta?.duration_minutes && meta.duration_minutes > 0
+                ? { final_test_duration_minutes: meta.duration_minutes }
+                : {}),
+              ...(meta?.passing_score && meta.passing_score > 0
+                ? { final_test_passing_score: meta.passing_score }
+                : {}),
             })
           }}
         />

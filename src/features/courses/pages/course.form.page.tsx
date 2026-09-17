@@ -133,6 +133,12 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           setFormData((prev) => ({
             ...prev,
             ...importedInfo,
+            author_id: prev.author_id || importedInfo.author_id,
+            author_name: prev.author_name || importedInfo.author_name,
+            author_email: prev.author_email || importedInfo.author_email,
+            author_avatar: prev.author_avatar || importedInfo.author_avatar,
+            author_title: prev.author_title || importedInfo.author_title,
+            author_bio: prev.author_bio || importedInfo.author_bio,
             modules: importedModules,
           }))
           setPendingUploads(pending || null)

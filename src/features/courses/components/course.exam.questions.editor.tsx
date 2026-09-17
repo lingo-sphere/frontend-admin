@@ -129,6 +129,20 @@ export function CourseExamQuestionsEditor({
     exam: activeExamConfig,
     is4Skills,
     isVi,
+    onExamMetaLoaded: (meta) => {
+      if (typeof meta.duration_minutes === 'number' && meta.duration_minutes > 0) {
+        setFormDuration(meta.duration_minutes)
+      }
+      if (meta.title && meta.title.trim()) {
+        setFormTitle(meta.title.trim())
+      }
+      if (typeof meta.passing_score === 'number' && meta.passing_score > 0) {
+        setFormPassingScore(meta.passing_score)
+      }
+      if (meta.description) {
+        setFormDescription(meta.description)
+      }
+    },
     onExamUpdated: () => {},
     onClose: () => handleRequestCancel(),
   })

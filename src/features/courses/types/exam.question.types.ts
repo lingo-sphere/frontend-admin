@@ -61,6 +61,21 @@ export interface UseExamQuestionEditorParams {
   initialGlobalAudioUrl?: string
   isVi: boolean
   onExamUpdated?: (updatedExam: ToeicExamItem) => void
-  onSave?: (questions: ExamQuestionItem[], globalAudioUrl: string) => Promise<void> | void
+  onExamMetaLoaded?: (meta: {
+    title?: string
+    duration_minutes?: number
+    passing_score?: number
+    description?: string
+  }) => void
+  onSave?: (
+    questions: ExamQuestionItem[],
+    globalAudioUrl: string,
+    meta?: {
+      title?: string
+      duration_minutes?: number
+      passing_score?: number
+      description?: string
+    }
+  ) => Promise<void> | void
   onClose: () => void
 }

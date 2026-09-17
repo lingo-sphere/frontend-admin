@@ -21,7 +21,16 @@ export interface ExamQuestionStudioModalProps {
   isVi: boolean
   initialQuestions?: ExamQuestionItem[]
   initialGlobalAudioUrl?: string
-  onSave: (questions: ExamQuestionItem[], globalAudioUrl: string) => Promise<void> | void
+  onSave: (
+    questions: ExamQuestionItem[],
+    globalAudioUrl: string,
+    meta?: {
+      title?: string
+      duration_minutes?: number
+      passing_score?: number
+      description?: string
+    }
+  ) => Promise<void> | void
 }
 
 export function ExamQuestionStudioModal({

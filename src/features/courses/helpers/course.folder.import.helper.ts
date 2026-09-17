@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import type { CourseFormData, CourseModule, CourseLesson, LessonQuestion } from '@/features/courses/components/course.basic.info.tab'
 import type { QuizQuestionItem } from '@/features/courses/schemas/course.schema'
 import { generateSlug } from '@/features/courses/helpers/course.helper'
+import { authStore } from '@/features/auth/store/auth.store'
 
 export interface VideoUploadTaskItem {
   lessonId: string
@@ -195,10 +196,21 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   const target_score = Number(findValue(infoRaw, ['target_score', 'mục tiêu']) || 500)
   const price = Number(findValue(infoRaw, ['price', 'giá gốc']) || 0)
   const discount_price = Number(findValue(infoRaw, ['discount_price', 'giá khuyến mãi']) || 0)
-  const author_name = String(findValue(infoRaw, ['author_name', 'tên giảng viên']) || 'Đội ngũ Giảng viên LingoSphere').trim()
-  const author_title = String(findValue(infoRaw, ['author_title', 'chức danh']) || 'Giảng viên chuyên môn').trim()
-  const author_email = String(findValue(infoRaw, ['author_email', 'email giảng viên']) || '').trim()
-  const author_bio = String(findValue(infoRaw, ['author_bio', 'tiểu sử giảng viên']) || '').trim()
+  const authState = authStore.getState()
+  const currentProfile = authState.profile
+  const currentUser = authState.user
+  const author_id = currentProfile?.user_id || currentUser?.user_id || ''
+  const author_name =
+    currentProfile?.full_name ||
+    currentUser?.full_name ||
+    (currentUser?.email ? currentUser.email.split('@')[0] : '') ||
+    'Quản trị viên'
+  const author_email = currentProfile?.email || currentUser?.email || ''
+  const author_avatar = currentProfile?.avatar_url || currentUser?.avatar_url || ''
+  const authorRole = currentProfile?.role || currentUser?.role
+  const author_title =
+    authorRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
+  const author_bio = currentProfile?.bio || ''
   const description = String(findValue(infoRaw, ['description', 'mô tả']) || `Khóa học ${title} chất lượng cao chuẩn quốc tế trên LingoSphere.`).trim()
   const final_test_passing_score = Number(findValue(infoRaw, ['final_test_passing_score', 'điểm đạt kiểm tra cuối khóa', 'cuối khóa']) || 70)
   const final_test_duration_minutes = Number(findValue(infoRaw, ['final_test_duration_minutes', 'thời lượng thi tốt nghiệp', 'thời lượng kiểm tra cuối khóa']) || 60)
@@ -320,9 +332,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     target_score: isNaN(target_score) ? 500 : target_score,
     price: isNaN(price) ? 0 : price,
     discount_price: isNaN(discount_price) ? 0 : discount_price,
+    author_id,
     author_name,
     author_title,
     author_email: author_email || undefined,
+    author_avatar: author_avatar || undefined,
     author_bio: author_bio || undefined,
     description,
     final_test_passing_score: isNaN(final_test_passing_score) ? 70 : final_test_passing_score,
