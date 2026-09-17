@@ -125,7 +125,7 @@ export function SidebarNavGroup({
                   )}
                   {hasChildren && (
                     <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-300 ease-out ${
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                         isExpanded
                           ? 'rotate-0 text-blue-600 dark:text-blue-400 opacity-100'
                           : `-rotate-90 ${isItemActive ? 'text-blue-500 dark:text-blue-400 opacity-90' : 'text-slate-400 opacity-60'}`
@@ -137,14 +137,14 @@ export function SidebarNavGroup({
 
               {hasChildren && (
                 <div
-                  className={`grid transition-all duration-300 ease-in-out ${
+                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                     isExpanded
-                      ? 'grid-rows-[1fr] opacity-100 mt-1 mb-1'
+                      ? 'grid-rows-[1fr] opacity-100'
                       : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                   }`}
                 >
-                  <div className="overflow-hidden">
-                    <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 py-0.5">
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 py-1">
                       {item.children!.map((child) => {
                         const isChildActive = activeNavItem === child.id
 

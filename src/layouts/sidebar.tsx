@@ -35,6 +35,18 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   })
 
   const handleNavigate = (id: string) => {
+    let targetParentId: string | null = null
+    for (const group of navGroups) {
+      for (const item of group.items) {
+        if (item.children && (item.id === id || item.children.some((c) => c.id === id))) {
+          targetParentId = item.id
+          break
+        }
+      }
+      if (targetParentId) break
+    }
+
+    setExpandedItem(targetParentId)
     navigate(navItemToPath(id))
     setMobileSidebarOpen(false)
   }
@@ -52,6 +64,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         }
       }
     }
+    setExpandedItem(null)
   }, [activeNavItem])
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
