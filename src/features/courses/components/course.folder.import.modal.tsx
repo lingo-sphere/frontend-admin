@@ -20,17 +20,25 @@ import {
 } from 'lucide-react'
 import {
   parseCourseFolder,
-  readVideoDuration,
   type ParsedFolderResult,
 } from '@/features/courses/helpers/course.folder.import.helper'
+import {
+  uploadFolderResourcesToR2,
+  type PendingFolderUploads,
+} from '@/features/courses/helpers/course.folder.upload.helper'
 import type { CourseFormData, CourseModule } from '@/features/courses/components/course.basic.info.tab'
-import { mediaAdminService } from '@/features/media/services/media.service'
 import { toast } from '@/store/toast.store'
+
+export type { PendingFolderUploads }
 
 interface CourseFolderImportModalProps {
   isOpen: boolean
   onClose: () => void
-  onApply: (courseInfo: Partial<CourseFormData>, modules: CourseModule[]) => void
+  onApply: (
+    courseInfo: Partial<CourseFormData>,
+    modules: CourseModule[],
+    pendingUploads?: PendingFolderUploads
+  ) => void
   isVi: boolean
   courseFolder?: string
 }
@@ -161,368 +169,6 @@ export function CourseFolderImportModal({
     }
   }
 
-  const handleApplyWithoutUpload = () => {
-    if (!parsedResult) return
-    onApply(parsedResult.courseInfo, parsedResult.modules)
-    toast.success(isVi ? 'Đã nạp toàn bộ cấu trúc khóa học vào Form thành công!' : 'Curriculum loaded successfully!')
-    onClose()
-  }
-
-  const handleUploadAndApply = async () => {
-    if (!parsedResult) return
-    setIsUploading(true)
-    setError(null)
-
-    const updatedModules = JSON.parse(JSON.stringify(parsedResult.modules)) as CourseModule[]
-    const updatedCourseInfo: Partial<CourseFormData> = { ...parsedResult.courseInfo }
-    const videoFiles = parsedResult.videoFilesToUpload
-    const moduleTheoryFiles = parsedResult.theoryFilesToUpload || []
-    const lessonTheoryFiles = parsedResult.lessonTheoryFilesToUpload || []
-    const courseDocFile = parsedResult.courseDocumentFileToUpload
-    const courseThumbFile = parsedResult.courseThumbnailFileToUpload
-    const finalTestAudioFile = parsedResult.finalTestAudioFileToUpload
-    const finalTestSpeakingFile = parsedResult.finalTestSpeakingFileToUpload
-    const moduleAudioFiles = parsedResult.moduleAudioFilesToUpload || []
-    const moduleSpeakingFiles = parsedResult.moduleSpeakingFilesToUpload || []
-    const questionMediaFiles = parsedResult.questionMediaFilesToUpload || []
-
-    const totalFiles =
-      videoFiles.length +
-      moduleTheoryFiles.length +
-      lessonTheoryFiles.length +
-      (courseDocFile ? 1 : 0) +
-      (courseThumbFile ? 1 : 0) +
-      (finalTestAudioFile ? 1 : 0) +
-      (finalTestSpeakingFile ? 1 : 0) +
-      moduleAudioFiles.length +
-      moduleSpeakingFiles.length +
-      questionMediaFiles.length
-
-    let totalBytes = 0
-    videoFiles.forEach((v) => { totalBytes += v.file.size })
-    moduleTheoryFiles.forEach((m) => { totalBytes += m.file.size })
-    lessonTheoryFiles.forEach((l) => { totalBytes += l.file.size })
-    if (courseDocFile) { totalBytes += courseDocFile.size }
-    if (courseThumbFile) { totalBytes += courseThumbFile.size }
-    if (finalTestAudioFile) { totalBytes += finalTestAudioFile.size }
-    if (finalTestSpeakingFile) { totalBytes += finalTestSpeakingFile.size }
-    moduleAudioFiles.forEach((a) => { totalBytes += a.file.size })
-    moduleSpeakingFiles.forEach((s) => { totalBytes += s.file.size })
-    questionMediaFiles.forEach((q) => { totalBytes += q.file.size })
-
-    const loadedBytesMap: Record<number, number> = {}
-    let completedFiles = 0
-    const poolLimit = 3
-    const tasks: (() => Promise<void>)[] = []
-
-    const updateCumulativeProgress = (fileIdx: number, loaded: number, name: string) => {
-      loadedBytesMap[fileIdx] = loaded
-      let currentTotalLoaded = 0
-      Object.values(loadedBytesMap).forEach((val) => {
-        currentTotalLoaded += val
-      })
-      const pct = totalBytes > 0 ? Math.min(100, Math.round((currentTotalLoaded * 100) / totalBytes)) : 100
-      setUploadPercent(pct)
-      setCurrentUploadName(name)
-    }
-
-    let globalFileIndex = 0
-
-    if (courseThumbFile) {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, courseThumbFile.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          courseThumbFile,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, courseThumbFile.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, courseThumbFile.size, courseThumbFile.name)
-        const uploadedUrl = uploadRes.file_url
-        if (uploadedUrl) {
-          updatedCourseInfo.thumbnail_url = uploadedUrl
-        }
-      })
-    }
-
-    if (courseDocFile) {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, courseDocFile.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          courseDocFile,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, courseDocFile.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, courseDocFile.size, courseDocFile.name)
-        const uploadedUrl = uploadRes.file_url
-        if (uploadedUrl) {
-          updatedCourseInfo.document_url = uploadedUrl
-          updatedCourseInfo.document_name = courseDocFile.name
-        }
-      })
-    }
-
-    if (finalTestAudioFile) {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, finalTestAudioFile.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          finalTestAudioFile,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, finalTestAudioFile.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, finalTestAudioFile.size, finalTestAudioFile.name)
-        const uploadedUrl = uploadRes.file_url
-        if (uploadedUrl) {
-          updatedCourseInfo.final_test_audio_url = uploadedUrl
-        }
-      })
-    }
-
-    if (finalTestSpeakingFile) {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, finalTestSpeakingFile.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          finalTestSpeakingFile,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, finalTestSpeakingFile.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, finalTestSpeakingFile.size, finalTestSpeakingFile.name)
-        const uploadedUrl = uploadRes.file_url
-        if (uploadedUrl) {
-          updatedCourseInfo.final_test_speaking_file_url = uploadedUrl
-        }
-      })
-    }
-
-    videoFiles.forEach((item) => {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, item.file.name)
-        let durSec = item.durationSeconds || 0
-        if (!durSec) {
-          durSec = await readVideoDuration(item.file)
-        }
-        const durMin = durSec >= 60 ? Math.round(durSec / 60) : Number((durSec / 60).toFixed(2))
-
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          item.file,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, item.file.name)
-          }
-        )
-
-        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-
-        const uploadedUrl = uploadRes.file_url
-        if (uploadedUrl) {
-          for (const mod of updatedModules) {
-            const targetLes = mod.lessons.find((l) => l.id === item.lessonId || (mod.module_order === item.moduleOrder && l.lesson_order === item.lessonOrder))
-            if (targetLes) {
-              targetLes.video_url = uploadedUrl
-              targetLes.duration_seconds = durSec
-              targetLes.duration_minutes = durMin
-              break
-            }
-          }
-        }
-      })
-    })
-
-    moduleTheoryFiles.forEach((item) => {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, item.file.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          item.file,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, item.file.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes.file_url
-        const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
-        if (targetMod && uploadedUrl) {
-          targetMod.theory_file_url = uploadedUrl
-          targetMod.theory_file_name = item.file.name
-        }
-      })
-    })
-
-    lessonTheoryFiles.forEach((item) => {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, item.file.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          item.file,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, item.file.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes.file_url
-        if (uploadedUrl) {
-          for (const mod of updatedModules) {
-            const targetLes = mod.lessons.find((l) => l.id === item.lessonId || (mod.module_order === item.moduleOrder && l.lesson_order === item.lessonOrder))
-            if (targetLes) {
-              targetLes.theory_file_url = uploadedUrl
-              targetLes.theory_file_name = item.file.name
-              break
-            }
-          }
-        }
-      })
-    })
-
-    moduleAudioFiles.forEach((item) => {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, item.file.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          item.file,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, item.file.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes.file_url
-        const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
-        if (targetMod && uploadedUrl) {
-          targetMod.test_audio_url = uploadedUrl
-          targetMod.challenge_audio_url = uploadedUrl
-          targetMod.audio_url = uploadedUrl
-        }
-      })
-    })
-
-    moduleSpeakingFiles.forEach((item) => {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, item.file.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          item.file,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, item.file.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes.file_url
-        const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
-        if (targetMod && uploadedUrl) {
-          targetMod.speaking_file_url = uploadedUrl
-        }
-      })
-    })
-
-    questionMediaFiles.forEach((item) => {
-      const fIdx = globalFileIndex++
-      tasks.push(async () => {
-        updateCumulativeProgress(fIdx, 0, item.file.name)
-        const uploadRes = await mediaAdminService.uploadDirectR2(
-          item.file,
-          courseFolder,
-          (_percent, loaded) => {
-            updateCumulativeProgress(fIdx, loaded, item.file.name)
-          }
-        )
-        updateCumulativeProgress(fIdx, item.file.size, item.file.name)
-        const uploadedUrl = uploadRes.file_url
-        if (!uploadedUrl) return
-
-        const isAudio = /\.(wav|mp3|ogg|m4a)$/i.test(item.file.name)
-        const isImage = /\.(jpe?g|png|webp|gif)$/i.test(item.file.name)
-
-        if (item.isFinalTest) {
-          const q = updatedCourseInfo.final_test_questions?.find((qu) => qu.id === item.questionId)
-          if (q) {
-            q.media_url = uploadedUrl
-            if (isImage) q.image_url = uploadedUrl
-            if (isAudio) q.audio_url = uploadedUrl
-          }
-        } else if (item.isChapterTest && item.moduleOrder !== undefined) {
-          const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
-          if (targetMod) {
-            const q1 = targetMod.test_questions?.find((qu) => qu.id === item.questionId)
-            if (q1) {
-              q1.media_url = uploadedUrl
-              if (isImage) q1.image_url = uploadedUrl
-              if (isAudio) q1.audio_url = uploadedUrl
-            }
-            const q2 = targetMod.challenge_questions?.find((qu) => qu.id === item.questionId)
-            if (q2) {
-              q2.media_url = uploadedUrl
-              if (isImage) q2.image_url = uploadedUrl
-              if (isAudio) q2.audio_url = uploadedUrl
-            }
-          }
-        }
-      })
-    })
-
-    try {
-      setUploadIndex(1)
-      const queue = tasks.map((task, idx) => ({ task, id: idx }))
-      const poolConcurrency = Math.min(poolLimit, tasks.length || 1)
-      let failedTasksCount = 0
-
-      const workers = Array.from({ length: poolConcurrency }, async () => {
-        while (queue.length > 0) {
-          const currentItem = queue.shift()
-          if (!currentItem) break
-          try {
-            await currentItem.task()
-          } catch (taskErr) {
-            failedTasksCount++
-            console.error(`[FolderImport] Task #${currentItem.id} failed:`, taskErr)
-          } finally {
-            completedFiles++
-            setUploadIndex(Math.min(completedFiles + 1, totalFiles))
-          }
-        }
-      })
-
-      await Promise.all(workers)
-      setUploadPercent(100)
-
-      onApply(updatedCourseInfo, updatedModules)
-      if (failedTasksCount > 0) {
-        toast.warning(
-          isVi
-            ? `Đã nạp khóa học vào Form (${totalFiles - failedTasksCount}/${totalFiles} file tải lên thành công, ${failedTasksCount} file bị gián đoạn).`
-            : `Course imported with ${totalFiles - failedTasksCount}/${totalFiles} files uploaded.`
-        )
-      } else {
-        toast.success(
-          isVi
-            ? `Đã tải lên toàn bộ ${totalFiles} tài nguyên trực tiếp lên R2 thành công!`
-            : `Successfully uploaded ${totalFiles} files to R2!`
-        )
-      }
-      onClose()
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Tải lên tài nguyên thất bại'
-      setError(msg)
-      toast.error(msg)
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
   const totalFilesToUploadCount = parsedResult
     ? parsedResult.videoFilesToUpload.length +
       parsedResult.theoryFilesToUpload.length +
@@ -535,6 +181,86 @@ export function CourseFolderImportModal({
       (parsedResult.moduleSpeakingFilesToUpload?.length || 0) +
       (parsedResult.questionMediaFilesToUpload?.length || 0)
     : 0
+
+  const handleApplyWithoutUpload = () => {
+    if (!parsedResult) return
+    const pendingUploads: PendingFolderUploads = {
+      videoFiles: parsedResult.videoFilesToUpload,
+      moduleTheoryFiles: parsedResult.theoryFilesToUpload || [],
+      lessonTheoryFiles: parsedResult.lessonTheoryFilesToUpload || [],
+      courseDocumentFile: parsedResult.courseDocumentFileToUpload,
+      courseThumbnailFile: parsedResult.courseThumbnailFileToUpload,
+      finalTestAudioFile: parsedResult.finalTestAudioFileToUpload,
+      finalTestSpeakingFile: parsedResult.finalTestSpeakingFileToUpload,
+      moduleAudioFiles: parsedResult.moduleAudioFilesToUpload || [],
+      moduleSpeakingFiles: parsedResult.moduleSpeakingFilesToUpload || [],
+      questionMediaFiles: parsedResult.questionMediaFilesToUpload || [],
+    }
+    onApply(parsedResult.courseInfo, parsedResult.modules, pendingUploads)
+    toast.success(
+      isVi
+        ? `Đã nạp toàn bộ cấu trúc vào Form! ${totalFilesToUploadCount} tệp (video & tài liệu) sẽ được tự động tải lên R2 khi bạn nhấn "Lưu Khóa Học".`
+        : `Curriculum loaded into Form! ${totalFilesToUploadCount} files will be automatically uploaded to R2 when saving.`
+    )
+    onClose()
+  }
+
+  const handleUploadAndApply = async () => {
+    if (!parsedResult) return
+    setIsUploading(true)
+    setError(null)
+    setUploadIndex(1)
+    setUploadPercent(0)
+
+    const pendingUploads: PendingFolderUploads = {
+      videoFiles: parsedResult.videoFilesToUpload,
+      moduleTheoryFiles: parsedResult.theoryFilesToUpload || [],
+      lessonTheoryFiles: parsedResult.lessonTheoryFilesToUpload || [],
+      courseDocumentFile: parsedResult.courseDocumentFileToUpload,
+      courseThumbnailFile: parsedResult.courseThumbnailFileToUpload,
+      finalTestAudioFile: parsedResult.finalTestAudioFileToUpload,
+      finalTestSpeakingFile: parsedResult.finalTestSpeakingFileToUpload,
+      moduleAudioFiles: parsedResult.moduleAudioFilesToUpload || [],
+      moduleSpeakingFiles: parsedResult.moduleSpeakingFilesToUpload || [],
+      questionMediaFiles: parsedResult.questionMediaFilesToUpload || [],
+    }
+
+    try {
+      const res = await uploadFolderResourcesToR2(
+        pendingUploads,
+        courseFolder,
+        parsedResult.courseInfo,
+        parsedResult.modules,
+        (progress) => {
+          setUploadIndex(Math.min(progress.completedFiles + 1, progress.totalFiles))
+          setUploadPercent(progress.percent)
+          setCurrentUploadName(progress.currentFileName)
+        }
+      )
+
+      onApply(res.courseInfo, res.modules, undefined)
+      if (res.failedCount > 0) {
+        toast.warning(
+          isVi
+            ? `Đã nạp khóa học vào Form (${totalFilesToUploadCount - res.failedCount}/${totalFilesToUploadCount} file tải lên thành công, ${res.failedCount} file bị gián đoạn).`
+            : `Course imported with ${totalFilesToUploadCount - res.failedCount}/${totalFilesToUploadCount} files uploaded.`
+        )
+      } else {
+        toast.success(
+          isVi
+            ? `Đã tải lên toàn bộ ${totalFilesToUploadCount} tài nguyên lên R2 và nạp vào Form thành công! Nhấn "Lưu Khóa Học" để hoàn tất.`
+            : `Successfully uploaded ${totalFilesToUploadCount} files to R2! Click Save Course to complete.`
+        )
+      }
+      onClose()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Tải lên tài nguyên thất bại'
+      setError(msg)
+      toast.error(msg)
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   return (
     <div
@@ -871,7 +597,11 @@ export function CourseFolderImportModal({
                 disabled={isUploading}
                 className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
               >
-                <span>{isVi ? 'Chỉ nạp cấu trúc vào Form' : 'Apply structure only'}</span>
+                <span>
+                  {isVi
+                    ? 'Nạp cấu trúc vào Form (Tự động tải lên R2 khi ấn Lưu)'
+                    : 'Apply to Form (Auto-upload to R2 on Save)'}
+                </span>
               </button>
 
               <button
@@ -890,8 +620,8 @@ export function CourseFolderImportModal({
                     <UploadCloud className="w-4 h-4" />
                     <span>
                       {isVi
-                        ? `Tải lên ${totalFilesToUploadCount} tệp (video & tài liệu) & Lưu`
-                        : `Upload ${totalFilesToUploadCount} files & Apply`}
+                        ? `Tải lên ${totalFilesToUploadCount} tệp lên R2 ngay & Nạp vào Form`
+                        : `Upload ${totalFilesToUploadCount} files to R2 now & Apply`}
                     </span>
                     <ArrowRight className="w-4 h-4" />
                   </>

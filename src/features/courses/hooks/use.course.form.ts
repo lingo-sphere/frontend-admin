@@ -11,6 +11,10 @@ import { toast } from '@/store/toast.store'
 import { validateCourseFormData } from '@/features/courses/helpers/course.helper'
 import { queryClient } from '@/config/query.config'
 import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
+import {
+  uploadFolderResourcesToR2,
+  type PendingFolderUploads,
+} from '@/features/courses/helpers/course.folder.upload.helper'
 
 export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const navigate = useNavigate()
@@ -33,6 +37,8 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const [courseCreatedAt, setCourseCreatedAt] = useState<number>(() => Date.now())
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatusText, setSubmitStatusText] = useState<string>('')
+  const [pendingUploads, setPendingUploads] = useState<PendingFolderUploads | null>(null)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<CourseFormData>(() => {
@@ -290,35 +296,69 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
 
     setIsSubmitting(true)
     try {
+      let finalCourseInfo: Partial<CourseFormData> = { ...formData }
+      let finalModules: CourseModule[] = formData.modules
+      const uploadedR2Urls: string[] = []
+
+      if (pendingUploads) {
+        setSubmitStatusText(isVi ? 'Đang tải tệp lên Cloudflare R2...' : 'Uploading files to R2...')
+        const uploadResult = await uploadFolderResourcesToR2(
+          pendingUploads,
+          courseFolder,
+          formData,
+          formData.modules,
+          (progress) => {
+            const status = isVi
+              ? `Đang tải lên R2 (${progress.completedFiles}/${progress.totalFiles} tệp - ${progress.percent}%)...`
+              : `Uploading to R2 (${progress.completedFiles}/${progress.totalFiles} - ${progress.percent}%)...`
+            setSubmitStatusText(status)
+          }
+        )
+
+        finalCourseInfo = uploadResult.courseInfo
+        finalModules = uploadResult.modules
+        uploadedR2Urls.push(...uploadResult.allUploadedUrls)
+
+        if (uploadResult.failedCount > 0) {
+          toast.warning(
+            isVi
+              ? `Có ${uploadResult.failedCount} file tải lên bị gián đoạn, đang tiếp tục lưu khóa học.`
+              : `${uploadResult.failedCount} files failed to upload, continuing save.`
+          )
+        }
+      }
+
+      setSubmitStatusText(isVi ? 'Đang lưu khóa học vào hệ thống...' : 'Saving course to system...')
+
       const payload = {
-        title: formData.title,
-        slug: formData.slug,
-        description: formData.description,
-        category: formData.category,
-        level: formData.level,
-        target_score: Number(formData.target_score),
-        price: Number(formData.price),
-        discount_price: Number(formData.discount_price),
-        thumbnail_url: formData.thumbnail_url,
-        document_url: formData.document_url || '',
-        document_name: formData.document_name || '',
-        is_published: formData.is_published,
-        author_id: formData.author_id || currentUser?.user_id,
-        author_name: formData.author_name || 'Đội ngũ Giảng viên LingoSphere',
-        author_email: formData.author_email || currentUser?.email,
-        author_avatar: formData.author_avatar || '',
-        author_title: formData.author_title || 'Giảng viên chuyên môn',
-        author_bio: formData.author_bio || '',
-        pre_test_exam_id: formData.pre_test_exam_id || undefined,
-        final_test_exam_id: formData.final_test_exam_id || undefined,
-        final_test_passing_score: Number(formData.final_test_passing_score) || 70,
-        final_test_questions: formData.final_test_questions || [],
-        final_test_audio_url: formData.final_test_audio_url || '',
-        final_test_speaking_prompt: formData.final_test_speaking_prompt || '',
-        final_test_speaking_file_url: formData.final_test_speaking_file_url || '',
-        final_test_writing_prompt: formData.final_test_writing_prompt || '',
-        final_test_writing_file_url: formData.final_test_writing_file_url || '',
-        modules: formData.modules.map((m, mIdx) => ({
+        title: finalCourseInfo.title || formData.title,
+        slug: finalCourseInfo.slug || formData.slug,
+        description: finalCourseInfo.description || formData.description,
+        category: finalCourseInfo.category || formData.category,
+        level: finalCourseInfo.level || formData.level,
+        target_score: Number(finalCourseInfo.target_score ?? formData.target_score),
+        price: Number(finalCourseInfo.price ?? formData.price),
+        discount_price: Number(finalCourseInfo.discount_price ?? formData.discount_price),
+        thumbnail_url: finalCourseInfo.thumbnail_url || formData.thumbnail_url,
+        document_url: finalCourseInfo.document_url || formData.document_url || '',
+        document_name: finalCourseInfo.document_name || formData.document_name || '',
+        is_published: finalCourseInfo.is_published ?? formData.is_published,
+        author_id: finalCourseInfo.author_id || formData.author_id || currentUser?.user_id,
+        author_name: finalCourseInfo.author_name || formData.author_name || 'Đội ngũ Giảng viên LingoSphere',
+        author_email: finalCourseInfo.author_email || formData.author_email || currentUser?.email,
+        author_avatar: finalCourseInfo.author_avatar || formData.author_avatar || '',
+        author_title: finalCourseInfo.author_title || formData.author_title || 'Giảng viên chuyên môn',
+        author_bio: finalCourseInfo.author_bio || formData.author_bio || '',
+        pre_test_exam_id: finalCourseInfo.pre_test_exam_id || formData.pre_test_exam_id || undefined,
+        final_test_exam_id: finalCourseInfo.final_test_exam_id || formData.final_test_exam_id || undefined,
+        final_test_passing_score: Number(finalCourseInfo.final_test_passing_score ?? formData.final_test_passing_score) || 70,
+        final_test_questions: finalCourseInfo.final_test_questions || formData.final_test_questions || [],
+        final_test_audio_url: finalCourseInfo.final_test_audio_url || formData.final_test_audio_url || '',
+        final_test_speaking_prompt: finalCourseInfo.final_test_speaking_prompt || formData.final_test_speaking_prompt || '',
+        final_test_speaking_file_url: finalCourseInfo.final_test_speaking_file_url || formData.final_test_speaking_file_url || '',
+        final_test_writing_prompt: finalCourseInfo.final_test_writing_prompt || formData.final_test_writing_prompt || '',
+        final_test_writing_file_url: finalCourseInfo.final_test_writing_file_url || formData.final_test_writing_file_url || '',
+        modules: finalModules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
           course_id: currentCourseId || '',
           title: m.title,
@@ -381,20 +421,20 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         })),
       }
 
-      const allMediaUrls: string[] = []
-      if (formData.thumbnail_url) allMediaUrls.push(formData.thumbnail_url)
-      if (formData.document_url) allMediaUrls.push(formData.document_url)
-      if (formData.final_test_audio_url) allMediaUrls.push(formData.final_test_audio_url)
-      if (formData.final_test_speaking_file_url)
-        allMediaUrls.push(formData.final_test_speaking_file_url)
-      if (formData.final_test_writing_file_url)
-        allMediaUrls.push(formData.final_test_writing_file_url)
-      if (Array.isArray(formData.final_test_questions)) {
-        formData.final_test_questions.forEach((q) => {
+      const allMediaUrls: string[] = [...uploadedR2Urls]
+      if (payload.thumbnail_url) allMediaUrls.push(payload.thumbnail_url)
+      if (payload.document_url) allMediaUrls.push(payload.document_url)
+      if (payload.final_test_audio_url) allMediaUrls.push(payload.final_test_audio_url)
+      if (payload.final_test_speaking_file_url)
+        allMediaUrls.push(payload.final_test_speaking_file_url)
+      if (payload.final_test_writing_file_url)
+        allMediaUrls.push(payload.final_test_writing_file_url)
+      if (Array.isArray(payload.final_test_questions)) {
+        payload.final_test_questions.forEach((q) => {
           if (q.media_url) allMediaUrls.push(q.media_url)
         })
       }
-      formData.modules.forEach((mod) => {
+      payload.modules.forEach((mod) => {
         if (mod.theory_file_url) allMediaUrls.push(mod.theory_file_url)
         if (mod.test_audio_url) allMediaUrls.push(mod.test_audio_url)
         if (mod.challenge_audio_url) allMediaUrls.push(mod.challenge_audio_url)
@@ -425,6 +465,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã tạo khóa học mới "${formData.title}" thành công!`)
       }
 
+      setPendingUploads(null)
       await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
       setActiveNavItem('courses')
     } catch (err: unknown) {
@@ -432,6 +473,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       toast.error(msg)
     } finally {
       setIsSubmitting(false)
+      setSubmitStatusText('')
     }
   }
 
@@ -451,6 +493,9 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
     isEditMode,
     isLoading,
     isSubmitting,
+    submitStatusText,
+    pendingUploads,
+    setPendingUploads,
     videoPreviewUrl,
     setVideoPreviewUrl,
     handleSubmit,

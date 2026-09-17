@@ -61,6 +61,8 @@ export interface CourseLesson {
   lesson_order: number
   theory_file_url?: string
   theory_file_name?: string
+  pending_video_name?: string
+  pending_theory_name?: string
   questions?: LessonQuestion[]
 }
 
@@ -71,6 +73,7 @@ export interface CourseModule {
   module_order: number
   theory_file_url?: string
   theory_file_name?: string
+  pending_theory_name?: string
   created_at_timestamp?: number
   is_free_preview?: boolean
   passing_score?: number

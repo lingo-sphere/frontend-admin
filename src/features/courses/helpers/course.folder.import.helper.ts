@@ -600,6 +600,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       lesson_order: lOrder,
       theory_file_name: matchedTheory?.name || lTheoryFile || undefined,
       theory_file_url: undefined,
+      pending_video_name: matchedVideo ? matchedVideo.name : undefined,
+      pending_theory_name: matchedTheory ? matchedTheory.name : undefined,
       questions: lessonQuizzes,
     })
   }
@@ -675,6 +677,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       description: modData.description,
       module_order: mOrder,
       theory_file_name: matchedModulePdf?.name || modData.theoryFile || undefined,
+      pending_theory_name: matchedModulePdf ? matchedModulePdf.name : undefined,
       passing_score: modData.passingScore,
       challenge_passing_score: modData.passingScore,
       duration_minutes: modData.durationMinutes,

@@ -25,6 +25,9 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     isEditMode,
     isLoading,
     isSubmitting,
+    submitStatusText,
+    pendingUploads,
+    setPendingUploads,
     videoPreviewUrl,
     setVideoPreviewUrl,
     handleSubmit,
@@ -33,6 +36,19 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     courseFolder,
     setActiveNavItem,
   } = useCourseForm(editCourseId, isVi)
+
+  const pendingFileCount = pendingUploads
+    ? (pendingUploads.videoFiles?.length || 0) +
+      (pendingUploads.moduleTheoryFiles?.length || 0) +
+      (pendingUploads.lessonTheoryFiles?.length || 0) +
+      (pendingUploads.courseDocumentFile ? 1 : 0) +
+      (pendingUploads.courseThumbnailFile ? 1 : 0) +
+      (pendingUploads.finalTestAudioFile ? 1 : 0) +
+      (pendingUploads.finalTestSpeakingFile ? 1 : 0) +
+      (pendingUploads.moduleAudioFiles?.length || 0) +
+      (pendingUploads.moduleSpeakingFiles?.length || 0) +
+      (pendingUploads.questionMediaFiles?.length || 0)
+    : 0
 
   if (isLoading) {
     return (
@@ -76,10 +92,20 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
         <StickyFormActionBar
           title={formData.title || (isEditMode ? (isVi ? 'Khóa học' : 'Course') : (isVi ? 'Khóa học mới' : 'New course'))}
           statusText={isVi ? (isEditMode ? 'Đang chỉnh sửa:' : 'Đang tạo mới:') : (isEditMode ? 'Editing:' : 'Creating:')}
-          badgeText={`${formData.modules.length} ${isVi ? 'chương' : 'chapters'} · ${totalLessons} ${isVi ? 'bài học' : 'lessons'}`}
+          badgeText={`${formData.modules.length} ${isVi ? 'chương' : 'chapters'} · ${totalLessons} ${isVi ? 'bài học' : 'lessons'}${
+            pendingFileCount > 0
+              ? ` · ${pendingFileCount} ${isVi ? 'tệp chờ tải lên R2' : 'files queued for R2'}`
+              : ''
+          }`}
           cancelText={isVi ? 'Hủy Bỏ' : 'Cancel'}
-          saveText={isSubmitting ? (isVi ? 'Đang lưu...' : 'Saving...') : (isVi ? 'Lưu Khóa Học' : 'Save Course')}
-          savingText={isVi ? 'Đang lưu...' : 'Saving...'}
+          saveText={
+            isSubmitting
+              ? submitStatusText || (isVi ? 'Đang lưu...' : 'Saving...')
+              : isVi
+              ? 'Lưu Khóa Học'
+              : 'Save Course'
+          }
+          savingText={submitStatusText || (isVi ? 'Đang lưu...' : 'Saving...')}
           isSubmitting={isSubmitting}
           onCancel={() => setActiveNavItem('courses')}
         />
@@ -97,12 +123,13 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
       <CourseFolderImportModal
         isOpen={isFolderModalOpen}
         onClose={() => setIsFolderModalOpen(false)}
-        onApply={(importedInfo, importedModules) => {
+        onApply={(importedInfo, importedModules, pending) => {
           setFormData((prev) => ({
             ...prev,
             ...importedInfo,
             modules: importedModules,
           }))
+          setPendingUploads(pending || null)
         }}
         isVi={isVi}
         courseFolder={courseFolder}
