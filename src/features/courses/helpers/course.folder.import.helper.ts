@@ -103,25 +103,13 @@ const findRowString = (row: Record<string, unknown>, fieldKeywords: string[]): s
   return ''
 }
 
-const normalizeFilename = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/\.[^/.]+$/, '')
-    .replace(/[^a-z0-9]/g, '')
-}
-
 const findMatchingFile = (targetName: string, files: File[]): File | undefined => {
   if (!targetName || !targetName.trim()) return undefined
   const cleanTarget = targetName.trim().toLowerCase()
-  const exact = files.find((f) => f.name.trim().toLowerCase() === cleanTarget)
-  if (exact) return exact
-
-  const normTarget = normalizeFilename(cleanTarget)
-  if (!normTarget) return undefined
-
   return files.find((f) => {
-    const normF = normalizeFilename(f.name)
-    return normF === normTarget || normF.includes(normTarget) || normTarget.includes(normF)
+    const fName = f.name.trim().toLowerCase()
+    const fRelPath = f.webkitRelativePath ? f.webkitRelativePath.toLowerCase() : ''
+    return fName === cleanTarget || fRelPath.endsWith(`/${cleanTarget}`) || fRelPath === cleanTarget
   })
 }
 
@@ -230,23 +218,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     ]) || 'thumbnail.png'
   ).trim()
 
-  let matchedCourseThumbnailFile = rawThumbnailName ? findMatchingFile(rawThumbnailName, files) : undefined
-  if (!matchedCourseThumbnailFile) {
-    matchedCourseThumbnailFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        /\.(png|jpe?g|webp)$/i.test(lower) &&
-        (lower.includes('thumb') ||
-          lower.includes('cover') ||
-          lower.includes('avatar') ||
-          lower.includes('poster') ||
-          lower.includes('banner'))
-      )
-    })
-  }
-  if (!matchedCourseThumbnailFile) {
-    matchedCourseThumbnailFile = files.find((f) => /\.(png|jpe?g|webp)$/i.test(f.name.toLowerCase()))
-  }
+  const matchedCourseThumbnailFile = rawThumbnailName ? findMatchingFile(rawThumbnailName, files) : undefined
 
   const rawDocumentName = String(
     findValue(infoRaw, [
@@ -262,21 +234,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     ]) || ''
   ).trim()
 
-  let matchedCourseDocumentFile = rawDocumentName ? findMatchingFile(rawDocumentName, files) : undefined
-  if (!matchedCourseDocumentFile) {
-    matchedCourseDocumentFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        lower.endsWith('.pdf') &&
-        (lower.includes('tong_quan') ||
-          lower.includes('giao_trinh') ||
-          lower.includes('cam_nang') ||
-          lower.includes('handbook') ||
-          lower.includes('syllabus'))
-      )
-    })
-  }
-
+  const matchedCourseDocumentFile = rawDocumentName ? findMatchingFile(rawDocumentName, files) : undefined
   const document_name = matchedCourseDocumentFile?.name || rawDocumentName || undefined
 
   const rawFinalAudio = String(
@@ -287,19 +245,10 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       'audio đề thi cuối khóa',
       'audio cuối khóa',
       'file âm thanh cuối khóa',
-    ]) || 'audio_final_test.wav'
+    ]) || ''
   ).trim()
 
-  let matchedFinalTestAudioFile = rawFinalAudio ? findMatchingFile(rawFinalAudio, files) : undefined
-  if (!matchedFinalTestAudioFile) {
-    matchedFinalTestAudioFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-        (lower.includes('final') || lower.includes('tot_nghiep'))
-      )
-    })
-  }
+  const matchedFinalTestAudioFile = rawFinalAudio ? findMatchingFile(rawFinalAudio, files) : undefined
 
   const rawFinalSpeaking = String(
     findValue(infoRaw, [
@@ -307,19 +256,10 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       'speaking_sample_final',
       'âm thanh nói mẫu cuối khóa',
       'audio nói mẫu cuối khóa',
-    ]) || 'speaking_sample_final.wav'
+    ]) || ''
   ).trim()
 
-  let matchedFinalTestSpeakingFile = rawFinalSpeaking ? findMatchingFile(rawFinalSpeaking, files) : undefined
-  if (!matchedFinalTestSpeakingFile) {
-    matchedFinalTestSpeakingFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-        (lower.includes('speaking_sample_final') || (lower.includes('speaking') && lower.includes('final')))
-      )
-    })
-  }
+  const matchedFinalTestSpeakingFile = rawFinalSpeaking ? findMatchingFile(rawFinalSpeaking, files) : undefined
 
   const questionMediaFilesToUpload: {
     questionId: string
@@ -615,19 +555,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const modData = modulesMap.get(mOrder)!
     const tests = chapterTestsByModule.get(mOrder) || []
 
-    let matchedModulePdf = modData.theoryFile ? findMatchingFile(modData.theoryFile, files) : undefined
-    if (!matchedModulePdf) {
-      matchedModulePdf = files.find((f) => {
-        const lower = f.name.toLowerCase()
-        return (
-          lower.endsWith('.pdf') &&
-          (lower.includes(`chuong_${mOrder}`) ||
-            lower.includes(`chuong${mOrder}`) ||
-            lower.includes(`module_${mOrder}`) ||
-            lower.includes(`module${mOrder}`))
-        )
-      })
-    }
+    const matchedModulePdf = modData.theoryFile ? findMatchingFile(modData.theoryFile, files) : undefined
 
     if (matchedModulePdf) {
       matchedPdfsCount++
@@ -635,37 +563,14 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     }
 
     const rawModAudio = `audio_test_chapter_${mOrder}.wav`
-    let matchedModuleAudio = findMatchingFile(rawModAudio, files)
-    if (!matchedModuleAudio) {
-      matchedModuleAudio = files.find((f) => {
-        const lower = f.name.toLowerCase()
-        return (
-          (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-          (lower.includes(`chapter_${mOrder}`) ||
-            lower.includes(`chapter${mOrder}`) ||
-            lower.includes(`chuong_${mOrder}`) ||
-            lower.includes(`chuong${mOrder}`))
-        )
-      })
-    }
+    const matchedModuleAudio = findMatchingFile(rawModAudio, files)
 
     if (matchedModuleAudio) {
       moduleAudioFilesToUpload.push({ moduleOrder: mOrder, file: matchedModuleAudio })
     }
 
     const rawModSpeaking = `speaking_sample_chapter_${mOrder}.wav`
-    let matchedModuleSpeaking = findMatchingFile(rawModSpeaking, files)
-    if (!matchedModuleSpeaking) {
-      matchedModuleSpeaking = files.find((f) => {
-        const lower = f.name.toLowerCase()
-        return (
-          (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-          (lower.includes(`speaking_sample_chapter_${mOrder}`) ||
-            lower.includes('speaking_sample_chapter_1') ||
-            lower.includes('speaking_sample'))
-        )
-      })
-    }
+    const matchedModuleSpeaking = findMatchingFile(rawModSpeaking, files)
 
     if (matchedModuleSpeaking) {
       moduleSpeakingFilesToUpload.push({ moduleOrder: mOrder, file: matchedModuleSpeaking })
