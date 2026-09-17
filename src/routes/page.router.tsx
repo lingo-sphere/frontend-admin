@@ -1,7 +1,4 @@
-/**
- * @file page.router.tsx
- * @description Component giao diện PageRouter phục vụ khu vực Quản trị Admin
- */
+// Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
 
 import { useLocation } from 'react-router-dom'
 import { pathToNavItem } from '@/routes/navigation'
@@ -42,6 +39,7 @@ import { PermissionsPage } from '@/features/rbac/pages/permissions.page'
 import { ExamsPage } from '@/features/exams/pages/exams.page'
 import { MediaStoragePage } from '@/features/media/pages/media.storage.page'
 import { RoadmapsPage } from '@/features/roadmaps/pages/roadmaps.page'
+import { ForbiddenPage, NotFoundPage } from '@/features/system/pages/status.result.page'
 
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -85,6 +83,10 @@ const pageMap: Record<string, React.ComponentType> = {
   'settings-ai': SettingsAiPage,
   'settings-system': SettingsSystemPage,
   'admin-profile': AdminProfilePage,
+  'not-found': NotFoundPage,
+  'forbidden': ForbiddenPage,
+  '403': ForbiddenPage,
+  '404': NotFoundPage,
 }
 
 export function PageRouter() {
@@ -97,6 +99,14 @@ export function PageRouter() {
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
+
+  if (activeNavItem === 'not-found' || activeNavItem === '404') {
+    return <NotFoundPage />
+  }
+
+  if (activeNavItem === 'forbidden' || activeNavItem === '403') {
+    return <ForbiddenPage />
+  }
 
   if (!isAdmin) {
     if (
@@ -116,36 +126,36 @@ export function PageRouter() {
       activeNavItem.startsWith('course-form:')
     ) {
       if (!hasPermission('GET', '/courses') && !hasModulePermission('COURSES')) {
-        return <DashboardPage />
+        return <ForbiddenPage />
       }
     }
 
     if (activeNavItem === 'vocabulary' || activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:') || activeNavItem === 'public-decks') {
       if (!hasModulePermission('VOCABULARY')) {
-        return <DashboardPage />
+        return <ForbiddenPage />
       }
     }
 
     if (activeNavItem === 'toeic-tests') {
       if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS')) {
-        return <DashboardPage />
+        return <ForbiddenPage />
       }
     }
 
     if (activeNavItem === 'roles') {
       if (!hasPermission('GET', '/roles') && !hasModulePermission('ROLES')) {
-        return <DashboardPage />
+        return <ForbiddenPage />
       }
     }
 
     if (activeNavItem === 'permissions') {
       if (!hasPermission('GET', '/permissions') && !hasModulePermission('PERMISSIONS')) {
-        return <DashboardPage />
+        return <ForbiddenPage />
       }
     }
 
     if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
-      return <DashboardPage />
+      return <ForbiddenPage />
     }
   }
 
@@ -205,7 +215,7 @@ export function PageRouter() {
     return <LearnerReminderHistoryPage courseId={courseId} userId={userId} />
   }
 
-  const PageComponent = pageMap[activeNavItem] || DashboardPage
+  const PageComponent = pageMap[activeNavItem] || NotFoundPage
 
   return <PageComponent />
 }

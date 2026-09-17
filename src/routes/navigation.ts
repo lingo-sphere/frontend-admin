@@ -1,7 +1,4 @@
-/**
- * @file navigation.ts
- * @description Tiện ích hỗ trợ xử lý dữ liệu và giao diện Admin
- */
+// Ánh xạ điều hướng giữa đường dẫn URL và danh mục menu Quản trị Admin.
 
 export function navItemToPath(navItem: string): string {
   if (!navItem || navItem === 'dashboard') return '/dashboard'
@@ -78,6 +75,8 @@ export function navItemToPath(navItem: string): string {
     const id = navItem.split(':')[1]
     return `/profile/${id}`
   }
+  if (navItem === 'forbidden' || navItem === '403') return '/403'
+  if (navItem === 'not-found' || navItem === '404') return '/404'
   return `/${navItem}`
 }
 
@@ -157,5 +156,7 @@ export function pathToNavItem(pathname: string): string {
   if (pathname.startsWith('/profile/')) {
     return `admin-profile:${pathname.replace('/profile/', '')}`
   }
-  return 'dashboard'
+  if (pathname === '/403' || pathname === '/forbidden') return 'forbidden'
+  if (pathname === '/404' || pathname === '/not-found') return 'not-found'
+  return 'not-found'
 }
