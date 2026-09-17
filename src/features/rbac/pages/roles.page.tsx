@@ -1,7 +1,8 @@
 // Trang quản trị các vai trò và quyền hạn RBAC trong giao diện Admin.
 import { useState } from 'react'
-import { Shield } from 'lucide-react'
+import { Shield, Sparkles, Plus, RotateCcw } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { roleService } from '@/features/rbac/services/role.service'
 import { toast } from '@/store/toast.store'
 import type { Role } from '@/types/api.types'
@@ -16,10 +17,14 @@ import {
 import { rbacKeys } from '@/features/rbac/keys/rbac.keys'
 
 export function RolesPage() {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const queryClient = useQueryClient()
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [isSeeding, setIsSeeding] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const { data: allPermissions = [] } = useAllPermissionsQuery(isRoleModalOpen)
 
@@ -29,8 +34,13 @@ export function RolesPage() {
 
   const isSubmitting = createRoleMutation.isPending || updateRoleMutation.isPending
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: rbacKeys.roles() })
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await queryClient.invalidateQueries({ queryKey: rbacKeys.roles() })
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   const handleSeedRBAC = async () => {
@@ -100,15 +110,40 @@ export function RolesPage() {
             Thiết lập danh mục các nhóm vai trò và phân bổ quyền hạn truy cập cho từng chức danh
           </p>
         </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSeedRBAC}
+            disabled={isSeeding}
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            title={isVi ? 'Tự động khởi tạo quyền hạn mẫu' : 'Initialize default RBAC permissions'}
+          >
+            <Sparkles className={`w-4 h-4 ${isSeeding ? 'animate-spin' : ''}`} />
+            <span>{isVi ? 'Khởi tạo RBAC Mẫu' : 'Seed Default RBAC'}</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreateRole}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 active:scale-95 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
+          </button>
+
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 active:scale-95 transition-colors cursor-pointer"
+            title={isVi ? 'Làm mới' : 'Refresh'}
+          >
+            <RotateCcw className={`w-4 h-4 ${isRefreshing || isSeeding ? 'animate-spin text-blue-600' : ''}`} />
+          </button>
+        </div>
       </div>
 
       <RolesListTab
-        onOpenCreateRole={handleOpenCreateRole}
         onOpenEditRole={handleOpenEditRole}
         onDeleteRole={handleDeleteRole}
-        onRefresh={handleRefresh}
-        onSeedDefaultRBAC={handleSeedRBAC}
-        isLoading={isSeeding}
+        isLoading={isSeeding || isRefreshing}
       />
 
       <RoleEditModal
