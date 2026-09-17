@@ -38,7 +38,6 @@ import { RolesPage } from '@/features/rbac/pages/roles.page'
 import { PermissionsPage } from '@/features/rbac/pages/permissions.page'
 import { ExamsPage } from '@/features/exams/pages/exams.page'
 import { MediaStoragePage } from '@/features/media/pages/media.storage.page'
-import { RoadmapsPage } from '@/features/roadmaps/pages/roadmaps.page'
 import { ForbiddenPage, NotFoundPage } from '@/features/system/pages/status.result.page'
 
 const pageMap: Record<string, React.ComponentType> = {
@@ -54,8 +53,6 @@ const pageMap: Record<string, React.ComponentType> = {
   'course-learners': CourseLearnersPage,
   'course-exams': CourseExamsPage,
   'course-create': CourseFormPage,
-  roadmaps: RoadmapsPage,
-  'roadmaps-list': RoadmapsPage,
   vocabulary: VocabularyPage,
   'vocab-create': VocabularyFormPage,
   'vocabulary-import': VocabularyImportPage,
@@ -116,8 +113,6 @@ export function PageRouter() {
       activeNavItem === 'course-exams' ||
       activeNavItem === 'course-exam-create' ||
       activeNavItem.startsWith('course-exam-questions:') ||
-      activeNavItem === 'roadmaps' ||
-      activeNavItem === 'roadmaps-list' ||
       activeNavItem.startsWith('course-scores:') ||
       activeNavItem.startsWith('course-submissions:') ||
       activeNavItem.startsWith('learner-progress:') ||

@@ -29,7 +29,7 @@ export function getCourseColumns({
   return [
     {
       key: 'info',
-      title: isVi ? 'Khóa học & Lộ trình' : 'Course & Roadmap',
+      title: isVi ? 'Thông tin khóa học' : 'Course Info',
       sortable: true,
       render: (course) => (
         <div className="flex items-center gap-3.5 py-1">

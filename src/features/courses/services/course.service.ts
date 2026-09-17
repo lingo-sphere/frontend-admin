@@ -1,24 +1,21 @@
-// Service xử lý các yêu cầu API quản lý khóa học, chương trình học và lộ trình học tập cho quản trị viên.
+// Service xử lý các yêu cầu API quản lý khóa học và chương trình học cho quản trị viên.
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { PaginatedResult, LessonQuestion, LearningRoadmapStage } from '@/types/api.types'
+import type { PaginatedResult, LessonQuestion } from '@/types/api.types'
 import {
   type Course,
   type CourseModule,
   type Lesson,
-  type LearningRoadmap,
   CourseSchema,
   CourseListSchema,
   PaginatedCoursesSchema,
   CourseModuleSchema,
   LessonSchema,
-  LearningRoadmapSchema,
-  RoadmapListSchema,
 } from '@/features/courses/schemas/course.schema'
 import { z } from 'zod'
 
-export type { Course, CourseModule, Lesson, LearningRoadmap, LearningRoadmapStage, LessonQuestion }
+export type { Course, CourseModule, Lesson, LessonQuestion }
 
 export interface CourseFilterParams {
   category?: string
@@ -129,39 +126,3 @@ export const courseService = {
   },
 }
 
-export const roadmapService = {
-  async getAllRoadmaps(params?: { skills_focus?: string; is_published?: boolean }): Promise<LearningRoadmap[]> {
-    return api.get<LearningRoadmap[]>(
-      API_CONFIG.ENDPOINTS.ROADMAPS.LIST,
-      params as Record<string, unknown>,
-      RoadmapListSchema
-    )
-  },
-
-  async getRoadmapById(id: string): Promise<LearningRoadmap> {
-    return api.get<LearningRoadmap>(API_CONFIG.ENDPOINTS.ROADMAPS.BY_ID(id), undefined, LearningRoadmapSchema)
-  },
-
-  async createRoadmap(payload: Partial<LearningRoadmap>): Promise<LearningRoadmap> {
-    return api.post<LearningRoadmap>(API_CONFIG.ENDPOINTS.ROADMAPS.LIST, payload, LearningRoadmapSchema)
-  },
-
-  async updateRoadmap(id: string, payload: Partial<LearningRoadmap>): Promise<LearningRoadmap> {
-    return api.put<LearningRoadmap>(API_CONFIG.ENDPOINTS.ROADMAPS.BY_ID(id), payload, LearningRoadmapSchema)
-  },
-
-  async deleteRoadmap(id: string): Promise<{ message: string }> {
-    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.ROADMAPS.BY_ID(id))
-  },
-
-  async getRecommendation(query: {
-    total_score?: number
-    listening_score?: number
-    reading_score?: number
-    speaking_score?: number
-    writing_score?: number
-    skills_type?: string
-  }): Promise<{ recommended_roadmap: LearningRoadmap & { stages: LearningRoadmapStage[] }; individual_courses: Course[]; note?: string }> {
-    return api.get(API_CONFIG.ENDPOINTS.ROADMAPS.RECOMMENDATION, query as Record<string, unknown>)
-  },
-}

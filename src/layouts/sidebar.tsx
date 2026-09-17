@@ -81,7 +81,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'courses-list':
         case 'course-learners':
         case 'course-exams':
-        case 'roadmaps':
           return hasPermission('GET', '/courses') || hasModulePermission('COURSES')
         case 'vocabulary':
         case 'public-decks':
