@@ -9,6 +9,7 @@ import type { QuizQuestionItem } from '@/features/courses/schemas/course.schema'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { CourseInstructorCard } from '@/features/courses/components/course.instructor.card'
 import { CourseFinalTestCard } from '@/features/courses/components/course.final.test.card'
+import { generateSlug } from '@/features/courses/helpers/course.helper'
 
 export interface CourseFormData {
   title: string
@@ -42,13 +43,7 @@ export interface CourseFormData {
   modules: CourseModule[]
 }
 
-export interface LessonQuestion {
-  id: string
-  question_text: string
-  options: string[]
-  correct_answer: string
-  explanation?: string
-}
+export type LessonQuestion = QuizQuestionItem
 
 export interface CourseLesson {
   id: string
@@ -63,7 +58,7 @@ export interface CourseLesson {
   theory_file_name?: string
   pending_video_name?: string
   pending_theory_name?: string
-  questions?: LessonQuestion[]
+  questions?: QuizQuestionItem[]
 }
 
 export interface CourseModule {
@@ -183,7 +178,16 @@ export function CourseBasicInfoTab({
                 type="text"
                 required
                 value={formData.title}
-                onChange={(e) => onChange({ title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value
+                  const currentSlug = formData.slug ? formData.slug.trim() : ''
+                  const prevAutoSlug = formData.title ? generateSlug(formData.title.trim()) : ''
+                  if (!currentSlug || currentSlug === prevAutoSlug) {
+                    onChange({ title: newTitle, slug: generateSlug(newTitle) })
+                  } else {
+                    onChange({ title: newTitle })
+                  }
+                }}
                 placeholder={isVi ? 'VD: Khóa học TOEIC 4 Kỹ Năng 750+ Bứt Phá' : 'Enter course title...'}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-medium"
               />

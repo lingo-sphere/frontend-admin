@@ -1,7 +1,4 @@
-/**
- * @file course.helper.ts
- * @description Mã nguồn thành phần course.helper.ts
- */
+// Helper tien ich xu ly slug, chuan hoa ten folder R2 va validate du lieu khoa hoc.
 
 import type { CourseFormData } from '@/features/courses/components/course.basic.info.tab'
 
@@ -44,6 +41,14 @@ export function generateSlug(text: string): string {
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '')
     .trim()
+}
+
+export function generateCourseR2Folder(title?: string, slug?: string, suffix?: string): string {
+  const cleanSlug = (slug && slug.trim()) || (title && title.trim()) || ''
+  const normalized = cleanSlug ? generateSlug(cleanSlug) : 'khoa-hoc'
+  const safeSlug = normalized.length > 80 ? normalized.substring(0, 80).replace(/-+$/, '') : normalized
+  const randomSuffix = suffix || Math.random().toString(36).substring(2, 8)
+  return `courses/${safeSlug}-${randomSuffix}`
 }
 
 export const COURSE_REGEX = {

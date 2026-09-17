@@ -3,12 +3,13 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { CourseFormData, CourseLesson, CourseModule } from '@/features/courses/components/course.basic.info.tab'
+import type { Course } from '@/features/courses/schemas/course.schema'
 import { courseService } from '@/features/courses/services/course.service'
 import { mediaService } from '@/features/media/services/media.service'
 import { pathToNavItem, navItemToPath } from '@/routes/navigation'
 import { authStore, useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
-import { validateCourseFormData } from '@/features/courses/helpers/course.helper'
+import { validateCourseFormData, generateCourseR2Folder } from '@/features/courses/helpers/course.helper'
 import { queryClient } from '@/config/query.config'
 import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
 import {
@@ -28,13 +29,13 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const currentCourseId =
     editCourseId ||
     (activeNavItem.startsWith('course-edit:') ? activeNavItem.split(':')[1] : undefined) ||
-    (typeof window !== 'undefined' && window.location.pathname.includes('/courses/')
-      ? window.location.pathname.split('/courses/')[1].replace('/edit', '')
+    (pathname.startsWith('/courses/') && !pathname.includes('/courses/create')
+      ? pathname.split('/courses/')[1].replace('/edit', '')
       : undefined)
 
   const isEditMode = Boolean(currentCourseId && currentCourseId !== 'create')
 
-  const [courseCreatedAt, setCourseCreatedAt] = useState<number>(() => Date.now())
+  const [randomFolderSuffix] = useState<string>(() => Math.random().toString(36).substring(2, 8))
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatusText, setSubmitStatusText] = useState<string>('')
@@ -44,18 +45,12 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const [formData, setFormData] = useState<CourseFormData>(() => {
     const profile = authStore.getState().profile
     const user = authStore.getState().user
-    const userPayload = user as unknown as Record<string, unknown>
     const resolvedName =
       profile?.full_name ||
-      (userPayload?.full_name as string) ||
-      (userPayload?.name as string) ||
+      user?.full_name ||
       (user?.email ? user.email.split('@')[0] : '')
     const resolvedEmail = profile?.email || user?.email || ''
-    const resolvedAvatar =
-      profile?.avatar_url ||
-      (userPayload?.avatar_url as string) ||
-      (userPayload?.avatar as string) ||
-      ''
+    const resolvedAvatar = profile?.avatar_url || user?.avatar_url || ''
     const resolvedRole = profile?.role || user?.role
     const resolvedTitle =
       resolvedRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
@@ -101,17 +96,15 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
     if (!isEditMode && (currentProfile || currentUser)) {
       setFormData((prev) => {
         if (!prev.author_name || prev.author_name === 'Đội ngũ Giảng viên LingoSphere') {
-          const userPayload = currentUser as unknown as Record<string, unknown>
           const resolvedName =
             currentProfile?.full_name ||
-            (userPayload?.full_name as string) ||
-            (userPayload?.name as string) ||
+            currentUser?.full_name ||
             (currentUser?.email ? currentUser.email.split('@')[0] : prev.author_name)
           const resolvedEmail =
             currentProfile?.email || currentUser?.email || prev.author_email
           const resolvedAvatar =
             currentProfile?.avatar_url ||
-            (userPayload?.avatar_url as string) ||
+            currentUser?.avatar_url ||
             prev.author_avatar
           const resolvedRole = currentProfile?.role || currentUser?.role
           const resolvedTitle =
@@ -142,18 +135,9 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const loadCourseData = async (courseId: string) => {
     setIsLoading(true)
     try {
-      const rawRes = (await courseService.getCourseById(
-        courseId
-      )) as unknown as Record<string, unknown>
-      if (rawRes) {
-        const course = (rawRes.course as Record<string, unknown>) || rawRes
-        const rawCurriculum = (rawRes.curriculum ||
-          course.modules ||
-          []) as Array<Record<string, unknown>>
-
-        if (course.created_at) {
-          setCourseCreatedAt(new Date(course.created_at as string).getTime())
-        }
+      const course = await courseService.getCourseById(courseId)
+      if (course) {
+        const rawCurriculum = course.curriculum || course.modules || []
 
         const mappedModules = rawCurriculum.map((m, mIdx) => {
           const rawLessons = (m.lessons || []) as Array<Record<string, unknown>>
@@ -300,11 +284,17 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       let finalModules: CourseModule[] = formData.modules
       const uploadedR2Urls: string[] = []
 
+      const resolvedCourseFolder = generateCourseR2Folder(
+        finalCourseInfo.title || formData.title,
+        finalCourseInfo.slug || formData.slug,
+        randomFolderSuffix
+      )
+
       if (pendingUploads) {
         setSubmitStatusText(isVi ? 'Đang tải tệp lên Cloudflare R2...' : 'Uploading files to R2...')
         const uploadResult = await uploadFolderResourcesToR2(
           pendingUploads,
-          courseFolder,
+          resolvedCourseFolder,
           formData,
           formData.modules,
           (progress) => {
@@ -330,7 +320,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
 
       setSubmitStatusText(isVi ? 'Đang lưu khóa học vào hệ thống...' : 'Saving course to system...')
 
-      const payload = {
+      const payload: Partial<Course> = {
         title: finalCourseInfo.title || formData.title,
         slug: finalCourseInfo.slug || formData.slug,
         description: finalCourseInfo.description || formData.description,
@@ -360,7 +350,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         final_test_writing_file_url: finalCourseInfo.final_test_writing_file_url || formData.final_test_writing_file_url || '',
         modules: finalModules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
-          course_id: currentCourseId || '',
+          course_id: isEditMode && currentCourseId ? currentCourseId : '',
           title: m.title,
           description: m.description,
           order_index: mIdx + 1,
@@ -434,7 +424,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           if (q.media_url) allMediaUrls.push(q.media_url)
         })
       }
-      payload.modules.forEach((mod) => {
+      payload.modules?.forEach((mod) => {
         if (mod.theory_file_url) allMediaUrls.push(mod.theory_file_url)
         if (mod.test_audio_url) allMediaUrls.push(mod.test_audio_url)
         if (mod.challenge_audio_url) allMediaUrls.push(mod.challenge_audio_url)
@@ -444,7 +434,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         qList.forEach((q) => {
           if (q.media_url) allMediaUrls.push(q.media_url)
         })
-        mod.lessons.forEach((les) => {
+        mod.lessons?.forEach((les) => {
           if (les.video_url) allMediaUrls.push(les.video_url)
           if (les.theory_file_url) allMediaUrls.push(les.theory_file_url)
         })
@@ -458,7 +448,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã cập nhật khóa học "${formData.title}" thành công!`)
       } else {
         const created = await courseService.createCourse(payload)
-        const newCourseId = created?._id || (created as { id?: string })?.id
+        const newCourseId = created._id
         if (allMediaUrls.length > 0) {
           mediaService.confirmMedia(allMediaUrls, newCourseId).catch(() => {})
         }
@@ -484,8 +474,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
     0
   )
 
-  const courseSlug = formData.slug.trim() || 'untitled-course'
-  const courseFolder = `courses/${courseSlug}-${courseCreatedAt}`
+  const courseFolder = generateCourseR2Folder(formData.title, formData.slug, randomFolderSuffix)
 
   return {
     formData,

@@ -26,6 +26,7 @@ import {
   uploadFolderResourcesToR2,
   type PendingFolderUploads,
 } from '@/features/courses/helpers/course.folder.upload.helper'
+import { generateCourseR2Folder } from '@/features/courses/helpers/course.helper'
 import type { CourseFormData, CourseModule } from '@/features/courses/components/course.basic.info.tab'
 import { toast } from '@/store/toast.store'
 
@@ -225,10 +226,17 @@ export function CourseFolderImportModal({
       questionMediaFiles: parsedResult.questionMediaFilesToUpload || [],
     }
 
+    const targetFolder = parsedResult
+      ? generateCourseR2Folder(
+          parsedResult.courseInfo.title,
+          parsedResult.courseInfo.slug
+        )
+      : courseFolder
+
     try {
       const res = await uploadFolderResourcesToR2(
         pendingUploads,
-        courseFolder,
+        targetFolder,
         parsedResult.courseInfo,
         parsedResult.modules,
         (progress) => {
