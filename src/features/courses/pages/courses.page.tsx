@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Plus, RotateCcw, GraduationCap, FileCheck2 } from 'lucide-react'
+import { Plus, RotateCcw } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
 import { DataTable } from '@/components/data.table'
 import { usePermission } from '@/features/rbac/hooks/use.permission'
@@ -155,7 +155,7 @@ export function CoursesPage() {
       <CourseStatsOverview stats={stats} />
 
       <DataTable<Course>
-        title={isVi ? 'Quản Lý Khóa Học & Lộ Trình' : 'Course & Curriculum Management'}
+        title={isVi ? 'Quản Lý Khóa Học' : 'Course Management'}
         subtitle={
           isVi
             ? 'Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi'
@@ -189,20 +189,6 @@ export function CoursesPage() {
         onResetFilters={handleResetFilters}
         extraActions={
           <>
-            <button
-              onClick={() => navigate('/course-learners')}
-              className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
-            >
-              <GraduationCap className="w-4 h-4" />
-              <span>{isVi ? 'Quản lý học viên' : 'Learners'}</span>
-            </button>
-            <button
-              onClick={() => navigate('/course-exams')}
-              className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
-            >
-              <FileCheck2 className="w-4 h-4" />
-              <span>{isVi ? 'Quản lý bài thi' : 'Exams'}</span>
-            </button>
             <button
               onClick={() => refetch()}
               className="flex items-center gap-2 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
