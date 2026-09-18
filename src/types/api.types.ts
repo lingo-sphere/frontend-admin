@@ -254,6 +254,7 @@ export interface Course {
   final_test_writing_file_url?: string | null
   rating?: number | null
   students_count?: number | null
+  is_bestseller?: boolean | null
   total_modules?: number | null
   total_lessons?: number | null
   skills?: string[]

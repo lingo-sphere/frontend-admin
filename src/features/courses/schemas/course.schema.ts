@@ -127,6 +127,7 @@ export const CourseBaseSchema = z.object({
   final_test_writing_file_url: z.string().nullable().optional(),
   rating: z.number().nullable().optional(),
   students_count: z.number().nullable().optional(),
+  is_bestseller: z.boolean().nullable().optional(),
   total_modules: z.number().nullable().optional(),
   total_lessons: z.number().nullable().optional(),
   skills: z.array(z.string()).optional(),
