@@ -17,14 +17,14 @@ import {
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 
-export function LoginPage() {
+export function LoginPage({ initialError }: { initialError?: string } = {}) {
   const { t } = useTranslation()
   const [email, setEmail] = useState('admin@lingosphere.local')
   const [password, setPassword] = useState('admin123')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null)
   const [selectedRole, setSelectedRole] = useState<'admin' | 'teacher'>('admin')
 
   const login = useAuthStore((state) => state.login)

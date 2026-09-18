@@ -138,8 +138,9 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       secondaryStorage.remove(STORAGE_KEYS.USER)
 
       primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, access_token)
+      primaryStorage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       if (refresh_token) {
-        primaryStorage.set(STORAGE_KEYS.REFRESH_TOKEN, refresh_token)
+        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, refresh_token, { days: 7 })
       }
       primaryStorage.set(STORAGE_KEYS.USER, updatedUser)
 
@@ -180,6 +181,7 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
       storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.session.remove(STORAGE_KEYS.USER)
+      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
       set({
         user: null,
         profile: null,

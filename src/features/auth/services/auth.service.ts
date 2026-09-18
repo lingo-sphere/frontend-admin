@@ -51,10 +51,7 @@ export const authService = {
 
   async logout(): Promise<{ message: string }> {
     try {
-      const refreshToken =
-        storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
-        storage.session.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
-        storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+      const refreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
       const res = await apiClient.post<{ message: string }>(
         API_CONFIG.ENDPOINTS.AUTH.LOGOUT,
         {},
