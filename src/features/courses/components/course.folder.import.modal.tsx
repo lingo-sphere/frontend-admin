@@ -20,20 +20,6 @@ import {
   RotateCcw,
 } from 'lucide-react'
 
-interface FileSystemHandleLike {
-  kind: 'file' | 'directory'
-  name: string
-}
-
-interface FileSystemFileHandleLike extends FileSystemHandleLike {
-  kind: 'file'
-  getFile: () => Promise<File>
-}
-
-interface FileSystemDirectoryHandleLike extends FileSystemHandleLike {
-  kind: 'directory'
-  values: () => AsyncIterable<FileSystemHandleLike>
-}
 import {
   parseCourseFolder,
   type ParsedFolderResult,
@@ -90,34 +76,6 @@ export const CourseFolderImportModal = forwardRef<
 
   const folderInputRef = useRef<HTMLInputElement | null>(null)
 
-  const collectFilesFromDirectoryHandle = async (
-    dirHandle: FileSystemDirectoryHandleLike,
-    path = ''
-  ): Promise<File[]> => {
-    const files: File[] = []
-    for await (const entry of dirHandle.values()) {
-      if (entry.kind === 'file') {
-        const file = await (entry as FileSystemFileHandleLike).getFile()
-        const relativePath = path ? `${path}/${file.name}` : file.name
-        try {
-          Object.defineProperty(file, 'webkitRelativePath', {
-            value: relativePath,
-            writable: true,
-            configurable: true,
-          })
-        } catch {}
-        files.push(file)
-      } else if (entry.kind === 'directory') {
-        const subFiles = await collectFilesFromDirectoryHandle(
-          entry as FileSystemDirectoryHandleLike,
-          path ? `${path}/${entry.name}` : entry.name
-        )
-        files.push(...subFiles)
-      }
-    }
-    return files
-  }
-
   const handleClose = () => {
     if (isUploading) return
     setParsedResult(null)
@@ -126,35 +84,13 @@ export const CourseFolderImportModal = forwardRef<
     onClose()
   }
 
-  const handlePickFolder = async (e?: React.MouseEvent) => {
+  const handlePickFolder = (e?: React.MouseEvent) => {
     e?.stopPropagation()
     if (isParsing || isUploading) return
-
-    if (typeof window !== 'undefined' && 'showDirectoryPicker' in window) {
-      try {
-        const picker = (window as unknown as {
-          showDirectoryPicker: (options?: { id?: string; mode?: 'read' }) => Promise<FileSystemDirectoryHandleLike>
-        }).showDirectoryPicker
-        const dirHandle = await picker({ mode: 'read' })
-        onOpen?.()
-        setIsParsing(true)
-        setError(null)
-        const files = await collectFilesFromDirectoryHandle(dirHandle)
-        await processFiles(files)
-        return
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          return
-        }
-        setIsParsing(false)
-        const msg = err instanceof Error ? err.message : 'Không thể đọc thư mục'
-        setError(msg)
-        toast.error(msg)
-        return
-      }
+    if (folderInputRef.current) {
+      folderInputRef.current.value = ''
+      folderInputRef.current.click()
     }
-
-    folderInputRef.current?.click()
   }
 
   useImperativeHandle(ref, () => ({
