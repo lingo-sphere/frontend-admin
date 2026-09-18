@@ -116,7 +116,7 @@ export const authStore = createStore<AuthState>()((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.login(credentials)
-      const { user, access_token } = res
+      const { user, access_token, refresh_token } = res
 
       let permissions: PermissionItem[] = user.permissions || []
       if (!permissions || permissions.length === 0) {
@@ -134,9 +134,13 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       const secondaryStorage = isRemember ? storage.session : storage
 
       secondaryStorage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       secondaryStorage.remove(STORAGE_KEYS.USER)
 
       primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, access_token)
+      if (refresh_token) {
+        primaryStorage.set(STORAGE_KEYS.REFRESH_TOKEN, refresh_token)
+      }
       primaryStorage.set(STORAGE_KEYS.USER, updatedUser)
 
       set({
@@ -171,8 +175,10 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       console.warn('Logout error (clearing local session anyway):', err)
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
       storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.session.remove(STORAGE_KEYS.USER)
       set({
         user: null,

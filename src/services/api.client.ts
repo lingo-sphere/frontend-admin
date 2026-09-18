@@ -98,22 +98,45 @@ apiClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const res = await axios.post<ApiResponse<{ access_token: string }>>(
+        const storedRefreshToken =
+          storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+          storage.session.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+          storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+
+        const refreshHeaders: Record<string, string> = {}
+        if (storedRefreshToken) {
+          refreshHeaders['x-refresh-token'] = storedRefreshToken
+        }
+
+        const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
           {},
           {
+            headers: refreshHeaders,
             withCredentials: true,
           },
         )
 
-        const responseData = res.data as unknown as { data?: { access_token?: string }; access_token?: string }
-        const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
+        const responseData = res.data as unknown as {
+          data?: { access_token?: string; refresh_token?: string }
+          access_token?: string
+          refresh_token?: string
+        }
+        const tokenPayload = responseData?.data || responseData
+        const newAccessToken = tokenPayload?.access_token
+        const newRefreshToken = tokenPayload?.refresh_token
 
         if (newAccessToken) {
           if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
             storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+            if (newRefreshToken) {
+              storage.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
+            }
           } else {
             storage.session.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+            if (newRefreshToken) {
+              storage.session.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
+            }
           }
 
           if (originalRequest.headers) {
@@ -131,9 +154,14 @@ apiClient.interceptors.response.use(
         console.warn('Phiên đăng nhập đã hết hạn. Đang đăng xuất...', refreshErr)
 
         storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.remove(STORAGE_KEYS.USER)
         storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.session.remove(STORAGE_KEYS.USER)
+        storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+        storage.cookie.remove(STORAGE_KEYS.USER)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         }

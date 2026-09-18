@@ -51,15 +51,30 @@ export const authService = {
 
   async logout(): Promise<{ message: string }> {
     try {
-      const res = await apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
+      const refreshToken =
+        storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+        storage.session.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+        storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+      const res = await apiClient.post<{ message: string }>(
+        API_CONFIG.ENDPOINTS.AUTH.LOGOUT,
+        {},
+        {
+          headers: refreshToken ? { 'x-refresh-token': refreshToken } : undefined,
+        },
+      )
       return res.data
     } catch {
       return { message: 'Logged out successfully' }
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
       storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.session.remove(STORAGE_KEYS.USER)
+      storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      storage.cookie.remove(STORAGE_KEYS.USER)
     }
   },
 
