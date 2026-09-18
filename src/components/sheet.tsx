@@ -1,7 +1,4 @@
-/**
- * @file sheet.tsx
- * @description Component giao diện sheet phục vụ khu vực Quản trị Admin
- */
+// Component giao dien Sheet drawer truot tu canh man hinh cho Admin.
 
 import React, { useEffect } from 'react'
 import { X } from 'lucide-react'
@@ -32,7 +29,6 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
 
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => onOpenChange?.(false)}
       />
 
       <div

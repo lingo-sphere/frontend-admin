@@ -1,7 +1,4 @@
-/**
- * @file vocabulary.detail.modal.tsx
- * @description Modal hiển thị chi tiết từ vựng với đầy đủ thông tin
- */
+// Modal hiển thị chi tiết từ vựng với đầy đủ phiên âm, nghĩa và ví dụ minh họa.
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -112,7 +109,6 @@ export function VocabularyDetailModal({
 
     try {
       const res = await vocabularyService.getLexicalItemById(vocabularyId)
-      // Handle response format: backend trả về { data: {...} } hoặc trực tiếp object
       const data = (res as any)?.data || res
       setVocabulary(data)
     } catch (err) {
@@ -147,12 +143,9 @@ export function VocabularyDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
-      {/* Modal */}
       <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-hidden bg-white dark:bg-slate-900 rounded-2xl shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50">
@@ -177,7 +170,6 @@ export function VocabularyDetailModal({
           </button>
         </div>
 
-        {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -193,7 +185,6 @@ export function VocabularyDetailModal({
             </div>
           ) : vocabulary ? (
             <div className="p-6 space-y-6">
-              {/* Word Header */}
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
@@ -206,7 +197,9 @@ export function VocabularyDetailModal({
                       </span>
                     )}
                     {vocabulary.is_verified && (
-                      <CheckCircle className="w-5 h-5 text-green-500" title={isVi ? 'Đã xác minh' : 'Verified'} />
+                      <span title={isVi ? 'Đã xác minh' : 'Verified'} className="inline-flex items-center">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      </span>
                     )}
                     {!vocabulary.is_active && (
                       <span className="px-2 py-1 text-xs font-medium rounded-lg bg-red-100 text-red-700 border border-red-200">
@@ -215,7 +208,6 @@ export function VocabularyDetailModal({
                     )}
                   </div>
 
-                  {/* Pronunciation */}
                   <div className="flex items-center gap-4 mt-2">
                     {vocabulary.pronunciation && (
                       <div className="flex items-center gap-2">
@@ -247,7 +239,6 @@ export function VocabularyDetailModal({
                     )}
                   </div>
 
-                  {/* Meta info */}
                   <div className="flex items-center gap-3 mt-3 text-xs text-slate-500 dark:text-slate-400">
                     {vocabulary.lexical_type && (
                       <span className="px-2 py-1 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400">
@@ -274,7 +265,6 @@ export function VocabularyDetailModal({
                 )}
               </div>
 
-              {/* Meanings Section */}
               <div className="space-y-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <MessageSquare className="w-4 h-4" />
@@ -401,7 +391,6 @@ export function VocabularyDetailModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800">
           <button
             onClick={onClose}

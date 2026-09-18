@@ -188,7 +188,6 @@ export function VideoPreviewModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 md:p-6 animate-in fade-in duration-150"
-      onClick={onClose}
     >
       {!isMetadataLoaded && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">

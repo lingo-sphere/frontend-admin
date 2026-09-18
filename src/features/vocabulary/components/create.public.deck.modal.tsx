@@ -1,7 +1,4 @@
-/**
- * @file create.public.deck.modal.tsx
- * @description Component giao diện CreatePublicDeckModal phục vụ khu vực Quản trị Admin
- */
+// Modal tạo mới bộ thẻ từ vựng công khai trong hệ thống từ vựng.
 
 import { X } from 'lucide-react'
 
@@ -27,10 +24,7 @@ export function CreatePublicDeckModal({
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 space-y-4 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}

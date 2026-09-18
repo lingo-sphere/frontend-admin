@@ -1,10 +1,7 @@
-/**
- * @file confirm.modal.tsx
- * @description Component giao diện ConfirmModal phục vụ khu vực Quản trị Admin
- */
+// Modal xac nhan thao tac quan tri he thong (ConfirmModal) danh cho Admin.
 
 import { useEffect } from 'react'
-import { AlertTriangle, Ban, Trash2 } from 'lucide-react'
+import { AlertTriangle, Ban, Trash2, X } from 'lucide-react'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -101,12 +98,18 @@ export function ConfirmModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
-      onClick={onClose}
     >
       <div
         className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 relative z-10 flex flex-col items-center text-center gap-4 animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getIconColorClasses()}`}>
           {getIcon()}
         </div>
