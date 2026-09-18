@@ -1,7 +1,4 @@
-/**
- * @file vocabulary.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ vocabulary
- */
+// Service xử lý các yêu cầu API quản lý từ vựng, chủ đề, phiên âm IPA và ngữ pháp.
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
@@ -9,11 +6,8 @@ import {
   LexicalItemSchema,
   LexicalItemListSchema,
   TopicSchema,
-  TopicListSchema,
   FlashcardDeckSchema,
   FlashcardDeckListSchema,
-  IpaSymbolSchema,
-  IpaSymbolListSchema,
   GrammarPointSchema,
   GrammarPointListSchema,
   type LexicalItem,
@@ -30,14 +24,12 @@ export interface SearchVocabParams {
   cefr_level?: string
   topic_id?: string
   lexical_type?: string
-  // word_type được chỉ định ở cấp Meaning
 }
 
 export interface IngestVocabularyParams {
   word: string
   cefr_level?: string
   lexical_type?: string
-  // word_type được chỉ định ở cấp Meaning
   skip_existing?: boolean
 }
 
@@ -53,7 +45,6 @@ export interface IngestVocabularyResult {
 }
 
 export const vocabularyService = {
-
   async searchVocabulary(params?: SearchVocabParams): Promise<LexicalItem[]> {
     return api.get<LexicalItem[]>(
       API_CONFIG.ENDPOINTS.VOCABULARY.SEARCH,
@@ -63,11 +54,9 @@ export const vocabularyService = {
   },
 
   async listVocabulary(params?: SearchVocabParams & { page?: number; limit?: number }): Promise<LexicalItem[]> {
-    // Bypass Zod validation vì backend trả về {data: [...]} object thay vì array trực tiếp
     return api.get<LexicalItem[]>(
       API_CONFIG.ENDPOINTS.VOCABULARY.LIST,
-      params as Record<string, unknown>,
-      null
+      params as Record<string, unknown>
     )
   },
 
@@ -100,23 +89,17 @@ export const vocabularyService = {
     file: File,
     audioType: 'us' | 'uk' = 'us'
   ): Promise<{ url: string; storage_key: string }> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('audio_type', audioType)
-
-    return api.post<{ url: string; storage_key: string }>(
+    return api.upload<{ url: string; storage_key: string }>(
       `${API_CONFIG.ENDPOINTS.VOCABULARY.BY_ID(id)}/upload-audio`,
-      formData,
-      null,
-      { 'Content-Type': 'multipart/form-data' }
+      file,
+      { audio_type: audioType }
     )
   },
 
   async ingestVocabulary(params: IngestVocabularyParams): Promise<IngestVocabularyResult> {
     return api.post<IngestVocabularyResult>(
       API_CONFIG.ENDPOINTS.VOCABULARY.INGEST,
-      params,
-      null
+      params
     )
   },
 
@@ -135,8 +118,7 @@ export const vocabularyService = {
       results: IngestVocabularyResult[]
     }>(
       API_CONFIG.ENDPOINTS.VOCABULARY.INGEST_BATCH,
-      { items },
-      null
+      { items }
     )
   },
 
@@ -145,12 +127,7 @@ export const vocabularyService = {
   },
 
   async getAllTopics(): Promise<Topic[]> {
-    // Bypass Zod validation vì backend trả về {data: [...]} hoặc {items: [...]} object
-    return api.get<Topic[]>(
-      API_CONFIG.ENDPOINTS.VOCABULARY.TOPICS,
-      undefined,
-      null
-    )
+    return api.get<Topic[]>(API_CONFIG.ENDPOINTS.VOCABULARY.TOPICS)
   },
 
   async getTopicById(id: string): Promise<Topic> {
@@ -170,27 +147,20 @@ export const vocabularyService = {
   },
 
   async getAllIpaSymbols(symbolType?: string): Promise<IpaSymbol[]> {
-    // Bypass Zod validation vì backend trả về 'id' không phải '_id'
     return api.get<IpaSymbol[]>(
       API_CONFIG.ENDPOINTS.VOCABULARY.IPA_SYMBOLS,
-      symbolType ? { symbol_type: symbolType } : undefined,
-      null // Bypass validation
+      symbolType ? { symbol_type: symbolType } : undefined
     )
   },
 
   async getIpaSymbolById(id: string): Promise<IpaSymbol> {
-    return api.get<IpaSymbol>(
-      API_CONFIG.ENDPOINTS.VOCABULARY.IPA_BY_ID(id),
-      undefined,
-      null // Bypass validation
-    )
+    return api.get<IpaSymbol>(API_CONFIG.ENDPOINTS.VOCABULARY.IPA_BY_ID(id))
   },
 
   async updateIpaSymbol(id: string, payload: Partial<IpaSymbol>): Promise<IpaSymbol> {
     return api.put<IpaSymbol>(
       API_CONFIG.ENDPOINTS.VOCABULARY.IPA_BY_ID(id),
-      payload,
-      null
+      payload
     )
   },
 
@@ -199,17 +169,11 @@ export const vocabularyService = {
     file: File,
     audioType: 'symbol' | 'example' = 'symbol'
   ): Promise<{ url: string; storage_key: string }> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('audio_type', audioType)
-
-    const response = await api.post<{ url: string; storage_key: string }>(
+    return api.upload<{ url: string; storage_key: string }>(
       `${API_CONFIG.ENDPOINTS.VOCABULARY.IPA_BY_ID(id)}/upload-audio`,
-      formData,
-      null,
-      { 'Content-Type': 'multipart/form-data' }
+      file,
+      { audio_type: audioType }
     )
-    return response
   },
 
   async getAllGrammarPoints(): Promise<GrammarPoint[]> {
@@ -222,7 +186,7 @@ export const vocabularyService = {
 
   async getGrammarPointById(id: string): Promise<GrammarPoint> {
     return api.get<GrammarPoint>(
-      API_CONFIG.ENDPOINTS.VOCABULARY.GRAMMAR_BY_ID,
+      API_CONFIG.ENDPOINTS.VOCABULARY.GRAMMAR_BY_ID(id),
       undefined,
       GrammarPointSchema
     )
