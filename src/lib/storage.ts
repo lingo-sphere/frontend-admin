@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   ACTIVE_EXAM: 'lingo_admin_active_exam',
   LANGUAGE: 'i18nextLng',
   PLACEMENT_FEATURED_COLLAPSED: 'lingo_admin_placement_featured_collapsed',
+  EXAM_CONFIG_COLLAPSED: 'lingo_admin_exam_config_collapsed',
 } as const
 
 interface CookieOptions {

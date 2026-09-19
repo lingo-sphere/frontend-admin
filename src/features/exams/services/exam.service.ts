@@ -81,6 +81,7 @@ export interface AdminAttemptQuestion {
   correct_option?: string
   image_url?: string
   audio_url?: string
+  media_url?: string
 }
 
 export interface AdminAttemptAnswer {

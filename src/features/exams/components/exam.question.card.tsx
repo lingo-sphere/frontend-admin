@@ -155,7 +155,7 @@ export function ExamQuestionCard({
           return /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(url) || url.includes('image')
         }
 
-        const audioSrc = (q.audio_url && isAudioUrl(q.audio_url)) ? q.audio_url : (isAudioUrl(q.media_url) ? q.media_url : undefined)
+        const audioSrc = q.audio_url || (isAudioUrl(q.media_url) ? q.media_url : undefined)
         const imageSrc = q.image_url || (isImageUrl(q.media_url) ? q.media_url : undefined)
         const hasAudio = Boolean(audioSrc)
         const hasImage = Boolean(imageSrc)

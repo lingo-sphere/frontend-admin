@@ -1,6 +1,7 @@
 // Component biên soạn đề thi và ngân hàng câu hỏi tích hợp thanh tác vụ lưu biểu mẫu cố định.
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { downloadSampleZip } from '@/features/exams/helpers/zip.exam.helper'
 import { ExamEditorHeader } from '@/features/courses/components/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/features/courses/components/exam.editor.global.audio'
@@ -36,7 +37,21 @@ export function CourseExamQuestionsEditor({
   const [formPassingScore, setFormPassingScore] = useState<number>(initialExam.passing_score ?? 0)
   const [formDescription, setFormDescription] = useState<string>(initialExam.description || '')
   const [formIsPublished, setFormIsPublished] = useState<boolean>(initialExam.is_published ?? true)
-  const [isConfigExpanded, setIsConfigExpanded] = useState<boolean>(isCreateMode)
+  const [isConfigExpanded, setIsConfigExpanded] = useState<boolean>(() => {
+    const savedCollapsed = storage.get<boolean>(STORAGE_KEYS.EXAM_CONFIG_COLLAPSED)
+    if (savedCollapsed !== null && savedCollapsed !== undefined) {
+      return !savedCollapsed
+    }
+    return isCreateMode
+  })
+
+  const handleSetConfigExpanded = useCallback((val: boolean | ((prev: boolean) => boolean)) => {
+    setIsConfigExpanded((prev) => {
+      const next = typeof val === 'function' ? val(prev) : val
+      storage.set(STORAGE_KEYS.EXAM_CONFIG_COLLAPSED, !next)
+      return next
+    })
+  }, [])
 
   const isSystemPlacement = Boolean(
     initialExam.is_system_placement || initialExam.type === 'DIAGNOSTIC_TEST' || !initialExam.course_id
@@ -188,7 +203,7 @@ export function CourseExamQuestionsEditor({
     sessionUploadedUrlsRef,
     cleanupSessionMedia,
     isDirty,
-    setIsConfigExpanded,
+    setIsConfigExpanded: handleSetConfigExpanded,
     onBack,
   })
 
@@ -245,7 +260,7 @@ export function CourseExamQuestionsEditor({
             formIsPublished={formIsPublished}
             setFormIsPublished={setFormIsPublished}
             isConfigExpanded={isConfigExpanded}
-            setIsConfigExpanded={setIsConfigExpanded}
+            setIsConfigExpanded={handleSetConfigExpanded}
             currentActiveConflict={currentActiveConflict}
             isSystemPlacement={isSystemPlacement}
             onCancelExam={handleRequestCancel}

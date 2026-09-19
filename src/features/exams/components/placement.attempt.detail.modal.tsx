@@ -680,13 +680,13 @@ export function PlacementAttemptDetailModal({
                           </div>
                         )}
 
-                        {qObj?.audio_url && (
+                        {(qObj?.audio_url || qObj?.media_url) && (
                           <div className="mt-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
                             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                               <Volume2 className="w-3.5 h-3.5 text-blue-500" />
                               <span>Audio câu hỏi (Listening / Speaking Prompt):</span>
                             </div>
-                            <audio controls className="w-full h-8" src={qObj.audio_url} />
+                            <audio controls className="w-full h-8" src={qObj.audio_url || qObj.media_url} />
                           </div>
                         )}
 
