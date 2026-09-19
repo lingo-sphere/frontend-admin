@@ -73,8 +73,8 @@ export function DataTable<T extends object>({
   columns,
   data,
   rowKey = (record) => {
-    const rec = record as { _id?: string; user_id?: string; id?: string }
-    return rec._id || rec.user_id || rec.id || ''
+    const rec = record as { _id?: string }
+    return rec._id ?? ''
   },
   isLoading = false,
   emptyText,

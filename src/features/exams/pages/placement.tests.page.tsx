@@ -93,11 +93,11 @@ export function PlacementTestsPage() {
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    navigate(`/course-exams/${exam._id || exam.id}/questions`)
+    navigate(`/course-exams/${exam._id}/questions`)
   }
 
   const handleTogglePublish = async (exam: ToeicExamItem, nextStatus: boolean) => {
-    const examId = exam._id || exam.id
+    const examId = exam._id
     if (!examId) return
 
     try {
@@ -285,7 +285,7 @@ export function PlacementTestsPage() {
 
         <div className="p-4 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
           <div className="text-[11px] text-slate-400 font-mono truncate">
-            {exam?._id || exam?.id ? `ID: ${exam._id || exam.id}` : (isVi ? 'Sẵn sàng cấu hình' : 'Ready to setup')}
+            {exam?._id ? `ID: ${exam._id}` : (isVi ? 'Sẵn sàng cấu hình' : 'Ready to setup')}
           </div>
 
           {exam ? (

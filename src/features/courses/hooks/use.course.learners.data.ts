@@ -9,7 +9,8 @@ import {
 } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
+import type { UserProfile } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 export interface CourseSimple {
   id: string
@@ -45,7 +46,7 @@ export function useCourseLearnersData() {
         try {
           const teacherCourses = await courseService.getTeacherCourses()
           if (Array.isArray(teacherCourses) && teacherCourses.length > 0) {
-            loadedCourses = teacherCourses.map((c: ApiCourse) => ({
+            loadedCourses = teacherCourses.map((c: Course) => ({
               id: c._id || '',
               title: c.title || '',
               thumbnail_url: c.thumbnail_url || '',
@@ -59,10 +60,10 @@ export function useCourseLearnersData() {
 
         if (loadedCourses.length === 0) {
           const allRes = await courseService.getAllCourses({ pageSize: 100 })
-          const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : allRes?.result || []
+          const rawList: Course[] = Array.isArray(allRes) ? allRes : allRes?.result || []
           loadedCourses = rawList
-            .filter((c: ApiCourse) => c.author_id === currentUserId)
-            .map((c: ApiCourse) => ({
+            .filter((c: Course) => c.author_id === currentUserId)
+            .map((c: Course) => ({
               id: c._id || '',
               title: c.title || '',
               thumbnail_url: c.thumbnail_url || '',
@@ -72,8 +73,8 @@ export function useCourseLearnersData() {
         }
       } else {
         const allRes = await courseService.getAllCourses({ pageSize: 100 })
-        const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : allRes?.result || []
-        loadedCourses = rawList.map((c: ApiCourse) => ({
+        const rawList: Course[] = Array.isArray(allRes) ? allRes : allRes?.result || []
+        loadedCourses = rawList.map((c: Course) => ({
           id: c._id || '',
           title: c.title || '',
           thumbnail_url: c.thumbnail_url || '',

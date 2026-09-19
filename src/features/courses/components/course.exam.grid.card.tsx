@@ -42,7 +42,7 @@ export function CourseExamGridCard({
   onDelete,
 }: CourseExamGridCardProps) {
   const badge = getExamTypeBadge(exam.type, exam)
-  const examId = exam._id || exam.id || ''
+  const examId = exam._id
 
   const isPlacement = Boolean(
     exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id

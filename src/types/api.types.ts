@@ -73,6 +73,14 @@ export interface UserProfile {
   target_toeic_score?: number | null
   current_estimated_score?: number | null
   learning_goal_minutes_per_day?: number | null
+  placement_test_score?: number | null
+  placement_listening_score?: number | null
+  placement_reading_score?: number | null
+  placement_speaking_score?: number | null
+  placement_writing_score?: number | null
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string | null
+  placement_tested_at?: string | null
+  is_score_manually_edited?: boolean
   bio?: string | null
   status: 'ACTIVE' | 'BLOCKED' | 'SUSPENDED' | string
   is_premium: boolean

@@ -16,7 +16,7 @@ export const QuizQuestionItemSchema = z.object({
   _id: z.string().optional(),
   lesson_id: z.string().optional(),
   prompt: z.string().optional(),
-  question_text: z.string().optional(),
+  question_text: z.string().default(''),
   options: z.array(QuizQuestionOptionSchema).default([]),
   correct_option: z.string().nullable().optional(),
   correct_answer: z.string().nullable().optional(),

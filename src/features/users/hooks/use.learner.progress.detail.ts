@@ -10,7 +10,8 @@ import { courseService } from '@/features/courses/services/course.service'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
-import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
+import type { UserProfile } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 interface UseLearnerProgressDetailProps {
   courseId: string
@@ -20,7 +21,7 @@ interface UseLearnerProgressDetailProps {
 interface LearnerProgressDetailQueryResult {
   student: StudentProgressItem | null
   userProfile: UserProfile | null
-  courseInfo: ApiCourse | null
+  courseInfo: Course | null
   submissions: SkillSubmissionItem[]
 }
 

@@ -266,17 +266,16 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
   }
 
   const authState = authStore.getState()
-  const currentProfile = authState.profile
   const currentUser = authState.user
-  const author_id = currentProfile?.user_id || currentUser?.user_id || ''
-  const author_name =
-    currentProfile?.full_name ||
-    currentUser?.full_name ||
-    (currentUser?.email ? currentUser.email.split('@')[0] : '') ||
-    'Quản trị viên'
-  const author_email = currentProfile?.email || currentUser?.email || ''
-  const author_avatar = currentProfile?.avatar_url || currentUser?.avatar_url || ''
-  const authorRole = currentProfile?.role || currentUser?.role
+  const currentProfile = authState.profile
+  const author_id = currentUser?.user_id || currentProfile?.user_id
+  if (!author_id) {
+    throw new Error('Không xác định được danh tính tác giả (author_id). Vui lòng đăng nhập lại.')
+  }
+  const author_name = currentUser?.full_name || currentProfile?.full_name || ''
+  const author_email = currentUser?.email || currentProfile?.email || ''
+  const author_avatar = currentUser?.avatar_url || currentProfile?.avatar_url || ''
+  const authorRole = currentUser?.role || currentProfile?.role
   const author_title =
     authorRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
   const author_bio = currentProfile?.bio || ''

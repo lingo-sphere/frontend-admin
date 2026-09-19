@@ -1,10 +1,10 @@
-// Trang quan tri tao moi va chinh sua tu vung kem quan ly ngu nghia trong Admin.
+// Trang quản trị tạo mới và chỉnh sửa từ vựng kèm quản lý ngữ nghĩa trong Admin.
 
 import { useState, useEffect } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
-import { VocabularyBasicInfoForm } from '@/features/vocabulary/components/vocabulary.basic.info.form'
+import { VocabularyBasicInfoForm, type BasicInfoFormData } from '@/features/vocabulary/components/vocabulary.basic.info.form'
 import { VocabularyMeaningsForm, type Meaning } from '@/features/vocabulary/components/vocabulary.meanings.form'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
@@ -20,14 +20,21 @@ export function VocabularyFormPage({
 }) {
   const navigate = useNavigate()
   const currentEditId = editWordId || editId
-  const isEditing = !!currentEditId
+  const isEditing = Boolean(currentEditId)
 
-  const [word, setWord] = useState('')
-  const [wordType, setWordType] = useState('NOUN')
-  const [cefrLevel, setCefrLevel] = useState('B1')
-  const [pronunciationUs, setPronunciationUs] = useState('')
-  const [pronunciationUk, setPronunciationUk] = useState('')
-  const [audioUrlUs, setAudioUrlUs] = useState('')
+  const [basicData, setBasicData] = useState<BasicInfoFormData>({
+    word: '',
+    lexical_type: 'word',
+    cefr_level: 'B1',
+    pronunciation: '',
+    audio_url_us: '',
+    audio_url_uk: '',
+    syllables: 1,
+    stress_pattern: '',
+    frequency_rank: 0,
+    source: 'curated',
+  })
+
   const [meanings, setMeanings] = useState<Meaning[]>([
     {
       id: 'mean-1',
@@ -40,28 +47,33 @@ export function VocabularyFormPage({
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Tải dữ liệu cũ khi ở chế độ chỉnh sửa (isEditing)
   useEffect(() => {
     if (currentEditId) {
       vocabularyService
         .getLexicalItemById(currentEditId)
         .then((data) => {
           if (data) {
-            setWord(data.word || '')
-            setWordType(data.word_type || 'NOUN')
-            setCefrLevel(data.cefr_level || 'B1')
-            setPronunciationUs(data.pronunciation_us || '')
-            setPronunciationUk(data.pronunciation_uk || '')
-            setAudioUrlUs(data.audio_url_us || '')
+            setBasicData({
+              word: data.word || '',
+              lexical_type: data.lexical_type || 'word',
+              cefr_level: data.cefr_level || 'B1',
+              pronunciation: data.pronunciation || '',
+              audio_url_us: data.audio_url_us || '',
+              audio_url_uk: data.audio_url_uk || '',
+              syllables: data.syllables || 1,
+              stress_pattern: data.stress_pattern || '',
+              frequency_rank: data.frequency_rank || 0,
+              source: data.source || 'curated',
+            })
             if (data.meanings && data.meanings.length > 0) {
               setMeanings(
                 data.meanings.map((m, idx) => ({
                   id: `mean-${idx}-${Date.now()}`,
-                  part_of_speech: m.part_of_speech || data.word_type || 'NOUN',
+                  part_of_speech: m.part_of_speech || 'NOUN',
                   definition_en: m.definition_en || '',
                   definition_vi: m.definition_vi || '',
                   short_meaning_vi: m.short_meaning_vi || '',
-                  examples: m.examples && m.examples.length > 0 ? m.examples : [''],
+                  examples: Array.isArray(m.examples) && m.examples.length > 0 ? (m.examples as string[]) : [''],
                 }))
               )
             }
@@ -78,7 +90,7 @@ export function VocabularyFormPage({
       ...meanings,
       {
         id: `mean-${Date.now()}`,
-        part_of_speech: wordType,
+        part_of_speech: 'NOUN',
         definition_en: '',
         definition_vi: '',
         short_meaning_vi: '',
@@ -127,7 +139,7 @@ export function VocabularyFormPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!word.trim()) {
+    if (!basicData.word.trim()) {
       toast.error('Vui lòng nhập từ vựng')
       return
     }
@@ -136,7 +148,7 @@ export function VocabularyFormPage({
     try {
       const formattedMeanings = meanings.map((m, idx) => ({
         meaning_order: idx + 1,
-        part_of_speech: m.part_of_speech || wordType,
+        part_of_speech: m.part_of_speech || 'NOUN',
         definition_en: m.definition_en,
         definition_vi: m.definition_vi || '',
         short_meaning_vi: m.short_meaning_vi,
@@ -144,15 +156,35 @@ export function VocabularyFormPage({
         is_primary: idx === 0,
       }))
 
-      await vocabularyService.createLexicalItem({
-        word: word.trim(),
-        word_type: wordType,
-        cefr_level: cefrLevel,
-        pronunciation_us: pronunciationUs || undefined,
-        pronunciation_uk: pronunciationUk || undefined,
-        audio_url_us: audioUrlUs || undefined,
-        meanings: formattedMeanings,
-      })
+      if (isEditing && currentEditId) {
+        await vocabularyService.updateLexicalItem(currentEditId, {
+          word: basicData.word.trim(),
+          lexical_type: basicData.lexical_type,
+          cefr_level: basicData.cefr_level,
+          pronunciation: basicData.pronunciation || undefined,
+          audio_url_us: basicData.audio_url_us || undefined,
+          audio_url_uk: basicData.audio_url_uk || undefined,
+          syllables: basicData.syllables,
+          stress_pattern: basicData.stress_pattern,
+          frequency_rank: basicData.frequency_rank,
+          source: basicData.source,
+          meanings: formattedMeanings,
+        })
+      } else {
+        await vocabularyService.createLexicalItem({
+          word: basicData.word.trim(),
+          lexical_type: basicData.lexical_type,
+          cefr_level: basicData.cefr_level,
+          pronunciation: basicData.pronunciation || undefined,
+          audio_url_us: basicData.audio_url_us || undefined,
+          audio_url_uk: basicData.audio_url_uk || undefined,
+          syllables: basicData.syllables,
+          stress_pattern: basicData.stress_pattern,
+          frequency_rank: basicData.frequency_rank,
+          source: basicData.source,
+          meanings: formattedMeanings,
+        })
+      }
 
       toast.success(
         isEditing
@@ -195,18 +227,10 @@ export function VocabularyFormPage({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <VocabularyBasicInfoForm
-          word={word}
-          wordType={wordType}
-          cefrLevel={cefrLevel}
-          pronunciationUs={pronunciationUs}
-          pronunciationUk={pronunciationUk}
-          audioUrlUs={audioUrlUs}
-          onWordChange={setWord}
-          onWordTypeChange={setWordType}
-          onCefrLevelChange={setCefrLevel}
-          onPronunciationUsChange={setPronunciationUs}
-          onPronunciationUkChange={setPronunciationUk}
-          onAudioUrlUsChange={setAudioUrlUs}
+          data={basicData}
+          onChange={(patch) => setBasicData((prev) => ({ ...prev, ...patch }))}
+          onAutoGenerate={() => {}}
+          isGenerating={false}
         />
 
         <VocabularyMeaningsForm
@@ -220,12 +244,8 @@ export function VocabularyFormPage({
         />
 
         <StickyFormActionBar
-          title={word.trim() || (isEditing ? 'Từ vựng' : 'Từ vựng mới')}
-          statusText={isEditing ? 'Đang chỉnh sửa:' : 'Đang tạo mới:'}
-          badgeText={wordType}
-          cancelText="Hủy Bỏ"
+          title={basicData.word || 'Mục từ mới'}
           saveText={isEditing ? 'Cập Nhật Từ Vựng' : 'Lưu Từ Vựng'}
-          savingText="Đang lưu..."
           isSubmitting={isSubmitting}
           onCancel={() => navigate('/vocabulary')}
         />

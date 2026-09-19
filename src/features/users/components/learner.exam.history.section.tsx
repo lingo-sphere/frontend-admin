@@ -127,7 +127,7 @@ export function LearnerExamHistorySection({
                 <span>Ngày kiểm tra</span>
               </div>
               <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1.5 truncate">
-                {formatDateTime(testedAt)}
+                {formatDateTime(testedAt ?? undefined)}
               </p>
             </div>
           </div>

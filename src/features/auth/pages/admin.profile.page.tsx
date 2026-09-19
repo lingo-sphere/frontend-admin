@@ -49,16 +49,16 @@ export function AdminProfilePage() {
         const userRole: 'ADMIN' | 'INSTRUCTOR' = rawRole === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN'
 
         const loaded: AdminProfileData = {
-          id: res?.user_id || authUser?.user_id || 'admin-root',
-          name: res?.full_name || authUser?.full_name || 'Admin Master',
-          email: res?.email || authUser?.email || 'admin@lingosphere.edu.vn',
+          id: res.user_id || authUser?.user_id || '',
+          name: res.full_name || authUser?.full_name || authUser?.email?.split('@')[0] || '',
+          email: res.email || authUser?.email || '',
           role: userRole,
-          avatar: res?.avatar_url || authUser?.avatar_url || '',
-          phone: res?.phone_number || '',
-          bio: res?.bio || '',
-          is_active: res?.status === 'ACTIVE',
+          avatar: res.avatar_url || authUser?.avatar_url || '',
+          phone: res.phone_number || '',
+          bio: res.bio || '',
+          is_active: res.status === 'ACTIVE',
           last_active: 'Vừa xong',
-          created_at: res?.created_at ? new Date(res.created_at).toLocaleDateString('vi-VN') : '01/01/2026',
+          created_at: res.created_at ? new Date(res.created_at).toLocaleDateString('vi-VN') : '',
         }
 
         setProfileData(loaded)
@@ -69,24 +69,27 @@ export function AdminProfilePage() {
           bio: loaded.bio || '',
         }))
       } catch (err) {
-        console.warn('Could not fetch latest profile from backend, using fallback auth state:', err)
-        const fallback: AdminProfileData = {
-          id: authUser?.user_id || 'admin-root',
-          name: authUser?.full_name || 'Admin Master',
-          email: authUser?.email || 'admin@lingosphere.edu.vn',
-          role: (authUser?.role || 'ADMIN').toUpperCase() as 'ADMIN' | 'INSTRUCTOR',
-          avatar: authUser?.avatar_url || '',
-          phone: '',
-          bio: '',
-          is_active: true,
-          last_active: 'Vừa xong',
-          created_at: '01/01/2026',
+        if (authUser) {
+          const fallback: AdminProfileData = {
+            id: authUser.user_id,
+            name: authUser.full_name || authUser.email.split('@')[0],
+            email: authUser.email,
+            role: (authUser.role === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN'),
+            avatar: authUser.avatar_url || '',
+            phone: '',
+            bio: '',
+            is_active: true,
+            last_active: 'Vừa xong',
+            created_at: '',
+          }
+          setProfileData(fallback)
+          setForm((prev) => ({
+            ...prev,
+            name: fallback.name,
+          }))
+        } else {
+          toast.error('Không thể tải thông tin hồ sơ quản trị')
         }
-        setProfileData(fallback)
-        setForm((prev) => ({
-          ...prev,
-          name: fallback.name,
-        }))
       } finally {
         setIsLoading(false)
       }

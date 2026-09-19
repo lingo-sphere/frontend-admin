@@ -4,7 +4,7 @@ import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import {
   ToeicExamItemSchema,
-  ToeicExamsResponseSchema,
+  ToeicExamListSchema,
   type ToeicExamItem,
   type CreateExamDto,
 } from '@/features/exams/schemas/exam.schema'
@@ -143,18 +143,11 @@ export interface AdminAttemptResultDetail {
 
 export const examAdminService = {
   async getExams(params?: Record<string, unknown>): Promise<ToeicExamItem[]> {
-    try {
-      const res = await api.get<ToeicExamItem[] | { items: ToeicExamItem[] }>(
-        API_CONFIG.ENDPOINTS.EXAMS.LIST,
-        params,
-        ToeicExamsResponseSchema
-      )
-      if (Array.isArray(res)) return res
-      if (res && 'items' in res && Array.isArray(res.items)) return res.items
-      return []
-    } catch {
-      return []
-    }
+    return api.get<ToeicExamItem[]>(
+      API_CONFIG.ENDPOINTS.EXAMS.LIST,
+      params,
+      ToeicExamListSchema
+    )
   },
 
   async getAllExams(params?: Record<string, unknown>): Promise<ToeicExamItem[]> {

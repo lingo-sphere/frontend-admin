@@ -79,7 +79,7 @@ export function LearnersPage() {
   const handleStatusChange = async (user: User, action: 'ban' | 'unban') => {
     try {
       const newStatus = action === 'ban' ? 'BLOCKED' : 'ACTIVE'
-      await updateLearnerStatus({ userId: user.id, status: newStatus })
+      await updateLearnerStatus({ userId: user.user_id, status: newStatus })
       toast.success(
         action === 'ban'
           ? 'Đã khóa tài khoản học viên thành công!'
@@ -92,7 +92,7 @@ export function LearnersPage() {
 
   const handleResetData = async (user: User) => {
     try {
-      await resetLearnerData(user.id)
+      await resetLearnerData(user.user_id)
       toast.success(
         isVi
           ? `Đã khởi tạo lại dữ liệu học tập của học viên ${user.full_name || user.email} thành công!`
@@ -130,7 +130,7 @@ export function LearnersPage() {
         isLoading={isLoading}
         columns={columns}
         data={data?.items || []}
-        rowKey={(u) => u.id}
+        rowKey={(u) => u.user_id}
         sortKey={sortKey}
         sortOrder={sortOrder}
         onSortChange={(k, o) => {

@@ -4,7 +4,7 @@ import { API_CONFIG } from '@/config/api.config'
 import type { AppNotification } from '@/types/api.types'
 
 export interface CreateNotificationPayload {
-  recipient_id?: string
+  recipient_id: string
   recipient_type?: string
   notification_type?: string
   notification_category?: string
@@ -12,9 +12,7 @@ export interface CreateNotificationPayload {
   title_vi?: string
   content: string
   content_vi?: string
-  category?: string
   priority?: string
-  user_id?: string
   action_url?: string
 }
 
@@ -45,14 +43,13 @@ export const notificationService = {
   },
 
   async createNotification(payload: CreateNotificationPayload): Promise<AppNotification> {
-    const targetRecipient = payload.recipient_id || payload.user_id || 'ALL_USERS'
-    const isBroadcast = targetRecipient === 'ALL' || targetRecipient === 'ALL_USERS'
+    const isBroadcast = payload.recipient_id === 'ALL' || payload.recipient_id === 'ALL_USERS'
 
     const body = {
-      recipient_id: targetRecipient,
+      recipient_id: payload.recipient_id,
       recipient_type: payload.recipient_type || (isBroadcast ? 'BROADCAST' : 'USER'),
       notification_type: payload.notification_type || (isBroadcast ? 'SYSTEM_BROADCAST' : 'SYSTEM_ALERT'),
-      notification_category: payload.notification_category || payload.category || 'SYSTEM',
+      notification_category: payload.notification_category || 'SYSTEM',
       title: payload.title,
       title_vi: payload.title_vi || payload.title,
       content: payload.content,

@@ -52,7 +52,7 @@ export function CourseExamQuestionsEditor({
         (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
         (e.placement_type === '2SKILLS' || e.skills_enabled === 'LR') &&
         e.is_published &&
-        (isCreateMode || (!currentEditingIds.has(e._id) && !currentEditingIds.has(e.id) && (!e.code || !currentEditingIds.has(e.code))))
+        (isCreateMode || (!currentEditingIds.has(e._id ?? '') && !currentEditingIds.has(e.id ?? '') && (!e.code || !currentEditingIds.has(e.code))))
     )
   }, [existingExams, currentEditingIds, isCreateMode])
 
@@ -62,7 +62,7 @@ export function CourseExamQuestionsEditor({
         (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
         (e.placement_type === '4SKILLS' || e.skills_enabled === 'ALL' || e.skills_enabled === 'FULL') &&
         e.is_published &&
-        (isCreateMode || (!currentEditingIds.has(e._id) && !currentEditingIds.has(e.id) && (!e.code || !currentEditingIds.has(e.code))))
+        (isCreateMode || (!currentEditingIds.has(e._id ?? '') && !currentEditingIds.has(e.id ?? '') && (!e.code || !currentEditingIds.has(e.code))))
     )
   }, [existingExams, currentEditingIds, isCreateMode])
 

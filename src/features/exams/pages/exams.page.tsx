@@ -36,7 +36,7 @@ export function ExamsPage() {
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    navigate(`/course-exams/${exam._id || exam.id}/questions`)
+    navigate(`/course-exams/${exam._id}/questions`)
   }
 
   const stats = useMemo(() => {
@@ -96,7 +96,7 @@ export function ExamsPage() {
       }
       setShowAddModal(false)
       storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, examItem)
-      navigate(`/course-exams/${examItem._id || examItem.id}/questions`)
+      navigate(`/course-exams/${examItem._id}/questions`)
       toast.success(
         isVi
           ? 'Đã tạo khung đề thi! Chuyển sang bước soạn câu hỏi...'

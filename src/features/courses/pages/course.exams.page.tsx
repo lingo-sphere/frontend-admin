@@ -51,7 +51,7 @@ export function CourseExamsPage() {
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    navigate(`/course-exams/${exam._id || exam.id}/questions`)
+    navigate(`/course-exams/${exam._id}/questions`)
   }
 
   const columns = useMemo(
@@ -94,12 +94,12 @@ export function CourseExamsPage() {
         isLoading={isLoading}
         columns={columns}
         data={paginatedExams}
-        rowKey={(e) => e._id || ''}
+        rowKey={(e) => e._id ?? ''}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         renderGridItem={(exam) => (
           <CourseExamGridCard
-            key={exam._id || ''}
+            key={exam._id}
             exam={exam}
             isVi={isVi}
             onOpenEdit={handleManageQuestions}

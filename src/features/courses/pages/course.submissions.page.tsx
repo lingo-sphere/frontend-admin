@@ -16,7 +16,7 @@ import { progressService, type SkillSubmissionItem } from '@/features/progress/s
 import { CourseSubmissionItemCard } from '@/features/courses/components/course.submission.item.card'
 import { CourseSubmissionReviewDialog } from '@/features/courses/components/course.submission.review.dialog'
 import { toast } from '@/store/toast.store'
-import type { Course as ApiCourse } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 interface CourseSubmissionsPageProps {
   courseId: string
@@ -31,7 +31,7 @@ export function CourseSubmissionsPage({ courseId }: CourseSubmissionsPageProps) 
   const [editScore, setEditScore] = useState<number>(0)
   const [editFeedback, setEditFeedback] = useState<string>('')
 
-  const { data: courseInfo = null } = useQuery<ApiCourse | null>({
+  const { data: courseInfo = null } = useQuery<Course | null>({
     queryKey: ['course-detail', courseId],
     queryFn: async () => {
       if (!courseId) return null

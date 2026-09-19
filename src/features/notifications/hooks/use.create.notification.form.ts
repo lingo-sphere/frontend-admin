@@ -61,18 +61,18 @@ export function useCreateNotificationForm({ isOpen, onClose, onSuccess }: UseCre
     return learners.filter((u) => {
       const name = (u.full_name || '').toLowerCase()
       const email = (u.email || '').toLowerCase()
-      const id = (u.user_id || u.id || '').toLowerCase()
+      const id = (u.user_id || '').toLowerCase()
       return name.includes(query) || email.includes(query) || id.includes(query)
     })
   }, [learners, learnerSearchTerm])
 
   const isAllFilteredSelected =
     filteredLearners.length > 0 &&
-    filteredLearners.every((l) => selectedLearnerIds.includes(l.user_id || l.id || ''))
+    filteredLearners.every((l) => selectedLearnerIds.includes(l.user_id))
 
   const handleToggleSelectAll = () => {
     const filteredIds = filteredLearners
-      .map((l) => l.user_id || l.id || '')
+      .map((l) => l.user_id)
       .filter((id) => Boolean(id))
 
     if (isAllFilteredSelected) {

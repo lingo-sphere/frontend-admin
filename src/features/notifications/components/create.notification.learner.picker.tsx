@@ -74,7 +74,7 @@ export function CreateNotificationLearnerPicker({
           </div>
         ) : (
           filteredLearners.map((learner) => {
-            const uid = learner.user_id || learner.id || ''
+            const uid = learner.user_id
             const isSelected = selectedLearnerIds.includes(uid)
             return (
               <div

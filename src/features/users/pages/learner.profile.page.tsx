@@ -68,6 +68,7 @@ export function UserProfilePage() {
   const quotaUser: User | null = useMemo(() => {
     if (!profileData) return null
     return {
+      user_id: profileData.id,
       id: profileData.id,
       full_name: profileData.full_name || '',
       email: profileData.email,

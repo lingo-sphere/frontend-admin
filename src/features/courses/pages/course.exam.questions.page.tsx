@@ -9,7 +9,7 @@ import { examAdminService, type ToeicExamItem } from '@/features/exams/services/
 import { toast } from '@/store/toast.store'
 import { CourseExamQuestionsEditor } from '@/features/courses/components/course.exam.questions.editor'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
-import type { Course } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 interface CourseExamQuestionsPageProps {
   examId: string

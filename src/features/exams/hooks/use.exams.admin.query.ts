@@ -42,7 +42,7 @@ export function useUpdateExamMutation() {
       examAdminService.updateExam(id, dto),
     onMutate: ({ id, dto }) =>
       optimisticUpdateCollection<ToeicExamItem>(queryClient, examAdminKeys.all, (exams) =>
-        exams.map((e) => ((e._id || e.id) === id ? { ...e, ...dto } : e))
+        exams.map((e) => (e._id === id ? { ...e, ...dto } : e))
       ),
     onError: (_err, _vars, context) => rollbackCollection<ToeicExamItem>(queryClient, context),
     onSettled: () => {
@@ -58,7 +58,7 @@ export function useDeleteExamMutation() {
     mutationFn: (id: string) => examAdminService.deleteExam(id),
     onMutate: (id: string) =>
       optimisticUpdateCollection<ToeicExamItem>(queryClient, examAdminKeys.all, (exams) =>
-        exams.filter((e) => (e._id || e.id) !== id)
+        exams.filter((e) => e._id !== id)
       ),
     onError: (_err, _id, context) => rollbackCollection<ToeicExamItem>(queryClient, context),
     onSettled: () => {

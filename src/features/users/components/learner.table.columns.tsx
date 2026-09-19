@@ -32,7 +32,7 @@ export function getLearnerColumns({
         return (
           <div
             className="flex items-center gap-3 cursor-pointer"
-            onClick={() => handleView(u.id)}
+            onClick={() => handleView(u.user_id)}
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-white text-xs shrink-0">
               {u.avatar_url ? (

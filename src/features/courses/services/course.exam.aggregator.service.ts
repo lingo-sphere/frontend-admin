@@ -30,9 +30,9 @@ class CourseExamAggregatorService {
         if (Array.isArray(teacherRes) && teacherRes.length > 0) {
           rawCourses = teacherRes
           allowedCourses = teacherRes.map((c) => ({
-            id: c._id || '',
-            title: c.title || '',
-            author_id: c.author_id || currentUserId,
+            id: c._id,
+            title: c.title,
+            author_id: c.author_id ?? undefined,
             students_count: c.students_count || 0,
           }))
         }
@@ -46,9 +46,9 @@ class CourseExamAggregatorService {
         const myCourses = rawCourses.filter((c) => c.author_id === currentUserId)
         const targetList = myCourses.length > 0 ? myCourses : rawCourses
         allowedCourses = targetList.map((c) => ({
-          id: c._id || '',
-          title: c.title || '',
-          author_id: c.author_id || '',
+          id: c._id,
+          title: c.title,
+          author_id: c.author_id ?? undefined,
           students_count: c.students_count || 0,
         }))
       }
@@ -56,14 +56,14 @@ class CourseExamAggregatorService {
       const allRes = await courseService.getAllCourses({ pageSize: 100 })
       rawCourses = allRes.result || []
       allowedCourses = rawCourses.map((c) => ({
-        id: c._id || '',
-        title: c.title || '',
-        author_id: c.author_id || '',
+        id: c._id,
+        title: c.title,
+        author_id: c.author_id ?? undefined,
         students_count: c.students_count || 0,
       }))
     }
 
-    const apiExams = await examAdminService.getExams().catch(() => [])
+    const apiExams = await examAdminService.getExams()
     const courseExamsList: ToeicExamItem[] = []
 
     await Promise.all(
@@ -120,12 +120,10 @@ class CourseExamAggregatorService {
             const qList =
               mod.challenge_questions && Array.isArray(mod.challenge_questions) && mod.challenge_questions.length > 0
                 ? mod.challenge_questions
-                : mod.post_mini_questions && Array.isArray(mod.post_mini_questions) && mod.post_mini_questions.length > 0
-                ? mod.post_mini_questions
                 : []
 
             if (qList.length > 0) {
-              const targetModId = mod._id || mod.id
+              const targetModId = mod._id
               const modAttemptsList = studentsProgressList
                 .map((s) =>
                   (s.modules_progress || []).find(
@@ -151,8 +149,8 @@ class CourseExamAggregatorService {
                   : 0
 
               courseExamsList.push({
-                id: mod.challenge_test_exam_id || mod.post_mini_test_exam_id || `mod_challenge_${targetModId}`,
-                _id: mod.challenge_test_exam_id || mod.post_mini_test_exam_id || `mod_challenge_${targetModId}`,
+                id: mod.challenge_test_exam_id || `mod_challenge_${targetModId}`,
+                _id: mod.challenge_test_exam_id || `mod_challenge_${targetModId}`,
                 title: `Challenge Test: ${mod.title}`,
                 course_id: c.id,
                 course_title: c.title,
@@ -160,13 +158,13 @@ class CourseExamAggregatorService {
                 module_title: mod.title,
                 type: 'CHALLENGE_TEST',
                 total_questions: qList.length,
-                duration_minutes: mod.challenge_duration_minutes || mod.post_mini_duration_minutes || 15,
-                passing_score: mod.challenge_passing_score || mod.post_mini_passing_score || 80,
+                duration_minutes: mod.challenge_duration_minutes || 15,
+                passing_score: mod.challenge_passing_score || 80,
                 is_published: true,
                 total_attempts: challengeAttempts,
                 avg_score: challengeAvg,
                 questions: qList,
-                audio_url: mod.challenge_audio_url || mod.test_audio_url || mod.audio_url || '',
+                audio_url: mod.challenge_audio_url || mod.audio_url || '',
                 author_id: c.author_id,
               })
             }
@@ -179,7 +177,7 @@ class CourseExamAggregatorService {
     const combined: ToeicExamItem[] = []
 
     apiExams.forEach((e) => {
-      const eid = e._id || e.id || ''
+      const eid = e._id
       if (eid && !seenIds.has(eid)) {
         const rawExam = e as Record<string, unknown>
         const resolvedType =
@@ -197,9 +195,7 @@ class CourseExamAggregatorService {
           return
         }
 
-        const matched = allowedCourses.find(
-          (c) => c.id === e.course_id || (c as unknown as { _id?: string })._id === e.course_id
-        )
+        const matched = allowedCourses.find((c) => c.id === e.course_id)
 
         if (isTeacher && !matched) {
           return
@@ -237,7 +233,7 @@ class CourseExamAggregatorService {
     })
 
     courseExamsList.forEach((e) => {
-      const eid = e._id || e.id || ''
+      const eid = e._id
       if (eid && !seenIds.has(eid)) {
         seenIds.add(eid)
         combined.push(e)
