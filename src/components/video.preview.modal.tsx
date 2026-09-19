@@ -1,7 +1,6 @@
 // Modal xem trước video bài học phong cách YouTube cao cấp cho quản trị viên.
 
 import { useEffect } from 'react'
-import Hls from 'hls.js'
 import {
   X,
   Check,
@@ -10,7 +9,7 @@ import {
   Copy,
 } from 'lucide-react'
 import { API_CONFIG } from '@/config/api.config'
-import { VideoControlsBar, type QualityOption } from '@/components/video.controls.bar'
+import { VideoControlsBar } from '@/components/video.controls.bar'
 import {
   useVideoPlayer,
   videoDimensionsCache,
@@ -47,13 +46,11 @@ export function VideoPreviewModal({
   isVi = true,
 }: VideoPreviewModalProps) {
   const resolvedUrl = resolveStreamUrl(videoUrl)
-  const isHls = resolvedUrl.includes('.m3u8')
   const isEmbed = resolvedUrl.includes('youtube.com') || resolvedUrl.includes('youtu.be')
 
   const {
     containerRef,
     videoRef,
-    hlsRef,
     progressBarRef,
     isPlaying,
     setIsPlaying,
@@ -71,11 +68,6 @@ export function VideoPreviewModal({
     isBuffering,
     setIsBuffering,
     copied,
-    qualities,
-    setQualities,
-    selectedQuality,
-    effectiveQualityLabel,
-    setEffectiveQualityLabel,
     hoverPosition,
     hoverTime,
     seekFeedback,
@@ -89,7 +81,6 @@ export function VideoPreviewModal({
     handleVolumeChange,
     seekRelative,
     handleSpeedChange,
-    handleQualityChange,
     toggleFullscreen,
     togglePip,
     handleCopyLink,
@@ -111,77 +102,10 @@ export function VideoPreviewModal({
     const video = videoRef.current
     if (!video) return
 
-    if (hlsRef.current) {
-      hlsRef.current.destroy()
-      hlsRef.current = null
-    }
-
     setIsBuffering(true)
-
-    if (isHls) {
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          capLevelToPlayerSize: false,
-          autoStartLoad: true,
-        })
-        hlsRef.current = hls
-        hls.loadSource(resolvedUrl)
-        hls.attachMedia(video)
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setIsBuffering(false)
-          hls.currentLevel = -1
-          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
-
-          const lvlOpts: QualityOption[] = [
-            { id: 'auto', label: isVi ? 'Tự động (Auto)' : 'Auto', index: -1 },
-          ]
-          hls.levels.forEach((lvl, idx) => {
-            const h = lvl.height
-            const label = `${h}p ${h >= 720 ? 'HD' : ''}`.trim()
-            lvlOpts.push({ id: `${h}p`, label, height: h, index: idx })
-          })
-          setQualities(lvlOpts)
-        })
-
-        hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
-          const currentLvl = hls.levels[data.level]
-          if (currentLvl) {
-            setEffectiveQualityLabel(`${currentLvl.height}p`)
-          }
-        })
-
-        hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad()
-                break
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                hls.recoverMediaError()
-                break
-              default:
-                hls.destroy()
-                break
-            }
-          }
-        })
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = resolvedUrl
-        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
-      }
-    } else {
-      video.src = resolvedUrl
-      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy()
-        hlsRef.current = null
-      }
-    }
-  }, [isOpen, resolvedUrl, isHls, isEmbed, isVi, videoRef, hlsRef, setIsBuffering, setIsPlaying, setQualities, setEffectiveQualityLabel])
+    video.src = resolvedUrl
+    video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+  }, [isOpen, resolvedUrl, isEmbed, videoRef, setIsBuffering, setIsPlaying])
 
   if (!isOpen) return null
 
@@ -339,10 +263,6 @@ export function VideoPreviewModal({
             playbackSpeed={playbackSpeed}
             isFullscreen={isFullscreen}
             showControls={showControls}
-            isHls={isHls}
-            qualities={qualities}
-            selectedQuality={selectedQuality}
-            effectiveQualityLabel={effectiveQualityLabel}
             isVi={isVi}
             progressBarRef={progressBarRef}
             onTogglePlay={togglePlay}
@@ -358,7 +278,6 @@ export function VideoPreviewModal({
             hoverPosition={hoverPosition}
             hoverTime={hoverTime}
             onSpeedChange={handleSpeedChange}
-            onQualityChange={handleQualityChange}
             onTogglePip={togglePip}
             onToggleFullscreen={toggleFullscreen}
           />

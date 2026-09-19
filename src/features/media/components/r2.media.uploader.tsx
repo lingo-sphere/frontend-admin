@@ -127,8 +127,8 @@ export function R2MediaUploader({
                   {uploadProgress >= 99
                     ? isVideo
                       ? isVi
-                        ? 'Đang hoàn tất tải lên & khởi tạo luồng HLS...'
-                        : 'Finalizing upload & initiating HLS stream...'
+                        ? 'Đang hoàn tất tải lên & lưu trữ video...'
+                        : 'Finalizing upload & storing video...'
                       : isVi
                       ? 'Đang xử lý & lưu trữ file...'
                       : 'Processing & finalizing...'

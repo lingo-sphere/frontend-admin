@@ -1,12 +1,7 @@
-/**
- * @file use.video.player.ts
- * @description Custom hook encapsulating HLS initialization, playback controls, keyboard shortcuts, and quality switching
- */
+// Custom hook quản lý phát video bài giảng, controls và phím tắt cho quản trị viên.
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import Hls from 'hls.js'
 import { toast } from '@/store/toast.store'
-import type { QualityOption } from '@/components/video.controls.bar'
 
 export interface UseVideoPlayerProps {
   isOpen: boolean
@@ -27,7 +22,6 @@ export function useVideoPlayer({
 }: UseVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const hlsRef = useRef<Hls | null>(null)
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const progressBarRef = useRef<HTMLDivElement | null>(null)
 
@@ -43,9 +37,7 @@ export function useVideoPlayer({
   const [isBuffering, setIsBuffering] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const [qualities, setQualities] = useState<QualityOption[]>([])
-  const [selectedQuality, setSelectedQuality] = useState<string>('auto')
-  const [effectiveQualityLabel, setEffectiveQualityLabel] = useState<string>('Auto')
+
 
   const [hoverPosition, setHoverPosition] = useState<number | null>(null)
   const [hoverTime, setHoverTime] = useState<number | null>(null)
@@ -153,20 +145,7 @@ export function useVideoPlayer({
     setPlaybackSpeed(speed)
   }
 
-  const handleQualityChange = (qualityId: string) => {
-    setSelectedQuality(qualityId)
-    if (hlsRef.current) {
-      const hls = hlsRef.current
-      if (qualityId === 'auto') {
-        hls.currentLevel = -1
-      } else {
-        const target = qualities.find((q) => q.id === qualityId)
-        if (target && target.index >= 0) {
-          hls.currentLevel = target.index
-        }
-      }
-    }
-  }
+
 
   const toggleFullscreen = () => {
     const el = containerRef.current
@@ -284,7 +263,6 @@ export function useVideoPlayer({
   return {
     containerRef,
     videoRef,
-    hlsRef,
     progressBarRef,
     isPlaying,
     setIsPlaying,
@@ -303,11 +281,7 @@ export function useVideoPlayer({
     isBuffering,
     setIsBuffering,
     copied,
-    qualities,
-    setQualities,
-    selectedQuality,
-    effectiveQualityLabel,
-    setEffectiveQualityLabel,
+
     hoverPosition,
     hoverTime,
     seekFeedback,
@@ -323,7 +297,6 @@ export function useVideoPlayer({
     seekTo,
     seekRelative,
     handleSpeedChange,
-    handleQualityChange,
     toggleFullscreen,
     togglePip,
     handleCopyLink,
