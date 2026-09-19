@@ -90,10 +90,18 @@ const findValue = (rows: Record<string, unknown>[], fieldKeywords: string[]): st
 }
 
 const findRowString = (row: Record<string, unknown>, fieldKeywords: string[]): string => {
-  for (const key of Object.keys(row)) {
-    const lowerKey = key.toLowerCase()
-    for (const kw of fieldKeywords) {
-      if (lowerKey.includes(kw.toLowerCase())) {
+  for (const kw of fieldKeywords) {
+    const lowerKw = kw.toLowerCase().trim()
+    if (!lowerKw) continue
+
+    for (const key of Object.keys(row)) {
+      const lowerKey = key.toLowerCase().trim()
+      if (
+        lowerKey === lowerKw ||
+        lowerKey.includes(`(${lowerKw})`) ||
+        lowerKey.startsWith(`${lowerKw} `) ||
+        lowerKey.endsWith(` ${lowerKw}`)
+      ) {
         const val = row[key]
         if (val !== undefined && val !== null && String(val).trim() !== '') {
           return String(val).trim()
@@ -101,6 +109,22 @@ const findRowString = (row: Record<string, unknown>, fieldKeywords: string[]): s
       }
     }
   }
+
+  for (const kw of fieldKeywords) {
+    const lowerKw = kw.toLowerCase().trim()
+    if (!lowerKw) continue
+
+    for (const key of Object.keys(row)) {
+      const lowerKey = key.toLowerCase().trim()
+      if (lowerKey.includes(lowerKw)) {
+        const val = row[key]
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          return String(val).trim()
+        }
+      }
+    }
+  }
+
   return ''
 }
 
@@ -109,7 +133,7 @@ const findMatchingFile = (targetName: string, files: File[]): File | undefined =
   const cleanTarget = targetName.trim().toLowerCase()
   return files.find((f) => {
     const fName = f.name.trim().toLowerCase()
-    const fRelPath = f.webkitRelativePath ? f.webkitRelativePath.toLowerCase() : ''
+    const fRelPath = f.webkitRelativePath ? f.webkitRelativePath.toLowerCase().replace(/\\/g, '/') : ''
     return fName === cleanTarget || fRelPath.endsWith(`/${cleanTarget}`) || fRelPath === cleanTarget
   })
 }
@@ -566,7 +590,20 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     }
     const mTitle = String(row['Tên chương (module_title)'] ?? row['module_title'] ?? `Chương ${mOrder}`).trim()
     const mDesc = String(row['Mô tả chương (module_description)'] ?? row['module_description'] ?? '').trim()
-    const mTheory = findRowString(row, ['module_theory_file', 'tài liệu chương', 'tài liệu lý thuyết', 'theory_file', 'tài liệu'])
+    const mTheory = String(
+      row['Tài liệu tổng hợp chương (module_theory_file)'] ??
+      row['Tài liệu chương (module_theory_file)'] ??
+      row['Tài liệu lý thuyết chương (module_theory_file)'] ??
+      row['module_theory_file'] ??
+      findRowString(row, [
+        'module_theory_file',
+        'tài liệu tổng hợp chương',
+        'tài liệu lý thuyết chương',
+        'tài liệu chương',
+        'đề cương chương',
+        'lý thuyết chương',
+      ])
+    ).trim()
 
     const rawMPassing = row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score']
     let mPassing = 70
@@ -587,8 +624,16 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       }
       mDuration = num
     }
-    const mSpeakingPrompt = findRowString(row, ['module_speaking_prompt', 'đề kiểm tra nói'])
-    const mWritingPrompt = findRowString(row, ['module_writing_prompt', 'đề kiểm tra viết'])
+    const mSpeakingPrompt = String(
+      row['Đề kiểm tra nói chương (module_speaking_prompt)'] ??
+      row['module_speaking_prompt'] ??
+      findRowString(row, ['module_speaking_prompt', 'đề kiểm tra nói'])
+    ).trim()
+    const mWritingPrompt = String(
+      row['Đề kiểm tra viết chương (module_writing_prompt)'] ??
+      row['module_writing_prompt'] ??
+      findRowString(row, ['module_writing_prompt', 'đề kiểm tra viết'])
+    ).trim()
 
     const rawLOrder = row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1
     const lOrder = Number(rawLOrder)
@@ -607,7 +652,20 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     } else {
       throw new Error(`Cấu hình học thử (is_free_preview) "${rawPreview}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TRUE hoặc FALSE.`)
     }
-    const lTheoryFile = findRowString(row, ['lesson_theory_file', 'file lý thuyết bài học', 'lý thuyết bài học', 'tài liệu bài học', 'theory'])
+    const lTheoryFile = String(
+      row['File lý thuyết bài học (lesson_theory_file)'] ??
+      row['Tài liệu bài học (lesson_theory_file)'] ??
+      row['Tài liệu lý thuyết bài học (lesson_theory_file)'] ??
+      row['Slide bài học (lesson_theory_file)'] ??
+      row['lesson_theory_file'] ??
+      findRowString(row, [
+        'lesson_theory_file',
+        'file lý thuyết bài học',
+        'tài liệu bài học',
+        'lý thuyết bài học',
+        'slide bài học',
+      ])
+    ).trim()
     const lTheoryText = String(row['Tóm tắt lý thuyết bài học (lesson_theory_text)'] ?? row['lesson_theory_text'] ?? '').trim()
 
     const matchedVideo = videoFilename ? findMatchingFile(videoFilename, files) : undefined
@@ -738,7 +796,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       title: modData.title,
       description: modData.description,
       module_order: mOrder,
-      theory_file_name: matchedModulePdf?.name || modData.theoryFile || undefined,
+      theory_file_name: matchedModulePdf ? matchedModulePdf.name : (modData.theoryFile || undefined),
       pending_theory_name: matchedModulePdf ? matchedModulePdf.name : undefined,
       passing_score: modData.passingScore,
       challenge_passing_score: modData.passingScore,
