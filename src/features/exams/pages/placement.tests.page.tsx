@@ -20,6 +20,8 @@ import {
   Flame,
   AlertCircle,
   Plus,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { useAdminExamsQuery, useUpdateExamMutation, useAdminPlacementAttemptsQuery, useDeleteExamMutation } from '@/features/exams/hooks/use.exams.admin.query'
 import { PlacementAttemptsTable } from '@/features/exams/components/placement.attempts.table'
@@ -37,6 +39,17 @@ export function PlacementTestsPage() {
 
   const [activeTab, setActiveTab] = useState<TabType>('system-exams')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState<boolean>(() => {
+    return storage.get<boolean>(STORAGE_KEYS.PLACEMENT_FEATURED_COLLAPSED, false) ?? false
+  })
+
+  const handleToggleFeaturedCollapse = () => {
+    setIsFeaturedCollapsed((prev) => {
+      const next = !prev
+      storage.set(STORAGE_KEYS.PLACEMENT_FEATURED_COLLAPSED, next)
+      return next
+    })
+  }
 
   const { data: allExams = [], isLoading: isLoadingExams, refetch: refetchExams } = useAdminExamsQuery()
   const updateExamMutation = useUpdateExamMutation()
@@ -527,44 +540,113 @@ export function PlacementTestsPage() {
 
       {activeTab === 'system-exams' && (
         <div className="space-y-6">
-          <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-blue-900 dark:text-blue-200 space-y-1">
-              <p className="font-bold">
-                {isVi
-                  ? 'Quy tắc xuất bản bài thi đầu vào hệ thống:'
-                  : 'System Placement Publishing Policy:'}
-              </p>
-              <p className="leading-relaxed opacity-90">
-                {isVi
-                  ? 'Hệ thống duy trì duy nhất 1 bài thi Công khai cho loại 2 Kỹ Năng (Listening & Reading) và 1 bài thi Công khai cho loại 4 Kỹ Năng (Full Skills). Học viên sau khi hoàn thành bài test sẽ nhận được gợi ý khóa học cá nhân hóa tương ứng với trình độ CEFR/ETS đạt được.'
-                  : 'The system maintains exactly 1 active public test for 2 Skills (LR) and 1 for 4 Skills (Full). Learners completing the test receive personalized course recommendations matched to their achieved CEFR/ETS score bracket.'}
-              </p>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden transition-all">
+            <div
+              onClick={handleToggleFeaturedCollapse}
+              className="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors select-none"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-100 dark:border-purple-900 shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                      {isVi ? 'Đề Thi Tiêu Chuẩn Áp Dụng Toàn Hệ Thống' : 'Official System Placement Standards'}
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                      {isVi ? '2 bài thi chính thức' : '2 Official Tests'}
+                    </span>
+                    {isFeaturedCollapsed && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        {isVi ? 'Đang thu gọn' : 'Collapsed'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                    {isVi
+                      ? 'Quy tắc xuất bản và 2 bài thi đánh giá năng lực chính thức (2 Kỹ Năng & 4 Kỹ Năng)'
+                      : 'Publishing policy and the 2 official diagnostic tests (2 Skills & 4 Skills)'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggleFeaturedCollapse()
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                  title={isFeaturedCollapsed ? (isVi ? 'Mở rộng hiển thị' : 'Expand') : (isVi ? 'Thu gọn hiển thị' : 'Collapse')}
+                >
+                  {isFeaturedCollapsed ? (
+                    <>
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                      <span>{isVi ? 'Mở rộng' : 'Expand'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="w-4 h-4 text-slate-400" />
+                      <span>{isVi ? 'Thu gọn' : 'Collapse'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {renderExamCard(
-              twoSkillsExam,
-              '2SKILLS',
-              isVi
-                ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 2 Kỹ Năng (LR)'
-                : 'TOEIC 2-Skill Placement Test (Listening & Reading)',
-              isVi
-                ? 'Đánh giá tốc độ và độ chính xác của 2 kỹ năng Nghe hiểu & Đọc hiểu theo thang điểm 10 - 990. Tự động phân loại trình độ A1 - C1 và đề xuất khóa học tương ứng.'
-                : 'Assess speed and accuracy for Listening & Reading on the 10 - 990 ETS scale. Automatically classifies learners into A1 - C1 and recommends suitable courses.'
-            )}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                isFeaturedCollapsed
+                  ? 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                  : 'grid-rows-[1fr] opacity-100 border-t border-slate-100 dark:border-slate-800'
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="p-5 space-y-5 bg-slate-50/40 dark:bg-slate-950/20">
+                  <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                    <div className="text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                      <p className="font-bold">
+                        {isVi
+                          ? 'Quy tắc xuất bản bài thi đầu vào hệ thống:'
+                          : 'System Placement Publishing Policy:'}
+                      </p>
+                      <p className="leading-relaxed opacity-90">
+                        {isVi
+                          ? 'Hệ thống duy trì duy nhất 1 bài thi Công khai cho loại 2 Kỹ Năng (Listening & Reading) và 1 bài thi Công khai cho loại 4 Kỹ Năng (Full Skills). Học viên sau khi hoàn thành bài test sẽ nhận được gợi ý khóa học cá nhân hóa tương ứng với trình độ CEFR/ETS đạt được.'
+                          : 'The system maintains exactly 1 active public test for 2 Skills (LR) and 1 for 4 Skills (Full). Learners completing the test receive personalized course recommendations matched to their achieved CEFR/ETS score bracket.'}
+                      </p>
+                    </div>
+                  </div>
 
-            {renderExamCard(
-              fourSkillsExam,
-              '4SKILLS',
-              isVi
-                ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 4 Kỹ Năng (Full Skills)'
-                : 'TOEIC 4-Skill Comprehensive Placement Test (L-R-S-W)',
-              isVi
-                ? 'Khảo sát toàn diện 4 kỹ năng Nghe, Đọc kèm công nghệ AI phân tích ngữ âm, độ lưu loát phần Nói (Speaking) và ngữ pháp cấu trúc phần Viết (Writing).'
-                : 'Comprehensive 4-skill evaluation with AI speech analysis for pronunciation, fluency in Speaking, and grammar structure analysis in Writing.'
-            )}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {renderExamCard(
+                      twoSkillsExam,
+                      '2SKILLS',
+                      isVi
+                        ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 2 Kỹ Năng (LR)'
+                        : 'TOEIC 2-Skill Placement Test (Listening & Reading)',
+                      isVi
+                        ? 'Đánh giá tốc độ và độ chính xác của 2 kỹ năng Nghe hiểu & Đọc hiểu theo thang điểm 10 - 990. Tự động phân loại trình độ A1 - C1 và đề xuất khóa học tương ứng.'
+                        : 'Assess speed and accuracy for Listening & Reading on the 10 - 990 ETS scale. Automatically classifies learners into A1 - C1 and recommends suitable courses.'
+                    )}
+
+                    {renderExamCard(
+                      fourSkillsExam,
+                      '4SKILLS',
+                      isVi
+                        ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 4 Kỹ Năng (Full Skills)'
+                        : 'TOEIC 4-Skill Comprehensive Placement Test (L-R-S-W)',
+                      isVi
+                        ? 'Khảo sát toàn diện 4 kỹ năng Nghe, Đọc kèm công nghệ AI phân tích ngữ âm, độ lưu loát phần Nói (Speaking) và ngữ pháp cấu trúc phần Viết (Writing).'
+                        : 'Comprehensive 4-skill evaluation with AI speech analysis for pronunciation, fluency in Speaking, and grammar structure analysis in Writing.'
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <PlacementExamsTable
