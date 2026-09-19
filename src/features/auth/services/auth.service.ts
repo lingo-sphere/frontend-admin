@@ -5,11 +5,13 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 import {
   AuthUserSchema,
   LoginResponseSchema,
+  RegisterResponseSchema,
   type AuthUser,
   type LoginResponse,
+  type RegisterResponse,
 } from '@/features/users/schemas/user.schema'
 
-export type { AuthUser, LoginResponse }
+export type { AuthUser, LoginResponse, RegisterResponse }
 
 export interface LoginCredentials {
   email: string
@@ -41,11 +43,11 @@ export const authService = {
     )
   },
 
-  async register(payload: RegisterPayload): Promise<LoginResponse> {
-    return api.post<LoginResponse>(
+  async register(payload: RegisterPayload): Promise<RegisterResponse> {
+    return api.post<RegisterResponse>(
       API_CONFIG.ENDPOINTS.AUTH.REGISTER,
       payload,
-      LoginResponseSchema
+      RegisterResponseSchema
     )
   },
 
