@@ -21,10 +21,13 @@ export function normalizeQuestions(
       raw.skillType === 'WRITING'
     const numPart = typeof rawPart === 'number' ? rawPart : parseInt(String(rawPart), 10)
     const hasExplicitPart = !isNaN(numPart) && numPart >= 1 && numPart <= 7
+    const rawMediaIsImage = Boolean(raw.media_url && /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(raw.media_url))
+    const rawMediaIsAudio = Boolean(raw.media_url && !rawMediaIsImage)
+
     const isListen =
       raw.skill_type === 'LISTENING' ||
       raw.skillType === 'LISTENING' ||
-      (!isSpk && !isWrt && Boolean(raw.media_url || raw.audio_url)) ||
+      (!isSpk && !isWrt && Boolean(raw.audio_url || rawMediaIsAudio)) ||
       (hasExplicitPart && numPart <= 4)
 
     const derivedSkill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isSpk
@@ -54,8 +57,8 @@ export function normalizeQuestions(
         .toString()
         .toUpperCase(),
       explanation: raw.explanation || raw.explanation_vi || raw.explanation_en || '',
-      media_url: raw.media_url || raw.audio_url || '',
-      image_url: raw.image_url || raw.image_media_id || raw.imageMediaId || raw.imageUrl || '',
+      media_url: raw.audio_url || (rawMediaIsAudio ? raw.media_url : '') || '',
+      image_url: raw.image_url || (rawMediaIsImage ? raw.media_url : '') || raw.image_media_id || raw.imageMediaId || raw.imageUrl || '',
       prep_time_seconds: raw.prep_time_seconds,
       response_time_seconds: raw.response_time_seconds,
       min_words: raw.min_words,

@@ -429,6 +429,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       })
     }
 
+    const isImageFile = /\.(jpe?g|png|webp|gif|svg)$/i.test(mediaFilename)
+    const isAudioFile = /\.(mp3|wav|ogg|m4a|aac)$/i.test(mediaFilename)
+
     finalTestQuestions.push({
       id: qId,
       question_text: qText,
@@ -436,7 +439,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       correct_answer,
       explanation,
       order_index: ftIdx + 1,
-      media_url: mediaFilename || undefined,
+      media_url: isAudioFile ? mediaFilename : undefined,
+      audio_url: isAudioFile ? mediaFilename : undefined,
+      image_url: isImageFile ? mediaFilename : undefined,
     })
   })
 
@@ -504,6 +509,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       })
     }
 
+    const isImageFile = /\.(jpe?g|png|webp|gif|svg)$/i.test(mediaFilename)
+    const isAudioFile = /\.(mp3|wav|ogg|m4a|aac)$/i.test(mediaFilename)
+
     const item: QuizQuestionItem = {
       id: qId,
       question_text: qText,
@@ -511,7 +519,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       correct_answer,
       explanation,
       order_index: (chapterTestsByModule.get(mOrder)?.length || 0) + 1,
-      media_url: mediaFilename || undefined,
+      media_url: isAudioFile ? mediaFilename : undefined,
+      audio_url: isAudioFile ? mediaFilename : undefined,
+      image_url: isImageFile ? mediaFilename : undefined,
     }
 
     if (!chapterTestsByModule.has(mOrder)) {

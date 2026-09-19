@@ -145,86 +145,104 @@ export function ExamQuestionCard({
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 pt-1">
-        {(isListening || Boolean(q.media_url)) && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={isUploadingAudio}
-              onClick={onRequestUploadAudio}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
-            >
-              {isUploadingAudio ? (
-                <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
-              ) : (
-                <Volume2 className="w-3 h-3 text-indigo-500" />
-              )}
-              <span>{q.media_url ? 'Đổi Audio câu' : 'Thêm Audio câu'}</span>
-            </button>
-            {q.media_url && (
-              <div className="flex items-center gap-1">
-                <audio controls src={q.media_url} className="h-6 max-w-[180px]" />
+      {(() => {
+        const isAudioUrl = (url?: string | null) => {
+          if (!url) return false
+          return /\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i.test(url) || url.includes('audio')
+        }
+        const isImageUrl = (url?: string | null) => {
+          if (!url) return false
+          return /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(url) || url.includes('image')
+        }
+
+        const audioSrc = (q.audio_url && isAudioUrl(q.audio_url)) ? q.audio_url : (isAudioUrl(q.media_url) ? q.media_url : undefined)
+        const imageSrc = q.image_url || (isImageUrl(q.media_url) ? q.media_url : undefined)
+        const hasAudio = Boolean(audioSrc)
+        const hasImage = Boolean(imageSrc)
+
+        return (
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {(isListening || hasAudio) && (
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => onUpdate({ media_url: undefined })}
-                  className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                  title="Xóa audio"
+                  disabled={isUploadingAudio}
+                  onClick={onRequestUploadAudio}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  {isUploadingAudio ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+                  ) : (
+                    <Volume2 className="w-3 h-3 text-indigo-500" />
+                  )}
+                  <span>{hasAudio ? 'Đổi Audio câu' : 'Thêm Audio câu'}</span>
                 </button>
+                {hasAudio && audioSrc && (
+                  <div className="flex items-center gap-1">
+                    <audio controls src={audioSrc} className="h-6 max-w-[180px]" />
+                    <button
+                      type="button"
+                      onClick={() => onUpdate({ media_url: undefined, audio_url: undefined })}
+                      className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
+                      title="Xóa audio"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(isListening || isReading || hasImage) && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isUploadingImage}
+                  onClick={onRequestUploadImage}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                >
+                  {isUploadingImage ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
+                  ) : (
+                    <ImageIcon className="w-3 h-3 text-amber-500" />
+                  )}
+                  <span>{hasImage ? 'Đổi ảnh câu' : 'Thêm Ảnh câu'}</span>
+                </button>
+                {hasImage && imageSrc && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs leading-none">
+                      <Image
+                        src={imageSrc}
+                        alt={isVi ? `Ảnh câu hỏi ${qIndex + 1}` : `Question ${qIndex + 1}`}
+                        width={56}
+                        height={32}
+                        className="object-cover rounded-md"
+                        preview={{
+                          mask: (
+                            <div className="flex items-center justify-center gap-0.5 text-[10px] font-bold text-white">
+                              <Maximize2 className="w-2.5 h-2.5" />
+                              <span>{isVi ? 'Xem' : 'View'}</span>
+                            </div>
+                          ),
+                        }}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdate({ image_url: undefined, ...(q.media_url && isImageUrl(q.media_url) ? { media_url: undefined } : {}) })}
+                      className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      title={isVi ? 'Xóa ảnh' : 'Remove image'}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-
-        {(isListening || isReading) && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={isUploadingImage}
-              onClick={onRequestUploadImage}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
-            >
-              {isUploadingImage ? (
-                <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
-              ) : (
-                <ImageIcon className="w-3 h-3 text-amber-500" />
-              )}
-              <span>{q.image_url ? 'Đổi ảnh câu' : 'Thêm Ảnh câu'}</span>
-            </button>
-            {q.image_url && (
-              <div className="flex items-center gap-1.5">
-                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs leading-none">
-                  <Image
-                    src={q.image_url}
-                    alt={isVi ? `Ảnh câu hỏi ${qIndex + 1}` : `Question ${qIndex + 1}`}
-                    width={56}
-                    height={32}
-                    className="object-cover rounded-md"
-                    preview={{
-                      mask: (
-                        <div className="flex items-center justify-center gap-0.5 text-[10px] font-bold text-white">
-                          <Maximize2 className="w-2.5 h-2.5" />
-                          <span>{isVi ? 'Xem' : 'View'}</span>
-                        </div>
-                      ),
-                    }}
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => onUpdate({ image_url: undefined })}
-                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                  title={isVi ? 'Xóa ảnh' : 'Remove image'}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+        )
+      })()}
 
       {!isSpeaking && !isWriting ? (
         <div className="space-y-2 pt-1">

@@ -359,31 +359,41 @@ export async function uploadFolderResourcesToR2(
 
       allUploadedUrls.push(uploadRes.file_url)
       onFileUploaded?.(uploadRes.file_url)
-      const isAudio = /\.(wav|mp3|ogg|m4a)$/i.test(item.file.name)
-      const isImage = /\.(jpe?g|png|webp|gif)$/i.test(item.file.name)
+      const isAudio = /\.(wav|mp3|ogg|m4a|aac)$/i.test(item.file.name)
+      const isImage = /\.(jpe?g|png|webp|gif|svg)$/i.test(item.file.name)
 
       if (item.isFinalTest) {
         const q = updatedCourseInfo.final_test_questions?.find((qu) => qu.id === item.questionId)
         if (q) {
-          q.media_url = uploadRes.file_url
-          if (isImage) q.image_url = uploadRes.file_url
-          if (isAudio) q.audio_url = uploadRes.file_url
+          if (isImage) {
+            q.image_url = uploadRes.file_url
+            if (q.media_url && /\.(jpe?g|png|webp|gif|svg)$/i.test(q.media_url)) {
+              q.media_url = undefined
+            }
+          }
+          if (isAudio) {
+            q.audio_url = uploadRes.file_url
+            q.media_url = uploadRes.file_url
+          }
         }
       } else if (item.isChapterTest && item.moduleOrder !== undefined) {
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod) {
-          const q1 = targetMod.test_questions?.find((qu) => qu.id === item.questionId)
-          if (q1) {
-            q1.media_url = uploadRes.file_url
-            if (isImage) q1.image_url = uploadRes.file_url
-            if (isAudio) q1.audio_url = uploadRes.file_url
+          const updateQuestionMedia = (qu?: { media_url?: string | null; image_url?: string | null; audio_url?: string | null }) => {
+            if (!qu) return
+            if (isImage) {
+              qu.image_url = uploadRes.file_url
+              if (qu.media_url && /\.(jpe?g|png|webp|gif|svg)$/i.test(qu.media_url)) {
+                qu.media_url = undefined
+              }
+            }
+            if (isAudio) {
+              qu.audio_url = uploadRes.file_url
+              qu.media_url = uploadRes.file_url
+            }
           }
-          const q2 = targetMod.challenge_questions?.find((qu) => qu.id === item.questionId)
-          if (q2) {
-            q2.media_url = uploadRes.file_url
-            if (isImage) q2.image_url = uploadRes.file_url
-            if (isAudio) q2.audio_url = uploadRes.file_url
-          }
+          updateQuestionMedia(targetMod.test_questions?.find((qu) => qu.id === item.questionId))
+          updateQuestionMedia(targetMod.challenge_questions?.find((qu) => qu.id === item.questionId))
         }
       }
     })
