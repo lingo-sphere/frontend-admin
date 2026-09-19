@@ -69,27 +69,27 @@ export function PlacementTestsPage() {
   }, [allExams])
 
   const twoSkillsExam = useMemo(() => {
-    return (
-      placementExams.find(
-        (e) =>
-          e.skills_enabled === 'LR' ||
-          e.placement_type === '2SKILLS' ||
-          (e.title && e.title.includes('2 Kỹ Năng'))
-      ) || placementExams[0]
+    return placementExams.find(
+      (e) =>
+        e.skills_enabled === 'LR' ||
+        e.placement_type === '2SKILLS' ||
+        (Boolean(e.title) && e.title.includes('2 Kỹ Năng'))
     )
   }, [placementExams])
 
   const fourSkillsExam = useMemo(() => {
-    return (
-      placementExams.find(
-        (e) =>
-          e.skills_enabled === 'ALL' ||
-          e.placement_type === '4SKILLS' ||
-          e.skills_enabled === 'LRWS' ||
-          (e.title && e.title.includes('4 Kỹ Năng'))
-      ) || (placementExams.length > 1 ? placementExams[1] : undefined)
+    return placementExams.find(
+      (e) =>
+        e.skills_enabled === 'ALL' ||
+        e.placement_type === '4SKILLS' ||
+        e.skills_enabled === 'LRWS' ||
+        (Boolean(e.title) && e.title.includes('4 Kỹ Năng'))
     )
   }, [placementExams])
+
+  const systemExamsCount = useMemo(() => {
+    return (twoSkillsExam ? 1 : 0) + (fourSkillsExam ? 1 : 0)
+  }, [twoSkillsExam, fourSkillsExam])
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
@@ -133,13 +133,11 @@ export function PlacementTestsPage() {
     const qCount = exam
       ? Array.isArray(exam.questions) && exam.questions.length > 0
         ? exam.questions.length
-        : exam.total_questions || (isTwoSkills ? 30 : 40)
-      : isTwoSkills
-      ? 30
-      : 40
+        : exam.total_questions || 0
+      : 0
 
-    const duration = exam?.duration_minutes || (isTwoSkills ? 45 : 60)
-    const isPublished = exam?.is_published ?? true
+    const duration = exam?.duration_minutes || 0
+    const isPublished = exam?.is_published ?? false
     const totalAttempts = exam?.total_attempts || 0
     const avgScore = exam?.avg_score || 0
 
@@ -186,22 +184,29 @@ export function PlacementTestsPage() {
                       </>
                     )}
                   </span>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${
-                      isPublished
-                        ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                    }`}
-                  >
+                  {!exam ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      {isVi ? 'Chưa khởi tạo' : 'Not initialized'}
+                    </span>
+                  ) : (
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isPublished ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                        isPublished
+                          ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                       }`}
-                    />
-                    {isPublished
-                      ? (isVi ? 'Đang công khai' : 'Published')
-                      : (isVi ? 'Bản nháp / Ẩn' : 'Draft / Hidden')}
-                  </span>
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isPublished ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                        }`}
+                      />
+                      {isPublished
+                        ? (isVi ? 'Đang công khai' : 'Published')
+                        : (isVi ? 'Bản nháp / Ẩn' : 'Draft / Hidden')}
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1 line-clamp-1">
                   {exam?.title || defaultTitle}
@@ -221,7 +226,7 @@ export function PlacementTestsPage() {
                 <span>{isVi ? 'Thời gian' : 'Duration'}</span>
               </div>
               <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {duration} {isVi ? 'phút' : 'mins'}
+                {exam && duration > 0 ? `${duration} ${isVi ? 'phút' : 'mins'}` : '-'}
               </div>
             </div>
 
@@ -231,7 +236,7 @@ export function PlacementTestsPage() {
                 <span>{isVi ? 'Số câu hỏi' : 'Questions'}</span>
               </div>
               <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {qCount} {isVi ? 'câu' : 'qs'}
+                {exam && qCount > 0 ? `${qCount} ${isVi ? 'câu' : 'qs'}` : '-'}
               </div>
             </div>
 
@@ -241,7 +246,7 @@ export function PlacementTestsPage() {
                 <span>{isVi ? 'Lượt thi' : 'Attempts'}</span>
               </div>
               <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {totalAttempts.toLocaleString()}
+                {exam ? totalAttempts.toLocaleString() : '-'}
               </div>
             </div>
 
@@ -251,7 +256,7 @@ export function PlacementTestsPage() {
                 <span>{isVi ? 'Điểm TB' : 'Avg Score'}</span>
               </div>
               <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                {avgScore > 0 ? `${avgScore}/990` : '-'}
+                {exam && avgScore > 0 ? `${avgScore}/990` : '-'}
               </div>
             </div>
           </div>
@@ -285,7 +290,7 @@ export function PlacementTestsPage() {
 
         <div className="p-4 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
           <div className="text-[11px] text-slate-400 font-mono truncate">
-            {exam?._id ? `ID: ${exam._id}` : (isVi ? 'Sẵn sàng cấu hình' : 'Ready to setup')}
+            {exam?._id ? `ID: ${exam._id}` : (isVi ? 'Chưa có bản ghi trong hệ thống' : 'Not created in system')}
           </div>
 
           {exam ? (
@@ -300,7 +305,7 @@ export function PlacementTestsPage() {
           ) : (
             <button
               type="button"
-              onClick={() => navigate('/course-exams/new/questions')}
+              onClick={() => navigate('/practice/placement-tests/create')}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -423,9 +428,9 @@ export function PlacementTestsPage() {
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>{isVi ? '2 Đề Thi Đầu Vào Hệ Thống' : 'System Placement Tests'}</span>
+          <span>{isVi ? 'Đề Thi Đầu Vào Hệ Thống' : 'System Placement Tests'}</span>
           <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
-            2
+            {systemExamsCount}
           </span>
         </button>
 
