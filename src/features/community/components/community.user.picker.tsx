@@ -46,14 +46,14 @@ export function CommunityUserPicker({
 
   const getRolePriority = (role?: string | null) => {
     const r = (role || '').toUpperCase()
-    if (r === 'ADMIN' || r === 'SUPER_ADMIN') return 1
+    if (r === 'ADMIN') return 1
     if (r === 'INSTRUCTOR' || r === 'TEACHER') return 2
     return 3
   }
 
   const getRoleBadge = (role?: string | null) => {
     const r = (role || '').toUpperCase()
-    if (r === 'ADMIN' || r === 'SUPER_ADMIN') {
+    if (r === 'ADMIN') {
       return {
         label: t('community.roleAdmin'),
         icon: ShieldCheck,

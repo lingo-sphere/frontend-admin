@@ -138,7 +138,7 @@ export function CommunityModeratorModal({
 
     for (const learner of selectedLearners) {
       const role = (learner.role || '').toUpperCase()
-      const isAllowed = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR', 'TEACHER'].includes(role)
+      const isAllowed = ['ADMIN', 'INSTRUCTOR', 'TEACHER'].includes(role)
       if (!isAllowed) {
         toast.error(t('community.invalidRole', { name: learner.full_name }))
         return
@@ -185,7 +185,7 @@ export function CommunityModeratorModal({
               onSelectUsers={setSelectedLearners}
               manualUserId={targetUserIdInput}
               onChangeManualUserId={setTargetUserIdInput}
-              allowedRoles={['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR', 'TEACHER']}
+              allowedRoles={['ADMIN', 'INSTRUCTOR', 'TEACHER']}
               themeColor="indigo"
             />
 

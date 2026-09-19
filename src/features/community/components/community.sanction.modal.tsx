@@ -204,7 +204,7 @@ export function CommunitySanctionModal({
                 }}
                 manualUserId={targetUserId}
                 onChangeManualUserId={setTargetUserId}
-                disabledRoles={['ADMIN', 'SUPER_ADMIN']}
+                disabledRoles={['ADMIN']}
                 themeColor="rose"
               />
             )}
