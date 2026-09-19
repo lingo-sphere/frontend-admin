@@ -1,6 +1,6 @@
 // Custom hook quan ly state form tao va sua khoa hoc, dong bo tai lieu va cau hoi luyen tap.
 
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { CourseFormData, CourseLesson, CourseModule } from '@/features/courses/components/course.basic.info.tab'
 import type { Course } from '@/features/courses/schemas/course.schema'
@@ -38,9 +38,21 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const [randomFolderSuffix] = useState<string>(() => Math.random().toString(36).substring(2, 8))
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatusText, setSubmitStatusText] = useState<string>('')
+  const [submitStatusText, setSubmitStatusText] = useState('')
   const [pendingUploads, setPendingUploads] = useState<PendingFolderUploads | null>(null)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  const handleAbortSave = () => {
+    if (abortControllerRef.current) {
+      setSubmitStatusText(
+        isVi
+          ? 'Đang dừng tiến trình và dọn dẹp tài nguyên trên R2 & CSDL...'
+          : 'Aborting and cleaning up resources on R2 & DB...'
+      )
+      abortControllerRef.current.abort()
+    }
+  }
 
   const [formData, setFormData] = useState<CourseFormData>(() => {
     const profile = authStore.getState().profile
@@ -276,11 +288,15 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       return
     }
 
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
+    const uploadedR2Urls: string[] = []
+    let createdCourseId: string | null = null
+
     setIsSubmitting(true)
     try {
       let finalCourseInfo: Partial<CourseFormData> = { ...formData }
       let finalModules: CourseModule[] = formData.modules
-      const uploadedR2Urls: string[] = []
 
       const resolvedCourseFolder = generateCourseR2Folder(
         finalCourseInfo.title || formData.title,
@@ -300,12 +316,19 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
               ? `Đang tải lên R2 (${progress.completedFiles}/${progress.totalFiles} tệp - ${progress.percent}%)...`
               : `Uploading to R2 (${progress.completedFiles}/${progress.totalFiles} - ${progress.percent}%)...`
             setSubmitStatusText(status)
+          },
+          abortController.signal,
+          (url) => {
+            uploadedR2Urls.push(url)
           }
         )
 
+        if (abortController.signal.aborted) {
+          throw new DOMException('Aborted', 'AbortError')
+        }
+
         finalCourseInfo = uploadResult.courseInfo
         finalModules = uploadResult.modules
-        uploadedR2Urls.push(...uploadResult.allUploadedUrls)
 
         if (uploadResult.failedCount > 0) {
           toast.warning(
@@ -314,6 +337,10 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
               : `${uploadResult.failedCount} files failed to upload, continuing save.`
           )
         }
+      }
+
+      if (abortController.signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError')
       }
 
       setSubmitStatusText(isVi ? 'Đang lưu khóa học vào hệ thống...' : 'Saving course to system...')
@@ -437,6 +464,10 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         })
       })
 
+      if (abortController.signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError')
+      }
+
       if (isEditMode && currentCourseId) {
         await courseService.updateCourse(currentCourseId, payload)
         if (allMediaUrls.length > 0) {
@@ -445,9 +476,12 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã cập nhật khóa học "${formData.title}" thành công!`)
       } else {
         const created = await courseService.createCourse(payload)
-        const newCourseId = created._id
+        createdCourseId = created._id
+        if (abortController.signal.aborted) {
+          throw new DOMException('Aborted', 'AbortError')
+        }
         if (allMediaUrls.length > 0) {
-          mediaService.confirmMedia(allMediaUrls, newCourseId).catch(() => {})
+          mediaService.confirmMedia(allMediaUrls, created._id).catch(() => {})
         }
         toast.success(`Đã tạo khóa học mới "${formData.title}" thành công!`)
       }
@@ -456,11 +490,40 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
       setActiveNavItem('courses')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lưu khóa học thất bại'
-      toast.error(msg)
+      const isAborted =
+        abortController.signal.aborted ||
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof Error && (err.name === 'AbortError' || err.message.toLowerCase().includes('abort')))
+
+      if (isAborted) {
+        setSubmitStatusText(
+          isVi
+            ? 'Đang xóa sạch dữ liệu trên R2 và CSDL...'
+            : 'Cleaning up resources on R2 and database...'
+        )
+        try {
+          if (uploadedR2Urls.length > 0) {
+            await mediaService.cleanupTempMedia(uploadedR2Urls)
+          }
+          if (createdCourseId) {
+            await courseService.deleteCourse(createdCourseId)
+          }
+        } catch (cleanupErr) {
+          console.error('[Rollback] Cleanup error:', cleanupErr)
+        }
+        toast.info(
+          isVi
+            ? 'Đã hủy tiến trình lưu và dọn dẹp sạch toàn bộ tài nguyên trên Cloudflare R2 & CSDL.'
+            : 'Save process was canceled and all associated resources on R2 & DB were deleted.'
+        )
+      } else {
+        const msg = err instanceof Error ? err.message : 'Lưu khóa học thất bại'
+        toast.error(msg)
+      }
     } finally {
       setIsSubmitting(false)
       setSubmitStatusText('')
+      abortControllerRef.current = null
     }
   }
 
@@ -485,6 +548,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
     videoPreviewUrl,
     setVideoPreviewUrl,
     handleSubmit,
+    handleAbortSave,
     totalLessons,
     totalDuration,
     courseFolder,

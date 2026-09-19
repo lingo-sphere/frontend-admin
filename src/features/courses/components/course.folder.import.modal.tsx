@@ -30,6 +30,7 @@ import {
 } from '@/features/courses/helpers/course.folder.upload.helper'
 import { generateCourseR2Folder } from '@/features/courses/helpers/course.helper'
 import type { CourseFormData, CourseModule } from '@/features/courses/components/course.basic.info.tab'
+import { mediaAdminService } from '@/features/media/services/media.service'
 import { toast } from '@/store/toast.store'
 
 export type { PendingFolderUploads }
@@ -75,6 +76,22 @@ export const CourseFolderImportModal = forwardRef<
   const [parsedResult, setParsedResult] = useState<ParsedFolderResult | null>(null)
 
   const folderInputRef = useRef<HTMLInputElement | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const modalUploadedUrlsRef = useRef<string[]>([])
+
+  const handleAbortUpload = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      try {
+        if (modalUploadedUrlsRef.current.length > 0) {
+          await mediaAdminService.cleanupTempMedia(modalUploadedUrlsRef.current)
+          modalUploadedUrlsRef.current = []
+        }
+      } catch {}
+      setIsUploading(false)
+      toast.info(isVi ? 'Đã hủy tải lên và dọn dẹp các tệp trên R2.' : 'Upload canceled and R2 files cleaned up.')
+    }
+  }
 
   const handleClose = () => {
     if (isUploading) return
@@ -272,6 +289,10 @@ export const CourseFolderImportModal = forwardRef<
         )
       : courseFolder
 
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
+    modalUploadedUrlsRef.current = []
+
     try {
       const res = await uploadFolderResourcesToR2(
         pendingUploads,
@@ -282,6 +303,10 @@ export const CourseFolderImportModal = forwardRef<
           setUploadIndex(Math.min(progress.completedFiles + 1, progress.totalFiles))
           setUploadPercent(progress.percent)
           setCurrentUploadName(progress.currentFileName)
+        },
+        abortController.signal,
+        (url) => {
+          modalUploadedUrlsRef.current.push(url)
         }
       )
 
@@ -301,11 +326,26 @@ export const CourseFolderImportModal = forwardRef<
       }
       handleClose()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Tải lên tài nguyên thất bại'
-      setError(msg)
-      toast.error(msg)
+      const isAborted =
+        abortController.signal.aborted ||
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof Error && (err.name === 'AbortError' || err.message.toLowerCase().includes('abort')))
+      if (isAborted) {
+        try {
+          if (modalUploadedUrlsRef.current.length > 0) {
+            await mediaAdminService.cleanupTempMedia(modalUploadedUrlsRef.current)
+            modalUploadedUrlsRef.current = []
+          }
+        } catch {}
+        toast.info(isVi ? 'Đã hủy tải lên và dọn dẹp các tệp trên R2.' : 'Upload canceled and R2 files cleaned up.')
+      } else {
+        const msg = err instanceof Error ? err.message : 'Tải lên tài nguyên thất bại'
+        setError(msg)
+        toast.error(msg)
+      }
     } finally {
       setIsUploading(false)
+      abortControllerRef.current = null
     }
   }
 
@@ -656,11 +696,14 @@ export const CourseFolderImportModal = forwardRef<
 
               <button
                 type="button"
-                onClick={handleClose}
-                disabled={isUploading}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
+                onClick={isUploading ? handleAbortUpload : handleClose}
+                className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                  isUploading
+                    ? 'border-rose-300 dark:border-rose-800 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-900/60 shadow-xs animate-pulse'
+                    : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                }`}
               >
-                <span>{isVi ? 'Đóng' : 'Cancel'}</span>
+                <span>{isUploading ? (isVi ? 'Hủy tải lên & Dọn dẹp' : 'Abort & Cleanup') : (isVi ? 'Đóng' : 'Cancel')}</span>
               </button>
 
               <button

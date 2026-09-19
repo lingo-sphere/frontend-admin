@@ -63,18 +63,22 @@ export const mediaAdminService = {
   async uploadDirectR2(
     file: File,
     folder = 'courses',
-    onProgress?: (percent: number, loaded: number, total: number) => void
+    onProgress?: (percent: number, loaded: number, total: number) => void,
+    signal?: AbortSignal
   ): Promise<MediaUploadResponse> {
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError')
+    }
+
     let mimeType = file.type
-    if (!mimeType) {
+    if (!mimeType || mimeType === 'application/octet-stream') {
       const lowerName = file.name.toLowerCase()
-      if (lowerName.endsWith('.pdf')) mimeType = 'application/pdf'
-      else if (lowerName.endsWith('.mp4')) mimeType = 'video/mp4'
+      if (lowerName.endsWith('.mp4')) mimeType = 'video/mp4'
       else if (lowerName.endsWith('.webm')) mimeType = 'video/webm'
-      else if (lowerName.endsWith('.wav')) mimeType = 'audio/wav'
       else if (lowerName.endsWith('.mp3')) mimeType = 'audio/mpeg'
+      else if (lowerName.endsWith('.wav')) mimeType = 'audio/wav'
       else if (lowerName.endsWith('.ogg')) mimeType = 'audio/ogg'
-      else if (lowerName.endsWith('.m4a')) mimeType = 'audio/mp4'
+      else if (lowerName.endsWith('.pdf')) mimeType = 'application/pdf'
       else if (lowerName.endsWith('.png')) mimeType = 'image/png'
       else if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) mimeType = 'image/jpeg'
       else if (lowerName.endsWith('.webp')) mimeType = 'image/webp'
@@ -83,8 +87,27 @@ export const mediaAdminService = {
 
     const presigned = await this.getPresignedUploadUrl(file.name, mimeType, file.size, folder)
 
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError')
+    }
+
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest()
+      const onAbort = () => {
+        try {
+          xhr.abort()
+        } catch {}
+        reject(new DOMException('Aborted', 'AbortError'))
+      }
+
+      if (signal) {
+        if (signal.aborted) {
+          onAbort()
+          return
+        }
+        signal.addEventListener('abort', onAbort, { once: true })
+      }
+
       xhr.open('PUT', presigned.upload_url, true)
       xhr.setRequestHeader('Content-Type', mimeType)
 
@@ -96,6 +119,9 @@ export const mediaAdminService = {
       }
 
       xhr.onload = () => {
+        if (signal) {
+          signal.removeEventListener('abort', onAbort)
+        }
         if (xhr.status >= 200 && xhr.status < 300) {
           onProgress?.(100, file.size, file.size)
           resolve()
@@ -104,7 +130,20 @@ export const mediaAdminService = {
         }
       }
 
-      xhr.onerror = () => reject(new Error('Lỗi kết nối mạng khi tải trực tiếp lên Cloudflare R2'))
+      xhr.onerror = () => {
+        if (signal) {
+          signal.removeEventListener('abort', onAbort)
+        }
+        reject(new Error('Lỗi kết nối mạng khi tải trực tiếp lên Cloudflare R2'))
+      }
+
+      xhr.onabort = () => {
+        if (signal) {
+          signal.removeEventListener('abort', onAbort)
+        }
+        reject(new DOMException('Aborted', 'AbortError'))
+      }
+
       xhr.send(file)
     })
 

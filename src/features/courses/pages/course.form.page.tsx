@@ -35,6 +35,7 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
     videoPreviewUrl,
     setVideoPreviewUrl,
     handleSubmit,
+    handleAbortSave,
     totalLessons,
     totalDuration,
     courseFolder,
@@ -112,6 +113,8 @@ export function CourseFormPage({ editCourseId }: CourseFormPageProps) {
           savingText={submitStatusText || (isVi ? 'Đang lưu...' : 'Saving...')}
           isSubmitting={isSubmitting}
           onCancel={() => setActiveNavItem('courses')}
+          onAbortSave={handleAbortSave}
+          abortText={isVi ? 'Hủy Lưu & Dọn Dẹp' : 'Cancel & Clean Up'}
         />
       </form>
 

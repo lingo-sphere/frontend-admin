@@ -36,7 +36,9 @@ export async function uploadFolderResourcesToR2(
   courseFolder: string,
   currentCourseInfo: Partial<CourseFormData>,
   currentModules: CourseModule[],
-  onProgress?: (progress: FolderUploadProgress) => void
+  onProgress?: (progress: FolderUploadProgress) => void,
+  signal?: AbortSignal,
+  onFileUploaded?: (url: string) => void
 ): Promise<{
   courseInfo: Partial<CourseFormData>
   modules: CourseModule[]
@@ -121,12 +123,14 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, courseThumbFile.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, courseThumbFile.size, courseThumbFile.name)
       if (uploadRes.file_url) {
         updatedCourseInfo.thumbnail_url = uploadRes.file_url
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
       }
     })
   }
@@ -140,13 +144,15 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, courseDocFile.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, courseDocFile.size, courseDocFile.name)
       if (uploadRes.file_url) {
         updatedCourseInfo.document_url = uploadRes.file_url
         updatedCourseInfo.document_name = courseDocFile.name
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
       }
     })
   }
@@ -160,12 +166,14 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, finalTestAudioFile.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, finalTestAudioFile.size, finalTestAudioFile.name)
       if (uploadRes.file_url) {
         updatedCourseInfo.final_test_audio_url = uploadRes.file_url
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
       }
     })
   }
@@ -179,12 +187,14 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, finalTestSpeakingFile.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, finalTestSpeakingFile.size, finalTestSpeakingFile.name)
       if (uploadRes.file_url) {
         updatedCourseInfo.final_test_speaking_file_url = uploadRes.file_url
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
       }
     })
   }
@@ -204,13 +214,15 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, item.file.name)
-        }
+        },
+        signal
       )
 
       reportProgress(fIdx, item.file.size, item.file.name)
 
       if (uploadRes.file_url) {
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
         for (const mod of updatedModules) {
           const targetLes = mod.lessons.find((l) => l.id === item.lessonId || (mod.module_order === item.moduleOrder && l.lesson_order === item.lessonOrder))
           if (targetLes) {
@@ -234,11 +246,13 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, item.file.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, item.file.size, item.file.name)
       if (uploadRes.file_url) {
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod) {
           targetMod.theory_file_url = uploadRes.file_url
@@ -258,11 +272,13 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, item.file.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, item.file.size, item.file.name)
       if (uploadRes.file_url) {
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
         for (const mod of updatedModules) {
           const targetLes = mod.lessons.find((l) => l.id === item.lessonId || (mod.module_order === item.moduleOrder && l.lesson_order === item.lessonOrder))
           if (targetLes) {
@@ -285,11 +301,13 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, item.file.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, item.file.size, item.file.name)
       if (uploadRes.file_url) {
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod) {
           targetMod.test_audio_url = uploadRes.file_url
@@ -309,11 +327,13 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, item.file.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, item.file.size, item.file.name)
       if (uploadRes.file_url) {
         allUploadedUrls.push(uploadRes.file_url)
+        onFileUploaded?.(uploadRes.file_url)
         const targetMod = updatedModules.find((m) => m.module_order === item.moduleOrder)
         if (targetMod) {
           targetMod.speaking_file_url = uploadRes.file_url
@@ -331,12 +351,14 @@ export async function uploadFolderResourcesToR2(
         courseFolder,
         (_percent, loaded) => {
           reportProgress(fIdx, loaded, item.file.name)
-        }
+        },
+        signal
       )
       reportProgress(fIdx, item.file.size, item.file.name)
       if (!uploadRes.file_url) return
 
       allUploadedUrls.push(uploadRes.file_url)
+      onFileUploaded?.(uploadRes.file_url)
       const isAudio = /\.(wav|mp3|ogg|m4a)$/i.test(item.file.name)
       const isImage = /\.(jpe?g|png|webp|gif)$/i.test(item.file.name)
 
@@ -374,11 +396,14 @@ export async function uploadFolderResourcesToR2(
 
   const workers = Array.from({ length: poolConcurrency }, async () => {
     while (queue.length > 0) {
+      if (signal?.aborted) break
       const task = queue.shift()
       if (!task) break
+      if (signal?.aborted) break
       try {
         await task()
       } catch (taskErr) {
+        if (signal?.aborted) break
         failedCount++
         console.error('[FolderUploadHelper] Task failed:', taskErr)
       } finally {
@@ -394,6 +419,10 @@ export async function uploadFolderResourcesToR2(
   })
 
   await Promise.all(workers)
+
+  if (signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError')
+  }
 
   return {
     courseInfo: updatedCourseInfo,
