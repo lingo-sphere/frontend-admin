@@ -17,9 +17,10 @@ interface CourseExamQuestionsPageProps {
 
 function createNewExamTemplate(type: '2SKILLS' | '4SKILLS' = '2SKILLS'): ToeicExamItem {
   const is4Skills = type === '4SKILLS'
+  const stableId = is4Skills ? 'exam_new_placement_4skills' : 'exam_new_placement_2skills'
   return {
-    id: `exam_new_${Date.now()}`,
-    _id: `exam_new_${Date.now()}`,
+    id: stableId,
+    _id: stableId,
     title: is4Skills
       ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 4 Kỹ Năng (Full Skills)'
       : 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 2 Kỹ Năng (LR)',
@@ -77,7 +78,8 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       const allExams = await examAdminService.getExams()
       return Array.isArray(allExams) ? allExams : []
     },
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 
   const {
@@ -179,7 +181,11 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       return null
     },
     initialData: initialCachedExam,
-    staleTime: 0,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   })
 
   const handleBack = useCallback(() => {

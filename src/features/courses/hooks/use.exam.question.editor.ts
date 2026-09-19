@@ -114,6 +114,12 @@ export function useExamQuestionEditor({
     }
 
     if (prevExamKeyRef.current !== currentExamKey) {
+      if (prevExamKeyRef.current !== null && isProcessingZip) {
+        return
+      }
+      if (prevExamKeyRef.current !== null && questions.length > 0 && initialBundle.qs.length === 0) {
+        return
+      }
       prevExamKeyRef.current = currentExamKey
       setQuestions(initialBundle.qs)
       setGlobalAudioUrl(initialBundle.audio)
@@ -124,7 +130,7 @@ export function useExamQuestionEditor({
       setSearchQuery('')
       setPartFilter('ALL')
     }
-  }, [isOpen, currentExamKey, initialBundle])
+  }, [isOpen, currentExamKey, initialBundle, isProcessingZip, questions.length])
 
   const isDirty = useMemo(() => {
     if (!initialSnapshot) return false
