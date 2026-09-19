@@ -136,7 +136,8 @@ export function PageRouter() {
     if (
       activeNavItem === 'toeic-tests' ||
       activeNavItem === 'placement-tests' ||
-      activeNavItem === 'placement-test-create'
+      activeNavItem === 'placement-test-create' ||
+      activeNavItem.startsWith('placement-test-questions:')
     ) {
       if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS') && !hasModulePermission('PRACTICE')) {
         return <ForbiddenPage />
@@ -197,7 +198,7 @@ export function PageRouter() {
     return <CourseExamQuestionsPage examId="new" />
   }
 
-  if (activeNavItem.startsWith('course-exam-questions:')) {
+  if (activeNavItem.startsWith('course-exam-questions:') || activeNavItem.startsWith('placement-test-questions:')) {
     const examId = activeNavItem.split(':')[1]
     return <CourseExamQuestionsPage examId={examId} />
   }

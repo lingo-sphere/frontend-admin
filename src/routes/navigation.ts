@@ -60,6 +60,10 @@ export function navItemToPath(navItem: string): string {
   if (navItem === 'toeic-tests') return '/practice/exams'
   if (navItem === 'placement-tests') return '/practice/placement-tests'
   if (navItem === 'placement-test-create') return '/practice/placement-tests/create'
+  if (navItem.startsWith('placement-test-questions:')) {
+    const id = navItem.split(':')[1]
+    return id === 'new' ? '/practice/placement-tests/create' : `/practice/placement-tests/${id}/questions`
+  }
   if (navItem === 'community') return '/community'
   if (navItem === 'public-decks') return '/public-decks'
   if (navItem === 'progress') return '/progress'
@@ -142,6 +146,14 @@ export function pathToNavItem(pathname: string): string {
   if (pathname === '/practice/writing') return 'practice-writing'
   if (pathname === '/practice/exams') return 'toeic-tests'
   if (pathname === '/practice/placement-tests/create' || pathname === '/placement-tests/create') return 'placement-test-create'
+  if (pathname.startsWith('/practice/placement-tests/') && pathname.endsWith('/questions')) {
+    const id = pathname.replace('/practice/placement-tests/', '').replace('/questions', '')
+    return `placement-test-questions:${id}`
+  }
+  if (pathname.startsWith('/placement-tests/') && pathname.endsWith('/questions')) {
+    const id = pathname.replace('/placement-tests/', '').replace('/questions', '')
+    return `placement-test-questions:${id}`
+  }
   if (pathname === '/practice/placement-tests' || pathname === '/placement-tests') return 'placement-tests'
   if (pathname === '/community') return 'community'
   if (pathname === '/public-decks') return 'public-decks'
@@ -224,7 +236,7 @@ export function getEffectiveNavId(navItem: string): string {
     return 'toeic-tests'
   }
 
-  if (navItem === 'placement-tests' || navItem === 'placement-test-create') {
+  if (navItem === 'placement-tests' || navItem === 'placement-test-create' || navItem.startsWith('placement-test-questions:')) {
     return 'placement-tests'
   }
 

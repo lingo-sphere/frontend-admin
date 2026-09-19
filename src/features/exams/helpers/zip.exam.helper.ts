@@ -91,6 +91,7 @@ export interface ParseZipResult {
     passing_score?: number
     description?: string
   }
+  detectedSkillMode?: '2SKILLS' | '4SKILLS'
 }
 
 function extractExamWorkbookData(workbook: XLSX.WorkBook): {
@@ -492,7 +493,8 @@ export async function parseAndUploadZipExam(
   isVi: boolean,
   onProgress?: (status: string, current?: number, total?: number) => void,
   is4Skills = false,
-  isLessonMode = false
+  isLessonMode = false,
+  onAutoSwitchSkills?: (skills: '2SKILLS' | '4SKILLS') => void
 ): Promise<ParseZipResult> {
   const isDirectExcel = /\.(xlsx|xls|csv)$/i.test(file.name)
   const isZip = /\.(zip)$/i.test(file.name)
@@ -600,13 +602,35 @@ export async function parseAndUploadZipExam(
   }
 
   if (!isLessonMode) {
-    onProgress?.(isVi ? 'Đang kiểm tra tính tương thích cột kỹ năng...' : 'Validating skills compatibility...')
+    let hasSpeakingOrWriting = false
+    for (let idx = 0; idx < rawRows.length; idx++) {
+      const row = rawRows[idx]
+      for (const [colName, val] of Object.entries(row)) {
+        const norm = normalizeKey(colName)
+        if (norm.includes('kynang') || norm.includes('skill') || norm.includes('part') || norm.includes('phan')) {
+          const strVal = String(val ?? '').trim()
+          if (!strVal) continue
+          const classified = classifySkill(strVal)
+          if (classified === 'SPEAKING' || classified === 'WRITING') {
+            hasSpeakingOrWriting = true
+            break
+          }
+        }
+      }
+      if (hasSpeakingOrWriting) break
+    }
+
+    let effectiveIs4Skills = is4Skills
+    if (hasSpeakingOrWriting && !is4Skills && onAutoSwitchSkills) {
+      effectiveIs4Skills = true
+      onAutoSwitchSkills('4SKILLS')
+    }
 
     const invalidSkillDetails: string[] = []
 
     for (let idx = 0; idx < rawRows.length; idx++) {
       const row = rawRows[idx]
-      let rowStt: string | number = idx + 1
+      const rowStt = row['STT'] || row['stt'] || idx + 1
       let explicitSkillStr = ''
       let explicitPartStr = ''
 
@@ -615,8 +639,9 @@ export async function parseAndUploadZipExam(
         const strVal = String(val ?? '').trim()
         if (!strVal) continue
 
-        if (norm.includes('stt') || norm === 'no' || norm === 'number') {
-          rowStt = strVal
+        if (norm === 'kynang' || norm === 'skill') {
+          explicitSkillStr = strVal
+          break
         } else if (norm.includes('kynang') || norm.includes('skill')) {
           explicitSkillStr = strVal
         } else if (norm.includes('part') || norm.includes('phan') || norm.includes('loai') || norm.includes('type')) {
@@ -627,7 +652,7 @@ export async function parseAndUploadZipExam(
       const testValues = [explicitSkillStr, explicitPartStr].filter(Boolean)
       for (const val of testValues) {
         const classified = classifySkill(val)
-        if (!is4Skills) {
+        if (!effectiveIs4Skills) {
           if (classified === 'SPEAKING' || classified === 'WRITING' || classified === 'UNKNOWN') {
             const excelLine = idx + 2
             invalidSkillDetails.push(
@@ -652,7 +677,7 @@ export async function parseAndUploadZipExam(
     }
 
     if (invalidSkillDetails.length > 0) {
-      const errorMsg = !is4Skills
+      const errorMsg = !effectiveIs4Skills
         ? isVi
           ? `Khóa học / Đề thi này áp dụng TOEIC 2 Kỹ năng (Chỉ bao gồm Nghe và Đọc). File tải lên chứa kỹ năng không hợp lệ: ${invalidSkillDetails.join(', ')}. Hệ thống đã từ chối tải lên và không lưu media lên hệ thống lưu trữ R2. Vui lòng chỉnh sửa file chỉ gồm kỹ năng Nghe và Đọc!`
           : `This course / exam is configured for TOEIC 2 Skills (Listening & Reading only). Uploaded file contains unsupported skills: ${invalidSkillDetails.join(', ')}. No media was uploaded to R2. Please ensure the file only contains Listening and Reading!`
@@ -899,5 +924,15 @@ export async function parseAndUploadZipExam(
     audioCount: audioLinkedCount,
     imageCount: imageLinkedCount,
     examInfo: detectedExamInfo,
+    detectedSkillMode: (!isLessonMode && rawRows.some((row) => {
+      for (const [colName, val] of Object.entries(row)) {
+        const norm = normalizeKey(colName)
+        if (norm.includes('kynang') || norm.includes('skill') || norm.includes('part') || norm.includes('phan')) {
+          const c = classifySkill(String(val ?? '').trim())
+          if (c === 'SPEAKING' || c === 'WRITING') return true
+        }
+      }
+      return false
+    })) ? '4SKILLS' : '2SKILLS',
   }
 }

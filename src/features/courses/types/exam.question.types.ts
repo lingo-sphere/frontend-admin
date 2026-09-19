@@ -67,6 +67,7 @@ export interface UseExamQuestionEditorParams {
     passing_score?: number
     description?: string
   }) => void
+  onSkillsAutoSwitched?: (skills: '2SKILLS' | '4SKILLS') => void
   onSave?: (
     questions: ExamQuestionItem[],
     globalAudioUrl: string,

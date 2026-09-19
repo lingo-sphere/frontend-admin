@@ -21,8 +21,9 @@ import {
   AlertCircle,
   Plus,
 } from 'lucide-react'
-import { useAdminExamsQuery, useUpdateExamMutation, useAdminPlacementAttemptsQuery } from '@/features/exams/hooks/use.exams.admin.query'
+import { useAdminExamsQuery, useUpdateExamMutation, useAdminPlacementAttemptsQuery, useDeleteExamMutation } from '@/features/exams/hooks/use.exams.admin.query'
 import { PlacementAttemptsTable } from '@/features/exams/components/placement.attempts.table'
+import { PlacementExamsTable } from '@/features/exams/components/placement.exams.table'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
@@ -39,6 +40,7 @@ export function PlacementTestsPage() {
 
   const { data: allExams = [], isLoading: isLoadingExams, refetch: refetchExams } = useAdminExamsQuery()
   const updateExamMutation = useUpdateExamMutation()
+  const deleteExamMutation = useDeleteExamMutation()
 
   const { data: attemptsData, refetch: refetchAttempts } = useAdminPlacementAttemptsQuery({
     page: 1,
@@ -69,31 +71,48 @@ export function PlacementTestsPage() {
   }, [allExams])
 
   const twoSkillsExam = useMemo(() => {
-    return placementExams.find(
-      (e) =>
-        e.skills_enabled === 'LR' ||
-        e.placement_type === '2SKILLS' ||
-        (Boolean(e.title) && e.title.includes('2 Kỹ Năng'))
+    return (
+      placementExams.find(
+        (e) =>
+          e.is_published &&
+          (e.skills_enabled === 'LR' ||
+            e.placement_type === '2SKILLS' ||
+            (Boolean(e.title) && e.title.includes('2 Kỹ Năng')))
+      ) ||
+      placementExams.find(
+        (e) =>
+          e.skills_enabled === 'LR' ||
+          e.placement_type === '2SKILLS' ||
+          (Boolean(e.title) && e.title.includes('2 Kỹ Năng'))
+      )
     )
   }, [placementExams])
 
   const fourSkillsExam = useMemo(() => {
-    return placementExams.find(
-      (e) =>
-        e.skills_enabled === 'ALL' ||
-        e.placement_type === '4SKILLS' ||
-        e.skills_enabled === 'LRWS' ||
-        (Boolean(e.title) && e.title.includes('4 Kỹ Năng'))
+    return (
+      placementExams.find(
+        (e) =>
+          e.is_published &&
+          (e.skills_enabled === 'ALL' ||
+            e.placement_type === '4SKILLS' ||
+            e.skills_enabled === 'LRWS' ||
+            (Boolean(e.title) && e.title.includes('4 Kỹ Năng')))
+      ) ||
+      placementExams.find(
+        (e) =>
+          e.skills_enabled === 'ALL' ||
+          e.placement_type === '4SKILLS' ||
+          e.skills_enabled === 'LRWS' ||
+          (Boolean(e.title) && e.title.includes('4 Kỹ Năng'))
+      )
     )
   }, [placementExams])
 
-  const systemExamsCount = useMemo(() => {
-    return (twoSkillsExam ? 1 : 0) + (fourSkillsExam ? 1 : 0)
-  }, [twoSkillsExam, fourSkillsExam])
+  const systemExamsCount = placementExams.length
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    navigate(`/course-exams/${exam._id}/questions`)
+    navigate(`/practice/placement-tests/${exam._id}/questions`)
   }
 
   const handleCreatePlacementExam = (type: '2SKILLS' | '4SKILLS') => {
@@ -101,18 +120,56 @@ export function PlacementTestsPage() {
     navigate(`/practice/placement-tests/create?type=${type}`)
   }
 
+  const handleDeleteExam = async (id: string) => {
+    try {
+      await deleteExamMutation.mutateAsync(id)
+      toast.success(isVi ? 'Đã xóa đề thi đầu vào thành công!' : 'Placement test deleted!')
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (isVi ? 'Không thể xóa đề thi đầu vào.' : 'Failed to delete exam.')
+      toast.error(msg)
+    }
+  }
+
   const handleTogglePublish = async (exam: ToeicExamItem, nextStatus: boolean) => {
     const examId = exam._id
     if (!examId) return
 
     try {
+      if (nextStatus) {
+        const isFour =
+          exam.skills_enabled === 'ALL' ||
+          exam.skills_enabled === 'LRWS' ||
+          exam.placement_type === '4SKILLS' ||
+          (Boolean(exam.title) && exam.title.includes('4 Kỹ Năng'))
+
+        const conflicting = placementExams.find((e) => {
+          if (e._id === examId || !e.is_published) return false
+          const eIsFour =
+            e.skills_enabled === 'ALL' ||
+            e.skills_enabled === 'LRWS' ||
+            e.placement_type === '4SKILLS' ||
+            (Boolean(e.title) && e.title.includes('4 Kỹ Năng'))
+          return isFour ? eIsFour : !eIsFour
+        })
+
+        if (conflicting && conflicting._id) {
+          await updateExamMutation.mutateAsync({
+            id: conflicting._id,
+            dto: { is_published: false },
+          })
+        }
+      }
+
       await updateExamMutation.mutateAsync({
         id: examId,
         dto: { is_published: nextStatus },
       })
       toast.success(
         nextStatus
-          ? (isVi ? 'Đã xuất bản bài thi đầu vào công khai!' : 'Placement test published!')
+          ? (isVi ? 'Đã kích hoạt xuất bản bài thi đầu vào công khai!' : 'Placement test published!')
           : (isVi ? 'Đã chuyển bài thi về bản nháp / ẩn khỏi hệ thống!' : 'Placement test set to draft!')
       )
     } catch (err: unknown) {
@@ -353,14 +410,24 @@ export function PlacementTestsPage() {
             <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => handleCreatePlacementExam(twoSkillsExam ? '4SKILLS' : '2SKILLS')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{isVi ? 'Tạo bài thi mới' : 'Add New Exam'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleCreatePlacementExam('2SKILLS')}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Tạo đề 2 Kỹ Năng' : 'New 2-Skill Exam'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCreatePlacementExam('4SKILLS')}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Tạo đề 4 Kỹ Năng' : 'New 4-Skill Exam'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -499,6 +566,18 @@ export function PlacementTestsPage() {
                 : 'Comprehensive 4-skill evaluation with AI speech analysis for pronunciation, fluency in Speaking, and grammar structure analysis in Writing.'
             )}
           </div>
+
+          <PlacementExamsTable
+            exams={placementExams}
+            isVi={isVi}
+            onManageQuestions={handleManageQuestions}
+            onTogglePublish={handleTogglePublish}
+            onDeleteExam={handleDeleteExam}
+            onCreateExam={handleCreatePlacementExam}
+            isMutatingPublish={updateExamMutation.isPending}
+            active2SkillsExamId={twoSkillsExam?._id}
+            active4SkillsExamId={fourSkillsExam?._id}
+          />
         </div>
       )}
 

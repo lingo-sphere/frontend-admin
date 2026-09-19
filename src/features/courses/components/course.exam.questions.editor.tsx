@@ -93,6 +93,19 @@ export function CourseExamQuestionsEditor({
     formPlacementSkills,
   ])
 
+  const handleSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
+    setFormPlacementSkills(skills)
+    if (skills === '2SKILLS') {
+      setFormDuration((prev) => (prev <= 0 || prev === 90 || prev === 140 ? 60 : prev))
+      setFormPassingScore((prev) => (prev <= 0 || prev === 650 || prev === 70 ? 500 : prev))
+      if (published2SkillsExam) setFormIsPublished(false)
+    } else {
+      setFormDuration((prev) => (prev <= 0 || prev === 60 || prev === 120 ? 140 : prev))
+      setFormPassingScore((prev) => (prev <= 0 || prev === 500 ? 70 : prev))
+      if (published4SkillsExam) setFormIsPublished(false)
+    }
+  }
+
   const {
     questions,
     globalAudioUrl,
@@ -126,9 +139,12 @@ export function CourseExamQuestionsEditor({
     isDirty,
   } = useExamQuestionEditor({
     isOpen: true,
-    exam: activeExamConfig,
+    exam: initialExam,
     is4Skills,
     isVi,
+    onSkillsAutoSwitched: (newSkills) => {
+      handleSkillsChange(newSkills)
+    },
     onExamMetaLoaded: (meta) => {
       if (typeof meta.duration_minutes === 'number' && meta.duration_minutes > 0) {
         setFormDuration(meta.duration_minutes)
@@ -175,19 +191,6 @@ export function CourseExamQuestionsEditor({
     setIsConfigExpanded,
     onBack,
   })
-
-  const handleSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
-    setFormPlacementSkills(skills)
-    if (skills === '2SKILLS') {
-      setFormDuration(60)
-      setFormPassingScore(500)
-      if (published2SkillsExam) setFormIsPublished(false)
-    } else {
-      setFormDuration(90)
-      setFormPassingScore(650)
-      if (published4SkillsExam) setFormIsPublished(false)
-    }
-  }
 
   return (
     <>

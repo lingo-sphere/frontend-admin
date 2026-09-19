@@ -77,7 +77,11 @@ export function ExamConfigForm({
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold transition-colors cursor-pointer disabled:opacity-50"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{isVi ? 'Bài thi khóa học' : 'Course Exams'}</span>
+            <span>
+              {isSystemPlacement
+                ? (isVi ? 'Đề thi đầu vào' : 'Placement Tests')
+                : (isVi ? 'Bài thi khóa học' : 'Course Exams')}
+            </span>
           </button>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
           <span className="text-slate-800 dark:text-slate-200 font-bold truncate max-w-xs sm:max-w-md">

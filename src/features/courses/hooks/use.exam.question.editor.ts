@@ -30,6 +30,7 @@ export function useExamQuestionEditor({
   isVi,
   onExamUpdated,
   onExamMetaLoaded,
+  onSkillsAutoSwitched,
   onSave,
   onClose,
 }: UseExamQuestionEditorParams) {
@@ -41,9 +42,11 @@ export function useExamQuestionEditor({
         exam?.skills_enabled === 'FULL' ||
         false
 
+  const examIdKey = exam?._id || exam?.id || 'new'
+
   const initialBundle = useMemo(
     () => computeInitialBundle(exam, initialQuestions, initialGlobalAudioUrl),
-    [exam, initialQuestions, initialGlobalAudioUrl]
+    [examIdKey, initialQuestions, initialGlobalAudioUrl]
   )
 
   const [questions, setQuestions] = useState<ExamQuestionItem[]>(() => initialBundle.qs)
@@ -98,8 +101,20 @@ export function useExamQuestionEditor({
     })
   }
 
+  const prevExamKeyRef = useRef<string | null>(null)
+  const currentExamKey = `${examIdKey}_${isOpen}`
+
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      prevExamKeyRef.current = null
+      initialSnapshotRef.current = null
+      setInitialSnapshot(null)
+      sessionUploadedUrlsRef.current.clear()
+      return
+    }
+
+    if (prevExamKeyRef.current !== currentExamKey) {
+      prevExamKeyRef.current = currentExamKey
       setQuestions(initialBundle.qs)
       setGlobalAudioUrl(initialBundle.audio)
       setInitialSnapshot(initialBundle.snap)
@@ -108,12 +123,8 @@ export function useExamQuestionEditor({
       sessionUploadedUrlsRef.current.clear()
       setSearchQuery('')
       setPartFilter('ALL')
-    } else {
-      initialSnapshotRef.current = null
-      setInitialSnapshot(null)
-      sessionUploadedUrlsRef.current.clear()
     }
-  }, [isOpen, initialBundle])
+  }, [isOpen, currentExamKey, initialBundle])
 
   const isDirty = useMemo(() => {
     if (!initialSnapshot) return false
@@ -363,7 +374,10 @@ export function useExamQuestionEditor({
           }
         },
         effectiveIs4Skills,
-        isLessonMode
+        isLessonMode,
+        (switchedSkills) => {
+          onSkillsAutoSwitched?.(switchedSkills)
+        }
       )
 
       setQuestions(result.questions)
@@ -380,9 +394,16 @@ export function useExamQuestionEditor({
         if (q.image_url) sessionUploadedUrlsRef.current.add(q.image_url)
       })
 
+      const autoSwitchedMsg =
+        result.detectedSkillMode === '4SKILLS' && !effectiveIs4Skills
+          ? isVi
+            ? ' (Đã tự động chuyển cấu hình sang 4 Kỹ năng LRWS)'
+            : ' (Auto-switched config to 4 Skills LRWS)'
+          : ''
+
       toast.success(
         isVi
-          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh) từ file nén!`
+          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh)${autoSwitchedMsg}!`
           : `Successfully imported ${result.questions.length} questions from archive!`
       )
     } catch (err: unknown) {
