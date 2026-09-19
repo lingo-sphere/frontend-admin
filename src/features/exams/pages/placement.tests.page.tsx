@@ -96,6 +96,11 @@ export function PlacementTestsPage() {
     navigate(`/course-exams/${exam._id}/questions`)
   }
 
+  const handleCreatePlacementExam = (type: '2SKILLS' | '4SKILLS') => {
+    storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
+    navigate(`/practice/placement-tests/create?type=${type}`)
+  }
+
   const handleTogglePublish = async (exam: ToeicExamItem, nextStatus: boolean) => {
     const examId = exam._id
     if (!examId) return
@@ -305,7 +310,7 @@ export function PlacementTestsPage() {
           ) : (
             <button
               type="button"
-              onClick={() => navigate('/practice/placement-tests/create')}
+              onClick={() => handleCreatePlacementExam(type)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -350,7 +355,7 @@ export function PlacementTestsPage() {
 
           <button
             type="button"
-            onClick={() => navigate('/practice/placement-tests/create')}
+            onClick={() => handleCreatePlacementExam(twoSkillsExam ? '4SKILLS' : '2SKILLS')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
