@@ -101,6 +101,9 @@ export const API_CONFIG = {
       WRITING: '/practice/writing/exercises',
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       JOURNAL_PROMPT: '/practice/writing/journal/daily-prompt',
+      // Practice Context taxonomy - dùng cho mapping câu hỏi với context
+      CONTEXTS: '/practice/contexts',
+      CONTEXTS_BY_LEVEL: (level: number) => `/practice/contexts?level=${level}`,
     },
 
     EXAMS: {

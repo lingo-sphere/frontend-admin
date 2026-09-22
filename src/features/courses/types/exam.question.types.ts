@@ -19,6 +19,8 @@ export interface ExamQuestionItem {
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
+  // Practice Context - dùng cho recommendation khi user làm sai
+  context_id?: string | null
   [key: string]: unknown
 }
 
@@ -50,6 +52,8 @@ export interface RawExamQuestion {
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
+  // Practice Context
+  context_id?: string | null
 }
 
 export interface UseExamQuestionEditorParams {
