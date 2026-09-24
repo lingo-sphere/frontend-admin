@@ -5,6 +5,7 @@ import { Popconfirm } from '@/components/popconfirm'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 import { NumberInput } from '@/components/number.input'
 import { Image } from 'antd'
+import { ContextSelector } from '@/components/context.selector'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 
 const SKILL_OPTIONS_2: SelectOption[] = [
@@ -91,6 +92,20 @@ export function ExamQuestionCard({
               size="sm"
             />
           </div>
+
+          {/* Context Selector - Practice Context cho recommendation */}
+          {(isListening || isReading) && (
+            <div className="w-56">
+              <label className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1 block">
+                Context
+              </label>
+              <ContextSelector
+                value={q.context_id}
+                onChange={(contextId) => onUpdate({ context_id: contextId })}
+                placeholder="Chọn ngữ cảnh..."
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5">

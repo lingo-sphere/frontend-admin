@@ -62,6 +62,7 @@ export function normalizeQuestions(
       prep_time_seconds: raw.prep_time_seconds,
       response_time_seconds: raw.response_time_seconds,
       min_words: raw.min_words,
+      context_id: (raw as any).context_id || null,
     }
   })
 }
@@ -82,6 +83,7 @@ export function getQuestionsSnapshot(qs: ExamQuestionItem[], audio: string): str
       prep_time_seconds: q.prep_time_seconds ?? null,
       response_time_seconds: q.response_time_seconds ?? null,
       min_words: q.min_words ?? null,
+      context_id: q.context_id || null,
     })),
   })
 }
