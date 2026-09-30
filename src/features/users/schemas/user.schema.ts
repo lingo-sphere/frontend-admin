@@ -48,7 +48,6 @@ export const UserProfileSchema = z.object({
   total_xp: z.number().nullable().optional(),
   current_streak: z.number().nullable().optional(),
   level: z.number().nullable().optional(),
-  gems: z.number().nullable().optional(),
   league: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),

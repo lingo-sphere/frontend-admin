@@ -24,7 +24,6 @@ export interface User {
   level: number
   current_streak: number
   longest_streak: number
-  gems: number
 
   lessons_completed: number
   vocabulary_reviewed: number

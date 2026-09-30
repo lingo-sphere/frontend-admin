@@ -88,7 +88,6 @@ export interface UserProfile {
   total_xp?: number | null
   current_streak?: number | null
   level?: number | null
-  gems?: number | null
   league?: string | null
   created_at?: string | null
   updated_at?: string | null

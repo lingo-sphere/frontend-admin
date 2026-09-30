@@ -90,7 +90,6 @@ export function UserProfilePage() {
       created_at: profileData.created_at || '',
       level: profileData.level ?? 1,
       longest_streak: profileData.longest_streak ?? 0,
-      gems: 0,
       lessons_completed: 0,
       vocabulary_reviewed: 0,
       practice_sessions: 0,

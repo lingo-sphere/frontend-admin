@@ -39,7 +39,6 @@ export async function fetchLearners(queryParams: UserQueryParams): Promise<Pagin
     created_at: u.created_at || '',
     level: u.level ?? 1,
     longest_streak: u.current_streak ?? 0,
-    gems: u.gems ?? 0,
     lessons_completed: 0,
     vocabulary_reviewed: 0,
     practice_sessions: 0,
