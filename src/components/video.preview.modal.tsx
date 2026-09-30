@@ -8,7 +8,7 @@ import {
   RotateCw,
   Copy,
 } from 'lucide-react'
-import { API_CONFIG } from '@/config/api.config'
+import { resolveMediaUrl } from '@/lib/media.utils'
 import { VideoControlsBar } from '@/components/video.controls.bar'
 import {
   useVideoPlayer,
@@ -25,19 +25,6 @@ export interface VideoPreviewModalProps {
   isVi?: boolean
 }
 
-const resolveStreamUrl = (url: string) => {
-  if (!url) return ''
-  if (url.includes('pub-') || url.includes('r2.cloudflarestorage.com') || url.includes('.r2.dev')) {
-    try {
-      const parsed = new URL(url)
-      return `${API_CONFIG.BASE_URL}/media/stream${parsed.pathname}`
-    } catch {
-      return url
-    }
-  }
-  return url
-}
-
 export function VideoPreviewModal({
   isOpen,
   onClose,
@@ -45,7 +32,7 @@ export function VideoPreviewModal({
   title,
   isVi = true,
 }: VideoPreviewModalProps) {
-  const resolvedUrl = resolveStreamUrl(videoUrl)
+  const resolvedUrl = resolveMediaUrl(videoUrl)
   const isEmbed = resolvedUrl.includes('youtube.com') || resolvedUrl.includes('youtu.be')
 
   const {

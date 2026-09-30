@@ -6,6 +6,7 @@ import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 import { getCategoryBadgeClass } from '@/features/courses/helpers/course.helper'
 import { formatCurrency, formatNumber } from '@/lib/format'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 interface GetCourseColumnsOptions {
   isVi: boolean
@@ -36,7 +37,7 @@ export function getCourseColumns({
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
             {course.thumbnail_url ? (
               <img
-                src={course.thumbnail_url}
+                src={resolveMediaUrl(course.thumbnail_url)}
                 alt=""
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />

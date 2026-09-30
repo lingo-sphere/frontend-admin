@@ -6,6 +6,7 @@ import { categoryLabels } from '@/features/courses/data/courses.data'
 import { Popconfirm } from '@/components/popconfirm'
 import { getCategoryBadgeClass } from '@/features/courses/helpers/course.helper'
 import { formatCurrency, formatNumber } from '@/lib/format'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 interface CourseGridCardProps {
   course: Course
@@ -57,7 +58,7 @@ export function CourseGridCard({
         <div className="relative aspect-video w-full bg-slate-100 dark:bg-slate-800/80 overflow-hidden">
           {course.thumbnail_url ? (
             <img
-              src={course.thumbnail_url}
+              src={resolveMediaUrl(course.thumbnail_url)}
               alt={course.title}
               className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
             />

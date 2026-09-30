@@ -2,24 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { mediaService } from '@/features/media/services/media.service'
-import { API_CONFIG } from '@/config/api.config'
 import { videoDimensionsCache } from '@/components/video.preview.modal'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 export const resolveStreamUrl = (url: string) => {
-  if (!url) return ''
-  if (
-    url.includes('pub-') ||
-    url.includes('r2.cloudflarestorage.com') ||
-    url.includes('.r2.dev')
-  ) {
-    try {
-      const parsed = new URL(url)
-      return `${API_CONFIG.BASE_URL}/media/stream${parsed.pathname}`
-    } catch {
-      return url
-    }
-  }
-  return url
+  return resolveMediaUrl(url)
 }
 
 interface UseR2UploaderOptions {

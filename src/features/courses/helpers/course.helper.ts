@@ -40,7 +40,7 @@ export function generateCourseR2Folder(title?: string, slug?: string, suffix?: s
 export const COURSE_REGEX = {
   SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  URL: /^(https?:\/\/.+|\/.*)$/,
+  URL: /^(https?:\/\/.+|\/.*|[a-zA-Z0-9_\-\/]+\.[a-zA-Z0-9]+)$/,
   INTEGER_NON_NEGATIVE: /^\d+$/,
   TOEIC_SCORE: /^(?:[1-9]\d{1,2}|990)$/,
   EXCEL_FILE: /\.(xlsx|xls)$/i,
