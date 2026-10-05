@@ -80,6 +80,13 @@ apiClient.interceptors.response.use(
         return Promise.reject(new Error(errorMsg || 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'))
       }
 
+      const existingAccessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+      const existingRefreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.session.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+
+      if (!existingAccessToken && !existingRefreshToken) {
+        return Promise.reject(new Error(errorMsg || i18n.t('auth.loginFailed')))
+      }
+
       if (!originalRequest._retry) {
         if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
@@ -145,9 +152,10 @@ apiClient.interceptors.response.use(
         } else {
           throw new Error('Invalid token response structure')
         }
-      } catch (refreshErr) {
-        processQueue(refreshErr, null)
-        console.warn('Phiên đăng nhập đã hết hạn. Đang đăng xuất...', refreshErr)
+      } catch {
+        const sessionExpiredError = new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+        processQueue(sessionExpiredError, null)
+        console.warn('Phiên đăng nhập quản trị viên đã hết hạn. Đang dọn dẹp phiên...')
 
         storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
@@ -161,7 +169,7 @@ apiClient.interceptors.response.use(
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         }
-        return Promise.reject(refreshErr)
+        return Promise.reject(sessionExpiredError)
       } finally {
         isRefreshing = false
       }
@@ -219,19 +227,15 @@ export const api = {
   async get<T>(url: string, params?: Record<string, unknown>, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.get<any>(url, { params })
 
-    // Handle multiple response formats
     const responseData = res.data
     let raw: unknown
 
     if (Array.isArray(responseData)) {
       raw = responseData
     } else if (responseData && typeof responseData === 'object') {
-      // Paginated response from TransformInterceptor
       if ('items' in responseData && Array.isArray((responseData as any).items)) {
         raw = responseData
-      }
-      // Standard response
-      else if ('data' in responseData) {
+      } else if ('data' in responseData) {
         if (Array.isArray((responseData as any).data)) {
           raw = (responseData as any).data
         } else {
