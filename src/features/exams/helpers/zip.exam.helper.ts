@@ -6,6 +6,7 @@ import { toast } from '@/store/toast.store'
 import JSZip from 'jszip'
 import * as XLSX from 'xlsx'
 import { extractRarExamArchive } from '@/features/exams/helpers/rar.exam.helper'
+import { normalizeToRelativePath } from '@/lib/media.utils'
 
 function normalizeKey(str: string): string {
   return str
@@ -718,7 +719,8 @@ export async function parseAndUploadZipExam(
         const folder = isAudio ? 'exam-question-audio' : 'exam-question-image'
 
         const uploadRes = await mediaAdminService.uploadFile(uploadFileObj, folder)
-        const publicUrl = uploadRes.file_url || uploadRes.url || uploadRes.public_url
+        const rawUrl = uploadRes.file_url || uploadRes.url || uploadRes.public_url || uploadRes.storage_key
+        const publicUrl = normalizeToRelativePath(rawUrl)
 
         if (publicUrl) {
           uploadedMap[name.toLowerCase()] = publicUrl

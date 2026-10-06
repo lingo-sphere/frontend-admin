@@ -28,10 +28,10 @@ export function LearnerReminderHistoryPage({ courseId, userId }: LearnerReminder
     handleManualUnlock,
   } = useLearnerReminderHistory({ courseId, userId })
 
-  const displayName = userProfile?.full_name || student?.full_name || userProfile?.email || student?.email || '-'
-  const displayEmail = userProfile?.email || student?.email || '-'
+  const displayName = userProfile?.full_name || student?.full_name || ''
+  const displayEmail = userProfile?.email || student?.email || ''
   const avatarUrl = userProfile?.avatar_url || student?.avatar_url
-  const courseTitle = courseInfo?.title || student?.course_title || '-'
+  const courseTitle = courseInfo?.title || student?.course_title || ''
 
   const schedule = student?.schedule
   const lockState = student?.lock_state

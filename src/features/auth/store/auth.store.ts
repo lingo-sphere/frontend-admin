@@ -78,7 +78,14 @@ const getStoredToken = (): string | null => {
 }
 
 const getStoredUser = (): AuthUser | null => {
-  return storage.get<AuthUser>(STORAGE_KEYS.USER) || storage.session.get<AuthUser>(STORAGE_KEYS.USER)
+  const user = storage.get<AuthUser>(STORAGE_KEYS.USER) || storage.session.get<AuthUser>(STORAGE_KEYS.USER)
+  if (user) {
+    const role = (user.role || '').toUpperCase()
+    if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+      return null
+    }
+  }
+  return user
 }
 
 export const authStore = createStore<AuthState>()((set, get) => ({
@@ -117,6 +124,10 @@ export const authStore = createStore<AuthState>()((set, get) => ({
     try {
       const res = await authService.login(credentials)
       const { user, access_token, refresh_token } = res
+      const role = (user?.role || '').toUpperCase()
+      if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+        throw new Error('Tài khoản học viên (USER/LEARNER) không có quyền truy cập trang quản trị Admin.')
+      }
 
       let permissions: PermissionItem[] = user.permissions || []
       if (!permissions || permissions.length === 0) {
@@ -212,6 +223,11 @@ export const authStore = createStore<AuthState>()((set, get) => ({
 
     try {
       const user = await authService.getMe()
+      const role = (user?.role || '').toUpperCase()
+      if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+        await get().logout()
+        return
+      }
       let profile: UserProfile | null = null
       try {
         profile = await userService.getMyProfile()

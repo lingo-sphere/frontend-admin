@@ -38,6 +38,7 @@ interface ExamConfigFormProps {
   setIsConfigExpanded: (val: boolean | ((prev: boolean) => boolean)) => void
   currentActiveConflict?: ToeicExamItem
   isSystemPlacement: boolean
+  isToeic?: boolean
   onCancelExam: () => void
   isCanceling: boolean
 }
@@ -62,6 +63,7 @@ export function ExamConfigForm({
   setIsConfigExpanded,
   currentActiveConflict,
   isSystemPlacement,
+  isToeic = false,
   onCancelExam,
   isCanceling,
 }: ExamConfigFormProps) {
@@ -77,7 +79,9 @@ export function ExamConfigForm({
           >
             <ArrowLeft className="w-4 h-4" />
             <span>
-              {isSystemPlacement
+              {isToeic
+                ? (isVi ? 'Đề thi TOEIC' : 'TOEIC Exams')
+                : isSystemPlacement
                 ? (isVi ? 'Đề thi đầu vào' : 'Placement Tests')
                 : (isVi ? 'Bài thi khóa học' : 'Course Exams')}
             </span>
@@ -86,7 +90,11 @@ export function ExamConfigForm({
           <span className="text-slate-800 dark:text-slate-200 font-bold truncate max-w-xs sm:max-w-md">
             {isCreateMode
               ? isVi
-                ? 'Tạo bài thi đánh giá mới (Toàn Hệ Thống)'
+                ? isToeic
+                  ? 'Tạo đề thi TOEIC mới'
+                  : 'Tạo bài thi đánh giá mới (Toàn Hệ Thống)'
+                : isToeic
+                ? 'Create New TOEIC Exam'
                 : 'Create New Placement Exam'
               : formTitle || initialExam.title}
           </span>
@@ -173,17 +181,43 @@ export function ExamConfigForm({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Phạm vi áp dụng bài thi:' : 'Applied Scope:'}
                 </label>
-                <div className="flex items-center justify-between px-4 py-2.5 bg-violet-50/80 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-bold text-violet-800 dark:text-violet-300">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-violet-600 shrink-0" />
-                    <span>
-                      {isVi ? '[TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)' : '[SYSTEM WIDE] - Placement Test'}
+                {isToeic ? (
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold text-indigo-800 dark:text-indigo-300">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>
+                        {isVi ? '[LUYỆN TẬP & THI THỬ] - Ngân hàng đề thi TOEIC hệ thống' : '[PRACTICE & MOCK EXAMS] - TOEIC Exam Bank'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                      {isVi ? 'Ngân hàng đề thi' : 'Exam Bank'}
                     </span>
                   </div>
-                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
-                    {isVi ? 'Toàn hệ thống' : 'Global System'}
-                  </span>
-                </div>
+                ) : isSystemPlacement ? (
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-violet-50/80 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-bold text-violet-800 dark:text-violet-300">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-violet-600 shrink-0" />
+                      <span>
+                        {isVi ? '[TOÀN HỆ THỐNG] - Bài thi đầu vào phân loại trình độ (Placement Test)' : '[SYSTEM WIDE] - Placement Test'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
+                      {isVi ? 'Toàn hệ thống' : 'Global System'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-bold text-blue-800 dark:text-blue-300">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>
+                        {isVi ? `[KHÓA HỌC] - ${initialExam.course_title || 'Bài thi khóa học'}` : `[COURSE] - ${initialExam.course_title || 'Course Exam'}`}
+                      </span>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                      {isVi ? 'Khóa học' : 'Course'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -196,7 +230,11 @@ export function ExamConfigForm({
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder={
                     isVi
-                      ? 'Ví dụ: Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC (LR)'
+                      ? isToeic
+                        ? 'Ví dụ: TOEIC Official 2025 - Test 01'
+                        : 'Ví dụ: Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC (LR)'
+                      : isToeic
+                      ? 'e.g., TOEIC Official 2025 - Test 01'
                       : 'e.g., TOEIC Diagnostic Placement Test'
                   }
                   className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -205,7 +243,9 @@ export function ExamConfigForm({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  {isVi ? 'Bộ kỹ năng đánh giá (Placement Type):' : 'Assessment Skills:'}
+                  {isToeic
+                    ? (isVi ? 'Hình thức đề thi TOEIC:' : 'TOEIC Exam Format:')
+                    : (isVi ? 'Bộ kỹ năng đánh giá (Placement Type):' : 'Assessment Skills:')}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div

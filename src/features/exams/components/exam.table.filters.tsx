@@ -1,23 +1,20 @@
-/**
- * @file exam.table.filters.tsx
- * @description Search input and exam type filter buttons for exam list table
- */
+// Bộ lọc tìm kiếm và phân loại đề thi TOEIC cho bảng danh sách đề thi.
 
-import { Search } from 'lucide-react'
+import { Search, Headphones, Sparkles, LayoutGrid } from 'lucide-react'
 
 interface ExamTableFiltersProps {
   searchQuery: string
   onSearchChange: (val: string) => void
-  selectedType: string
-  onTypeChange: (val: string) => void
+  selectedSkill?: string
+  onSkillChange?: (val: string) => void
   isVi: boolean
 }
 
 export function ExamTableFilters({
   searchQuery,
   onSearchChange,
-  selectedType,
-  onTypeChange,
+  selectedSkill = 'ALL',
+  onSkillChange,
   isVi,
 }: ExamTableFiltersProps) {
   return (
@@ -29,38 +26,55 @@ export function ExamTableFilters({
         />
         <input
           type="text"
-          placeholder={isVi ? 'Tìm kiếm đề thi theo tên...' : 'Search exams by title...'}
+          placeholder={isVi ? 'Tìm kiếm đề thi theo tên hoặc mã...' : 'Search exams by title or code...'}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
-        {['ALL', 'FULL_TEST', 'MINI_TEST', 'PRE_TEST', 'POST_MINI_TEST'].map(
-          (type) => (
-            <button
-              key={type}
-              onClick={() => onTypeChange(type)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedType === type
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
-              }`}
-            >
-              {type === 'ALL'
-                ? (isVi ? 'Tất cả' : 'All')
-                : type === 'FULL_TEST'
-                  ? 'Full Test (200c)'
-                  : type === 'MINI_TEST'
-                    ? 'Mini Test'
-                    : type === 'PRE_TEST'
-                      ? 'Pre-Test'
-                      : 'Post-Mini Test'}
-            </button>
-          )
-        )}
-      </div>
+      {onSkillChange && (
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => onSkillChange('ALL')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              selectedSkill === 'ALL'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>{isVi ? 'Tất cả kỹ năng' : 'All Skills'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSkillChange('2SKILLS')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              selectedSkill === '2SKILLS'
+                ? 'bg-blue-600 text-white shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400'
+            }`}
+          >
+            <Headphones className="w-3.5 h-3.5" />
+            <span>{isVi ? '2 Kỹ Năng (LR)' : '2 Skills (LR)'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSkillChange('4SKILLS')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              selectedSkill === '4SKILLS'
+                ? 'bg-purple-600 text-white shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{isVi ? '4 Kỹ Năng (LRSW)' : '4 Skills (LRSW)'}</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }

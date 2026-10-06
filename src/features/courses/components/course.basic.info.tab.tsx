@@ -115,18 +115,14 @@ export function CourseBasicInfoTab({
 
   useEffect(() => {
     if (!formData.author_name && (profile || user)) {
-      const userPayload = user as unknown as Record<string, unknown>
-      const fullName =
-        profile?.full_name ||
-        (userPayload?.full_name as string) ||
-        (userPayload?.name as string) ||
-        (user?.email ? user.email.split('@')[0] : '')
-      if (fullName) {
+      const currentAuthorId = user?.user_id || profile?.user_id
+      const currentFullName = profile?.full_name || user?.full_name
+      if (currentFullName && currentAuthorId) {
         onChange({
-          author_id: profile?.user_id || user?.user_id,
-          author_name: String(fullName),
+          author_id: currentAuthorId,
+          author_name: currentFullName,
           author_email: profile?.email || user?.email || '',
-          author_avatar: profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || '',
+          author_avatar: profile?.avatar_url || user?.avatar_url || '',
           author_title: (profile?.role || user?.role) === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật',
         })
       }

@@ -1,7 +1,4 @@
-/**
- * @file admin.profile.header.tsx
- * @description Component giao diện AdminProfileHeader phục vụ khu vực Quản trị Admin
- */
+// Header hồ sơ cá nhân quản trị viên với avatar và thông tin vai trò.
 
 import { Shield, GraduationCap } from 'lucide-react'
 import { R2MediaUploader } from '@/features/media/components/r2.media.uploader'
@@ -28,15 +25,15 @@ export function AdminProfileHeader({
         <div className="shrink-0 flex flex-col items-center">
           <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-indigo-600 to-violet-500 p-0.5 shadow-xl shadow-indigo-500/20">
             <div className="w-full h-full rounded-[22px] bg-white dark:bg-slate-900 overflow-hidden flex items-center justify-center">
-              {profileData.avatar ? (
+              {profileData.avatar_url ? (
                 <img
-                  src={profileData.avatar}
-                  alt={profileData.name}
+                  src={profileData.avatar_url}
+                  alt={profileData.full_name}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-                  {profileData.name.slice(0, 2).toUpperCase()}
+                  {profileData.full_name.slice(0, 2).toUpperCase()}
                 </span>
               )}
             </div>
@@ -44,7 +41,7 @@ export function AdminProfileHeader({
           <div className="mt-2 w-36">
             <R2MediaUploader
               type="image"
-              value={profileData.avatar || ''}
+              value={profileData.avatar_url || ''}
               onChange={onAvatarChange}
               folder="admin-avatars"
               label=""
@@ -56,7 +53,7 @@ export function AdminProfileHeader({
         <div className="flex-1 text-center sm:text-left space-y-2">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              {profileData.name}
+              {profileData.full_name}
             </h2>
             {profileData.role === 'ADMIN' ? (
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
@@ -72,7 +69,7 @@ export function AdminProfileHeader({
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {profileData.email} • ID: <span className="font-mono">{profileData.id}</span>
+            {profileData.email} • ID: <span className="font-mono">{profileData.user_id}</span>
           </p>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-slate-600 dark:text-slate-400">

@@ -26,6 +26,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { useAdminAttemptResultQuery } from '@/features/exams/hooks/use.exams.admin.query'
 import { examService, type AdminAttemptAnswer, type AdminAttemptQuestion } from '@/features/exams/services/exam.service'
+import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 
 interface PlacementAttemptDetailModalProps {
@@ -119,7 +120,7 @@ export function PlacementAttemptDetailModal({
         return `${header},${body}`
       }
     }
-    return trimmed
+    return resolveMediaUrl(trimmed)
   }
 
   const isAudioContent = (str?: string): boolean => {
@@ -213,11 +214,11 @@ export function PlacementAttemptDetailModal({
                   Chi Tiết Bài Test Đầu Vào
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                  {attempt?.exam_code || 'PLACEMENT'}
+                  {attempt?.exam_code}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {attempt?.exam_title || 'Đề Đánh Giá Năng Lực Đầu Vào TOEIC'}
+                {attempt?.exam_title}
               </p>
             </div>
           </div>
@@ -255,19 +256,19 @@ export function PlacementAttemptDetailModal({
                       {learner?.avatar_url ? (
                         <img
                           src={learner.avatar_url}
-                          alt={learner.full_name || 'Learner'}
+                          alt={learner.full_name}
                           className="w-full h-full rounded-2xl object-cover"
                         />
                       ) : (
-                        (learner?.full_name || learner?.email || 'HV').slice(0, 2).toUpperCase()
+                        learner?.full_name?.slice(0, 2).toUpperCase()
                       )}
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
-                        {learner?.full_name || 'Học viên ẩn danh'}
+                        {learner?.full_name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {learner?.email || '-'}
+                        {learner?.email}
                       </p>
                       {learner?.target_toeic_score ? (
                         <p className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 mt-0.5">
@@ -334,7 +335,7 @@ export function PlacementAttemptDetailModal({
                           <span>Chỉnh Sửa Điểm Số & Gửi Nhận Xét Tới Học Viên</span>
                         </div>
                         <span className="text-[11px] text-slate-400 font-medium">
-                          Học viên: {learner?.full_name || learner?.email || 'N/A'}
+                          Học viên: {learner?.full_name}
                         </span>
                       </div>
 
@@ -405,7 +406,7 @@ export function PlacementAttemptDetailModal({
                           />
                           <span className="flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Gửi email thông báo điểm mới tới học viên <strong>({learner?.email || 'email học viên'})</strong></span>
+                            <span>Gửi email thông báo điểm mới tới học viên <strong>({learner?.email})</strong></span>
                           </span>
                         </label>
 
@@ -673,7 +674,7 @@ export function PlacementAttemptDetailModal({
                         {qObj?.image_url && (
                           <div className="mt-3 max-w-md rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                             <img
-                              src={qObj.image_url}
+                              src={resolveMediaUrl(qObj.image_url)}
                               alt={`Question ${ans.question_number}`}
                               className="w-full h-auto object-cover"
                             />
@@ -686,7 +687,7 @@ export function PlacementAttemptDetailModal({
                               <Volume2 className="w-3.5 h-3.5 text-blue-500" />
                               <span>Audio câu hỏi (Listening / Speaking Prompt):</span>
                             </div>
-                            <audio controls className="w-full h-8" src={qObj.audio_url || qObj.media_url} />
+                            <audio controls className="w-full h-8" src={resolveMediaUrl(qObj.audio_url || qObj.media_url)} />
                           </div>
                         )}
 

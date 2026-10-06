@@ -51,7 +51,8 @@ export function PlacementTestsPage() {
     })
   }
 
-  const { data: allExams = [], isLoading: isLoadingExams, refetch: refetchExams } = useAdminExamsQuery()
+  const placementQueryParams = useMemo(() => ({ isSystemPlacement: 'true' }), [])
+  const { data: allExams = [], isLoading: isLoadingExams, refetch: refetchExams } = useAdminExamsQuery(placementQueryParams)
   const updateExamMutation = useUpdateExamMutation()
   const deleteExamMutation = useDeleteExamMutation()
 

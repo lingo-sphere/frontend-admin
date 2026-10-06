@@ -19,7 +19,6 @@ export interface ExamQuestionItem {
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
-  // Practice Context - dùng cho recommendation khi user làm sai
   context_id?: string | null
   [key: string]: unknown
 }
@@ -28,17 +27,13 @@ export interface RawExamQuestion {
   id?: string | null
   _id?: string | null
   skill_type?: string | null
-  skillType?: string | null
   part_number?: number | string | null
-  part?: number | string | null
   part_name?: string | null
   question_type?: string | null
   question_text?: string | null
-  questionTextEn?: string | null
   question_text_en?: string | null
   options?: Array<string | { textEn?: string; text?: string }> | null
   correct_answer?: string | null
-  correctOption?: string | null
   correct_option?: string | null
   explanation?: string | null
   explanation_vi?: string | null
@@ -47,12 +42,9 @@ export interface RawExamQuestion {
   audio_url?: string | null
   image_url?: string | null
   image_media_id?: string | null
-  imageMediaId?: string | null
-  imageUrl?: string | null
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
-  // Practice Context
   context_id?: string | null
 }
 

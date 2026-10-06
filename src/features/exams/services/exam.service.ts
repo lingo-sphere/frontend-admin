@@ -23,6 +23,7 @@ export interface PlacementAttemptItem {
   exam_title: string
   exam_code: string
   exam_type: string
+  skills_enabled?: string
   attempt_type: string
   total_scaled_score: number
   listening_scaled_score: number
@@ -182,6 +183,13 @@ export const examAdminService = {
   async getPlacementAttempts(params?: Record<string, unknown>): Promise<PaginatedPlacementAttempts> {
     return api.get<PaginatedPlacementAttempts>(
       API_CONFIG.ENDPOINTS.EXAMS.ADMIN_PLACEMENT_ATTEMPTS,
+      params
+    )
+  },
+
+  async getToeicAttempts(params?: Record<string, unknown>): Promise<PaginatedPlacementAttempts> {
+    return api.get<PaginatedPlacementAttempts>(
+      API_CONFIG.ENDPOINTS.EXAMS.ADMIN_TOEIC_ATTEMPTS,
       params
     )
   },

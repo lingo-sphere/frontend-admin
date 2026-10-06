@@ -1,6 +1,5 @@
 // Component gốc cấu hình giao diện Admin và cung cấp QueryClientProvider cùng ConfigProvider quốc tế hóa.
 import { useEffect } from 'react'
-import { BrowserRouter } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useTranslation } from 'react-i18next'
@@ -28,22 +27,21 @@ export function App() {
 
   return (
     <ConfigProvider locale={currentLanguage === 'vi' ? viVN : enUS}>
-      <BrowserRouter>
-        <AdminLayoutProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthGuard>
-              <AdminShell>
-                <PageRouter />
-              </AdminShell>
-            </AuthGuard>
-            <ToastContainer />
-            <SessionKickoutModal />
-            {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-          </QueryClientProvider>
-        </AdminLayoutProvider>
-      </BrowserRouter>
+      <AdminLayoutProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthGuard>
+            <AdminShell>
+              <PageRouter />
+            </AdminShell>
+          </AuthGuard>
+          <ToastContainer />
+          <SessionKickoutModal />
+          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+        </QueryClientProvider>
+      </AdminLayoutProvider>
     </ConfigProvider>
   )
 }
+
 
 

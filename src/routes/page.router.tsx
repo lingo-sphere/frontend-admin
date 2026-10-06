@@ -100,11 +100,11 @@ export function PageRouter() {
   const isAdmin = currentRole === 'ADMIN'
 
   if (activeNavItem === 'not-found' || activeNavItem === '404') {
-    return <NotFoundPage />
+    return <NotFoundPage key={pathname} />
   }
 
   if (activeNavItem === 'forbidden' || activeNavItem === '403') {
-    return <ForbiddenPage />
+    return <ForbiddenPage key={pathname} />
   }
 
   if (!isAdmin) {
@@ -123,101 +123,111 @@ export function PageRouter() {
       activeNavItem.startsWith('course-form:')
     ) {
       if (!hasPermission('GET', '/courses') && !hasModulePermission('COURSES')) {
-        return <ForbiddenPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'vocabulary' || activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:') || activeNavItem === 'public-decks') {
       if (!hasModulePermission('VOCABULARY')) {
-        return <ForbiddenPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (
       activeNavItem === 'toeic-tests' ||
+      activeNavItem === 'toeic-exam-create' ||
+      activeNavItem.startsWith('toeic-exam-questions:') ||
       activeNavItem === 'placement-tests' ||
       activeNavItem === 'placement-test-create' ||
       activeNavItem.startsWith('placement-test-questions:')
     ) {
       if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS') && !hasModulePermission('PRACTICE')) {
-        return <ForbiddenPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'roles') {
       if (!hasPermission('GET', '/roles') && !hasModulePermission('ROLES')) {
-        return <ForbiddenPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'permissions') {
       if (!hasPermission('GET', '/permissions') && !hasModulePermission('PERMISSIONS')) {
-        return <ForbiddenPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
-      return <ForbiddenPage />
+      return <ForbiddenPage key={pathname} />
     }
   }
 
   if (activeNavItem.startsWith('admin-user-form:') || activeNavItem.startsWith('admin-user-edit:')) {
     const userId = activeNavItem.split(':')[1]
-    return <AdminUserFormPage editUserId={userId} />
+    return <AdminUserFormPage key={pathname} editUserId={userId} />
   }
 
   if (activeNavItem.startsWith('user-profile:')) {
-    return <UserProfilePage />
+    return <UserProfilePage key={pathname} />
   }
 
   if (activeNavItem.startsWith('admin-profile:')) {
-    return <AdminProfilePage />
+    return <AdminProfilePage key={pathname} />
   }
 
   if (activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:')) {
     const wordId = activeNavItem.split(':')[1]
-    return <VocabularyFormPage editWordId={wordId} />
+    return <VocabularyFormPage key={pathname} editWordId={wordId} />
   }
 
   if (activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseFormPage editCourseId={courseId} />
+    return <CourseFormPage key={pathname} editCourseId={courseId} />
   }
 
   if (activeNavItem.startsWith('course-scores:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseScoresPage courseId={courseId} />
+    return <CourseScoresPage key={pathname} courseId={courseId} />
   }
 
   if (activeNavItem.startsWith('course-submissions:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseSubmissionsPage courseId={courseId} />
+    return <CourseSubmissionsPage key={pathname} courseId={courseId} />
   }
 
-  if (activeNavItem === 'course-exam-create' || activeNavItem === 'placement-test-create') {
-    return <CourseExamQuestionsPage examId="new" />
+  if (
+    activeNavItem === 'course-exam-create' ||
+    activeNavItem === 'placement-test-create' ||
+    activeNavItem === 'toeic-exam-create'
+  ) {
+    return <CourseExamQuestionsPage key={pathname} examId="new" />
   }
 
-  if (activeNavItem.startsWith('course-exam-questions:') || activeNavItem.startsWith('placement-test-questions:')) {
+  if (
+    activeNavItem.startsWith('course-exam-questions:') ||
+    activeNavItem.startsWith('placement-test-questions:') ||
+    activeNavItem.startsWith('toeic-exam-questions:')
+  ) {
     const examId = activeNavItem.split(':')[1]
-    return <CourseExamQuestionsPage examId={examId} />
+    return <CourseExamQuestionsPage key={pathname} examId={examId} />
   }
 
   if (activeNavItem.startsWith('learner-progress:')) {
     const parts = activeNavItem.split(':')
     const courseId = parts[1]
     const userId = parts[2]
-    return <LearnerProgressDetailPage courseId={courseId} userId={userId} />
+    return <LearnerProgressDetailPage key={pathname} courseId={courseId} userId={userId} />
   }
 
   if (activeNavItem.startsWith('learner-reminders:')) {
     const parts = activeNavItem.split(':')
     const courseId = parts[1]
     const userId = parts[2]
-    return <LearnerReminderHistoryPage courseId={courseId} userId={userId} />
+    return <LearnerReminderHistoryPage key={pathname} courseId={courseId} userId={userId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || NotFoundPage
 
-  return <PageComponent />
+  return <PageComponent key={pathname} />
 }

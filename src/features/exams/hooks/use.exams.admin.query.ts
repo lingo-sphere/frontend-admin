@@ -77,6 +77,16 @@ export function useAdminPlacementAttemptsQuery(params?: Record<string, unknown>,
   })
 }
 
+export function useAdminToeicAttemptsQuery(params?: Record<string, unknown>, enabled = true) {
+  return useQuery({
+    queryKey: examAdminKeys.toeicAttempts(params),
+    queryFn: () => examAdminService.getToeicAttempts(params),
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 0,
+  })
+}
+
 export function useAdminAttemptResultQuery(attemptId: string, enabled = true) {
   return useQuery({
     queryKey: examAdminKeys.attemptResult(attemptId),

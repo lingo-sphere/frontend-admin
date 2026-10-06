@@ -57,10 +57,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const [formData, setFormData] = useState<CourseFormData>(() => {
     const profile = authStore.getState().profile
     const user = authStore.getState().user
-    const resolvedName =
-      profile?.full_name ||
-      user?.full_name ||
-      (user?.email ? user.email.split('@')[0] : '')
+    const resolvedName = profile?.full_name || user?.full_name || ''
     const resolvedEmail = profile?.email || user?.email || ''
     const resolvedAvatar = profile?.avatar_url || user?.avatar_url || ''
     const resolvedRole = profile?.role || user?.role
@@ -80,7 +77,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       document_url: '',
       document_name: '',
       is_published: true,
-      author_id: profile?.user_id || user?.user_id,
+      author_id: user?.user_id || profile?.user_id || '',
       author_name: resolvedName,
       author_email: resolvedEmail,
       author_avatar: resolvedAvatar,
@@ -106,25 +103,18 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   useEffect(() => {
     if (!isEditMode && (currentProfile || currentUser)) {
       setFormData((prev) => {
-        if (!prev.author_name || prev.author_name === 'Đội ngũ Giảng viên LingoSphere') {
-          const resolvedName =
-            currentProfile?.full_name ||
-            currentUser?.full_name ||
-            (currentUser?.email ? currentUser.email.split('@')[0] : prev.author_name)
-          const resolvedEmail =
-            currentProfile?.email || currentUser?.email || prev.author_email
-          const resolvedAvatar =
-            currentProfile?.avatar_url ||
-            currentUser?.avatar_url ||
-            prev.author_avatar
+        if (!prev.author_name) {
+          const resolvedName = currentProfile?.full_name || currentUser?.full_name || ''
+          const resolvedEmail = currentProfile?.email || currentUser?.email || ''
+          const resolvedAvatar = currentProfile?.avatar_url || currentUser?.avatar_url || ''
           const resolvedRole = currentProfile?.role || currentUser?.role
           const resolvedTitle =
             resolvedRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
-          const resolvedBio = currentProfile?.bio || prev.author_bio || ''
+          const resolvedBio = currentProfile?.bio || ''
 
           return {
             ...prev,
-            author_id: currentProfile?.user_id || currentUser?.user_id || prev.author_id,
+            author_id: currentUser?.user_id || currentProfile?.user_id || '',
             author_name: resolvedName,
             author_email: resolvedEmail,
             author_avatar: resolvedAvatar,
@@ -357,11 +347,11 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         document_url: finalCourseInfo.document_url || formData.document_url || '',
         document_name: finalCourseInfo.document_name || formData.document_name || '',
         is_published: finalCourseInfo.is_published ?? formData.is_published,
-        author_id: finalCourseInfo.author_id || formData.author_id || currentUser?.user_id,
-        author_name: finalCourseInfo.author_name || formData.author_name || 'Đội ngũ Giảng viên LingoSphere',
-        author_email: finalCourseInfo.author_email || formData.author_email || currentUser?.email,
+        author_id: finalCourseInfo.author_id || formData.author_id || currentUser?.user_id || '',
+        author_name: finalCourseInfo.author_name || formData.author_name || currentUser?.full_name || currentProfile?.full_name || '',
+        author_email: finalCourseInfo.author_email || formData.author_email || currentUser?.email || '',
         author_avatar: finalCourseInfo.author_avatar || formData.author_avatar || '',
-        author_title: finalCourseInfo.author_title || formData.author_title || 'Giảng viên chuyên môn',
+        author_title: finalCourseInfo.author_title || formData.author_title || ((currentUser?.role || currentProfile?.role) === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'),
         author_bio: finalCourseInfo.author_bio || formData.author_bio || '',
         pre_test_exam_id: finalCourseInfo.pre_test_exam_id || formData.pre_test_exam_id || undefined,
         final_test_exam_id: finalCourseInfo.final_test_exam_id || formData.final_test_exam_id || undefined,

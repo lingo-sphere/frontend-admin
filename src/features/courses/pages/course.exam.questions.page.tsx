@@ -1,7 +1,7 @@
 // Trang điều phối tải dữ liệu và studio biên soạn đề thi bài kiểm tra khóa học với TanStack Query.
 import { useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Loader2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
@@ -188,14 +188,34 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
     refetchOnReconnect: false,
   })
 
+  const { pathname } = useLocation()
+  const isPlacementContext = Boolean(
+    pathname.includes('/placement-tests') ||
+    exam?.is_system_placement ||
+    exam?.type === 'DIAGNOSTIC_TEST'
+  )
+  const isCourseContext = Boolean(
+    pathname.startsWith('/course-exams') ||
+    exam?.course_id ||
+    String(examId).startsWith('course_final_') ||
+    String(examId).startsWith('mod_challenge_')
+  )
+  const examContext: 'TOEIC' | 'PLACEMENT' | 'COURSE' = isPlacementContext
+    ? 'PLACEMENT'
+    : isCourseContext
+    ? 'COURSE'
+    : 'TOEIC'
+
   const handleBack = useCallback(() => {
     storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
-    if (exam?.is_system_placement) {
+    if (examContext === 'PLACEMENT') {
       navigate('/practice/placement-tests')
+    } else if (examContext === 'TOEIC') {
+      navigate('/practice/exams')
     } else {
       navigate('/course-exams')
     }
-  }, [navigate, exam?.is_system_placement])
+  }, [navigate, examContext])
 
   if (isLoading && !exam) {
     return (
@@ -244,6 +264,7 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       existingExams={existingExams}
       isVi={isVi}
       onBack={handleBack}
+      examContext={examContext}
     />
   )
 }

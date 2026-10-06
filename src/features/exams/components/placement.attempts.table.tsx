@@ -117,7 +117,7 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
                   className="w-full h-full rounded-xl object-cover"
                 />
               ) : (
-                (item.learner_name || item.learner_email || 'HV').slice(0, 2).toUpperCase()
+                item.learner_name.slice(0, 2).toUpperCase()
               )}
             </div>
             <div>
@@ -226,7 +226,7 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
         render: (item) => (
           <button
             type="button"
-            onClick={() => setSelectedAttemptId(item._id || item.attempt_id)}
+            onClick={() => setSelectedAttemptId(item._id)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-2xs"
           >
             <Eye className="w-3.5 h-3.5" />
@@ -308,7 +308,7 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
         isLoading={isLoading}
         columns={columns}
         data={items}
-        rowKey={(item) => item._id || item.attempt_id}
+        rowKey={(item) => item._id}
         sortKey={sortKey}
         sortOrder={sortOrder}
         onSortChange={(k, o) => {

@@ -18,6 +18,7 @@ export interface CourseExamQuestionsEditorProps {
   existingExams: ToeicExamItem[]
   isVi: boolean
   onBack: () => void
+  examContext?: 'TOEIC' | 'PLACEMENT' | 'COURSE'
 }
 
 export function CourseExamQuestionsEditor({
@@ -26,6 +27,7 @@ export function CourseExamQuestionsEditor({
   existingExams,
   isVi,
   onBack,
+  examContext,
 }: CourseExamQuestionsEditorProps) {
   const [formTitle, setFormTitle] = useState<string>(initialExam.title || '')
   const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>(
@@ -53,33 +55,42 @@ export function CourseExamQuestionsEditor({
     })
   }, [])
 
-  const isSystemPlacement = Boolean(
-    initialExam.is_system_placement || initialExam.type === 'DIAGNOSTIC_TEST' || !initialExam.course_id
+  const isPlacement = Boolean(
+    examContext === 'PLACEMENT' ||
+    initialExam.is_system_placement ||
+    initialExam.type === 'DIAGNOSTIC_TEST'
   )
+  const isToeic = Boolean(
+    examContext === 'TOEIC' ||
+    (!isPlacement && !initialExam.course_id && !initialExam.id?.startsWith('course_final_') && !initialExam.id?.startsWith('mod_challenge_'))
+  )
+  const isSystemPlacement = isPlacement
 
   const currentEditingIds = useMemo(() => {
     return new Set([initialExam._id, initialExam.id, initialExam.code].filter(Boolean) as string[])
   }, [initialExam])
 
   const published2SkillsExam = useMemo(() => {
+    if (!isSystemPlacement) return undefined
     return existingExams.find(
       (e) =>
-        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST') &&
         (e.placement_type === '2SKILLS' || e.skills_enabled === 'LR') &&
         e.is_published &&
         (isCreateMode || (!currentEditingIds.has(e._id ?? '') && !currentEditingIds.has(e.id ?? '') && (!e.code || !currentEditingIds.has(e.code))))
     )
-  }, [existingExams, currentEditingIds, isCreateMode])
+  }, [existingExams, currentEditingIds, isCreateMode, isSystemPlacement])
 
   const published4SkillsExam = useMemo(() => {
+    if (!isSystemPlacement) return undefined
     return existingExams.find(
       (e) =>
-        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST') &&
         (e.placement_type === '4SKILLS' || e.skills_enabled === 'ALL' || e.skills_enabled === 'FULL') &&
         e.is_published &&
         (isCreateMode || (!currentEditingIds.has(e._id ?? '') && !currentEditingIds.has(e.id ?? '') && (!e.code || !currentEditingIds.has(e.code))))
     )
-  }, [existingExams, currentEditingIds, isCreateMode])
+  }, [existingExams, currentEditingIds, isCreateMode, isSystemPlacement])
 
   const currentActiveConflict = isSystemPlacement
     ? formPlacementSkills === '2SKILLS'
@@ -263,6 +274,7 @@ export function CourseExamQuestionsEditor({
             setIsConfigExpanded={handleSetConfigExpanded}
             currentActiveConflict={currentActiveConflict}
             isSystemPlacement={isSystemPlacement}
+            isToeic={isToeic}
             onCancelExam={handleRequestCancel}
             isCanceling={isCanceling}
           />
@@ -273,6 +285,7 @@ export function CourseExamQuestionsEditor({
               isVi={isVi}
               is4Skills={is4Skills}
               isSystemPlacement={isSystemPlacement}
+              isToeic={isToeic}
               questionsCount={questions.length}
               searchQuery={searchQuery}
               uploadingGlobalAudio={uploadingGlobalAudio}

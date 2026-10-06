@@ -1,7 +1,4 @@
-/**
- * @file admin.profile.info.form.tsx
- * @description Component giao diện AdminProfileInfoForm phục vụ khu vực Quản trị Admin
- */
+// Form chỉnh sửa thông tin hồ sơ cá nhân quản trị viên.
 
 import { User, Mail, Phone, FileText } from 'lucide-react'
 

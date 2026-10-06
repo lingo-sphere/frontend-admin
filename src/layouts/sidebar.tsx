@@ -1,6 +1,6 @@
 // Thanh điều hướng thanh bên Admin hỗ trợ thu gọn và phân quyền truy cập.
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { PanelLeftClose, Shield } from 'lucide-react'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { pathToNavItem, navItemToPath, getEffectiveNavId } from '@/routes/navigation'
@@ -46,9 +46,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       if (targetParentId) break
     }
 
-    setExpandedItem(targetParentId)
-    navigate(navItemToPath(id))
-    setMobileSidebarOpen(false)
+    if (targetParentId) {
+      setExpandedItem((prev) => (prev === targetParentId ? prev : targetParentId))
+    }
+    if (mobile) {
+      setMobileSidebarOpen(false)
+    }
   }
 
   const toggleExpand = (id: string) => {
@@ -59,12 +62,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     for (const group of navGroups) {
       for (const item of group.items) {
         if (item.children && (item.id === activeNavItem || item.children.some((c) => c.id === activeNavItem))) {
-          setExpandedItem(item.id)
+          setExpandedItem((prev) => (prev === item.id ? prev : item.id))
           return
         }
       }
     }
-    setExpandedItem(null)
+    setExpandedItem((prev) => (prev === null ? prev : null))
   }, [activeNavItem])
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
@@ -199,9 +202,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const content = (
     <div className="flex flex-col h-full select-none justify-between overflow-hidden">
       <div className="flex flex-col flex-1 min-h-0">
-        <button
+        <Link
+          to="/dashboard"
           onClick={() => handleNavigate('dashboard')}
-          type="button"
           title={isVietnamese ? 'Về trang Tổng quan' : 'Go to Dashboard'}
           className={`w-full shrink-0 flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-all ${
             sidebarCollapsed && !mobile ? 'justify-center' : ''
@@ -223,7 +226,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
               </div>
             </div>
           )}
-        </button>
+        </Link>
 
         <nav className="my-2 flex-1 sidebar-scroll space-y-2 pr-0.5 overflow-y-auto">
           {localizedGroups.map((group, groupIdx) => (

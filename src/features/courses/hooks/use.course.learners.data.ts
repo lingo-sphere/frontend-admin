@@ -60,26 +60,26 @@ export function useCourseLearnersData() {
 
         if (loadedCourses.length === 0) {
           const allRes = await courseService.getAllCourses({ pageSize: 100 })
-          const rawList: Course[] = Array.isArray(allRes) ? allRes : allRes?.result || []
+          const rawList: Course[] = allRes.result
           loadedCourses = rawList
             .filter((c: Course) => c.author_id === currentUserId)
             .map((c: Course) => ({
-              id: c._id || '',
-              title: c.title || '',
-              thumbnail_url: c.thumbnail_url || '',
-              author_id: c.author_id || '',
-              students_count: c.students_count || 0,
+              id: c._id,
+              title: c.title,
+              thumbnail_url: c.thumbnail_url,
+              author_id: c.author_id,
+              students_count: c.students_count,
             }))
         }
       } else {
         const allRes = await courseService.getAllCourses({ pageSize: 100 })
-        const rawList: Course[] = Array.isArray(allRes) ? allRes : allRes?.result || []
+        const rawList: Course[] = allRes.result
         loadedCourses = rawList.map((c: Course) => ({
-          id: c._id || '',
-          title: c.title || '',
-          thumbnail_url: c.thumbnail_url || '',
-          author_id: c.author_id || '',
-          students_count: c.students_count || 0,
+          id: c._id,
+          title: c.title,
+          thumbnail_url: c.thumbnail_url,
+          author_id: c.author_id,
+          students_count: c.students_count,
         }))
       }
 

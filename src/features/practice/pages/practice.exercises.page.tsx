@@ -1,5 +1,5 @@
 // Trang quản trị danh sách và cấu hình các bộ bài tập luyện thi trong hệ thống Admin
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Award } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
@@ -17,8 +17,7 @@ export function PracticeExercisesPage() {
   const isVi = i18n.language === 'vi'
 
   const { data: serverSets = [], isLoading, refetch } = usePracticeSetsQuery()
-  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
-  const [practiceSets, setPracticeSets] = useState<PracticeSet[]>([])
+  const [localSets, setLocalSets] = useState<PracticeSet[] | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
@@ -32,19 +31,25 @@ export function PracticeExercisesPage() {
   const [newTotalQuestions, setNewTotalQuestions] = useState(30)
   const [newDuration, setNewDuration] = useState(30)
 
-  useEffect(() => {
-    setPracticeSets(serverSets)
-  }, [serverSets])
+  const practiceSets = useMemo(() => {
+    return localSets ?? serverSets
+  }, [localSets, serverSets])
+
+  const handleRefresh = async () => {
+    setLocalSets(null)
+    await refetch()
+  }
+  const { isReloading: isRefreshing, trigger: handleRefreshTrigger } = useReloadAnimation(handleRefresh)
 
   const handleToggleStatus = (id: string, current: boolean) => {
-    setPracticeSets((prev) =>
-      prev.map((s) => (s._id === id ? { ...s, is_active: !current } : s))
+    setLocalSets(
+      practiceSets.map((s) => (s._id === id ? { ...s, is_active: !current } : s))
     )
     toast.success('Đã cập nhật trạng thái bộ bài tập')
   }
 
   const handleDelete = (id: string) => {
-    setPracticeSets((prev) => prev.filter((s) => s._id !== id))
+    setLocalSets(practiceSets.filter((s) => s._id !== id))
     toast.success('Đã xóa bộ bài tập luyện thi thành công!')
   }
 
@@ -62,7 +67,7 @@ export function PracticeExercisesPage() {
       duration_minutes: newDuration,
       is_active: true,
     }
-    setPracticeSets([newSet, ...practiceSets])
+    setLocalSets([newSet, ...practiceSets])
     toast.success('Tạo bộ bài tập luyện thi mới thành công!')
     setShowAddModal(false)
     setNewTitle('')
@@ -103,7 +108,7 @@ export function PracticeExercisesPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => handleRefresh()}
+            onClick={() => handleRefreshTrigger()}
             disabled={isRefreshing}
             className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer disabled:opacity-60"
           >

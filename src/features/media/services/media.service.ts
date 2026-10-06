@@ -12,6 +12,7 @@ import {
   type PresignedUploadResponse,
   type TtsGenerateResponse,
 } from '@/features/media/schemas/media.schema'
+import { normalizeToRelativePath } from '@/lib/media.utils'
 
 export type { StorageQuota, MediaUploadResponse, PresignedUploadResponse, TtsGenerateResponse }
 
@@ -147,14 +148,16 @@ export const mediaAdminService = {
       xhr.send(file)
     })
 
+    const cleanStorageKey = normalizeToRelativePath(presigned.storage_key || presigned.file_url)
+
     return {
-      id: presigned.storage_key,
+      id: cleanStorageKey,
       filename: file.name,
       file_name: file.name,
-      file_url: presigned.file_url,
-      url: presigned.file_url,
-      public_url: presigned.file_url,
-      storage_key: presigned.storage_key,
+      file_url: cleanStorageKey,
+      url: cleanStorageKey,
+      public_url: cleanStorageKey,
+      storage_key: cleanStorageKey,
       mime_type: mimeType,
       file_size_bytes: file.size,
     }

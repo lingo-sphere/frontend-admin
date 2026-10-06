@@ -7,6 +7,7 @@ import { NumberInput } from '@/components/number.input'
 import { Image } from 'antd'
 import { ContextSelector } from '@/components/context.selector'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 const SKILL_OPTIONS_2: SelectOption[] = [
   { value: 'LISTENING', label: 'Nghe (Listening)' },
@@ -170,8 +171,10 @@ export function ExamQuestionCard({
           return /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(url) || url.includes('image')
         }
 
-        const audioSrc = q.audio_url || (isAudioUrl(q.media_url) ? q.media_url : undefined)
-        const imageSrc = q.image_url || (isImageUrl(q.media_url) ? q.media_url : undefined)
+        const rawAudio = q.audio_url || (isAudioUrl(q.media_url) ? q.media_url : undefined)
+        const rawImage = q.image_url || (isImageUrl(q.media_url) ? q.media_url : undefined)
+        const audioSrc = rawAudio ? resolveMediaUrl(rawAudio) : undefined
+        const imageSrc = rawImage ? resolveMediaUrl(rawImage) : undefined
         const hasAudio = Boolean(audioSrc)
         const hasImage = Boolean(imageSrc)
 

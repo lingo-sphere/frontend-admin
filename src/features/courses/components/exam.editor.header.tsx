@@ -16,6 +16,7 @@ interface ExamEditorHeaderProps {
   isVi: boolean
   is4Skills: boolean
   isSystemPlacement: boolean
+  isToeic?: boolean
   isLessonMode?: boolean
   questionsCount: number
   searchQuery: string
@@ -32,6 +33,7 @@ export function ExamEditorHeader({
   isVi,
   is4Skills,
   isSystemPlacement,
+  isToeic = false,
   isLessonMode = false,
   questionsCount,
   searchQuery,
@@ -65,7 +67,11 @@ export function ExamEditorHeader({
                 </span>
               ) : (
                 <>
-                  {isSystemPlacement ? (
+                  {isToeic ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      {isVi ? 'Đề thi TOEIC' : 'TOEIC Exam'}
+                    </span>
+                  ) : isSystemPlacement ? (
                     <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                       {isVi ? 'Đầu vào hệ thống' : 'System Placement'}
                     </span>

@@ -6,19 +6,11 @@ import type { ExamQuestionItem, RawExamQuestion } from '@/features/courses/types
 export function normalizeQuestions(
   rawList: Array<ExamQuestionItem | RawExamQuestion | Record<string, unknown>>
 ): ExamQuestionItem[] {
-  return rawList.map((q, idx) => {
+  return rawList.map((q) => {
     const raw = q as RawExamQuestion
-    const rawPart = raw.part_number ?? raw.part
-    const isSpk =
-      rawPart === 'speaking' ||
-      raw.question_type === 'SPEAKING' ||
-      raw.skill_type === 'SPEAKING' ||
-      raw.skillType === 'SPEAKING'
-    const isWrt =
-      rawPart === 'writing' ||
-      raw.question_type === 'WRITING' ||
-      raw.skill_type === 'WRITING' ||
-      raw.skillType === 'WRITING'
+    const rawPart = raw.part_number
+    const isSpk = rawPart === 'speaking' || raw.question_type === 'SPEAKING' || raw.skill_type === 'SPEAKING'
+    const isWrt = rawPart === 'writing' || raw.question_type === 'WRITING' || raw.skill_type === 'WRITING'
     const numPart = typeof rawPart === 'number' ? rawPart : parseInt(String(rawPart), 10)
     const hasExplicitPart = !isNaN(numPart) && numPart >= 1 && numPart <= 7
     const rawMediaIsImage = Boolean(raw.media_url && /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(raw.media_url))
@@ -26,7 +18,6 @@ export function normalizeQuestions(
 
     const isListen =
       raw.skill_type === 'LISTENING' ||
-      raw.skillType === 'LISTENING' ||
       (!isSpk && !isWrt && Boolean(raw.audio_url || rawMediaIsAudio)) ||
       (hasExplicitPart && numPart <= 4)
 
@@ -39,30 +30,23 @@ export function normalizeQuestions(
           : 'READING'
 
     return {
-      id: raw.id || raw._id || `q_${idx}`,
+      id: raw.id || raw._id || '',
       skill_type: derivedSkill,
       part_number: isSpk ? 'speaking' : isWrt ? 'writing' : hasExplicitPart ? numPart : undefined,
       part_name: raw.part_name || '',
       question_type: isSpk ? 'SPEAKING' : isWrt ? 'WRITING' : 'MULTIPLE_CHOICE',
-      question_text: raw.question_text || raw.questionTextEn || raw.question_text_en || '',
+      question_text: raw.question_text || raw.question_text_en || '',
       options: Array.isArray(raw.options)
         ? raw.options.map((opt) => (typeof opt === 'string' ? opt : opt.textEn || opt.text || ''))
-        : ['', '', '', ''],
-      correct_answer: (
-        raw.correct_answer ||
-        raw.correctOption ||
-        raw.correct_option ||
-        'A'
-      )
-        .toString()
-        .toUpperCase(),
+        : [],
+      correct_answer: (raw.correct_answer || raw.correct_option || '').toString().toUpperCase(),
       explanation: raw.explanation || raw.explanation_vi || raw.explanation_en || '',
-      media_url: raw.audio_url || (rawMediaIsAudio ? raw.media_url : '') || '',
-      image_url: raw.image_url || (rawMediaIsImage ? raw.media_url : '') || raw.image_media_id || raw.imageMediaId || raw.imageUrl || '',
+      media_url: raw.media_url || raw.audio_url || '',
+      image_url: raw.image_url || raw.image_media_id || '',
       prep_time_seconds: raw.prep_time_seconds,
       response_time_seconds: raw.response_time_seconds,
       min_words: raw.min_words,
-      context_id: (raw as any).context_id || null,
+      context_id: raw.context_id || null,
     }
   })
 }
@@ -76,7 +60,7 @@ export function getQuestionsSnapshot(qs: ExamQuestionItem[], audio: string): str
       question_type: q.question_type || 'MULTIPLE_CHOICE',
       question_text: (q.question_text || '').trim(),
       options: Array.isArray(q.options) ? q.options.map((opt) => (opt || '').trim()) : [],
-      correct_answer: (q.correct_answer || 'A').toString().trim().toUpperCase(),
+      correct_answer: (q.correct_answer || '').toString().trim().toUpperCase(),
       explanation: (q.explanation || '').trim(),
       media_url: (q.media_url || q.audio_url || '').trim(),
       image_url: (q.image_url || '').trim(),

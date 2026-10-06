@@ -43,9 +43,9 @@ export function LearnerSubmissionCard({
             </div>
             <div>
               <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {sub.user_name || 'Học viên'}
+                {sub.user_name}
               </h4>
-              <p className="text-xs text-slate-400">{sub.user_email || 'Email chưa cập nhật'}</p>
+              <p className="text-xs text-slate-400">{sub.user_email}</p>
             </div>
           </div>
 

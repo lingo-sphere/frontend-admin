@@ -58,6 +58,11 @@ export function navItemToPath(navItem: string): string {
   if (navItem === 'practice-speaking') return '/practice/speaking'
   if (navItem === 'practice-writing') return '/practice/writing'
   if (navItem === 'toeic-tests') return '/practice/exams'
+  if (navItem === 'toeic-exam-create') return '/practice/exams/create'
+  if (navItem.startsWith('toeic-exam-questions:')) {
+    const id = navItem.split(':')[1]
+    return id === 'new' ? '/practice/exams/create' : `/practice/exams/${id}/questions`
+  }
   if (navItem === 'placement-tests') return '/practice/placement-tests'
   if (navItem === 'placement-test-create') return '/practice/placement-tests/create'
   if (navItem.startsWith('placement-test-questions:')) {
@@ -86,92 +91,98 @@ export function navItemToPath(navItem: string): string {
 }
 
 export function pathToNavItem(pathname: string): string {
-  if (pathname === '/' || pathname === '/dashboard') return 'dashboard'
-  if (pathname === '/users') return 'users-list'
-  if (pathname.startsWith('/users/')) {
-    return `user-profile:${pathname.replace('/users/', '')}`
+  const cleanPath = pathname ? pathname.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/' : '/'
+  if (cleanPath === '/' || cleanPath === '/dashboard') return 'dashboard'
+  if (cleanPath === '/users') return 'users-list'
+  if (cleanPath.startsWith('/users/')) {
+    return `user-profile:${cleanPath.replace('/users/', '')}`
   }
-  if (pathname === '/admins') return 'admins'
-  if (pathname === '/admins/create') return 'admin-user-create'
-  if (pathname.startsWith('/admins/') && pathname.endsWith('/edit')) {
-    const id = pathname.replace('/admins/', '').replace('/edit', '')
+  if (cleanPath === '/admins') return 'admins'
+  if (cleanPath === '/admins/create') return 'admin-user-create'
+  if (cleanPath.startsWith('/admins/') && cleanPath.endsWith('/edit')) {
+    const id = cleanPath.replace('/admins/', '').replace('/edit', '')
     return `admin-user-edit:${id}`
   }
-  if (pathname === '/courses') return 'courses-list'
-  if (pathname === '/courses/list') return 'courses-list'
-  if (pathname === '/courses/learners' || pathname === '/course-learners') return 'course-learners'
-  if (pathname.startsWith('/course-learners/') && pathname.includes('/students/')) {
-    const raw = pathname.replace('/course-learners/', '')
+  if (cleanPath === '/courses') return 'courses-list'
+  if (cleanPath === '/courses/list') return 'courses-list'
+  if (cleanPath === '/courses/learners' || cleanPath === '/course-learners') return 'course-learners'
+  if (cleanPath.startsWith('/course-learners/') && cleanPath.includes('/students/')) {
+    const raw = cleanPath.replace('/course-learners/', '')
     const parts = raw.split('/students/')
     const courseId = parts[0]
     const userId = parts[1]
     return `learner-progress:${courseId}:${userId}`
   }
-  if (pathname.startsWith('/course-learners/') && pathname.includes('/reminders/')) {
-    const raw = pathname.replace('/course-learners/', '')
+  if (cleanPath.startsWith('/course-learners/') && cleanPath.includes('/reminders/')) {
+    const raw = cleanPath.replace('/course-learners/', '')
     const parts = raw.split('/reminders/')
     const courseId = parts[0]
     const userId = parts[1]
     return `learner-reminders:${courseId}:${userId}`
   }
-  if (pathname === '/courses/exams' || pathname === '/course-exams') return 'course-exams'
-  if (pathname === '/course-exams/create') return 'course-exam-create'
-  if (pathname.startsWith('/course-exams/') && pathname.endsWith('/questions')) {
-    const id = pathname.replace('/course-exams/', '').replace('/questions', '')
+  if (cleanPath === '/courses/exams' || cleanPath === '/course-exams') return 'course-exams'
+  if (cleanPath === '/course-exams/create') return 'course-exam-create'
+  if (cleanPath.startsWith('/course-exams/') && cleanPath.endsWith('/questions')) {
+    const id = cleanPath.replace('/course-exams/', '').replace('/questions', '')
     return `course-exam-questions:${id}`
   }
-  if (pathname === '/courses/create') return 'course-create'
-  if (pathname.startsWith('/courses/') && pathname.endsWith('/scores')) {
-    const id = pathname.replace('/courses/', '').replace('/scores', '')
+  if (cleanPath === '/courses/create') return 'course-create'
+  if (cleanPath.startsWith('/courses/') && cleanPath.endsWith('/scores')) {
+    const id = cleanPath.replace('/courses/', '').replace('/scores', '')
     return `course-scores:${id}`
   }
-  if (pathname.startsWith('/courses/') && pathname.endsWith('/submissions')) {
-    const id = pathname.replace('/courses/', '').replace('/submissions', '')
+  if (cleanPath.startsWith('/courses/') && cleanPath.endsWith('/submissions')) {
+    const id = cleanPath.replace('/courses/', '').replace('/submissions', '')
     return `course-submissions:${id}`
   }
-  if (pathname.startsWith('/courses/') && pathname.endsWith('/edit')) {
-    const id = pathname.replace('/courses/', '').replace('/edit', '')
+  if (cleanPath.startsWith('/courses/') && cleanPath.endsWith('/edit')) {
+    const id = cleanPath.replace('/courses/', '').replace('/edit', '')
     return `course-edit:${id}`
   }
-  if (pathname === '/vocabulary') return 'vocabulary'
-  if (pathname === '/vocabulary/create') return 'vocab-create'
-  if (pathname.startsWith('/vocabulary/') && pathname.endsWith('/edit')) {
-    const id = pathname.replace('/vocabulary/', '').replace('/edit', '')
+  if (cleanPath === '/vocabulary') return 'vocabulary'
+  if (cleanPath === '/vocabulary/create') return 'vocab-create'
+  if (cleanPath.startsWith('/vocabulary/') && cleanPath.endsWith('/edit')) {
+    const id = cleanPath.replace('/vocabulary/', '').replace('/edit', '')
     return `vocab-edit:${id}`
   }
-  if (pathname === '/vocabulary/import') return 'vocabulary-import'
-  if (pathname === '/practice' || pathname === '/practice/exercises') return 'practice-exercises'
-  if (pathname === '/practice/listening') return 'practice-listening'
-  if (pathname === '/practice/speaking') return 'practice-speaking'
-  if (pathname === '/practice/writing') return 'practice-writing'
-  if (pathname === '/practice/exams') return 'toeic-tests'
-  if (pathname === '/practice/placement-tests/create' || pathname === '/placement-tests/create') return 'placement-test-create'
-  if (pathname.startsWith('/practice/placement-tests/') && pathname.endsWith('/questions')) {
-    const id = pathname.replace('/practice/placement-tests/', '').replace('/questions', '')
+  if (cleanPath === '/vocabulary/import') return 'vocabulary-import'
+  if (cleanPath === '/practice' || cleanPath === '/practice/exercises') return 'practice-exercises'
+  if (cleanPath === '/practice/listening') return 'practice-listening'
+  if (cleanPath === '/practice/speaking') return 'practice-speaking'
+  if (cleanPath === '/practice/writing') return 'practice-writing'
+  if (cleanPath === '/practice/exams') return 'toeic-tests'
+  if (cleanPath === '/practice/exams/create') return 'toeic-exam-create'
+  if (cleanPath.startsWith('/practice/exams/') && cleanPath.endsWith('/questions')) {
+    const id = cleanPath.replace('/practice/exams/', '').replace('/questions', '')
+    return `toeic-exam-questions:${id}`
+  }
+  if (cleanPath === '/practice/placement-tests/create' || cleanPath === '/placement-tests/create') return 'placement-test-create'
+  if (cleanPath.startsWith('/practice/placement-tests/') && cleanPath.endsWith('/questions')) {
+    const id = cleanPath.replace('/practice/placement-tests/', '').replace('/questions', '')
     return `placement-test-questions:${id}`
   }
-  if (pathname.startsWith('/placement-tests/') && pathname.endsWith('/questions')) {
-    const id = pathname.replace('/placement-tests/', '').replace('/questions', '')
+  if (cleanPath.startsWith('/placement-tests/') && cleanPath.endsWith('/questions')) {
+    const id = cleanPath.replace('/placement-tests/', '').replace('/questions', '')
     return `placement-test-questions:${id}`
   }
-  if (pathname === '/practice/placement-tests' || pathname === '/placement-tests') return 'placement-tests'
-  if (pathname === '/community') return 'community'
-  if (pathname === '/public-decks') return 'public-decks'
-  if (pathname === '/progress') return 'progress'
-  if (pathname === '/analytics/posthog' || pathname === '/posthog') return 'analytics-posthog'
-  if (pathname === '/monitoring/betterstack' || pathname === '/betterstack') return 'monitoring-betterstack'
-  if (pathname === '/notifications') return 'notifications'
-  if (pathname === '/settings' || pathname === '/settings/plans') return 'settings-plans'
-  if (pathname === '/settings/ai' || pathname === '/ai-management' || pathname === '/ai') return 'settings-ai'
-  if (pathname === '/settings/system') return 'settings-system'
-  if (pathname === '/roles') return 'roles'
-  if (pathname === '/permissions') return 'permissions'
-  if (pathname === '/profile') return 'admin-profile'
-  if (pathname.startsWith('/profile/')) {
-    return `admin-profile:${pathname.replace('/profile/', '')}`
+  if (cleanPath === '/practice/placement-tests' || cleanPath === '/placement-tests') return 'placement-tests'
+  if (cleanPath === '/community') return 'community'
+  if (cleanPath === '/public-decks') return 'public-decks'
+  if (cleanPath === '/progress') return 'progress'
+  if (cleanPath === '/analytics/posthog' || cleanPath === '/posthog') return 'analytics-posthog'
+  if (cleanPath === '/monitoring-betterstack' || cleanPath === '/betterstack') return 'monitoring-betterstack'
+  if (cleanPath === '/notifications') return 'notifications'
+  if (cleanPath === '/settings' || cleanPath === '/settings/plans') return 'settings-plans'
+  if (cleanPath === '/settings/ai' || cleanPath === '/ai-management' || cleanPath === '/ai') return 'settings-ai'
+  if (cleanPath === '/settings/system') return 'settings-system'
+  if (cleanPath === '/roles') return 'roles'
+  if (cleanPath === '/permissions') return 'permissions'
+  if (cleanPath === '/profile') return 'admin-profile'
+  if (cleanPath.startsWith('/profile/')) {
+    return `admin-profile:${cleanPath.replace('/profile/', '')}`
   }
-  if (pathname === '/403' || pathname === '/forbidden') return 'forbidden'
-  if (pathname === '/404' || pathname === '/not-found') return 'not-found'
+  if (cleanPath === '/403' || cleanPath === '/forbidden') return 'forbidden'
+  if (cleanPath === '/404' || cleanPath === '/not-found') return 'not-found'
   return 'not-found'
 }
 
@@ -232,7 +243,12 @@ export function getEffectiveNavId(navItem: string): string {
     return 'practice-exercises'
   }
 
-  if (navItem === 'toeic-tests' || navItem === 'exams') {
+  if (
+    navItem === 'toeic-tests' ||
+    navItem === 'exams' ||
+    navItem === 'toeic-exam-create' ||
+    navItem.startsWith('toeic-exam-questions:')
+  ) {
     return 'toeic-tests'
   }
 
