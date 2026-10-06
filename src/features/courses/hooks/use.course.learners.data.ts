@@ -66,9 +66,9 @@ export function useCourseLearnersData() {
             .map((c: Course) => ({
               id: c._id,
               title: c.title,
-              thumbnail_url: c.thumbnail_url,
-              author_id: c.author_id,
-              students_count: c.students_count,
+              thumbnail_url: c.thumbnail_url || undefined,
+              author_id: c.author_id || undefined,
+              students_count: c.students_count ?? 0,
             }))
         }
       } else {
@@ -77,9 +77,9 @@ export function useCourseLearnersData() {
         loadedCourses = rawList.map((c: Course) => ({
           id: c._id,
           title: c.title,
-          thumbnail_url: c.thumbnail_url,
-          author_id: c.author_id,
-          students_count: c.students_count,
+          thumbnail_url: c.thumbnail_url || undefined,
+          author_id: c.author_id || undefined,
+          students_count: c.students_count ?? 0,
         }))
       }
 
