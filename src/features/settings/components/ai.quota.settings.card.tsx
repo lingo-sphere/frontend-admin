@@ -97,10 +97,10 @@ export function AiQuotaSettingsCard() {
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-xs font-bold">
                 <MessageSquare className="w-4 h-4 text-purple-500" />
-                <span>Số Câu Hỏi AI / Tháng</span>
+                <span>Số Câu Hỏi AI / Ngày</span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Giới hạn lượt trò chuyện với Gia sư AI
+                Giới hạn lượt trò chuyện với Gia sư AI mỗi ngày
               </p>
               <div className="pt-1">
                 <input

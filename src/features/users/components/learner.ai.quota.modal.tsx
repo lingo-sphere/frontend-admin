@@ -177,7 +177,7 @@ export function LearnerAiQuotaModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                      Số câu hỏi tối đa / tháng
+                      Số câu hỏi tối đa / ngày
                     </label>
                     <input
                       type="number"
