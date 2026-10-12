@@ -42,6 +42,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const [pendingUploads, setPendingUploads] = useState<PendingFolderUploads | null>(null)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const initialModulesSnapshotRef = useRef<string>('')
 
   const handleAbortSave = () => {
     if (abortControllerRef.current) {
@@ -259,6 +260,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           final_test_writing_file_url: (course.final_test_writing_file_url || '') as string,
           modules: mappedModules,
         })
+        initialModulesSnapshotRef.current = JSON.stringify(mappedModules)
       }
     } catch (err: unknown) {
       console.error('Failed to load course details:', err)
@@ -362,7 +364,16 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         final_test_speaking_file_url: finalCourseInfo.final_test_speaking_file_url || formData.final_test_speaking_file_url || '',
         final_test_writing_prompt: finalCourseInfo.final_test_writing_prompt || formData.final_test_writing_prompt || '',
         final_test_writing_file_url: finalCourseInfo.final_test_writing_file_url || formData.final_test_writing_file_url || '',
-        modules: finalModules.map((m, mIdx) => ({
+      }
+
+      const modulesWereModified =
+        !isEditMode ||
+        Boolean(pendingUploads) ||
+        !initialModulesSnapshotRef.current ||
+        initialModulesSnapshotRef.current !== JSON.stringify(finalModules)
+
+      if (modulesWereModified) {
+        payload.modules = finalModules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
           course_id: isEditMode && currentCourseId ? currentCourseId : '',
           title: m.title,
@@ -422,7 +433,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
             order_index: lIdx + 1,
             lesson_order: lIdx + 1,
           })),
-        })),
+        }))
       }
 
       const allMediaUrls: string[] = [...uploadedR2Urls]
