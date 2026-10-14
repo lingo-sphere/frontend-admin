@@ -1,13 +1,9 @@
-/**
- * @file sidebar.tsx
- * @description Admin navigation sidebar component with collapsible layout, permission checks, and multi-level routing
- */
-
+// Thanh điều hướng thanh bên Admin hỗ trợ thu gọn và phân quyền truy cập.
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { PanelLeftClose, Shield } from 'lucide-react'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
-import { pathToNavItem, navItemToPath } from '@/routes/navigation'
+import { pathToNavItem, navItemToPath, getEffectiveNavId } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { navGroups, type NavGroup, type NavItem } from '@/layouts/sidebar.nav.config'
@@ -22,7 +18,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const isVietnamese = i18n.language === 'vi'
   const location = useLocation()
   const navigate = useNavigate()
-  const activeNavItem = pathToNavItem(location.pathname)
+  const activeNavItem = getEffectiveNavId(pathToNavItem(location.pathname))
   const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useAdminLayout()
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
@@ -39,8 +35,23 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   })
 
   const handleNavigate = (id: string) => {
-    navigate(navItemToPath(id))
-    setMobileSidebarOpen(false)
+    let targetParentId: string | null = null
+    for (const group of navGroups) {
+      for (const item of group.items) {
+        if (item.children && (item.id === id || item.children.some((c) => c.id === id))) {
+          targetParentId = item.id
+          break
+        }
+      }
+      if (targetParentId) break
+    }
+
+    if (targetParentId) {
+      setExpandedItem((prev) => (prev === targetParentId ? prev : targetParentId))
+    }
+    if (mobile) {
+      setMobileSidebarOpen(false)
+    }
   }
 
   const toggleExpand = (id: string) => {
@@ -51,11 +62,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     for (const group of navGroups) {
       for (const item of group.items) {
         if (item.children && (item.id === activeNavItem || item.children.some((c) => c.id === activeNavItem))) {
-          setExpandedItem(item.id)
+          setExpandedItem((prev) => (prev === item.id ? prev : item.id))
           return
         }
       }
     }
+    setExpandedItem((prev) => (prev === null ? prev : null))
   }, [activeNavItem])
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
@@ -85,7 +97,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'courses-list':
         case 'course-learners':
         case 'course-exams':
-        case 'roadmaps':
           return hasPermission('GET', '/courses') || hasModulePermission('COURSES')
         case 'vocabulary':
         case 'public-decks':
@@ -97,7 +108,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'practice-writing':
           return hasModulePermission('PRACTICE')
         case 'toeic-tests':
-          return hasPermission('GET', '/exams') || hasModulePermission('EXAMS')
+        case 'placement-tests':
+          return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE')
         case 'media-storage':
           return hasModulePermission('MEDIA')
         case 'community':
@@ -158,7 +170,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       ...group,
       label: groupLabel,
       items: group.items.map((item) => {
-        const itemKey = `nav.${toCamelCase(item.id)}`
+        const itemKey = item.id === 'community' ? 'nav.communityNav' : `nav.${toCamelCase(item.id)}`
         const itemTranslated = t(itemKey)
         const itemLabel =
           itemTranslated && itemTranslated !== itemKey ? itemTranslated : item.label
@@ -167,7 +179,10 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           ...item,
           label: itemLabel,
           children: item.children?.map((child) => {
-            const childKey = `nav.${toCamelCase(child.id)}`
+            const childKey =
+              child.id === 'progress' && item.id === 'progress'
+                ? 'nav.progressLingosphere'
+                : `nav.${toCamelCase(child.id)}`
             const childTranslated = t(childKey)
             const childLabel =
               childTranslated && childTranslated !== childKey
@@ -187,10 +202,10 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const content = (
     <div className="flex flex-col h-full select-none justify-between overflow-hidden">
       <div className="flex flex-col flex-1 min-h-0">
-        <button
+        <Link
+          to="/dashboard"
           onClick={() => handleNavigate('dashboard')}
-          type="button"
-          title={isVietnamese ? 'Về trang Tổng quan (Dashboard)' : 'Go to Dashboard'}
+          title={isVietnamese ? 'Về trang Tổng quan' : 'Go to Dashboard'}
           className={`w-full shrink-0 flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-all ${
             sidebarCollapsed && !mobile ? 'justify-center' : ''
           }`}
@@ -206,12 +221,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
                 <p className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">
-                  Admin Console
+                  {t('common.adminConsole')}
                 </p>
               </div>
             </div>
           )}
-        </button>
+        </Link>
 
         <nav className="my-2 flex-1 sidebar-scroll space-y-2 pr-0.5 overflow-y-auto">
           {localizedGroups.map((group, groupIdx) => (
@@ -241,7 +256,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           >
             <PanelLeftClose className="w-4 h-4 shrink-0" />
             {!sidebarCollapsed && (
-              <span>{isVietnamese ? 'Thu gọn menu' : 'Collapse'}</span>
+              <span>{t('nav.collapseMenu')}</span>
             )}
           </button>
         )}

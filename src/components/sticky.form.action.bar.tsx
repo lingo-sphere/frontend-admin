@@ -1,6 +1,6 @@
 // Thanh tác vụ cố định đáy màn hình giúp quản trị viên lưu biểu mẫu nhanh chóng mà không cần cuộn trang.
 
-import { Save, Loader2, ArrowLeft } from 'lucide-react'
+import { Save, Loader2, ArrowLeft, Ban } from 'lucide-react'
 
 export interface StickyFormActionBarProps {
   title?: string
@@ -12,6 +12,8 @@ export interface StickyFormActionBarProps {
   isSubmitting?: boolean
   disabled?: boolean
   onCancel?: () => void
+  onAbortSave?: () => void
+  abortText?: string
   onSave?: () => void
   saveButtonType?: 'submit' | 'button'
 }
@@ -26,6 +28,8 @@ export function StickyFormActionBar({
   isSubmitting = false,
   disabled = false,
   onCancel,
+  onAbortSave,
+  abortText,
   onSave,
   saveButtonType = 'submit',
 }: StickyFormActionBarProps) {
@@ -50,7 +54,16 @@ export function StickyFormActionBar({
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
-        {onCancel && (
+        {isSubmitting && onAbortSave ? (
+          <button
+            type="button"
+            onClick={onAbortSave}
+            className="flex items-center gap-1.5 h-10 px-4 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-900/60 text-xs font-bold transition-all cursor-pointer shadow-xs animate-pulse"
+          >
+            <Ban className="w-3.5 h-3.5" />
+            <span>{abortText || 'Hủy Lưu & Dọn Dẹp'}</span>
+          </button>
+        ) : onCancel ? (
           <button
             type="button"
             onClick={onCancel}
@@ -60,7 +73,7 @@ export function StickyFormActionBar({
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>{cancelText}</span>
           </button>
-        )}
+        ) : null}
         <button
           type={saveButtonType}
           onClick={saveButtonType === 'button' ? onSave : undefined}

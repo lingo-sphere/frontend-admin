@@ -2,10 +2,11 @@
 
 import { BookOpen, Edit2, Trash2, Headphones, GraduationCap, Target, BookMarked, Users } from 'lucide-react'
 import type { Course } from '@/features/courses/data/courses.data'
-import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
+import { categoryLabels } from '@/features/courses/data/courses.data'
 import { Popconfirm } from '@/components/popconfirm'
-import { getCategoryBadgeClass, getLevelBadgeClass } from '@/features/courses/helpers/course.helper'
+import { getCategoryBadgeClass } from '@/features/courses/helpers/course.helper'
 import { formatCurrency, formatNumber } from '@/lib/format'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 interface CourseGridCardProps {
   course: Course
@@ -57,7 +58,7 @@ export function CourseGridCard({
         <div className="relative aspect-video w-full bg-slate-100 dark:bg-slate-800/80 overflow-hidden">
           {course.thumbnail_url ? (
             <img
-              src={course.thumbnail_url}
+              src={resolveMediaUrl(course.thumbnail_url)}
               alt={course.title}
               className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
             />
@@ -75,13 +76,11 @@ export function CourseGridCard({
             >
               {categoryLabels[course.category]?.[isVi ? 'vi' : 'en'] || course.category}
             </span>
-            <span
-              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border backdrop-blur-md shadow-xs ${getLevelBadgeClass(
-                course.level
-              )}`}
-            >
-              {levelLabels[course.level]?.[isVi ? 'vi' : 'en'] || course.level}
-            </span>
+            {course.target_score ? (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold border backdrop-blur-md shadow-xs bg-teal-500/20 text-teal-100 border-teal-500/30">
+                🎯 {course.target_score}+
+              </span>
+            ) : null}
           </div>
 
           <div className="absolute top-3 right-3">

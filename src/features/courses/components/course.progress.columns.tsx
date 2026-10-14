@@ -46,9 +46,9 @@ export function createCourseProgressColumns({
       minWidth: '160px',
       render: (st) => {
         const u = usersMap.get(st.user_id) || usersMap.get(String(st.user_id))
-        const displayName = u?.full_name || st.full_name || 'Học viên ẩn danh'
-        const email = u?.email || st.email || 'Chưa cập nhật email'
-        const avatarSrc = (u?.avatar_url || st.avatar_url) || undefined
+        const displayName = u?.full_name || st.full_name || ''
+        const email = u?.email || st.email || ''
+        const avatarSrc = u?.avatar_url || st.avatar_url || undefined
 
         return (
           <div className="flex items-center gap-2.5 min-w-[150px]">

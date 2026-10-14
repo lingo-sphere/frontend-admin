@@ -1,7 +1,4 @@
-/**
- * @file role.edit.modal.tsx
- * @description Modal tạo mới và chỉnh sửa vai trò người dùng (Role) cùng phân quyền hạn (RBAC Permissions)
- */
+// Modal tạo mới và chỉnh sửa vai trò người dùng cùng phân quyền hạn trong hệ thống RBAC.
 
 import { useState, useMemo, useEffect } from 'react'
 import { X, Search, ShieldCheck } from 'lucide-react'
@@ -113,10 +110,7 @@ export function RoleEditModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-modal-backdrop"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-modal-backdrop">
       <div
         className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col h-[85vh] max-h-[850px] animate-modal-content"
         onClick={(e) => e.stopPropagation()}

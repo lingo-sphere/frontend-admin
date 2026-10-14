@@ -9,7 +9,8 @@ import {
 } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { Course as ApiCourse, UserProfile } from '@/types/api.types'
+import type { UserProfile } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 export interface CourseSimple {
   id: string
@@ -45,7 +46,7 @@ export function useCourseLearnersData() {
         try {
           const teacherCourses = await courseService.getTeacherCourses()
           if (Array.isArray(teacherCourses) && teacherCourses.length > 0) {
-            loadedCourses = teacherCourses.map((c: ApiCourse) => ({
+            loadedCourses = teacherCourses.map((c: Course) => ({
               id: c._id || '',
               title: c.title || '',
               thumbnail_url: c.thumbnail_url || '',
@@ -59,26 +60,26 @@ export function useCourseLearnersData() {
 
         if (loadedCourses.length === 0) {
           const allRes = await courseService.getAllCourses({ pageSize: 100 })
-          const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : allRes?.result || []
+          const rawList: Course[] = allRes.result
           loadedCourses = rawList
-            .filter((c: ApiCourse) => c.author_id === currentUserId)
-            .map((c: ApiCourse) => ({
-              id: c._id || '',
-              title: c.title || '',
-              thumbnail_url: c.thumbnail_url || '',
-              author_id: c.author_id || '',
-              students_count: c.students_count || 0,
+            .filter((c: Course) => c.author_id === currentUserId)
+            .map((c: Course) => ({
+              id: c._id,
+              title: c.title,
+              thumbnail_url: c.thumbnail_url || undefined,
+              author_id: c.author_id || undefined,
+              students_count: c.students_count ?? 0,
             }))
         }
       } else {
         const allRes = await courseService.getAllCourses({ pageSize: 100 })
-        const rawList: ApiCourse[] = Array.isArray(allRes) ? allRes : allRes?.result || []
-        loadedCourses = rawList.map((c: ApiCourse) => ({
-          id: c._id || '',
-          title: c.title || '',
-          thumbnail_url: c.thumbnail_url || '',
-          author_id: c.author_id || '',
-          students_count: c.students_count || 0,
+        const rawList: Course[] = allRes.result
+        loadedCourses = rawList.map((c: Course) => ({
+          id: c._id,
+          title: c.title,
+          thumbnail_url: c.thumbnail_url || undefined,
+          author_id: c.author_id || undefined,
+          students_count: c.students_count ?? 0,
         }))
       }
 

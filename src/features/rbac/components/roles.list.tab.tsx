@@ -1,28 +1,23 @@
 // Component giao diện danh sách vai trò phục vụ quản trị phân quyền.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw, Edit2, Trash2, Sparkles, Shield, Search } from 'lucide-react'
+import { Edit2, Trash2, Shield, Search } from 'lucide-react'
 import type { Role } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 import { useRolesQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
+import { toast } from '@/store/toast.store'
 
 interface RolesListTabProps {
-  onOpenCreateRole: () => void
   onOpenEditRole: (role: Role) => void
   onDeleteRole: (roleId: string) => Promise<void> | void
-  onRefresh?: () => void
-  onSeedDefaultRBAC: () => void
   isLoading?: boolean
 }
 
 export function RolesListTab({
-  onOpenCreateRole,
   onOpenEditRole,
   onDeleteRole,
-  onRefresh,
-  onSeedDefaultRBAC,
   isLoading = false,
 }: RolesListTabProps) {
   const { i18n } = useTranslation()
@@ -50,33 +45,40 @@ export function RolesListTab({
     setCurrentPage(1)
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilterName('')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await refetch()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc vai trò' : 'Role filters reset')
   }
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-'
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return dateStr
-    const day = String(d.getDate()).padStart(2, '0')
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const year = d.getFullYear()
-    const hours = String(d.getHours()).padStart(2, '0')
-    const mins = String(d.getMinutes()).padStart(2, '0')
-    const secs = String(d.getSeconds()).padStart(2, '0')
-    return `${day}-${month}-${year} ${hours}:${mins}:${secs}`
+    try {
+      const d = new Date(dateStr)
+      return d.toLocaleDateString(isVi ? 'vi-VN' : 'en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    } catch {
+      return dateStr
+    }
   }
 
   const columns: DataTableColumn<Role>[] = [
     {
       key: 'name',
       title: isVi ? 'Tên Vai Trò (Role)' : 'Role Name',
+      sortable: true,
       render: (role) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-500/20">
             <Shield className="w-4 h-4" />
           </div>
           <div>
@@ -194,38 +196,6 @@ export function RolesListTab({
     </form>
   )
 
-  const extraActions = (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={onSeedDefaultRBAC}
-        className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer"
-        title={isVi ? 'Tự động khởi tạo quyền hạn mẫu' : 'Initialize default RBAC permissions'}
-      >
-        <Sparkles className="w-4 h-4" />
-        <span>{isVi ? 'Khởi tạo RBAC Mẫu' : 'Seed Default RBAC'}</span>
-      </button>
-
-      <button
-        onClick={onOpenCreateRole}
-        className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition-all cursor-pointer"
-      >
-        <Plus className="w-4 h-4" />
-        <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
-      </button>
-
-      <button
-        onClick={() => {
-          if (onRefresh) onRefresh()
-          refetch()
-        }}
-        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-        title={isVi ? 'Làm mới' : 'Refresh'}
-      >
-        <RotateCcw className={`w-4 h-4 ${isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
-      </button>
-    </div>
-  )
-
   return (
     <DataTable<Role>
       columns={columns}
@@ -241,7 +211,6 @@ export function RolesListTab({
         setCurrentPage(1)
       }}
       filterSlot={filterSlot}
-      extraActions={extraActions}
       onResetFilters={handleResetFilters}
       pagination={{
         currentPage,

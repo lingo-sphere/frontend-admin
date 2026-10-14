@@ -35,6 +35,16 @@ export const MediaUploadResponseSchema = z.object({
   media_owner_type: z.string().optional(),
 }).passthrough()
 
+export const PresignedUploadResponseSchema = z.object({
+  upload_url: z.string(),
+  public_url: z.string(),
+  file_url: z.string(),
+  url: z.string(),
+  raw_r2_url: z.string().optional(),
+  storage_key: z.string(),
+  expires_in_seconds: z.number(),
+}).passthrough()
+
 export const TtsGenerateResponseSchema = z.object({
   audio_url: z.string(),
   duration_seconds: z.number().optional(),
@@ -43,4 +53,5 @@ export const TtsGenerateResponseSchema = z.object({
 export type StorageQuota = z.infer<typeof StorageQuotaSchema>
 export type RawStorageUsageResponse = z.infer<typeof RawStorageUsageResponseSchema>
 export type MediaUploadResponse = z.infer<typeof MediaUploadResponseSchema>
+export type PresignedUploadResponse = z.infer<typeof PresignedUploadResponseSchema>
 export type TtsGenerateResponse = z.infer<typeof TtsGenerateResponseSchema>

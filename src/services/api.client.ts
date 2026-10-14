@@ -1,5 +1,6 @@
-// Service API client gọi backend cho chức năng quản trị viên
+// Service API client gọi backend cho chức năng quản trị viên hỗ trợ đa ngôn ngữ
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+import i18n from '@/i18n/i18n'
 import { API_CONFIG } from '@/config/api.config'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { ApiResponse } from '@/types/api.types'
@@ -79,6 +80,13 @@ apiClient.interceptors.response.use(
         return Promise.reject(new Error(errorMsg || 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'))
       }
 
+      const existingAccessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+      const existingRefreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.session.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+
+      if (!existingAccessToken && !existingRefreshToken) {
+        return Promise.reject(new Error(errorMsg || i18n.t('auth.loginFailed')))
+      }
+
       if (!originalRequest._retry) {
         if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
@@ -97,22 +105,41 @@ apiClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const res = await axios.post<ApiResponse<{ access_token: string }>>(
+        const storedRefreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+
+        const refreshHeaders: Record<string, string> = {}
+        if (storedRefreshToken) {
+          refreshHeaders['x-refresh-token'] = storedRefreshToken
+        }
+
+        const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
           {},
           {
+            headers: refreshHeaders,
             withCredentials: true,
           },
         )
 
-        const responseData = res.data as unknown as { data?: { access_token?: string }; access_token?: string }
-        const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
+        const responseData = res.data as unknown as {
+          data?: { access_token?: string; refresh_token?: string }
+          access_token?: string
+          refresh_token?: string
+        }
+        const tokenPayload = responseData?.data || responseData
+        const newAccessToken = tokenPayload?.access_token
+        const newRefreshToken = tokenPayload?.refresh_token
 
         if (newAccessToken) {
           if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
             storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
           } else {
             storage.session.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+          }
+          if (newRefreshToken) {
+            storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken, { days: 7 })
+            storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+            storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
           }
 
           if (originalRequest.headers) {
@@ -125,18 +152,24 @@ apiClient.interceptors.response.use(
         } else {
           throw new Error('Invalid token response structure')
         }
-      } catch (refreshErr) {
-        processQueue(refreshErr, null)
-        console.warn('Phiên đăng nhập đã hết hạn. Đang đăng xuất...', refreshErr)
+      } catch {
+        const sessionExpiredError = new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+        processQueue(sessionExpiredError, null)
+        console.warn('Phiên đăng nhập quản trị viên đã hết hạn. Đang dọn dẹp phiên...')
 
         storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.remove(STORAGE_KEYS.USER)
         storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.session.remove(STORAGE_KEYS.USER)
+        storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+        storage.cookie.remove(STORAGE_KEYS.USER)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         }
-        return Promise.reject(refreshErr)
+        return Promise.reject(sessionExpiredError)
       } finally {
         isRefreshing = false
       }
@@ -155,19 +188,19 @@ apiClient.interceptors.response.use(
       cleanMessage.includes('Failed to fetch') ||
       cleanMessage.includes('ENOTFOUND')
     ) {
-      cleanMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại dịch vụ hoặc kết nối mạng.'
+      cleanMessage = i18n.t('errors.serverErrorDesc')
     } else if (cleanMessage.includes('timeout') || cleanMessage.includes('ETIMEDOUT')) {
-      cleanMessage = 'Yêu cầu xử lý quá thời gian quy định. Vui lòng thử lại.'
+      cleanMessage = i18n.t('errors.serverErrorDesc')
     } else if (cleanMessage.includes('Internal server error') || cleanMessage.includes('Internal Server Error')) {
-      cleanMessage = 'Hệ thống đang bận hoặc xảy ra sự cố khi xử lý dữ liệu. Vui lòng thử lại sau.'
+      cleanMessage = i18n.t('errors.serverErrorDesc')
     } else if (cleanMessage.includes('<!DOCTYPE') || cleanMessage.includes('<html')) {
-      cleanMessage = 'Dịch vụ tạm thời không phản hồi. Vui lòng thử lại sau ít phút.'
+      cleanMessage = i18n.t('errors.serverErrorDesc')
     } else if (cleanMessage.includes('Request failed with status code 401')) {
-      cleanMessage = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'
+      cleanMessage = i18n.t('auth.loginFailed')
     } else if (cleanMessage.includes('Request failed with status code 403')) {
-      cleanMessage = 'Bạn không có quyền thực hiện thao tác này.'
+      cleanMessage = i18n.t('errors.forbiddenDesc')
     } else if (cleanMessage.includes('Request failed with status code 404')) {
-      cleanMessage = 'Không tìm thấy dữ liệu yêu cầu.'
+      cleanMessage = i18n.t('errors.notFoundDesc')
     }
 
     return Promise.reject(new Error(cleanMessage))
@@ -194,19 +227,15 @@ export const api = {
   async get<T>(url: string, params?: Record<string, unknown>, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.get<any>(url, { params })
 
-    // Handle multiple response formats
     const responseData = res.data
     let raw: unknown
 
     if (Array.isArray(responseData)) {
       raw = responseData
     } else if (responseData && typeof responseData === 'object') {
-      // Paginated response from TransformInterceptor
       if ('items' in responseData && Array.isArray((responseData as any).items)) {
         raw = responseData
-      }
-      // Standard response
-      else if ('data' in responseData) {
+      } else if ('data' in responseData) {
         if (Array.isArray((responseData as any).data)) {
           raw = (responseData as any).data
         } else {

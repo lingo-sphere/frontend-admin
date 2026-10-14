@@ -8,7 +8,7 @@ export const WordMeaningSchema = z.object({
   definition_en: z.string(),
   definition_vi: z.string(),
   short_meaning_vi: z.string().nullable().optional(),
-  // examples được lưu trong bảng examples riêng
+  examples: z.array(z.string()).optional(),
   synonyms: z.array(z.string()).optional(),
   antonyms: z.array(z.string()).optional(),
   collocations: z.array(z.string()).optional(),

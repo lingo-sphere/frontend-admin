@@ -1,7 +1,4 @@
-/**
- * @file ipa.symbol.edit.modal.tsx
- * @description Modal chỉnh sửa ký hiệu IPA với upload audio
- */
+// Modal chỉnh sửa thông tin ký hiệu IPA và tải lên âm thanh phát âm.
 
 import { useState, useEffect, useRef } from "react";
 import { Volume2, X, Upload, Loader2 } from "lucide-react";
@@ -32,7 +29,6 @@ export function IpaSymbolEditModal({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     description_en: "",
     description_vi: "",
@@ -40,7 +36,6 @@ export function IpaSymbolEditModal({
     audio_url: "",
   });
 
-  // Sync form data when symbol changes
   useEffect(() => {
     if (symbol) {
       setFormData({
@@ -109,15 +104,11 @@ export function IpaSymbolEditModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 dark:bg-black/40 backdrop-blur-[1px] animate-in fade-in duration-150"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 dark:bg-black/40 backdrop-blur-[1px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
@@ -140,16 +131,13 @@ export function IpaSymbolEditModal({
           </button>
         </div>
 
-        {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Symbol Display */}
           <div className="flex items-center justify-center py-4 rounded-xl bg-gradient-to-br from-amber-50/60 to-orange-50/60 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-100 dark:border-amber-900/40">
             <div className="text-5xl font-bold text-amber-700 dark:text-amber-300 font-serif">
               /{symbol.symbol}/
             </div>
           </div>
 
-          {/* Type & Level Display */}
           <div className="flex flex-wrap items-center gap-2">
             {typeLabel && (
               <span
@@ -160,7 +148,6 @@ export function IpaSymbolEditModal({
             )}
           </div>
 
-          {/* Description EN */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               {isVi ? "Mô tả (English)" : "Description (English)"}
@@ -180,7 +167,6 @@ export function IpaSymbolEditModal({
             />
           </div>
 
-          {/* Description VI */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               {isVi ? "Mô tả (Tiếng Việt)" : "Description (Vietnamese)"}
@@ -200,7 +186,6 @@ export function IpaSymbolEditModal({
             />
           </div>
 
-          {/* CEFR Level */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               CEFR Level
@@ -221,13 +206,11 @@ export function IpaSymbolEditModal({
             </select>
           </div>
 
-          {/* Audio Upload Section */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               {isVi ? "Âm thanh IPA" : "IPA Audio"}
             </label>
 
-            {/* Upload Button */}
             <input
               ref={fileInputRef}
               type="file"
@@ -254,7 +237,6 @@ export function IpaSymbolEditModal({
               )}
             </button>
 
-            {/* Audio URL Preview */}
             {formData.audio_url && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
                 <p className="flex-1 text-xs text-slate-600 dark:text-slate-400 font-mono truncate">
@@ -276,7 +258,6 @@ export function IpaSymbolEditModal({
             </p>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-400">
               {error}
@@ -284,7 +265,6 @@ export function IpaSymbolEditModal({
           )}
         </form>
 
-        {/* Footer */}
         <div className="p-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <button
             type="button"

@@ -1,7 +1,6 @@
 // Khai báo các định nghĩa kiểu dữ liệu cho thực thể học viên và thống kê người học trong quản trị.
-
 export interface User {
-  id: string
+  user_id: string
   email: string
   full_name: string
   avatar_url?: string
@@ -25,7 +24,6 @@ export interface User {
   level: number
   current_streak: number
   longest_streak: number
-  gems: number
 
   lessons_completed: number
   vocabulary_reviewed: number

@@ -255,7 +255,8 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
   const handleApplyQuestions = (
     moduleId: string,
     questions: ExamQuestionItem[],
-    audioUrl?: string
+    audioUrl?: string,
+    meta?: { duration_minutes?: number }
   ) => {
     updateModule(moduleId, {
       test_questions: questions,
@@ -264,6 +265,13 @@ export function useCourseCurriculum({ modules, onChange }: UseCourseCurriculumPr
       test_audio_url: audioUrl || '',
       challenge_audio_url: audioUrl || '',
       audio_url: audioUrl || '',
+      ...(meta?.duration_minutes && meta.duration_minutes > 0
+        ? {
+            duration_minutes: meta.duration_minutes,
+            challenge_duration_minutes: meta.duration_minutes,
+            post_mini_duration_minutes: meta.duration_minutes,
+          }
+        : {}),
     })
   }
 

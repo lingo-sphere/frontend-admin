@@ -1,7 +1,4 @@
-/**
- * @file permission.modal.tsx
- * @description Component giao diện PermissionModal phục vụ khu vực Quản trị Admin
- */
+// Modal tạo mới và cập nhật permission trong hệ thống phân quyền RBAC.
 
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -122,10 +119,7 @@ export function PermissionModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop">
       <div
         className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-modal-content"
         onClick={(e) => e.stopPropagation()}

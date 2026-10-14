@@ -78,7 +78,7 @@ export function useCourseExams() {
           if (!old) return old
           return {
             ...old,
-            exams: old.exams.filter((e) => (e._id || e.id) !== deletedId),
+            exams: old.exams.filter((e) => e._id !== deletedId),
           }
         }
       )
@@ -92,7 +92,8 @@ export function useCourseExams() {
 
   const togglePublishMutation = useMutation({
     mutationFn: async ({ exam, nextStatus }: { exam: ToeicExamItem; nextStatus: boolean }) => {
-      const examId = exam._id || exam.id || ''
+      const examId = exam._id ?? ''
+      if (!examId) throw new Error('ID bài thi không hợp lệ.')
       if (exam.course_id && String(examId).startsWith('course_final_')) {
         await courseService.updateCourse(exam.course_id, { is_published: nextStatus })
       } else if (exam.module_id && String(examId).startsWith('mod_challenge_')) {
@@ -110,7 +111,7 @@ export function useCourseExams() {
           return {
             ...old,
             exams: old.exams.map((e) =>
-              (e._id || e.id) === examId ? { ...e, is_published: nextStatus } : e
+              e._id === examId ? { ...e, is_published: nextStatus } : e
             ),
           }
         }
@@ -130,10 +131,8 @@ export function useCourseExams() {
 
   const filteredExams = useMemo(() => {
     const list = exams.filter((e) => {
-      const isSystemPlacement = e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id
       const matchCourse =
-        selectedCourseId === 'ALL' ||
-        (selectedCourseId === 'GLOBAL_SYSTEM' ? isSystemPlacement : e.course_id === selectedCourseId)
+        selectedCourseId === 'ALL' || e.course_id === selectedCourseId
 
       const isChallengeType = e.type === 'CHALLENGE_TEST' || e.type === 'POST_MINI_TEST' || e.type === 'PRE_TEST'
       const matchType =
@@ -201,12 +200,16 @@ export function useCourseExams() {
     const scored = filteredExams.filter((e) => (e.avg_score || 0) > 0)
     const avgScore = scored.length
       ? Math.round(scored.reduce((sum, e) => sum + (e.avg_score || 0), 0) / scored.length)
-      : 760
+      : 0
 
     return { total, published, totalAttempts, avgScore }
   }, [filteredExams])
 
-  const handleResetFilters = useCallback(() => {
+  const loadData = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
+  const handleResetFilters = useCallback(async () => {
     setSearchQuery('')
     setSelectedCourseId('ALL')
     setTypeFilter('ALL')
@@ -214,7 +217,9 @@ export function useCourseExams() {
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
-  }, [])
+    await loadData()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc bài thi' : 'Exam filters reset')
+  }, [loadData, isVi])
 
   const handleDeleteExam = useCallback(
     async (examId?: string) => {
@@ -226,14 +231,14 @@ export function useCourseExams() {
 
   const handleTogglePublish = useCallback(
     async (exam: ToeicExamItem) => {
-      const examId = exam._id || exam.id || ''
+      const examId = exam._id
       const nextStatus = !exam.is_published
 
       if (nextStatus && (exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id)) {
         const is4Skills = exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS'
         const conflict = exams.find(
           (e) =>
-            (e._id || e.id) !== examId &&
+            e._id !== examId &&
             (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
             e.is_published &&
             (is4Skills
@@ -255,10 +260,6 @@ export function useCourseExams() {
     },
     [exams, isVi, togglePublishMutation]
   )
-
-  const loadData = useCallback(async () => {
-    await refetch()
-  }, [refetch])
 
   return {
     isVi,

@@ -1,11 +1,8 @@
-/**
- * @file practice.listening.page.tsx
- * @description Trang quản trị PracticeListeningPage trong giao diện Admin
- */
-
+// Trang quản trị bài tập luyện nghe TOEIC trong giao diện Admin.
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, Headphones } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { practiceService } from '@/features/practice/services/practice.service'
 import { toast } from '@/store/toast.store'
 import type { ListeningExercise } from '@/types/api.types'
@@ -42,6 +39,8 @@ export function PracticeListeningPage() {
       setIsLoading(false)
     }
   }
+
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(fetchExercises)
 
   useEffect(() => {
     fetchExercises()
@@ -102,11 +101,12 @@ export function PracticeListeningPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchExercises}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing || isLoading}
+            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-60"
             title="Làm mới"
           >
-            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-4 h-4 ${isRefreshing || isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowAddModal(true)}

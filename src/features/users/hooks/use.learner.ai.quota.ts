@@ -21,10 +21,10 @@ export function useLearnerAiQuota({ user, isOpen, onSuccess }: UseLearnerAiQuota
   const [customContextTokens, setCustomContextTokens] = useState<number>(1000)
 
   const loadUserQuota = useCallback(async () => {
-    if (!user?.id) return
+    if (!user?.user_id) return
     setIsLoading(true)
     try {
-      const res = await aiAdminService.getUserAiQuota(user.id)
+      const res = await aiAdminService.getUserAiQuota(user.user_id)
       if (res?.status) {
         setQuotaStatus(res.status)
         setCustomChatLimit(res.status.chat.limit || 5)
@@ -35,7 +35,7 @@ export function useLearnerAiQuota({ user, isOpen, onSuccess }: UseLearnerAiQuota
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id])
+  }, [user?.user_id])
 
   useEffect(() => {
     if (isOpen && user) {
@@ -44,10 +44,10 @@ export function useLearnerAiQuota({ user, isOpen, onSuccess }: UseLearnerAiQuota
   }, [isOpen, user, loadUserQuota])
 
   const handleResetQuota = async () => {
-    if (!user?.id) return
+    if (!user?.user_id) return
     setIsResetting(true)
     try {
-      const res = await aiAdminService.resetUserAiQuota(user.id)
+      const res = await aiAdminService.resetUserAiQuota(user.user_id)
       if (res?.quota) {
         setQuotaStatus(res.quota)
       }
@@ -63,10 +63,10 @@ export function useLearnerAiQuota({ user, isOpen, onSuccess }: UseLearnerAiQuota
 
   const handleSaveCustomLimits = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user?.id) return
+    if (!user?.user_id) return
     setIsSavingCustom(true)
     try {
-      const res = await aiAdminService.updateUserAiQuota(user.id, {
+      const res = await aiAdminService.updateUserAiQuota(user.user_id, {
         chat_messages_limit: Number(customChatLimit),
         context_token_limit: Number(customContextTokens),
       })

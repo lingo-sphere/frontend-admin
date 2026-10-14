@@ -1,16 +1,21 @@
 // Custom hook quan ly state form tao va sua khoa hoc, dong bo tai lieu va cau hoi luyen tap.
 
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { CourseFormData, CourseLesson, CourseModule } from '@/features/courses/components/course.basic.info.tab'
+import type { Course } from '@/features/courses/schemas/course.schema'
 import { courseService } from '@/features/courses/services/course.service'
 import { mediaService } from '@/features/media/services/media.service'
 import { pathToNavItem, navItemToPath } from '@/routes/navigation'
 import { authStore, useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
-import { validateCourseFormData } from '@/features/courses/helpers/course.helper'
+import { validateCourseFormData, generateCourseR2Folder } from '@/features/courses/helpers/course.helper'
 import { queryClient } from '@/config/query.config'
 import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
+import {
+  uploadFolderResourcesToR2,
+  type PendingFolderUploads,
+} from '@/features/courses/helpers/course.folder.upload.helper'
 
 export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const navigate = useNavigate()
@@ -24,32 +29,38 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const currentCourseId =
     editCourseId ||
     (activeNavItem.startsWith('course-edit:') ? activeNavItem.split(':')[1] : undefined) ||
-    (typeof window !== 'undefined' && window.location.pathname.includes('/courses/')
-      ? window.location.pathname.split('/courses/')[1].replace('/edit', '')
+    (pathname.startsWith('/courses/') && !pathname.includes('/courses/create')
+      ? pathname.split('/courses/')[1].replace('/edit', '')
       : undefined)
 
   const isEditMode = Boolean(currentCourseId && currentCourseId !== 'create')
 
-  const [courseCreatedAt, setCourseCreatedAt] = useState<number>(() => Date.now())
+  const [randomFolderSuffix] = useState<string>(() => Math.random().toString(36).substring(2, 8))
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatusText, setSubmitStatusText] = useState('')
+  const [pendingUploads, setPendingUploads] = useState<PendingFolderUploads | null>(null)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const initialModulesSnapshotRef = useRef<string>('')
+
+  const handleAbortSave = () => {
+    if (abortControllerRef.current) {
+      setSubmitStatusText(
+        isVi
+          ? 'Đang dừng tiến trình và dọn dẹp tài nguyên trên R2 & CSDL...'
+          : 'Aborting and cleaning up resources on R2 & DB...'
+      )
+      abortControllerRef.current.abort()
+    }
+  }
 
   const [formData, setFormData] = useState<CourseFormData>(() => {
     const profile = authStore.getState().profile
     const user = authStore.getState().user
-    const userPayload = user as unknown as Record<string, unknown>
-    const resolvedName =
-      profile?.full_name ||
-      (userPayload?.full_name as string) ||
-      (userPayload?.name as string) ||
-      (user?.email ? user.email.split('@')[0] : '')
+    const resolvedName = profile?.full_name || user?.full_name || ''
     const resolvedEmail = profile?.email || user?.email || ''
-    const resolvedAvatar =
-      profile?.avatar_url ||
-      (userPayload?.avatar_url as string) ||
-      (userPayload?.avatar as string) ||
-      ''
+    const resolvedAvatar = profile?.avatar_url || user?.avatar_url || ''
     const resolvedRole = profile?.role || user?.role
     const resolvedTitle =
       resolvedRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
@@ -60,7 +71,6 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       slug: '',
       description: '',
       category: 'TOEIC_2_SKILLS',
-      level: 'BEGINNER',
       target_score: 500,
       price: 0,
       discount_price: 0,
@@ -68,7 +78,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       document_url: '',
       document_name: '',
       is_published: true,
-      author_id: profile?.user_id || user?.user_id,
+      author_id: user?.user_id || profile?.user_id || '',
       author_name: resolvedName,
       author_email: resolvedEmail,
       author_avatar: resolvedAvatar,
@@ -94,27 +104,18 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   useEffect(() => {
     if (!isEditMode && (currentProfile || currentUser)) {
       setFormData((prev) => {
-        if (!prev.author_name || prev.author_name === 'Đội ngũ Giảng viên LingoSphere') {
-          const userPayload = currentUser as unknown as Record<string, unknown>
-          const resolvedName =
-            currentProfile?.full_name ||
-            (userPayload?.full_name as string) ||
-            (userPayload?.name as string) ||
-            (currentUser?.email ? currentUser.email.split('@')[0] : prev.author_name)
-          const resolvedEmail =
-            currentProfile?.email || currentUser?.email || prev.author_email
-          const resolvedAvatar =
-            currentProfile?.avatar_url ||
-            (userPayload?.avatar_url as string) ||
-            prev.author_avatar
+        if (!prev.author_name) {
+          const resolvedName = currentProfile?.full_name || currentUser?.full_name || ''
+          const resolvedEmail = currentProfile?.email || currentUser?.email || ''
+          const resolvedAvatar = currentProfile?.avatar_url || currentUser?.avatar_url || ''
           const resolvedRole = currentProfile?.role || currentUser?.role
           const resolvedTitle =
             resolvedRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
-          const resolvedBio = currentProfile?.bio || prev.author_bio || ''
+          const resolvedBio = currentProfile?.bio || ''
 
           return {
             ...prev,
-            author_id: currentProfile?.user_id || currentUser?.user_id || prev.author_id,
+            author_id: currentUser?.user_id || currentProfile?.user_id || '',
             author_name: resolvedName,
             author_email: resolvedEmail,
             author_avatar: resolvedAvatar,
@@ -136,18 +137,9 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
   const loadCourseData = async (courseId: string) => {
     setIsLoading(true)
     try {
-      const rawRes = (await courseService.getCourseById(
-        courseId
-      )) as unknown as Record<string, unknown>
-      if (rawRes) {
-        const course = (rawRes.course as Record<string, unknown>) || rawRes
-        const rawCurriculum = (rawRes.curriculum ||
-          course.modules ||
-          []) as Array<Record<string, unknown>>
-
-        if (course.created_at) {
-          setCourseCreatedAt(new Date(course.created_at as string).getTime())
-        }
+      const course = await courseService.getCourseById(courseId)
+      if (course) {
+        const rawCurriculum = course.curriculum || course.modules || []
 
         const mappedModules = rawCurriculum.map((m, mIdx) => {
           const rawLessons = (m.lessons || []) as Array<Record<string, unknown>>
@@ -238,7 +230,6 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           slug: (course.slug || '') as string,
           description: (course.description || '') as string,
           category: (course.category || 'TOEIC_2_SKILLS') as CourseFormData['category'],
-          level: (course.level || 'BEGINNER') as CourseFormData['level'],
           target_score: typeof course.target_score === 'number' ? course.target_score : 500,
           price: typeof course.price === 'number' ? course.price : 0,
           discount_price:
@@ -269,6 +260,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           final_test_writing_file_url: (course.final_test_writing_file_url || '') as string,
           modules: mappedModules,
         })
+        initialModulesSnapshotRef.current = JSON.stringify(mappedModules)
       }
     } catch (err: unknown) {
       console.error('Failed to load course details:', err)
@@ -288,39 +280,102 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
       return
     }
 
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
+    const uploadedR2Urls: string[] = []
+    let createdCourseId: string | null = null
+
     setIsSubmitting(true)
     try {
-      const payload = {
-        title: formData.title,
-        slug: formData.slug,
-        description: formData.description,
-        category: formData.category,
-        level: formData.level,
-        target_score: Number(formData.target_score),
-        price: Number(formData.price),
-        discount_price: Number(formData.discount_price),
-        thumbnail_url: formData.thumbnail_url,
-        document_url: formData.document_url || '',
-        document_name: formData.document_name || '',
-        is_published: formData.is_published,
-        author_id: formData.author_id || currentUser?.user_id,
-        author_name: formData.author_name || 'Đội ngũ Giảng viên LingoSphere',
-        author_email: formData.author_email || currentUser?.email,
-        author_avatar: formData.author_avatar || '',
-        author_title: formData.author_title || 'Giảng viên chuyên môn',
-        author_bio: formData.author_bio || '',
-        pre_test_exam_id: formData.pre_test_exam_id || undefined,
-        final_test_exam_id: formData.final_test_exam_id || undefined,
-        final_test_passing_score: Number(formData.final_test_passing_score) || 70,
-        final_test_questions: formData.final_test_questions || [],
-        final_test_audio_url: formData.final_test_audio_url || '',
-        final_test_speaking_prompt: formData.final_test_speaking_prompt || '',
-        final_test_speaking_file_url: formData.final_test_speaking_file_url || '',
-        final_test_writing_prompt: formData.final_test_writing_prompt || '',
-        final_test_writing_file_url: formData.final_test_writing_file_url || '',
-        modules: formData.modules.map((m, mIdx) => ({
+      let finalCourseInfo: Partial<CourseFormData> = { ...formData }
+      let finalModules: CourseModule[] = formData.modules
+
+      const resolvedCourseFolder = generateCourseR2Folder(
+        finalCourseInfo.title || formData.title,
+        finalCourseInfo.slug || formData.slug,
+        randomFolderSuffix
+      )
+
+      if (pendingUploads) {
+        setSubmitStatusText(isVi ? 'Đang tải tệp lên Cloudflare R2...' : 'Uploading files to R2...')
+        const uploadResult = await uploadFolderResourcesToR2(
+          pendingUploads,
+          resolvedCourseFolder,
+          formData,
+          formData.modules,
+          (progress) => {
+            const status = isVi
+              ? `Đang tải lên R2 (${progress.completedFiles}/${progress.totalFiles} tệp - ${progress.percent}%)...`
+              : `Uploading to R2 (${progress.completedFiles}/${progress.totalFiles} - ${progress.percent}%)...`
+            setSubmitStatusText(status)
+          },
+          abortController.signal,
+          (url) => {
+            uploadedR2Urls.push(url)
+          }
+        )
+
+        if (abortController.signal.aborted) {
+          throw new DOMException('Aborted', 'AbortError')
+        }
+
+        finalCourseInfo = uploadResult.courseInfo
+        finalModules = uploadResult.modules
+
+        if (uploadResult.failedCount > 0) {
+          toast.warning(
+            isVi
+              ? `Có ${uploadResult.failedCount} file tải lên bị gián đoạn, đang tiếp tục lưu khóa học.`
+              : `${uploadResult.failedCount} files failed to upload, continuing save.`
+          )
+        }
+      }
+
+      if (abortController.signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError')
+      }
+
+      setSubmitStatusText(isVi ? 'Đang lưu khóa học vào hệ thống...' : 'Saving course to system...')
+
+      const payload: Partial<Course> = {
+        title: finalCourseInfo.title || formData.title,
+        slug: finalCourseInfo.slug || formData.slug,
+        description: finalCourseInfo.description || formData.description,
+        category: finalCourseInfo.category || formData.category,
+        target_score: Number(finalCourseInfo.target_score ?? formData.target_score),
+        price: Number(finalCourseInfo.price ?? formData.price),
+        discount_price: Number(finalCourseInfo.discount_price ?? formData.discount_price),
+        thumbnail_url: finalCourseInfo.thumbnail_url || formData.thumbnail_url,
+        document_url: finalCourseInfo.document_url || formData.document_url || '',
+        document_name: finalCourseInfo.document_name || formData.document_name || '',
+        is_published: finalCourseInfo.is_published ?? formData.is_published,
+        author_id: finalCourseInfo.author_id || formData.author_id || currentUser?.user_id || '',
+        author_name: finalCourseInfo.author_name || formData.author_name || currentUser?.full_name || currentProfile?.full_name || '',
+        author_email: finalCourseInfo.author_email || formData.author_email || currentUser?.email || '',
+        author_avatar: finalCourseInfo.author_avatar || formData.author_avatar || '',
+        author_title: finalCourseInfo.author_title || formData.author_title || ((currentUser?.role || currentProfile?.role) === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'),
+        author_bio: finalCourseInfo.author_bio || formData.author_bio || '',
+        pre_test_exam_id: finalCourseInfo.pre_test_exam_id || formData.pre_test_exam_id || undefined,
+        final_test_exam_id: finalCourseInfo.final_test_exam_id || formData.final_test_exam_id || undefined,
+        final_test_passing_score: Number(finalCourseInfo.final_test_passing_score ?? formData.final_test_passing_score) || 70,
+        final_test_questions: finalCourseInfo.final_test_questions || formData.final_test_questions || [],
+        final_test_audio_url: finalCourseInfo.final_test_audio_url || formData.final_test_audio_url || '',
+        final_test_speaking_prompt: finalCourseInfo.final_test_speaking_prompt || formData.final_test_speaking_prompt || '',
+        final_test_speaking_file_url: finalCourseInfo.final_test_speaking_file_url || formData.final_test_speaking_file_url || '',
+        final_test_writing_prompt: finalCourseInfo.final_test_writing_prompt || formData.final_test_writing_prompt || '',
+        final_test_writing_file_url: finalCourseInfo.final_test_writing_file_url || formData.final_test_writing_file_url || '',
+      }
+
+      const modulesWereModified =
+        !isEditMode ||
+        Boolean(pendingUploads) ||
+        !initialModulesSnapshotRef.current ||
+        initialModulesSnapshotRef.current !== JSON.stringify(finalModules)
+
+      if (modulesWereModified) {
+        payload.modules = finalModules.map((m, mIdx) => ({
           _id: m.id || `mod-${mIdx}`,
-          course_id: currentCourseId || '',
+          course_id: isEditMode && currentCourseId ? currentCourseId : '',
           title: m.title,
           description: m.description,
           order_index: mIdx + 1,
@@ -378,23 +433,23 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
             order_index: lIdx + 1,
             lesson_order: lIdx + 1,
           })),
-        })),
+        }))
       }
 
-      const allMediaUrls: string[] = []
-      if (formData.thumbnail_url) allMediaUrls.push(formData.thumbnail_url)
-      if (formData.document_url) allMediaUrls.push(formData.document_url)
-      if (formData.final_test_audio_url) allMediaUrls.push(formData.final_test_audio_url)
-      if (formData.final_test_speaking_file_url)
-        allMediaUrls.push(formData.final_test_speaking_file_url)
-      if (formData.final_test_writing_file_url)
-        allMediaUrls.push(formData.final_test_writing_file_url)
-      if (Array.isArray(formData.final_test_questions)) {
-        formData.final_test_questions.forEach((q) => {
+      const allMediaUrls: string[] = [...uploadedR2Urls]
+      if (payload.thumbnail_url) allMediaUrls.push(payload.thumbnail_url)
+      if (payload.document_url) allMediaUrls.push(payload.document_url)
+      if (payload.final_test_audio_url) allMediaUrls.push(payload.final_test_audio_url)
+      if (payload.final_test_speaking_file_url)
+        allMediaUrls.push(payload.final_test_speaking_file_url)
+      if (payload.final_test_writing_file_url)
+        allMediaUrls.push(payload.final_test_writing_file_url)
+      if (Array.isArray(payload.final_test_questions)) {
+        payload.final_test_questions.forEach((q) => {
           if (q.media_url) allMediaUrls.push(q.media_url)
         })
       }
-      formData.modules.forEach((mod) => {
+      payload.modules?.forEach((mod) => {
         if (mod.theory_file_url) allMediaUrls.push(mod.theory_file_url)
         if (mod.test_audio_url) allMediaUrls.push(mod.test_audio_url)
         if (mod.challenge_audio_url) allMediaUrls.push(mod.challenge_audio_url)
@@ -404,11 +459,15 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         qList.forEach((q) => {
           if (q.media_url) allMediaUrls.push(q.media_url)
         })
-        mod.lessons.forEach((les) => {
+        mod.lessons?.forEach((les) => {
           if (les.video_url) allMediaUrls.push(les.video_url)
           if (les.theory_file_url) allMediaUrls.push(les.theory_file_url)
         })
       })
+
+      if (abortController.signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError')
+      }
 
       if (isEditMode && currentCourseId) {
         await courseService.updateCourse(currentCourseId, payload)
@@ -418,20 +477,54 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         toast.success(`Đã cập nhật khóa học "${formData.title}" thành công!`)
       } else {
         const created = await courseService.createCourse(payload)
-        const newCourseId = created?._id || (created as { id?: string })?.id
+        createdCourseId = created._id
+        if (abortController.signal.aborted) {
+          throw new DOMException('Aborted', 'AbortError')
+        }
         if (allMediaUrls.length > 0) {
-          mediaService.confirmMedia(allMediaUrls, newCourseId).catch(() => {})
+          mediaService.confirmMedia(allMediaUrls, created._id).catch(() => {})
         }
         toast.success(`Đã tạo khóa học mới "${formData.title}" thành công!`)
       }
 
+      setPendingUploads(null)
       await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
       setActiveNavItem('courses')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lưu khóa học thất bại'
-      toast.error(msg)
+      const isAborted =
+        abortController.signal.aborted ||
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof Error && (err.name === 'AbortError' || err.message.toLowerCase().includes('abort')))
+
+      if (isAborted) {
+        setSubmitStatusText(
+          isVi
+            ? 'Đang xóa sạch dữ liệu trên R2 và CSDL...'
+            : 'Cleaning up resources on R2 and database...'
+        )
+        try {
+          if (uploadedR2Urls.length > 0) {
+            await mediaService.cleanupTempMedia(uploadedR2Urls)
+          }
+          if (createdCourseId) {
+            await courseService.deleteCourse(createdCourseId)
+          }
+        } catch (cleanupErr) {
+          console.error('[Rollback] Cleanup error:', cleanupErr)
+        }
+        toast.info(
+          isVi
+            ? 'Đã hủy tiến trình lưu và dọn dẹp sạch toàn bộ tài nguyên trên Cloudflare R2 & CSDL.'
+            : 'Save process was canceled and all associated resources on R2 & DB were deleted.'
+        )
+      } else {
+        const msg = err instanceof Error ? err.message : 'Lưu khóa học thất bại'
+        toast.error(msg)
+      }
     } finally {
       setIsSubmitting(false)
+      setSubmitStatusText('')
+      abortControllerRef.current = null
     }
   }
 
@@ -442,8 +535,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
     0
   )
 
-  const courseSlug = formData.slug.trim() || 'untitled-course'
-  const courseFolder = `courses/${courseSlug}-${courseCreatedAt}`
+  const courseFolder = generateCourseR2Folder(formData.title, formData.slug, randomFolderSuffix)
 
   return {
     formData,
@@ -451,9 +543,13 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
     isEditMode,
     isLoading,
     isSubmitting,
+    submitStatusText,
+    pendingUploads,
+    setPendingUploads,
     videoPreviewUrl,
     setVideoPreviewUrl,
     handleSubmit,
+    handleAbortSave,
     totalLessons,
     totalDuration,
     courseFolder,

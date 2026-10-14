@@ -1,15 +1,12 @@
-/**
- * @file admin.profile.helper.ts
- * @description Mã nguồn thành phần admin-profile.helper.ts
- */
+// Tiện ích hỗ trợ quản trị hồ sơ cá nhân và kiểm tra độ mạnh mật khẩu.
 
 export interface AdminProfileData {
-  id: string
-  name: string
+  user_id: string
+  full_name: string
   email: string
   role: 'ADMIN' | 'INSTRUCTOR'
-  avatar?: string
-  phone?: string
+  avatar_url?: string
+  phone_number?: string
   bio?: string
   is_active: boolean
   last_active: string

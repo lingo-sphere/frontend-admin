@@ -13,6 +13,7 @@ export const ToeicExamItemSchema = z.object({
   module_title: z.string().nullable().optional(),
   author_id: z.string().nullable().optional(),
   type: z.string().nullable().optional(),
+  exam_type: z.string().nullable().optional(),
   duration_minutes: z.number().nullable().optional(),
   total_questions: z.number().nullable().optional(),
   passing_score: z.number().nullable().optional(),

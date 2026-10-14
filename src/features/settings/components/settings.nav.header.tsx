@@ -1,11 +1,7 @@
-/**
- * @file settings.nav.header.tsx
- * @description Thanh điều hướng đầu trang cho khu vực Cấu hình Hệ thống & Dịch vụ
- */
-
+// Thanh điều hướng đầu trang cho khu vực Cấu hình Hệ thống & Dịch vụ.
 import { Crown, Bot, Settings as SettingsIcon, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { navItemToPath } from '@/routes/navigation'
 
 export type SettingsPageType = 'plans' | 'ai' | 'system'
@@ -19,7 +15,6 @@ interface SettingsNavHeaderProps {
 export function SettingsNavHeader({ activePage, onRefresh, isRefreshing }: SettingsNavHeaderProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const navigate = useNavigate()
 
   const navTabs = [
     { id: 'plans' as SettingsPageType, navItem: 'settings-plans', label: isVietnamese ? 'Gói dịch vụ' : 'Plans', icon: Crown },
@@ -59,22 +54,22 @@ export function SettingsNavHeader({ activePage, onRefresh, isRefreshing }: Setti
           const Icon = tab.icon
           const isActive = activePage === tab.id
           return (
-            <button
+            <Link
               key={tab.id}
-              type="button"
+              to={navItemToPath(tab.navItem)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 isActive
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
               }`}
-              onClick={() => navigate(navItemToPath(tab.navItem))}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
-            </button>
+            </Link>
           )
         })}
       </div>
     </div>
   )
 }
+

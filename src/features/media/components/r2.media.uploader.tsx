@@ -1,7 +1,4 @@
-/**
- * @file r2.media.uploader.tsx
- * @description Component upload file media (hình ảnh, video bài giảng) trực tiếp lên Cloudflare R2 kèm hiển thị tiến trình
- */
+// Component upload file media hình ảnh, video bài giảng lên Cloudflare R2.
 
 import {
   UploadCloud,
@@ -130,8 +127,8 @@ export function R2MediaUploader({
                   {uploadProgress >= 99
                     ? isVideo
                       ? isVi
-                        ? 'Đang hoàn tất tải lên & khởi tạo luồng HLS...'
-                        : 'Finalizing upload & initiating HLS stream...'
+                        ? 'Đang hoàn tất tải lên & lưu trữ video...'
+                        : 'Finalizing upload & storing video...'
                       : isVi
                       ? 'Đang xử lý & lưu trữ file...'
                       : 'Processing & finalizing...'
@@ -215,10 +212,7 @@ export function R2MediaUploader({
       )}
 
       {showPreviewModal && value && !isVideo && !isDocument && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
-          onClick={() => setShowPreviewModal(false)}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div
             className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-slate-950/95 border border-slate-700/60 shadow-2xl shadow-black/80"
             onClick={(e) => e.stopPropagation()}

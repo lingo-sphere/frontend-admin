@@ -4,6 +4,7 @@
  */
 
 import { Trash2, Volume2 } from 'lucide-react'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 interface ExamEditorGlobalAudioProps {
   globalAudioUrl: string
@@ -18,6 +19,8 @@ export function ExamEditorGlobalAudio({
 }: ExamEditorGlobalAudioProps) {
   if (!globalAudioUrl) return null
 
+  const resolvedUrl = resolveMediaUrl(globalAudioUrl)
+
   return (
     <div className="flex items-center justify-between gap-3 px-6 py-2 bg-indigo-50/50 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/40 text-xs">
       <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
@@ -25,7 +28,7 @@ export function ExamEditorGlobalAudio({
         <span className="font-semibold">
           {isVi ? 'Audio toàn bài thi:' : 'Global Exam Audio:'}
         </span>
-        <audio controls src={globalAudioUrl} className="h-7 max-w-xs" />
+        <audio controls src={resolvedUrl} className="h-7 max-w-xs" />
       </div>
       <button
         type="button"

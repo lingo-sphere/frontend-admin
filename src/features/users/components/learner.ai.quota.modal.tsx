@@ -48,10 +48,7 @@ export function LearnerAiQuotaModal({
   if (!isOpen || !user) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] animate-in fade-in duration-150"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
@@ -180,7 +177,7 @@ export function LearnerAiQuotaModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                      Số câu hỏi tối đa / tháng
+                      Số câu hỏi tối đa / ngày
                     </label>
                     <input
                       type="number"

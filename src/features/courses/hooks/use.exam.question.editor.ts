@@ -29,6 +29,8 @@ export function useExamQuestionEditor({
   initialGlobalAudioUrl,
   isVi,
   onExamUpdated,
+  onExamMetaLoaded,
+  onSkillsAutoSwitched,
   onSave,
   onClose,
 }: UseExamQuestionEditorParams) {
@@ -40,13 +42,21 @@ export function useExamQuestionEditor({
         exam?.skills_enabled === 'FULL' ||
         false
 
+  const examIdKey = exam?._id || exam?.id || 'new'
+
   const initialBundle = useMemo(
     () => computeInitialBundle(exam, initialQuestions, initialGlobalAudioUrl),
-    [exam, initialQuestions, initialGlobalAudioUrl]
+    [examIdKey, initialQuestions, initialGlobalAudioUrl]
   )
 
   const [questions, setQuestions] = useState<ExamQuestionItem[]>(() => initialBundle.qs)
   const [globalAudioUrl, setGlobalAudioUrl] = useState<string>(() => initialBundle.audio)
+  const [importedExamMeta, setImportedExamMeta] = useState<{
+    title?: string
+    duration_minutes?: number
+    passing_score?: number
+    description?: string
+  } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [partFilter, setPartFilter] = useState<string>('ALL')
 
@@ -91,8 +101,26 @@ export function useExamQuestionEditor({
     })
   }
 
+  const prevExamKeyRef = useRef<string | null>(null)
+  const currentExamKey = `${examIdKey}_${isOpen}`
+
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      prevExamKeyRef.current = null
+      initialSnapshotRef.current = null
+      setInitialSnapshot(null)
+      sessionUploadedUrlsRef.current.clear()
+      return
+    }
+
+    if (prevExamKeyRef.current !== currentExamKey) {
+      if (prevExamKeyRef.current !== null && isProcessingZip) {
+        return
+      }
+      if (prevExamKeyRef.current !== null && questions.length > 0 && initialBundle.qs.length === 0) {
+        return
+      }
+      prevExamKeyRef.current = currentExamKey
       setQuestions(initialBundle.qs)
       setGlobalAudioUrl(initialBundle.audio)
       setInitialSnapshot(initialBundle.snap)
@@ -101,12 +129,8 @@ export function useExamQuestionEditor({
       sessionUploadedUrlsRef.current.clear()
       setSearchQuery('')
       setPartFilter('ALL')
-    } else {
-      initialSnapshotRef.current = null
-      setInitialSnapshot(null)
-      sessionUploadedUrlsRef.current.clear()
     }
-  }, [isOpen, initialBundle])
+  }, [isOpen, currentExamKey, initialBundle, isProcessingZip, questions.length])
 
   const isDirty = useMemo(() => {
     if (!initialSnapshot) return false
@@ -356,7 +380,10 @@ export function useExamQuestionEditor({
           }
         },
         effectiveIs4Skills,
-        isLessonMode
+        isLessonMode,
+        (switchedSkills) => {
+          onSkillsAutoSwitched?.(switchedSkills)
+        }
       )
 
       setQuestions(result.questions)
@@ -364,14 +391,25 @@ export function useExamQuestionEditor({
         sessionUploadedUrlsRef.current.add(result.globalAudioUrl)
         setGlobalAudioUrl(result.globalAudioUrl)
       }
+      if (result.examInfo) {
+        setImportedExamMeta(result.examInfo)
+        onExamMetaLoaded?.(result.examInfo)
+      }
       result.questions.forEach((q) => {
         if (q.media_url) sessionUploadedUrlsRef.current.add(q.media_url)
         if (q.image_url) sessionUploadedUrlsRef.current.add(q.image_url)
       })
 
+      const autoSwitchedMsg =
+        result.detectedSkillMode === '4SKILLS' && !effectiveIs4Skills
+          ? isVi
+            ? ' (Đã tự động chuyển cấu hình sang 4 Kỹ năng LRWS)'
+            : ' (Auto-switched config to 4 Skills LRWS)'
+          : ''
+
       toast.success(
         isVi
-          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh) từ file nén!`
+          ? `Đã nạp thành công ${result.questions.length} câu hỏi (${result.audioCount} audio, ${result.imageCount} ảnh)${autoSwitchedMsg}!`
           : `Successfully imported ${result.questions.length} questions from archive!`
       )
     } catch (err: unknown) {
@@ -389,7 +427,7 @@ export function useExamQuestionEditor({
     if (onSave) {
       setIsSaving(true)
       try {
-        await onSave(questions, globalAudioUrl)
+        await onSave(questions, globalAudioUrl, importedExamMeta || undefined)
         syncSavedState(questions, globalAudioUrl)
         onClose()
       } finally {

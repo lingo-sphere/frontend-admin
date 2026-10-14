@@ -1,7 +1,4 @@
-/**
- * @file global.search.modal.tsx
- * @description Modal tìm kiếm nhanh toàn cục các trang quản trị, tính năng và thao tác hệ thống
- */
+// Modal tìm kiếm nhanh toàn cục các trang quản trị, tính năng và thao tác hệ thống.
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -84,10 +81,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
@@ -107,18 +101,26 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
             }
             className="w-full bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-0"
           />
-          {query ? (
+          <div className="flex items-center gap-1 shrink-0">
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                title={isVi ? 'Xóa tìm kiếm' : 'Clear search'}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
             <button
-              onClick={() => setQuery('')}
-              className="text-slate-400 hover:text-slate-600 p-1"
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isVi ? 'Đóng' : 'Close'}
             >
               <X className="w-4 h-4" />
             </button>
-          ) : (
-            <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
-              ESC
-            </span>
-          )}
+          </div>
         </div>
 
         <div className="max-h-96 overflow-y-auto p-2 divide-y divide-slate-100 dark:divide-slate-800/40">

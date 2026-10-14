@@ -47,7 +47,7 @@ export interface DataTableProps<T> {
   subtitle?: React.ReactNode
   filterSlot?: React.ReactNode
   extraActions?: React.ReactNode
-  onResetFilters?: () => void
+  onResetFilters?: () => void | Promise<void>
 
   viewMode?: 'table' | 'grid'
   onViewModeChange?: (mode: 'table' | 'grid') => void
@@ -73,8 +73,8 @@ export function DataTable<T extends object>({
   columns,
   data,
   rowKey = (record) => {
-    const rec = record as { _id?: string; user_id?: string; id?: string }
-    return rec._id || rec.user_id || rec.id || ''
+    const rec = record as { _id?: string }
+    return rec._id ?? ''
   },
   isLoading = false,
   emptyText,
@@ -193,6 +193,22 @@ export function DataTable<T extends object>({
     ? Math.ceil(pagination.totalItems / pagination.pageSize) || 1
     : 1
 
+  const handleResetFiltersInternal = async () => {
+    setColumnOptions(
+      columns.map((col) => ({
+        key: col.key,
+        label: typeof col.title === 'string' ? col.title : col.key,
+        visible: !col.hidden,
+      }))
+    )
+    setDensity('middle')
+    setInternalSortKey(null)
+    setInternalSortOrder(null)
+    if (onResetFilters) {
+      await onResetFilters()
+    }
+  }
+
   return (
     <div className="space-y-4">
       {(title || extraActions) && (
@@ -227,7 +243,7 @@ export function DataTable<T extends object>({
           onColumnsChange={setColumnOptions}
           viewMode={renderGridItem ? viewMode : undefined}
           onViewModeChange={onViewModeChange}
-          onResetFilters={onResetFilters}
+          onResetFilters={onResetFilters ? handleResetFiltersInternal : undefined}
           totalCount={pagination ? pagination.totalItems : data.length}
         />
       </div>

@@ -1,8 +1,8 @@
-// Modal tao moi bai thi.
+// Modal tạo mới đề thi TOEIC.
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X } from 'lucide-react'
+import { X, Headphones, Sparkles } from 'lucide-react'
 import { CustomSelect } from '@/components/custom.select'
 import { NumberInput } from '@/components/number.input'
 import { ConfirmModal } from '@/components/confirm.modal'
@@ -10,7 +10,7 @@ import { ConfirmModal } from '@/components/confirm.modal'
 interface CreateExamModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (title: string, type: string, duration: number) => Promise<void>
+  onSubmit: (title: string, type: string, duration: number, skillsEnabled?: 'LR' | 'ALL') => Promise<void>
 }
 
 export function CreateExamModal({
@@ -22,6 +22,7 @@ export function CreateExamModal({
   const isVi = i18n.language === 'vi'
 
   const [title, setTitle] = useState('')
+  const [skillsEnabled, setSkillsEnabled] = useState<'LR' | 'ALL'>('LR')
   const [type, setType] = useState('FULL_TEST')
   const [duration, setDuration] = useState(120)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -42,8 +43,9 @@ export function CreateExamModal({
     if (!title.trim()) return
     setIsSubmitting(true)
     try {
-      await onSubmit(title, type, duration)
+      await onSubmit(title, type, duration, skillsEnabled)
       setTitle('')
+      setSkillsEnabled('LR')
       setType('FULL_TEST')
       setDuration(120)
       onClose()
@@ -53,10 +55,7 @@ export function CreateExamModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
-      onClick={handleRequestClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-lg rounded-3xl border border-slate-200/90 bg-white p-6 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 dark:border-slate-800 dark:bg-slate-900 space-y-4 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
@@ -88,6 +87,55 @@ export function CreateExamModal({
             />
           </div>
 
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {isVi ? 'Hệ kỹ năng TOEIC' : 'TOEIC Skills System'} <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSkillsEnabled('LR')
+                  if (type === 'FULL_TEST') setDuration(120)
+                }}
+                className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  skillsEnabled === 'LR'
+                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                }`}
+              >
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Headphones className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold leading-tight">TOEIC 2 Kỹ Năng</p>
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">Listening & Reading</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSkillsEnabled('ALL')
+                  if (type === 'FULL_TEST') setDuration(140)
+                }}
+                className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  skillsEnabled === 'ALL'
+                    ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/20'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                }`}
+              >
+                <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold leading-tight">TOEIC 4 Kỹ Năng</p>
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">Full L-R-S-W</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -97,10 +145,8 @@ export function CreateExamModal({
                 value={type}
                 onChange={setType}
                 options={[
-                  { value: 'FULL_TEST', label: isVi ? 'Đề thi đầy đủ (200 câu)' : 'Full Test (200 questions)', badge: isVi ? '200 câu' : '200Q' },
+                  { value: 'FULL_TEST', label: isVi ? 'Đề thi đầy đủ' : 'Full Test', badge: skillsEnabled === 'ALL' ? (isVi ? '4 Kỹ năng' : '4 Skills') : (isVi ? '200 câu' : '200Q') },
                   { value: 'MINI_TEST', label: isVi ? 'Đề thi rút gọn' : 'Mini Test' },
-                  { value: 'PRE_TEST', label: isVi ? 'Đề kiểm tra đầu vào' : 'Pre-Test' },
-                  { value: 'POST_MINI_TEST', label: isVi ? 'Đề kiểm tra sau khóa' : 'Post-Mini Test' },
                 ]}
                 className="w-full"
               />

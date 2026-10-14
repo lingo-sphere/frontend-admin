@@ -18,7 +18,7 @@ export async function fetchLearners(queryParams: UserQueryParams): Promise<Pagin
   const res = await userService.getAllUsers(queryParams)
   const rawItems: UserProfile[] = Array.isArray(res) ? res : (res?.result || [])
   const items = rawItems.map((u: UserProfile) => ({
-    id: u.user_id,
+    user_id: u.user_id,
     full_name: u.full_name,
     email: u.email,
     target_toeic_score: u.target_toeic_score ?? 0,
@@ -39,7 +39,6 @@ export async function fetchLearners(queryParams: UserQueryParams): Promise<Pagin
     created_at: u.created_at || '',
     level: u.level ?? 1,
     longest_streak: u.current_streak ?? 0,
-    gems: u.gems ?? 0,
     lessons_completed: 0,
     vocabulary_reviewed: 0,
     practice_sessions: 0,
@@ -104,7 +103,7 @@ export function useUpdateLearnerStatusMutation() {
     onMutate: ({ userId, status }) => {
       const nextMappedStatus = status === 'BLOCKED' ? 'BANNED' : 'ACTIVE'
       return optimisticUpdateCollection<User>(queryClient, userKeys.all, (learners) =>
-        learners.map((u) => (u.id === userId ? { ...u, status: nextMappedStatus } : u))
+        learners.map((u) => (u.user_id === userId ? { ...u, status: nextMappedStatus } : u))
       )
     },
     onError: (_err, _vars, context) => rollbackCollection<User>(queryClient, context),

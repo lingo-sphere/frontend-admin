@@ -13,6 +13,7 @@ import {
   ArrowDown,
   Sparkles,
   HelpCircle,
+  UploadCloud,
 } from 'lucide-react'
 import { R2MediaUploader } from '@/features/media/components/r2.media.uploader'
 import type { CourseLesson } from '@/features/courses/components/course.basic.info.tab'
@@ -81,6 +82,18 @@ export function ChapterLessonCard({
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 text-[11px] font-semibold border border-emerald-200 dark:border-emerald-800/60 shrink-0">
               <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               <span>{durationLabel !== '0s' ? durationLabel : isVi ? 'Đã có video' : 'Video ready'}</span>
+            </span>
+          ) : lesson.pending_video_name ? (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 text-[11px] font-semibold border border-amber-200 dark:border-amber-800/60 shrink-0"
+              title={lesson.pending_video_name}
+            >
+              <UploadCloud className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <span className="max-w-[170px] truncate">
+                {isVi
+                  ? `Chờ tải R2 (${durationLabel !== '0s' ? durationLabel : lesson.pending_video_name})`
+                  : `Pending R2 (${durationLabel})`}
+              </span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 text-[11px] font-semibold border border-amber-200 dark:border-amber-800/60 shrink-0">
@@ -167,6 +180,16 @@ export function ChapterLessonCard({
       {isExpanded && (
         <div className="p-3.5 sm:p-4 space-y-3.5 bg-white dark:bg-slate-900">
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800/80 dark:bg-slate-950/40">
+            {lesson.pending_video_name && !lesson.video_url && (
+              <div className="flex items-center gap-2 p-2.5 mb-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 font-medium">
+                <UploadCloud className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="truncate">
+                  {isVi
+                    ? `Đã khớp file: "${lesson.pending_video_name}" (sẽ tự động tải lên Cloudflare R2 khi bạn nhấn "Lưu Khóa Học").`
+                    : `Matched file: "${lesson.pending_video_name}" (will be uploaded to R2 upon clicking Save).`}
+                </span>
+              </div>
+            )}
             <R2MediaUploader
               type="video"
               value={lesson.video_url}
@@ -184,6 +207,16 @@ export function ChapterLessonCard({
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800/80 dark:bg-slate-950/40">
+            {lesson.pending_theory_name && !lesson.theory_file_url && (
+              <div className="flex items-center gap-2 p-2.5 mb-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-800 dark:text-indigo-300 font-medium">
+                <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span className="truncate">
+                  {isVi
+                    ? `Đã khớp tài liệu: "${lesson.pending_theory_name}" (sẽ tự động tải lên Cloudflare R2 khi bạn nhấn "Lưu Khóa Học").`
+                    : `Matched document: "${lesson.pending_theory_name}" (will be uploaded to R2 upon clicking Save).`}
+                </span>
+              </div>
+            )}
             <R2MediaUploader
               type="document"
               value={lesson.theory_file_url || ''}

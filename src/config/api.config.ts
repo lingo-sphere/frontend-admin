@@ -69,12 +69,6 @@ export const API_CONFIG = {
       QUESTION_BY_ID: (questionId: string) => `/courses/questions/${questionId}`,
     },
 
-    ROADMAPS: {
-      LIST: '/courses/roadmaps',
-      BY_ID: (id: string) => `/courses/roadmaps/${id}`,
-      RECOMMENDATION: '/courses/roadmaps/recommendation',
-    },
-
     VOCABULARY: {
       LIST: '/vocabulary/lexical-items',
       SEARCH: '/vocabulary/lexical-items/search',
@@ -107,6 +101,9 @@ export const API_CONFIG = {
       WRITING: '/practice/writing/exercises',
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       JOURNAL_PROMPT: '/practice/writing/journal/daily-prompt',
+      // Practice Context taxonomy - dùng cho mapping câu hỏi với context
+      CONTEXTS: '/practice/contexts',
+      CONTEXTS_BY_LEVEL: (level: number) => `/practice/contexts?level=${level}`,
     },
 
     EXAMS: {
@@ -117,9 +114,14 @@ export const API_CONFIG = {
       QUESTIONS: '/exams/questions',
       ADD_QUESTIONS: (id: string) => `/exams/${id}/questions`,
       ADMIN_PLACEMENT_ATTEMPTS: '/exams/admin/placement-attempts',
+      ADMIN_TOEIC_ATTEMPTS: '/exams/admin/toeic-attempts',
       ADMIN_ATTEMPT_RESULT: (attemptId: string) => `/exams/admin/attempts/${attemptId}/result`,
       ADMIN_USER_ATTEMPTS: (userId: string) => `/exams/admin/users/${userId}/attempts`,
       ADMIN_UPDATE_ATTEMPT_SCORE: (attemptId: string) => `/exams/admin/attempts/${attemptId}/score`,
+      AI_IMPORT: '/exams/ai-import',
+      AI_PREVIEW: '/exams/ai-import/preview',
+      AI_EXTRACT_KEYS: '/exams/ai-import/extract-keys',
+      AI_LOCAL_BATCH: '/exams/ai-import/local-batch',
     },
 
     NOTIFICATIONS: {

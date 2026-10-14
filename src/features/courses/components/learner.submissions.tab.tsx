@@ -8,6 +8,7 @@ import type { SkillSubmissionItem } from '@/features/progress/services/progress.
 import { LearnerSubmissionCard } from '@/features/courses/components/learner.submission.card'
 import { LearnerSubmissionsFilterBar } from '@/features/courses/components/learner.submissions.filter.bar'
 import { createLearnerSubmissionsColumns } from '@/features/courses/components/learner.submissions.columns'
+import { toast } from '@/store/toast.store'
 
 interface CourseSimple {
   id: string
@@ -125,7 +126,7 @@ export function LearnerSubmissionsTab({
     return filteredSubmissions.slice(start, start + subPageSize)
   }, [filteredSubmissions, subCurrentPage, subPageSize])
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSubmissionSearch('')
     onSelectCourseId('ALL')
     setSkillFilter('ALL')
@@ -133,6 +134,8 @@ export function LearnerSubmissionsTab({
     setSubSortKey(null)
     setSubSortOrder(null)
     setSubCurrentPage(1)
+    await onRefresh()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc bài nộp' : 'Submission filters reset')
   }
 
   const submissionColumns = useMemo(

@@ -48,7 +48,6 @@ export const UserProfileSchema = z.object({
   total_xp: z.number().nullable().optional(),
   current_streak: z.number().nullable().optional(),
   level: z.number().nullable().optional(),
-  gems: z.number().nullable().optional(),
   league: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
@@ -128,9 +127,19 @@ export const LoginResponseSchema = z.object({
   refresh_token: z.string().optional(),
 }).passthrough()
 
+export const RegisterResponseSchema = z.object({
+  message: z.string().optional(),
+  email: z.string().optional(),
+  expire_minutes: z.number().optional(),
+  user: AuthUserSchema.optional(),
+  access_token: z.string().optional(),
+  refresh_token: z.string().optional(),
+}).passthrough()
+
 export type PermissionItem = z.infer<typeof PermissionItemSchema>
 export type AuthUser = z.infer<typeof AuthUserSchema>
 export type LoginResponse = z.infer<typeof LoginResponseSchema>
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>
 export type UserProfile = z.infer<typeof UserProfileSchema>
 export type PaginationMeta = z.infer<typeof PaginationMetaSchema>
 export type PaginatedUserProfiles = z.infer<typeof PaginatedUserProfilesSchema>

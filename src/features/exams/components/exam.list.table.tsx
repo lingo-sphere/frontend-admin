@@ -1,7 +1,4 @@
-/**
- * @file exam.list.table.tsx
- * @description Exam list table with sorting, pagination, search, and type filters
- */
+// Bảng danh sách đề thi TOEIC với tính năng tìm kiếm, phân trang và bộ lọc hệ kỹ năng.
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,8 +11,8 @@ interface ExamListTableProps {
   exams: ToeicExamItem[]
   searchQuery: string
   onSearchChange: (val: string) => void
-  selectedType: string
-  onTypeChange: (val: string) => void
+  selectedSkill?: string
+  onSkillChange?: (val: string) => void
   onTogglePublish: (id: string, current: boolean) => void
   onDeleteExam: (id: string) => Promise<void> | void
   onManageQuestions?: (exam: ToeicExamItem) => void
@@ -25,8 +22,8 @@ export function ExamListTable({
   exams,
   searchQuery,
   onSearchChange,
-  selectedType,
-  onTypeChange,
+  selectedSkill = 'ALL',
+  onSkillChange,
   onTogglePublish,
   onDeleteExam,
   onManageQuestions,
@@ -56,9 +53,13 @@ export function ExamListTable({
       const matchesSearch = exam.title
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
-      const matchesType =
-        selectedType === 'ALL' || exam.type === selectedType
-      return matchesSearch && matchesType
+      const matchesSkill =
+        !selectedSkill ||
+        selectedSkill === 'ALL' ||
+        (selectedSkill === '4SKILLS'
+          ? exam.skills_enabled === 'ALL' || exam.skills_enabled === '4SKILLS' || exam.skills_enabled === 'LRSW'
+          : exam.skills_enabled !== 'ALL' && exam.skills_enabled !== '4SKILLS' && exam.skills_enabled !== 'LRSW')
+      return matchesSearch && matchesSkill
     })
 
     if (!sortKey || !sortOrder) return list
@@ -86,7 +87,7 @@ export function ExamListTable({
       }
       return 0
     })
-  }, [exams, searchQuery, selectedType, sortKey, sortOrder])
+  }, [exams, searchQuery, selectedSkill, sortKey, sortOrder])
 
   const totalPages = Math.ceil(filteredExams.length / pageSize) || 1
 
@@ -100,8 +101,8 @@ export function ExamListTable({
       <ExamTableFilters
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
-        selectedType={selectedType}
-        onTypeChange={onTypeChange}
+        selectedSkill={selectedSkill}
+        onSkillChange={onSkillChange}
         isVi={isVi}
       />
 
@@ -135,6 +136,7 @@ export function ExamListTable({
                     <span>{isVi ? 'Số câu' : 'Questions'}</span>
                   </div>
                 </th>
+                <th className="py-3.5 px-4">{isVi ? 'Tài nguyên' : 'Media'}</th>
                 <th
                   onClick={() => handleSort('attempts')}
                   className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
@@ -158,7 +160,7 @@ export function ExamListTable({
             <tbody className="text-slate-700 dark:text-slate-200 text-xs">
               {paginatedExams.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     {isVi ? 'Không tìm thấy đề thi nào phù hợp' : 'No matching exams found'}
                   </td>
                 </tr>

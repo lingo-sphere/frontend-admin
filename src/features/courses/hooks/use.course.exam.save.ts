@@ -130,13 +130,13 @@ export function useCourseExamSave({
         const createPayload: CreateExamDto = {
           title: trimmedTitle,
           code: generatedCode,
-          course_id: undefined,
-          course_title: 'Toàn Hệ Thống',
-          type: 'DIAGNOSTIC_TEST',
-          exam_type: 'DIAGNOSTIC_TEST',
-          is_system_placement: true,
-          skills_enabled: formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR',
-          placement_type: formPlacementSkills,
+          course_id: isSystemPlacement ? undefined : initialExam.course_id,
+          course_title: isSystemPlacement ? 'Toàn Hệ Thống' : (initialExam.course_title || 'Khóa học'),
+          type: isSystemPlacement ? 'DIAGNOSTIC_TEST' : (initialExam.type || 'TOEIC_FULL'),
+          exam_type: isSystemPlacement ? 'DIAGNOSTIC_TEST' : (initialExam.exam_type || 'TOEIC_FULL'),
+          is_system_placement: isSystemPlacement,
+          skills_enabled: isSystemPlacement ? (formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR') : (initialExam.skills_enabled || 'LR'),
+          placement_type: isSystemPlacement ? formPlacementSkills : undefined,
           duration_minutes: formDuration,
           total_questions: questions.length,
           passing_score: formPassingScore,
@@ -155,7 +155,9 @@ export function useCourseExamSave({
           if (q.image_url) allMediaUrls.push(q.image_url)
         })
         Array.from(sessionUploadedUrlsRef.current).forEach((u) => allMediaUrls.push(u))
-        await mediaAdminService.confirmMedia(allMediaUrls)
+        if (allMediaUrls.length > 0) {
+          await mediaAdminService.confirmMedia(allMediaUrls)
+        }
 
         toast.success(
           isVi
@@ -164,10 +166,12 @@ export function useCourseExamSave({
         )
         await queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
         await queryClient.invalidateQueries({ queryKey: ['course-exams-aggregated'] })
+        await queryClient.invalidateQueries({ queryKey: ['exams-all-existing'] })
         await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
+        storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
         onBack()
       } else {
-        const examId = initialExam._id || initialExam.id || ''
+        const examId = initialExam._id || initialExam.id || initialExam.code || ''
         const isCourseTest = String(examId).startsWith('course_final_')
         const isModuleChallenge = String(examId).startsWith('mod_challenge_')
 
@@ -195,8 +199,9 @@ export function useCourseExamSave({
             passing_score: formPassingScore,
             is_published: formIsPublished,
             description: formDescription.trim(),
-            placement_type: formPlacementSkills,
-            skills_enabled: formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR',
+            placement_type: isSystemPlacement ? formPlacementSkills : undefined,
+            skills_enabled: isSystemPlacement ? (formPlacementSkills === '4SKILLS' ? 'ALL' : 'LR') : (initialExam.skills_enabled || 'LR'),
+            is_system_placement: isSystemPlacement,
             questions,
             audio_url: globalAudioUrl,
           })
@@ -209,7 +214,9 @@ export function useCourseExamSave({
           if (q.image_url) allMediaUrls.push(q.image_url)
         })
         Array.from(sessionUploadedUrlsRef.current).forEach((u) => allMediaUrls.push(u))
-        await mediaAdminService.confirmMedia(allMediaUrls)
+        if (allMediaUrls.length > 0) {
+          await mediaAdminService.confirmMedia(allMediaUrls)
+        }
 
         toast.success(
           isVi
@@ -218,6 +225,7 @@ export function useCourseExamSave({
         )
         await queryClient.invalidateQueries({ queryKey: examAdminKeys.all })
         await queryClient.invalidateQueries({ queryKey: ['course-exams-aggregated'] })
+        await queryClient.invalidateQueries({ queryKey: ['exams-all-existing'] })
         await queryClient.invalidateQueries({ queryKey: courseAdminKeys.all })
         storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
         onBack()

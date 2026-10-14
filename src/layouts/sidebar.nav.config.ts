@@ -1,8 +1,4 @@
-/**
- * @file sidebar.nav.config.ts
- * @description Sidebar navigation groups configuration, item definitions, and permission checking logic
- */
-
+// Cấu hình danh mục nhóm và các mục điều hướng thanh bên Admin.
 import React from 'react'
 import {
   LayoutDashboard,
@@ -41,12 +37,12 @@ export interface NavGroup {
 export const navGroups: NavGroup[] = [
   {
     id: 'home',
-    label: 'HOME',
+    label: 'TRANG CHỦ',
     items: [{ id: 'dashboard', icon: LayoutDashboard, label: 'Tổng quan' }],
   },
   {
     id: 'users_management',
-    label: 'USERS',
+    label: 'QUẢN LÝ NGƯỜI DÙNG',
     items: [
       {
         id: 'users',
@@ -61,15 +57,15 @@ export const navGroups: NavGroup[] = [
   },
   {
     id: 'access_control',
-    label: 'ACCESS CONTROL',
+    label: 'QUẢN LÝ PHÂN QUYỀN',
     items: [
-      { id: 'roles', icon: Shield, label: 'Vai trò (Role)' },
-      { id: 'permissions', icon: KeyRound, label: 'Quyền hạn (Permission)' },
+      { id: 'roles', icon: Shield, label: 'Vai trò' },
+      { id: 'permissions', icon: KeyRound, label: 'Quyền hạn' },
     ],
   },
   {
     id: 'learning',
-    label: 'LEARNING',
+    label: 'GIẢNG DẠY & HỌC TẬP',
     items: [
       {
         id: 'courses',
@@ -79,28 +75,28 @@ export const navGroups: NavGroup[] = [
           { id: 'courses-list', label: 'Quản lý khóa học' },
           { id: 'course-learners', label: 'Quản lý học viên' },
           { id: 'course-exams', label: 'Quản lý bài thi' },
-          { id: 'roadmaps', label: 'Quản lý lộ trình' },
         ],
       },
       { id: 'vocabulary', icon: BookOpen, label: 'Từ vựng' },
       {
         id: 'practice',
         icon: Activity,
-        label: 'Luyện tập & TOEIC',
+        label: 'Luyện tập & Đề thi',
         children: [
           { id: 'practice-exercises', label: 'Bài luyện tập' },
           { id: 'practice-listening', label: 'Luyện nghe' },
           { id: 'practice-speaking', label: 'Luyện nói' },
           { id: 'practice-writing', label: 'Luyện viết' },
           { id: 'toeic-tests', label: 'Đề thi TOEIC' },
+          { id: 'placement-tests', label: 'Đề thi đầu vào' },
         ],
       },
-      { id: 'media-storage', icon: Layers3, label: 'Kho Media' },
+      { id: 'media-storage', icon: Layers3, label: 'Kho tài nguyên' },
     ],
   },
   {
     id: 'community',
-    label: 'COMMUNITY',
+    label: 'CỘNG ĐỒNG',
     items: [
       { id: 'community', icon: MessageCircle, label: 'Cộng đồng' },
       { id: 'public-decks', icon: Layers3, label: 'Bộ thẻ công khai' },
@@ -108,23 +104,23 @@ export const navGroups: NavGroup[] = [
   },
   {
     id: 'insights',
-    label: 'INSIGHTS',
+    label: 'THỐNG KÊ & BÁO CÁO',
     items: [
       {
         id: 'progress',
         icon: BarChart3,
         label: 'Thống kê dữ liệu',
         children: [
-          { id: 'progress', label: 'Phân tích LingoSphere' },
-          { id: 'analytics-posthog', label: 'Frontend Web (PostHog)' },
-          { id: 'monitoring-betterstack', label: 'Backend 13 Services (BetterStack)' },
+          { id: 'progress', label: 'Phân tích học tập' },
+          { id: 'analytics-posthog', label: 'Phân tích Web' },
+          { id: 'monitoring-betterstack', label: 'Giám sát hệ thống' },
         ],
       },
     ],
   },
   {
     id: 'system',
-    label: 'SYSTEM',
+    label: 'HỆ THỐNG',
     items: [
       { id: 'notifications', icon: Bell, label: 'Thông báo', kicker: '8' },
       {

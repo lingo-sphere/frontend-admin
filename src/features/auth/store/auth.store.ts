@@ -78,7 +78,14 @@ const getStoredToken = (): string | null => {
 }
 
 const getStoredUser = (): AuthUser | null => {
-  return storage.get<AuthUser>(STORAGE_KEYS.USER) || storage.session.get<AuthUser>(STORAGE_KEYS.USER)
+  const user = storage.get<AuthUser>(STORAGE_KEYS.USER) || storage.session.get<AuthUser>(STORAGE_KEYS.USER)
+  if (user) {
+    const role = (user.role || '').toUpperCase()
+    if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+      return null
+    }
+  }
+  return user
 }
 
 export const authStore = createStore<AuthState>()((set, get) => ({
@@ -116,7 +123,11 @@ export const authStore = createStore<AuthState>()((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.login(credentials)
-      const { user, access_token } = res
+      const { user, access_token, refresh_token } = res
+      const role = (user?.role || '').toUpperCase()
+      if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+        throw new Error('Tài khoản học viên (USER/LEARNER) không có quyền truy cập trang quản trị Admin.')
+      }
 
       let permissions: PermissionItem[] = user.permissions || []
       if (!permissions || permissions.length === 0) {
@@ -134,9 +145,14 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       const secondaryStorage = isRemember ? storage.session : storage
 
       secondaryStorage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       secondaryStorage.remove(STORAGE_KEYS.USER)
 
       primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, access_token)
+      primaryStorage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      if (refresh_token) {
+        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, refresh_token, { days: 7 })
+      }
       primaryStorage.set(STORAGE_KEYS.USER, updatedUser)
 
       set({
@@ -171,9 +187,12 @@ export const authStore = createStore<AuthState>()((set, get) => ({
       console.warn('Logout error (clearing local session anyway):', err)
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
       storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.session.remove(STORAGE_KEYS.USER)
+      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
       set({
         user: null,
         profile: null,
@@ -204,6 +223,11 @@ export const authStore = createStore<AuthState>()((set, get) => ({
 
     try {
       const user = await authService.getMe()
+      const role = (user?.role || '').toUpperCase()
+      if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+        await get().logout()
+        return
+      }
       let profile: UserProfile | null = null
       try {
         profile = await userService.getMyProfile()

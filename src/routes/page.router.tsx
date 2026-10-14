@@ -1,7 +1,4 @@
-/**
- * @file page.router.tsx
- * @description Component giao diện PageRouter phục vụ khu vực Quản trị Admin
- */
+// Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
 
 import { useLocation } from 'react-router-dom'
 import { pathToNavItem } from '@/routes/navigation'
@@ -40,8 +37,9 @@ import { AdminProfilePage } from '@/features/auth/pages/admin.profile.page'
 import { RolesPage } from '@/features/rbac/pages/roles.page'
 import { PermissionsPage } from '@/features/rbac/pages/permissions.page'
 import { ExamsPage } from '@/features/exams/pages/exams.page'
+import { PlacementTestsPage } from '@/features/exams/pages/placement.tests.page'
 import { MediaStoragePage } from '@/features/media/pages/media.storage.page'
-import { RoadmapsPage } from '@/features/roadmaps/pages/roadmaps.page'
+import { ForbiddenPage, NotFoundPage } from '@/features/system/pages/status.result.page'
 
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -56,8 +54,6 @@ const pageMap: Record<string, React.ComponentType> = {
   'course-learners': CourseLearnersPage,
   'course-exams': CourseExamsPage,
   'course-create': CourseFormPage,
-  roadmaps: RoadmapsPage,
-  'roadmaps-list': RoadmapsPage,
   vocabulary: VocabularyPage,
   'vocab-create': VocabularyFormPage,
   'vocabulary-import': VocabularyImportPage,
@@ -67,6 +63,7 @@ const pageMap: Record<string, React.ComponentType> = {
   'practice-speaking': PracticeSpeakingPage,
   'practice-writing': PracticeWritingPage,
   'toeic-tests': ExamsPage,
+  'placement-tests': PlacementTestsPage,
   exams: ExamsPage,
   'media-storage': MediaStoragePage,
   media: MediaStoragePage,
@@ -85,6 +82,10 @@ const pageMap: Record<string, React.ComponentType> = {
   'settings-ai': SettingsAiPage,
   'settings-system': SettingsSystemPage,
   'admin-profile': AdminProfilePage,
+  'not-found': NotFoundPage,
+  'forbidden': ForbiddenPage,
+  '403': ForbiddenPage,
+  '404': NotFoundPage,
 }
 
 export function PageRouter() {
@@ -98,6 +99,14 @@ export function PageRouter() {
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
 
+  if (activeNavItem === 'not-found' || activeNavItem === '404') {
+    return <NotFoundPage key={pathname} />
+  }
+
+  if (activeNavItem === 'forbidden' || activeNavItem === '403') {
+    return <ForbiddenPage key={pathname} />
+  }
+
   if (!isAdmin) {
     if (
       activeNavItem === 'courses' ||
@@ -106,8 +115,6 @@ export function PageRouter() {
       activeNavItem === 'course-exams' ||
       activeNavItem === 'course-exam-create' ||
       activeNavItem.startsWith('course-exam-questions:') ||
-      activeNavItem === 'roadmaps' ||
-      activeNavItem === 'roadmaps-list' ||
       activeNavItem.startsWith('course-scores:') ||
       activeNavItem.startsWith('course-submissions:') ||
       activeNavItem.startsWith('learner-progress:') ||
@@ -116,96 +123,111 @@ export function PageRouter() {
       activeNavItem.startsWith('course-form:')
     ) {
       if (!hasPermission('GET', '/courses') && !hasModulePermission('COURSES')) {
-        return <DashboardPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'vocabulary' || activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:') || activeNavItem === 'public-decks') {
       if (!hasModulePermission('VOCABULARY')) {
-        return <DashboardPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
-    if (activeNavItem === 'toeic-tests') {
-      if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS')) {
-        return <DashboardPage />
+    if (
+      activeNavItem === 'toeic-tests' ||
+      activeNavItem === 'toeic-exam-create' ||
+      activeNavItem.startsWith('toeic-exam-questions:') ||
+      activeNavItem === 'placement-tests' ||
+      activeNavItem === 'placement-test-create' ||
+      activeNavItem.startsWith('placement-test-questions:')
+    ) {
+      if (!hasPermission('GET', '/exams') && !hasModulePermission('EXAMS') && !hasModulePermission('PRACTICE')) {
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'roles') {
       if (!hasPermission('GET', '/roles') && !hasModulePermission('ROLES')) {
-        return <DashboardPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'permissions') {
       if (!hasPermission('GET', '/permissions') && !hasModulePermission('PERMISSIONS')) {
-        return <DashboardPage />
+        return <ForbiddenPage key={pathname} />
       }
     }
 
     if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
-      return <DashboardPage />
+      return <ForbiddenPage key={pathname} />
     }
   }
 
   if (activeNavItem.startsWith('admin-user-form:') || activeNavItem.startsWith('admin-user-edit:')) {
     const userId = activeNavItem.split(':')[1]
-    return <AdminUserFormPage editUserId={userId} />
+    return <AdminUserFormPage key={pathname} editUserId={userId} />
   }
 
   if (activeNavItem.startsWith('user-profile:')) {
-    return <UserProfilePage />
+    return <UserProfilePage key={pathname} />
   }
 
   if (activeNavItem.startsWith('admin-profile:')) {
-    return <AdminProfilePage />
+    return <AdminProfilePage key={pathname} />
   }
 
   if (activeNavItem.startsWith('vocab-edit:') || activeNavItem.startsWith('vocabulary-form:')) {
     const wordId = activeNavItem.split(':')[1]
-    return <VocabularyFormPage editWordId={wordId} />
+    return <VocabularyFormPage key={pathname} editWordId={wordId} />
   }
 
   if (activeNavItem.startsWith('course-edit:') || activeNavItem.startsWith('course-form:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseFormPage editCourseId={courseId} />
+    return <CourseFormPage key={pathname} editCourseId={courseId} />
   }
 
   if (activeNavItem.startsWith('course-scores:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseScoresPage courseId={courseId} />
+    return <CourseScoresPage key={pathname} courseId={courseId} />
   }
 
   if (activeNavItem.startsWith('course-submissions:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseSubmissionsPage courseId={courseId} />
+    return <CourseSubmissionsPage key={pathname} courseId={courseId} />
   }
 
-  if (activeNavItem === 'course-exam-create') {
-    return <CourseExamQuestionsPage examId="new" />
+  if (
+    activeNavItem === 'course-exam-create' ||
+    activeNavItem === 'placement-test-create' ||
+    activeNavItem === 'toeic-exam-create'
+  ) {
+    return <CourseExamQuestionsPage key={pathname} examId="new" />
   }
 
-  if (activeNavItem.startsWith('course-exam-questions:')) {
+  if (
+    activeNavItem.startsWith('course-exam-questions:') ||
+    activeNavItem.startsWith('placement-test-questions:') ||
+    activeNavItem.startsWith('toeic-exam-questions:')
+  ) {
     const examId = activeNavItem.split(':')[1]
-    return <CourseExamQuestionsPage examId={examId} />
+    return <CourseExamQuestionsPage key={pathname} examId={examId} />
   }
 
   if (activeNavItem.startsWith('learner-progress:')) {
     const parts = activeNavItem.split(':')
     const courseId = parts[1]
     const userId = parts[2]
-    return <LearnerProgressDetailPage courseId={courseId} userId={userId} />
+    return <LearnerProgressDetailPage key={pathname} courseId={courseId} userId={userId} />
   }
 
   if (activeNavItem.startsWith('learner-reminders:')) {
     const parts = activeNavItem.split(':')
     const courseId = parts[1]
     const userId = parts[2]
-    return <LearnerReminderHistoryPage courseId={courseId} userId={userId} />
+    return <LearnerReminderHistoryPage key={pathname} courseId={courseId} userId={userId} />
   }
 
-  const PageComponent = pageMap[activeNavItem] || DashboardPage
+  const PageComponent = pageMap[activeNavItem] || NotFoundPage
 
-  return <PageComponent />
+  return <PageComponent key={pathname} />
 }

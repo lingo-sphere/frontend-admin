@@ -1,5 +1,7 @@
-// Topbar notifications popover list with mark-as-read and navigation actions.
+// Danh sách thông báo dạng popover trên thanh điều hướng topbar.
+
 import type { RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Bell } from 'lucide-react'
 import type { AppNotification } from '@/types/api.types'
 import { formatRelativeTime } from '@/lib/format'
@@ -27,13 +29,15 @@ export function TopbarNotificationsDropdown({
   onGoToNotifications,
   isVietnamese,
 }: TopbarNotificationsDropdownProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative" ref={notificationRef}>
       <button
         className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors relative cursor-pointer"
         onClick={onToggleOpen}
         type="button"
-        aria-label="Thông báo"
+        aria-label={t('header.notifications')}
       >
         <Bell className="w-4.5 h-4.5" />
         {unreadCount > 0 && (
@@ -48,7 +52,7 @@ export function TopbarNotificationsDropdown({
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Bell className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-              <span>{isVietnamese ? 'Thông báo hệ thống' : 'System Notifications'}</span>
+              <span>{t('header.systemNotifications')}</span>
             </h3>
             {unreadCount > 0 && (
               <button
@@ -56,7 +60,7 @@ export function TopbarNotificationsDropdown({
                 onClick={onMarkAllAsRead}
                 type="button"
               >
-                {isVietnamese ? 'Đọc tất cả' : 'Mark all as read'}
+                {t('header.markAllAsRead')}
               </button>
             )}
           </div>
@@ -64,7 +68,7 @@ export function TopbarNotificationsDropdown({
           <div className="divide-y divide-slate-100 dark:divide-slate-800/60 my-2 max-h-72 overflow-y-auto pr-1">
             {notifications.length === 0 ? (
               <p className="py-6 text-center text-xs text-slate-400">
-                {isVietnamese ? 'Không có thông báo mới nào' : 'No new notifications'}
+                {t('header.noNewNotifications')}
               </p>
             ) : (
               notifications.map((notif) => {
@@ -108,7 +112,7 @@ export function TopbarNotificationsDropdown({
               onClick={onGoToNotifications}
               type="button"
             >
-              {isVietnamese ? 'Xem tất cả thông báo →' : 'View all notifications →'}
+              {t('header.viewAllNotifications')}
             </button>
           </div>
         </div>

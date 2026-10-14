@@ -1,5 +1,6 @@
-// Bảng điều khiển cấu hình phòng chat cộng đồng (Bật/tắt chat, chế độ chậm)
+// Bảng điều khiển cấu hình phòng chat cộng đồng (Bật/tắt chat, chế độ chậm).
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MessageSquare, Clock, Save, Lock, Unlock } from 'lucide-react'
 import type { AdminChatRoom, UpdateRoomSettingPayload } from '@/features/community/types/community.admin.types'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
@@ -10,19 +11,20 @@ interface CommunityRoomControlsProps {
   onUpdate: (payload: UpdateRoomSettingPayload) => Promise<void>
 }
 
-const SLOW_MODE_OPTIONS: SelectOption[] = [
-  { value: '0', label: 'Tắt' },
-  { value: '3', label: '3 giây' },
-  { value: '5', label: '5 giây' },
-  { value: '10', label: '10 giây' },
-  { value: '30', label: '30 giây' },
-  { value: '60', label: '60 giây' },
-]
-
 export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRoomControlsProps) {
+  const { t } = useTranslation()
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true)
   const [slowModeSeconds, setSlowModeSeconds] = useState<number>(0)
   const [isSaving, setIsSaving] = useState(false)
+
+  const slowModeOptions: SelectOption[] = [
+    { value: '0', label: t('community.slowModeOff') },
+    { value: '3', label: t('community.slowModeSeconds', { seconds: 3 }) },
+    { value: '5', label: t('community.slowModeSeconds', { seconds: 5 }) },
+    { value: '10', label: t('community.slowModeSeconds', { seconds: 10 }) },
+    { value: '30', label: t('community.slowModeSeconds', { seconds: 30 }) },
+    { value: '60', label: t('community.slowModeSeconds', { seconds: 60 }) },
+  ]
 
   useEffect(() => {
     if (room) {
@@ -57,14 +59,14 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                {room?.title || 'Phòng Chat Cộng Đồng'}
+                {room?.title || t('community.roomTitleDefault')}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
                 #{room?.room_code || 'general-lounge'}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Kênh giao lưu học tập trực tiếp cho học viên đã mua khóa học hoặc có gói PRO
+              {t('community.roomDescription')}
             </p>
           </div>
         </div>
@@ -75,7 +77,7 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white shadow-sm transition-all self-start md:self-auto cursor-pointer"
         >
           <Save className="w-4 h-4" />
-          {isSaving ? 'Đang lưu...' : 'Lưu cài đặt'}
+          {isSaving ? t('community.saving') : t('community.saveSettings')}
         </button>
       </div>
 
@@ -89,13 +91,13 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
                 <Lock className="w-4 h-4 text-rose-600" />
               )}
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Quyền trò chuyện toàn phòng
+                {t('community.chatPermissionTitle')}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
               {isChatEnabled
-                ? 'Đang mở: Mọi học viên đủ điều kiện đều có thể gửi tin nhắn tự do.'
-                : 'Chế độ khóa: Chỉ Quản trị viên và Phó nhóm mới có quyền gửi tin nhắn thông báo.'}
+                ? t('community.chatPermissionOpen')
+                : t('community.chatPermissionLocked')}
             </p>
           </div>
 
@@ -115,11 +117,11 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-500" />
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Chế độ gửi tin chậm (Slow Mode)
+                {t('community.slowModeTitle')}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
-              Giãn cách thời gian tối thiểu giữa 2 lần gửi tin của học viên để ngăn chặn spam.
+              {t('community.slowModeDesc')}
             </p>
           </div>
 
@@ -127,7 +129,7 @@ export function CommunityRoomControls({ room, isLoading, onUpdate }: CommunityRo
             <CustomSelect
               value={String(slowModeSeconds)}
               onChange={(val) => setSlowModeSeconds(Number(val))}
-              options={SLOW_MODE_OPTIONS}
+              options={slowModeOptions}
               size="sm"
               showSearch={false}
             />

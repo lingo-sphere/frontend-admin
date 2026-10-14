@@ -116,7 +116,7 @@ export function Topbar() {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
     try {
       await notificationService.markAllAsRead()
-      toast.success('Đã đánh dấu tất cả thông báo là đã đọc')
+      toast.success(t('header.markAllSuccess'))
     } catch {
     }
   }
@@ -129,7 +129,7 @@ export function Topbar() {
   const handleLogout = async () => {
     setShowLogoutConfirm(false)
     await logout()
-    toast.info('Bạn đã đăng xuất khỏi hệ thống thành công')
+    toast.info(t('header.logoutSuccess'))
   }
 
   useEffect(() => {
@@ -153,7 +153,7 @@ export function Topbar() {
             className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             onClick={() => setMobileSidebarOpen(true)}
             type="button"
-            aria-label="Mở menu"
+            aria-label={t('header.openMenu')}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -165,7 +165,7 @@ export function Topbar() {
           >
             <Search className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 shrink-0" />
             <span className="w-full text-slate-400 dark:text-slate-500 text-xs truncate">
-              {t('header.search') || 'Tìm kiếm nhanh (Người dùng, Khóa học, Từ vựng)...'}
+              {t('header.search')}
             </span>
             <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 font-mono shrink-0">
               ⌘K
@@ -178,20 +178,20 @@ export function Topbar() {
             <Users className="w-4 h-4" />
             <span>
               {totalLearnersCount !== null ? `${totalLearnersCount} ` : '12.4k '}
-              {t('header.learnersCount') || 'Học viên'}
+              {t('header.learnersCount')}
             </span>
           </div>
 
           <div className="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-300">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-            <span>{t('header.systemStable') || 'Hệ thống ổn định'}</span>
+            <span>{t('header.systemStable')}</span>
           </div>
 
           <button
             className="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-xs font-extrabold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             onClick={toggleLanguage}
             type="button"
-            title="Đổi ngôn ngữ Tiếng Việt / English"
+            title={t('header.switchLanguage')}
           >
             {isVietnamese ? 'VI' : 'EN'}
           </button>
@@ -200,7 +200,7 @@ export function Topbar() {
             className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             onClick={toggleTheme}
             type="button"
-            title={theme === 'dark' ? 'Chuyển sang Chế độ Sáng' : 'Chuyển sang Chế độ Tối'}
+            title={theme === 'dark' ? t('header.lightMode') : t('header.darkMode')}
           >
             {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-400" /> : <Moon className="w-4.5 h-4.5 text-indigo-600" />}
           </button>
@@ -248,14 +248,10 @@ export function Topbar() {
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={handleLogout}
-        title={isVietnamese ? 'Xác nhận đăng xuất' : 'Confirm Sign Out'}
-        description={
-          isVietnamese
-            ? 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống LingoSphere Admin Console không?'
-            : 'Are you sure you want to sign out of LingoSphere Admin Console?'
-        }
-        confirmText={isVietnamese ? 'Đăng xuất' : 'Sign Out'}
-        cancelText={isVietnamese ? 'Hủy bỏ' : 'Cancel'}
+        title={t('header.confirmLogoutTitle')}
+        description={t('header.confirmLogoutDesc')}
+        confirmText={t('auth.logout')}
+        cancelText={t('common.cancel')}
         variant="danger"
       />
 

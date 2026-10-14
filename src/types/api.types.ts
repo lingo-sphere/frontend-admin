@@ -73,6 +73,14 @@ export interface UserProfile {
   target_toeic_score?: number | null
   current_estimated_score?: number | null
   learning_goal_minutes_per_day?: number | null
+  placement_test_score?: number | null
+  placement_listening_score?: number | null
+  placement_reading_score?: number | null
+  placement_speaking_score?: number | null
+  placement_writing_score?: number | null
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string | null
+  placement_tested_at?: string | null
+  is_score_manually_edited?: boolean
   bio?: string | null
   status: 'ACTIVE' | 'BLOCKED' | 'SUSPENDED' | string
   is_premium: boolean
@@ -80,7 +88,6 @@ export interface UserProfile {
   total_xp?: number | null
   current_streak?: number | null
   level?: number | null
-  gems?: number | null
   league?: string | null
   created_at?: string | null
   updated_at?: string | null
@@ -125,7 +132,6 @@ export interface Role {
 }
 
 export type CourseCategory = 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
-export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type CourseApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED' | 'DRAFT'
 
 export interface QuizQuestionItem {
@@ -229,7 +235,6 @@ export interface Course {
   slug?: string
   description: string
   category: CourseCategory | string
-  level: CourseLevel | string
   target_score?: number | null
   price: number
   discount_price?: number | null
@@ -256,6 +261,7 @@ export interface Course {
   final_test_writing_file_url?: string | null
   rating?: number | null
   students_count?: number | null
+  is_bestseller?: boolean | null
   total_modules?: number | null
   total_lessons?: number | null
   skills?: string[]
@@ -264,36 +270,6 @@ export interface Course {
   course?: Course
   created_at?: string | null
   updated_at?: string | null
-}
-
-export interface LearningRoadmapStage {
-  stage_order: number
-  stage_title: string
-  stage_description?: string
-  course_id: string
-  target_band?: string
-  checkpoint_exam_id?: string
-  passing_score?: number
-  is_optional?: boolean
-  course?: Course | null
-}
-
-export interface LearningRoadmap {
-  _id: string
-  title: string
-  slug: string
-  description?: string
-  skills_focus: '2SKILLS' | '4SKILLS'
-  target_score: number
-  min_entry_score: number
-  max_entry_score: number
-  stages: LearningRoadmapStage[]
-  bundle_price?: number
-  original_price?: number
-  version?: number
-  is_published: boolean
-  created_at?: string
-  updated_at?: string
 }
 
 export type WordType = 'NOUN' | 'VERB' | 'ADJECTIVE' | 'ADVERB' | 'PREPOSITION' | 'CONJUNCTION' | 'PRONOUN' | 'PHRASE'

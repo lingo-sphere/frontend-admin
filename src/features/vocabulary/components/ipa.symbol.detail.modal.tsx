@@ -1,7 +1,4 @@
-/**
- * @file ipa.symbol.detail.modal.tsx
- * @description Modal xem chi tiết một ký hiệu IPA kèm audio playback
- */
+// Modal hiển thị chi tiết ký hiệu phiên âm IPA kèm audio phát âm.
 
 import { Volume2, X, Headphones, FileText, Tag, Hash } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -24,15 +21,11 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
   const typeLabel = symbol.symbol_type ? ipaSymbolTypeLabels[symbol.symbol_type] : undefined
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 dark:bg-black/40 backdrop-blur-[1px] animate-in fade-in duration-150"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 dark:bg-black/40 backdrop-blur-[1px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
@@ -55,16 +48,13 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6 space-y-5">
-          {/* Symbol Display */}
           <div className="flex items-center justify-center py-6 rounded-xl bg-gradient-to-br from-indigo-50/60 to-violet-50/60 dark:from-indigo-950/30 dark:to-violet-950/30 border border-indigo-100 dark:border-indigo-900/40">
             <div className="text-6xl font-bold text-indigo-700 dark:text-indigo-300 font-serif">
               /{symbol.symbol}/
             </div>
           </div>
 
-          {/* Type & Level */}
           <div className="flex flex-wrap items-center gap-2">
             {typeLabel && (
               <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${typeLabel.color}`}>
@@ -89,7 +79,6 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
             )}
           </div>
 
-          {/* Description */}
           {(symbol.description_en || symbol.description_vi) && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -113,7 +102,6 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
             </div>
           )}
 
-          {/* Example Word */}
           {symbol.example_word && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -142,7 +130,6 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
             </div>
           )}
 
-          {/* IPA Audio */}
           {symbol.audio_url && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -164,7 +151,6 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
             </div>
           )}
 
-          {/* Related Symbols */}
           {symbol.related_symbols && symbol.related_symbols.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -185,7 +171,6 @@ export function IpaSymbolDetailModal({ isOpen, onClose, symbol }: IpaSymbolDetai
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <button
             type="button"

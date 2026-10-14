@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import type { CourseFormData, CourseModule, CourseLesson, LessonQuestion } from '@/features/courses/components/course.basic.info.tab'
 import type { QuizQuestionItem } from '@/features/courses/schemas/course.schema'
 import { generateSlug } from '@/features/courses/helpers/course.helper'
+import { authStore } from '@/features/auth/store/auth.store'
 
 export interface VideoUploadTaskItem {
   lessonId: string
@@ -89,10 +90,18 @@ const findValue = (rows: Record<string, unknown>[], fieldKeywords: string[]): st
 }
 
 const findRowString = (row: Record<string, unknown>, fieldKeywords: string[]): string => {
-  for (const key of Object.keys(row)) {
-    const lowerKey = key.toLowerCase()
-    for (const kw of fieldKeywords) {
-      if (lowerKey.includes(kw.toLowerCase())) {
+  for (const kw of fieldKeywords) {
+    const lowerKw = kw.toLowerCase().trim()
+    if (!lowerKw) continue
+
+    for (const key of Object.keys(row)) {
+      const lowerKey = key.toLowerCase().trim()
+      if (
+        lowerKey === lowerKw ||
+        lowerKey.includes(`(${lowerKw})`) ||
+        lowerKey.startsWith(`${lowerKw} `) ||
+        lowerKey.endsWith(` ${lowerKw}`)
+      ) {
         const val = row[key]
         if (val !== undefined && val !== null && String(val).trim() !== '') {
           return String(val).trim()
@@ -100,28 +109,32 @@ const findRowString = (row: Record<string, unknown>, fieldKeywords: string[]): s
       }
     }
   }
-  return ''
-}
 
-const normalizeFilename = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/\.[^/.]+$/, '')
-    .replace(/[^a-z0-9]/g, '')
+  for (const kw of fieldKeywords) {
+    const lowerKw = kw.toLowerCase().trim()
+    if (!lowerKw) continue
+
+    for (const key of Object.keys(row)) {
+      const lowerKey = key.toLowerCase().trim()
+      if (lowerKey.includes(lowerKw)) {
+        const val = row[key]
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          return String(val).trim()
+        }
+      }
+    }
+  }
+
+  return ''
 }
 
 const findMatchingFile = (targetName: string, files: File[]): File | undefined => {
   if (!targetName || !targetName.trim()) return undefined
   const cleanTarget = targetName.trim().toLowerCase()
-  const exact = files.find((f) => f.name.trim().toLowerCase() === cleanTarget)
-  if (exact) return exact
-
-  const normTarget = normalizeFilename(cleanTarget)
-  if (!normTarget) return undefined
-
   return files.find((f) => {
-    const normF = normalizeFilename(f.name)
-    return normF === normTarget || normF.includes(normTarget) || normTarget.includes(normF)
+    const fName = f.name.trim().toLowerCase()
+    const fRelPath = f.webkitRelativePath ? f.webkitRelativePath.toLowerCase().replace(/\\/g, '/') : ''
+    return fName === cleanTarget || fRelPath.endsWith(`/${cleanTarget}`) || fRelPath === cleanTarget
   })
 }
 
@@ -197,27 +210,126 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[finalTestsSheetName] || {})
     : []
 
-  const title = String(findValue(infoRaw, ['title', 'tên khóa học']) || excelFile.name.replace(/\.[^/.]+$/, '').replace(/^\d+_/, '').replace(/_/g, ' ')).trim()
+  const rawTitle = findValue(infoRaw, ['title', 'tên khóa học'])
+  const title = String(rawTitle || '').trim()
+  if (!title) {
+    throw new Error('File Excel thiếu thông tin "title" (Tên khóa học) trong sheet Course_Info.')
+  }
+
   const rawSlug = String(findValue(infoRaw, ['slug', 'đường dẫn rút gọn']) || '').trim()
   const slug = rawSlug ? generateSlug(rawSlug) : generateSlug(title)
-  const rawCategory = String(findValue(infoRaw, ['category', 'thể loại']) || 'TOEIC_2_SKILLS').trim()
-  const category = rawCategory.includes('4') ? 'TOEIC_4_SKILLS' : 'TOEIC_2_SKILLS'
-  const rawLevel = String(findValue(infoRaw, ['level', 'trình độ']) || 'BEGINNER').trim().toUpperCase()
-  const level = rawLevel === 'INTERMEDIATE' || rawLevel === 'ADVANCED' ? rawLevel : 'BEGINNER'
-  const target_score = Number(findValue(infoRaw, ['target_score', 'mục tiêu']) || 500)
-  const price = Number(findValue(infoRaw, ['price', 'giá gốc']) || 0)
-  const discount_price = Number(findValue(infoRaw, ['discount_price', 'giá khuyến mãi']) || 0)
-  const author_name = String(findValue(infoRaw, ['author_name', 'tên giảng viên']) || 'Đội ngũ Giảng viên LingoSphere').trim()
-  const author_title = String(findValue(infoRaw, ['author_title', 'chức danh']) || 'Giảng viên chuyên môn').trim()
-  const author_email = String(findValue(infoRaw, ['author_email', 'email giảng viên']) || '').trim()
-  const author_bio = String(findValue(infoRaw, ['author_bio', 'tiểu sử giảng viên']) || '').trim()
-  const description = String(findValue(infoRaw, ['description', 'mô tả']) || `Khóa học ${title} chất lượng cao chuẩn quốc tế trên LingoSphere.`).trim()
-  const final_test_passing_score = Number(findValue(infoRaw, ['final_test_passing_score', 'điểm đạt kiểm tra cuối khóa', 'cuối khóa']) || 70)
-  const final_test_duration_minutes = Number(findValue(infoRaw, ['final_test_duration_minutes', 'thời lượng thi tốt nghiệp', 'thời lượng kiểm tra cuối khóa']) || 60)
+
+  const rawCategory = String(findValue(infoRaw, ['category', 'thể loại']) || '').trim().toUpperCase()
+  if (!rawCategory) {
+    throw new Error('File Excel thiếu thông tin "category" (Thể loại) trong sheet Course_Info.')
+  }
+  if (rawCategory !== 'TOEIC_2_SKILLS' && rawCategory !== 'TOEIC_4_SKILLS') {
+    throw new Error(
+      `Thể loại khóa học (category) "${rawCategory}" không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TOEIC_2_SKILLS hoặc TOEIC_4_SKILLS.`
+    )
+  }
+  const category: 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS' = rawCategory
+
+  const rawTargetScore = findValue(infoRaw, ['target_score', 'mục tiêu'])
+  if (rawTargetScore === undefined || rawTargetScore === null || String(rawTargetScore).trim() === '') {
+    throw new Error('File Excel thiếu thông tin "target_score" (Điểm mục tiêu) trong sheet Course_Info.')
+  }
+  const target_score = Number(rawTargetScore)
+  if (!Number.isInteger(target_score) || target_score < 0 || target_score > 990) {
+    throw new Error(
+      `Điểm mục tiêu (target_score) "${rawTargetScore}" không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 990.`
+    )
+  }
+
+  const rawPrice = findValue(infoRaw, ['price', 'giá gốc'])
+  if (rawPrice === undefined || rawPrice === null || String(rawPrice).trim() === '') {
+    throw new Error('File Excel thiếu thông tin "price" (Giá gốc) trong sheet Course_Info.')
+  }
+  const price = Number(rawPrice)
+  if (!Number.isInteger(price) || price < 0) {
+    throw new Error(`Giá khóa học (price) "${rawPrice}" không hợp lệ theo chuẩn Backend. Phải là số nguyên không âm (>= 0).`)
+  }
+
+  const rawDiscountPrice = findValue(infoRaw, ['discount_price', 'giá khuyến mãi'])
+  let discount_price = 0
+  if (rawDiscountPrice !== undefined && rawDiscountPrice !== null && String(rawDiscountPrice).trim() !== '') {
+    const numDiscount = Number(rawDiscountPrice)
+    if (!Number.isInteger(numDiscount) || numDiscount < 0) {
+      throw new Error(
+        `Giá khuyến mãi (discount_price) "${rawDiscountPrice}" không hợp lệ theo chuẩn Backend. Phải là số nguyên không âm (>= 0).`
+      )
+    }
+    if (price > 0 && numDiscount > price) {
+      throw new Error(`Giá khuyến mãi (${numDiscount}) không được lớn hơn giá gốc (${price}).`)
+    }
+    discount_price = numDiscount
+  }
+
+  const authState = authStore.getState()
+  const currentUser = authState.user
+  const currentProfile = authState.profile
+  const author_id = currentUser?.user_id || currentProfile?.user_id
+  if (!author_id) {
+    throw new Error('Không xác định được danh tính tác giả (author_id). Vui lòng đăng nhập lại.')
+  }
+  const author_name = currentUser?.full_name || currentProfile?.full_name || ''
+  const author_email = currentUser?.email || currentProfile?.email || ''
+  const author_avatar = currentUser?.avatar_url || currentProfile?.avatar_url || ''
+  const authorRole = currentUser?.role || currentProfile?.role
+  const author_title =
+    authorRole === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật'
+  const author_bio = currentProfile?.bio || ''
+
+  const description = String(
+    findValue(infoRaw, ['description', 'mô tả']) || `Khóa học ${title} chất lượng cao chuẩn quốc tế trên LingoSphere.`
+  ).trim()
+
+  const rawFinalPassing = findValue(infoRaw, ['final_test_passing_score', 'điểm đạt kiểm tra cuối khóa', 'cuối khóa'])
+  if (rawFinalPassing === undefined || rawFinalPassing === null || String(rawFinalPassing).trim() === '') {
+    throw new Error(
+      'File Excel thiếu thông tin "final_test_passing_score" (Điểm đạt bài thi cuối khóa) trong sheet Course_Info.'
+    )
+  }
+  const final_test_passing_score = Number(rawFinalPassing)
+  if (!Number.isInteger(final_test_passing_score) || final_test_passing_score < 0 || final_test_passing_score > 100) {
+    throw new Error(
+      `Điểm đạt bài thi cuối khóa (final_test_passing_score) "${rawFinalPassing}" không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 100.`
+    )
+  }
+
+  const rawFinalDuration = findValue(infoRaw, [
+    'final_test_duration_minutes',
+    'thời lượng thi tốt nghiệp',
+    'thời lượng kiểm tra cuối khóa',
+  ])
+  if (rawFinalDuration === undefined || rawFinalDuration === null || String(rawFinalDuration).trim() === '') {
+    throw new Error(
+      'File Excel thiếu thông tin "final_test_duration_minutes" (Thời lượng bài thi cuối khóa) trong sheet Course_Info.'
+    )
+  }
+  const final_test_duration_minutes = Number(rawFinalDuration)
+  if (!Number.isInteger(final_test_duration_minutes) || final_test_duration_minutes <= 0) {
+    throw new Error(
+      `Thời lượng bài thi cuối khóa (final_test_duration_minutes) "${rawFinalDuration}" không hợp lệ theo chuẩn Backend. Phải là số nguyên lớn hơn 0.`
+    )
+  }
+
   const final_test_speaking_prompt = String(findValue(infoRaw, ['final_test_speaking_prompt', 'đề thi nói cuối khóa']) || '').trim()
   const final_test_writing_prompt = String(findValue(infoRaw, ['final_test_writing_prompt', 'đề thi viết cuối khóa']) || '').trim()
-  const rawIsPublished = String(findValue(infoRaw, ['is_published', 'xuất bản']) || 'TRUE').toUpperCase()
-  const is_published = rawIsPublished !== 'FALSE'
+
+  const rawIsPublished = findValue(infoRaw, ['is_published', 'xuất bản'])
+  if (rawIsPublished === undefined || rawIsPublished === null || String(rawIsPublished).trim() === '') {
+    throw new Error('File Excel thiếu thông tin "is_published" (Trạng thái xuất bản) trong sheet Course_Info.')
+  }
+  const strPub = String(rawIsPublished).trim().toUpperCase()
+  let is_published = true
+  if (strPub === 'TRUE' || strPub === '1') {
+    is_published = true
+  } else if (strPub === 'FALSE' || strPub === '0') {
+    is_published = false
+  } else {
+    throw new Error(`Trạng thái xuất bản (is_published) "${rawIsPublished}" không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TRUE hoặc FALSE.`)
+  }
 
   const rawThumbnailName = String(
     findValue(infoRaw, [
@@ -230,23 +342,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     ]) || 'thumbnail.png'
   ).trim()
 
-  let matchedCourseThumbnailFile = rawThumbnailName ? findMatchingFile(rawThumbnailName, files) : undefined
-  if (!matchedCourseThumbnailFile) {
-    matchedCourseThumbnailFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        /\.(png|jpe?g|webp)$/i.test(lower) &&
-        (lower.includes('thumb') ||
-          lower.includes('cover') ||
-          lower.includes('avatar') ||
-          lower.includes('poster') ||
-          lower.includes('banner'))
-      )
-    })
-  }
-  if (!matchedCourseThumbnailFile) {
-    matchedCourseThumbnailFile = files.find((f) => /\.(png|jpe?g|webp)$/i.test(f.name.toLowerCase()))
-  }
+  const matchedCourseThumbnailFile = rawThumbnailName ? findMatchingFile(rawThumbnailName, files) : undefined
 
   const rawDocumentName = String(
     findValue(infoRaw, [
@@ -262,21 +358,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     ]) || ''
   ).trim()
 
-  let matchedCourseDocumentFile = rawDocumentName ? findMatchingFile(rawDocumentName, files) : undefined
-  if (!matchedCourseDocumentFile) {
-    matchedCourseDocumentFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        lower.endsWith('.pdf') &&
-        (lower.includes('tong_quan') ||
-          lower.includes('giao_trinh') ||
-          lower.includes('cam_nang') ||
-          lower.includes('handbook') ||
-          lower.includes('syllabus'))
-      )
-    })
-  }
-
+  const matchedCourseDocumentFile = rawDocumentName ? findMatchingFile(rawDocumentName, files) : undefined
   const document_name = matchedCourseDocumentFile?.name || rawDocumentName || undefined
 
   const rawFinalAudio = String(
@@ -287,19 +369,10 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       'audio đề thi cuối khóa',
       'audio cuối khóa',
       'file âm thanh cuối khóa',
-    ]) || 'audio_final_test.wav'
+    ]) || ''
   ).trim()
 
-  let matchedFinalTestAudioFile = rawFinalAudio ? findMatchingFile(rawFinalAudio, files) : undefined
-  if (!matchedFinalTestAudioFile) {
-    matchedFinalTestAudioFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-        (lower.includes('final') || lower.includes('tot_nghiep'))
-      )
-    })
-  }
+  const matchedFinalTestAudioFile = rawFinalAudio ? findMatchingFile(rawFinalAudio, files) : undefined
 
   const rawFinalSpeaking = String(
     findValue(infoRaw, [
@@ -307,19 +380,10 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       'speaking_sample_final',
       'âm thanh nói mẫu cuối khóa',
       'audio nói mẫu cuối khóa',
-    ]) || 'speaking_sample_final.wav'
+    ]) || ''
   ).trim()
 
-  let matchedFinalTestSpeakingFile = rawFinalSpeaking ? findMatchingFile(rawFinalSpeaking, files) : undefined
-  if (!matchedFinalTestSpeakingFile) {
-    matchedFinalTestSpeakingFile = files.find((f) => {
-      const lower = f.name.toLowerCase()
-      return (
-        (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-        (lower.includes('speaking_sample_final') || (lower.includes('speaking') && lower.includes('final')))
-      )
-    })
-  }
+  const matchedFinalTestSpeakingFile = rawFinalSpeaking ? findMatchingFile(rawFinalSpeaking, files) : undefined
 
   const questionMediaFilesToUpload: {
     questionId: string
@@ -338,8 +402,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? row['C'] ?? '').trim()
     const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? row['D'] ?? '').trim()
     const options = [optA, optB, optC, optD].filter(Boolean)
-    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
-    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? '').trim().toUpperCase()
+    if (rawAnswer && !['A', 'B', 'C', 'D'].includes(rawAnswer)) {
+      throw new Error(`Đáp án đúng "${rawAnswer}" tại câu hỏi tốt nghiệp số ${ftIdx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`)
+    }
+    const correct_answer = rawAnswer || 'A'
     const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
     const mediaFilename = String(
       row['File hình ảnh / âm thanh (media_filename)'] ??
@@ -361,6 +428,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       })
     }
 
+    const isImageFile = /\.(jpe?g|png|webp|gif|svg)$/i.test(mediaFilename)
+    const isAudioFile = /\.(mp3|wav|ogg|m4a|aac)$/i.test(mediaFilename)
+
     finalTestQuestions.push({
       id: qId,
       question_text: qText,
@@ -368,7 +438,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       correct_answer,
       explanation,
       order_index: ftIdx + 1,
-      media_url: mediaFilename || undefined,
+      media_url: isAudioFile ? mediaFilename : undefined,
+      audio_url: isAudioFile ? mediaFilename : undefined,
+      image_url: isImageFile ? mediaFilename : undefined,
     })
   })
 
@@ -376,17 +448,18 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     title,
     slug,
     category,
-    level,
-    target_score: isNaN(target_score) ? 500 : target_score,
-    price: isNaN(price) ? 0 : price,
-    discount_price: isNaN(discount_price) ? 0 : discount_price,
+    target_score,
+    price,
+    discount_price,
+    author_id,
     author_name,
     author_title,
     author_email: author_email || undefined,
+    author_avatar: author_avatar || undefined,
     author_bio: author_bio || undefined,
     description,
-    final_test_passing_score: isNaN(final_test_passing_score) ? 70 : final_test_passing_score,
-    final_test_duration_minutes: isNaN(final_test_duration_minutes) ? 60 : final_test_duration_minutes,
+    final_test_passing_score,
+    final_test_duration_minutes,
     final_test_speaking_prompt: final_test_speaking_prompt || undefined,
     final_test_writing_prompt: final_test_writing_prompt || undefined,
     final_test_questions: finalTestQuestions,
@@ -396,7 +469,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   const chapterTestsByModule = new Map<number, QuizQuestionItem[]>()
   chapterTestsRaw.forEach((row, qIdx) => {
-    const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? row['Chương'] ?? 1)
+    const rawMOrder = row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? row['Chương'] ?? 1
+    const mOrder = Number(rawMOrder)
+    if (!Number.isInteger(mOrder) || mOrder < 1) {
+      throw new Error(`Thứ tự chương (module_order) "${rawMOrder}" tại câu hỏi kiểm tra chương số ${qIdx + 1} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const qText = String(row['Câu hỏi trắc nghiệm (question_text)'] ?? row['question_text'] ?? row['Câu hỏi'] ?? '').trim()
     if (!qText) return
     const optA = String(row['Đáp án A (option_a)'] ?? row['option_a'] ?? row['A'] ?? '').trim()
@@ -404,8 +481,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? row['C'] ?? '').trim()
     const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? row['D'] ?? '').trim()
     const options = [optA, optB, optC, optD].filter(Boolean)
-    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? 'A').trim().toUpperCase()
-    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? row['Đáp án'] ?? '').trim().toUpperCase()
+    if (rawAnswer && !['A', 'B', 'C', 'D'].includes(rawAnswer)) {
+      throw new Error(`Đáp án đúng "${rawAnswer}" tại câu hỏi kiểm tra chương ${mOrder} số ${qIdx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`)
+    }
+    const correct_answer = rawAnswer || 'A'
     const explanation = String(row['Lời giải thích chi tiết (explanation)'] ?? row['explanation'] ?? row['Giải thích'] ?? '').trim()
     const mediaFilename = String(
       row['File hình ảnh / âm thanh (media_filename)'] ??
@@ -428,6 +508,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       })
     }
 
+    const isImageFile = /\.(jpe?g|png|webp|gif|svg)$/i.test(mediaFilename)
+    const isAudioFile = /\.(mp3|wav|ogg|m4a|aac)$/i.test(mediaFilename)
+
     const item: QuizQuestionItem = {
       id: qId,
       question_text: qText,
@@ -435,7 +518,9 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       correct_answer,
       explanation,
       order_index: (chapterTestsByModule.get(mOrder)?.length || 0) + 1,
-      media_url: mediaFilename || undefined,
+      media_url: isAudioFile ? mediaFilename : undefined,
+      audio_url: isAudioFile ? mediaFilename : undefined,
+      image_url: isImageFile ? mediaFilename : undefined,
     }
 
     if (!chapterTestsByModule.has(mOrder)) {
@@ -446,8 +531,16 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   const lessonQuizzesByModuleAndLesson = new Map<string, LessonQuestion[]>()
   lessonQuizzesRaw.forEach((row, lqIdx) => {
-    const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1)
-    const lOrder = Number(row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? 1)
+    const rawMOrder = row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1
+    const mOrder = Number(rawMOrder)
+    if (!Number.isInteger(mOrder) || mOrder < 1) {
+      throw new Error(`Thứ tự chương (module_order) "${rawMOrder}" tại câu hỏi ôn tập số ${lqIdx + 1} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
+    const rawLOrder = row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? 1
+    const lOrder = Number(rawLOrder)
+    if (!Number.isInteger(lOrder) || lOrder < 1) {
+      throw new Error(`Thứ tự bài học (lesson_order) "${rawLOrder}" tại câu hỏi ôn tập số ${lqIdx + 1} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const key = `${mOrder}-${lOrder}`
     const qText = String(row['Câu hỏi ôn tập (question_text)'] ?? row['question_text'] ?? '').trim()
     if (!qText) return
@@ -456,8 +549,11 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const optC = String(row['Đáp án C (option_c)'] ?? row['option_c'] ?? '').trim()
     const optD = String(row['Đáp án D (option_d)'] ?? row['option_d'] ?? '').trim()
     const options = [optA, optB, optC, optD].filter(Boolean)
-    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? 'A').trim().toUpperCase()
-    const correct_answer = ['A', 'B', 'C', 'D'].includes(rawAnswer) ? rawAnswer : 'A'
+    const rawAnswer = String(row['Đáp án đúng (correct_answer)'] ?? row['correct_answer'] ?? '').trim().toUpperCase()
+    if (rawAnswer && !['A', 'B', 'C', 'D'].includes(rawAnswer)) {
+      throw new Error(`Đáp án đúng "${rawAnswer}" tại câu hỏi ôn tập bài học ${mOrder}.${lOrder} số ${lqIdx + 1} không hợp lệ theo chuẩn Backend (chỉ chấp nhận A, B, C hoặc D).`)
+    }
+    const correct_answer = rawAnswer || 'A'
     const explanation = String(row['Lời giải thích (explanation)'] ?? row['explanation'] ?? '').trim()
 
     const item: LessonQuestion = {
@@ -496,21 +592,89 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
 
   for (let idx = 0; idx < lessonsRaw.length; idx++) {
     const row = lessonsRaw[idx]
-    const mOrder = Number(row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1)
+    const rawMOrder = row['Thứ tự chương (module_order)'] ?? row['module_order'] ?? 1
+    const mOrder = Number(rawMOrder)
+    if (!Number.isInteger(mOrder) || mOrder < 1) {
+      throw new Error(`Thứ tự chương (module_order) "${rawMOrder}" tại bài học dòng ${idx + 2} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const mTitle = String(row['Tên chương (module_title)'] ?? row['module_title'] ?? `Chương ${mOrder}`).trim()
     const mDesc = String(row['Mô tả chương (module_description)'] ?? row['module_description'] ?? '').trim()
-    const mTheory = findRowString(row, ['module_theory_file', 'tài liệu chương', 'tài liệu lý thuyết', 'theory_file', 'tài liệu'])
-    const mPassing = Number(row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score'] ?? 70)
-    const mDuration = Number(row['Thời lượng test chương (module_test_duration_minutes)'] ?? row['module_test_duration_minutes'] ?? (category === 'TOEIC_4_SKILLS' ? 20 : 15))
-    const mSpeakingPrompt = findRowString(row, ['module_speaking_prompt', 'đề kiểm tra nói'])
-    const mWritingPrompt = findRowString(row, ['module_writing_prompt', 'đề kiểm tra viết'])
+    const mTheory = String(
+      row['Tài liệu tổng hợp chương (module_theory_file)'] ??
+      row['Tài liệu chương (module_theory_file)'] ??
+      row['Tài liệu lý thuyết chương (module_theory_file)'] ??
+      row['module_theory_file'] ??
+      findRowString(row, [
+        'module_theory_file',
+        'tài liệu tổng hợp chương',
+        'tài liệu lý thuyết chương',
+        'tài liệu chương',
+        'đề cương chương',
+        'lý thuyết chương',
+      ])
+    ).trim()
 
-    const lOrder = Number(row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1)
+    const rawMPassing = row['Điểm đạt test chương (module_passing_score)'] ?? row['module_passing_score']
+    let mPassing = 70
+    if (rawMPassing !== undefined && rawMPassing !== null && String(rawMPassing).trim() !== '') {
+      const num = Number(rawMPassing)
+      if (!Number.isInteger(num) || num < 0 || num > 100) {
+        throw new Error(`Điểm đạt test chương "${rawMPassing}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Phải là số nguyên từ 0 đến 100.`)
+      }
+      mPassing = num
+    }
+
+    const rawMDuration = row['Thời lượng test chương (module_test_duration_minutes)'] ?? row['module_test_duration_minutes']
+    let mDuration = category === 'TOEIC_4_SKILLS' ? 20 : 15
+    if (rawMDuration !== undefined && rawMDuration !== null && String(rawMDuration).trim() !== '') {
+      const num = Number(rawMDuration)
+      if (!Number.isInteger(num) || num <= 0) {
+        throw new Error(`Thời lượng test chương "${rawMDuration}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Phải là số nguyên lớn hơn 0.`)
+      }
+      mDuration = num
+    }
+    const mSpeakingPrompt = String(
+      row['Đề kiểm tra nói chương (module_speaking_prompt)'] ??
+      row['module_speaking_prompt'] ??
+      findRowString(row, ['module_speaking_prompt', 'đề kiểm tra nói'])
+    ).trim()
+    const mWritingPrompt = String(
+      row['Đề kiểm tra viết chương (module_writing_prompt)'] ??
+      row['module_writing_prompt'] ??
+      findRowString(row, ['module_writing_prompt', 'đề kiểm tra viết'])
+    ).trim()
+
+    const rawLOrder = row['Thứ tự bài học (lesson_order)'] ?? row['lesson_order'] ?? idx + 1
+    const lOrder = Number(rawLOrder)
+    if (!Number.isInteger(lOrder) || lOrder < 1) {
+      throw new Error(`Thứ tự bài học (lesson_order) "${rawLOrder}" tại bài học dòng ${idx + 2} không hợp lệ. Phải là số nguyên >= 1.`)
+    }
     const lTitle = String(row['Tên bài học (lesson_title)'] ?? row['lesson_title'] ?? `Bài học ${mOrder}.${lOrder}`).trim()
     const videoFilename = String(row['Tên file video (video_filename)'] ?? row['video_filename'] ?? '').trim()
-    const rawPreview = String(row['Học thử miễn phí (is_free_preview)'] ?? row['is_free_preview'] ?? 'FALSE').toUpperCase()
-    const isFree = rawPreview === 'TRUE' || rawPreview === '1'
-    const lTheoryFile = findRowString(row, ['lesson_theory_file', 'file lý thuyết bài học', 'lý thuyết bài học', 'tài liệu bài học', 'theory'])
+
+    const rawPreview = String(row['Học thử miễn phí (is_free_preview)'] ?? row['is_free_preview'] ?? 'FALSE').trim().toUpperCase()
+    let isFree = false
+    if (rawPreview === 'TRUE' || rawPreview === '1') {
+      isFree = true
+    } else if (rawPreview === 'FALSE' || rawPreview === '0') {
+      isFree = false
+    } else {
+      throw new Error(`Cấu hình học thử (is_free_preview) "${rawPreview}" tại bài học dòng ${idx + 2} không hợp lệ theo chuẩn Backend. Giá trị hợp lệ: TRUE hoặc FALSE.`)
+    }
+    const lTheoryFile = String(
+      row['File lý thuyết bài học (lesson_theory_file)'] ??
+      row['Tài liệu bài học (lesson_theory_file)'] ??
+      row['Tài liệu lý thuyết bài học (lesson_theory_file)'] ??
+      row['Slide bài học (lesson_theory_file)'] ??
+      row['lesson_theory_file'] ??
+      findRowString(row, [
+        'lesson_theory_file',
+        'file lý thuyết bài học',
+        'tài liệu bài học',
+        'lý thuyết bài học',
+        'slide bài học',
+      ])
+    ).trim()
     const lTheoryText = String(row['Tóm tắt lý thuyết bài học (lesson_theory_text)'] ?? row['lesson_theory_text'] ?? '').trim()
 
     const matchedVideo = videoFilename ? findMatchingFile(videoFilename, files) : undefined
@@ -553,8 +717,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       moduleTitle: mTitle,
       moduleDescription: mDesc,
       moduleTheoryFile: mTheory,
-      modulePassingScore: isNaN(mPassing) ? 70 : mPassing,
-      moduleDurationMinutes: isNaN(mDuration) ? 15 : mDuration,
+      modulePassingScore: mPassing,
+      moduleDurationMinutes: mDuration,
       moduleSpeakingPrompt: mSpeakingPrompt || undefined,
       moduleWritingPrompt: mWritingPrompt || undefined,
       lessonOrder: lOrder,
@@ -574,8 +738,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
         title: mTitle,
         description: mDesc,
         theoryFile: mTheory,
-        passingScore: isNaN(mPassing) ? 70 : mPassing,
-        durationMinutes: isNaN(mDuration) ? 15 : mDuration,
+        passingScore: mPassing,
+        durationMinutes: mDuration,
         speakingPrompt: mSpeakingPrompt || undefined,
         writingPrompt: mWritingPrompt || undefined,
         lessons: [],
@@ -600,6 +764,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       lesson_order: lOrder,
       theory_file_name: matchedTheory?.name || lTheoryFile || undefined,
       theory_file_url: undefined,
+      pending_video_name: matchedVideo ? matchedVideo.name : undefined,
+      pending_theory_name: matchedTheory ? matchedTheory.name : undefined,
       questions: lessonQuizzes,
     })
   }
@@ -613,19 +779,7 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     const modData = modulesMap.get(mOrder)!
     const tests = chapterTestsByModule.get(mOrder) || []
 
-    let matchedModulePdf = modData.theoryFile ? findMatchingFile(modData.theoryFile, files) : undefined
-    if (!matchedModulePdf) {
-      matchedModulePdf = files.find((f) => {
-        const lower = f.name.toLowerCase()
-        return (
-          lower.endsWith('.pdf') &&
-          (lower.includes(`chuong_${mOrder}`) ||
-            lower.includes(`chuong${mOrder}`) ||
-            lower.includes(`module_${mOrder}`) ||
-            lower.includes(`module${mOrder}`))
-        )
-      })
-    }
+    const matchedModulePdf = modData.theoryFile ? findMatchingFile(modData.theoryFile, files) : undefined
 
     if (matchedModulePdf) {
       matchedPdfsCount++
@@ -633,37 +787,14 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
     }
 
     const rawModAudio = `audio_test_chapter_${mOrder}.wav`
-    let matchedModuleAudio = findMatchingFile(rawModAudio, files)
-    if (!matchedModuleAudio) {
-      matchedModuleAudio = files.find((f) => {
-        const lower = f.name.toLowerCase()
-        return (
-          (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-          (lower.includes(`chapter_${mOrder}`) ||
-            lower.includes(`chapter${mOrder}`) ||
-            lower.includes(`chuong_${mOrder}`) ||
-            lower.includes(`chuong${mOrder}`))
-        )
-      })
-    }
+    const matchedModuleAudio = findMatchingFile(rawModAudio, files)
 
     if (matchedModuleAudio) {
       moduleAudioFilesToUpload.push({ moduleOrder: mOrder, file: matchedModuleAudio })
     }
 
     const rawModSpeaking = `speaking_sample_chapter_${mOrder}.wav`
-    let matchedModuleSpeaking = findMatchingFile(rawModSpeaking, files)
-    if (!matchedModuleSpeaking) {
-      matchedModuleSpeaking = files.find((f) => {
-        const lower = f.name.toLowerCase()
-        return (
-          (lower.endsWith('.wav') || lower.endsWith('.mp3')) &&
-          (lower.includes(`speaking_sample_chapter_${mOrder}`) ||
-            lower.includes('speaking_sample_chapter_1') ||
-            lower.includes('speaking_sample'))
-        )
-      })
-    }
+    const matchedModuleSpeaking = findMatchingFile(rawModSpeaking, files)
 
     if (matchedModuleSpeaking) {
       moduleSpeakingFilesToUpload.push({ moduleOrder: mOrder, file: matchedModuleSpeaking })
@@ -674,7 +805,8 @@ export async function parseCourseFolder(files: File[]): Promise<ParsedFolderResu
       title: modData.title,
       description: modData.description,
       module_order: mOrder,
-      theory_file_name: matchedModulePdf?.name || modData.theoryFile || undefined,
+      theory_file_name: matchedModulePdf ? matchedModulePdf.name : (modData.theoryFile || undefined),
+      pending_theory_name: matchedModulePdf ? matchedModulePdf.name : undefined,
       passing_score: modData.passingScore,
       challenge_passing_score: modData.passingScore,
       duration_minutes: modData.durationMinutes,

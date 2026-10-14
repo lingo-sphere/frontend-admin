@@ -6,8 +6,10 @@ import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
 import { CustomSelect } from '@/components/custom.select'
-import { usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
+import { useRolesQuery, usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
+import { toast } from '@/store/toast.store'
 
 const RBAC_MODULES = [
   'AUTH',
@@ -65,18 +67,25 @@ export function PermissionsListTab({
 
   const { data, isLoading: isQueryLoading, refetch } = usePermissionsQuery(queryParams)
 
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(async () => {
+    if (onRefresh) onRefresh()
+    await refetch()
+  })
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setCurrentPage(1)
   }
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilterName('')
     setFilterApi('')
     setFilterModule('ALL')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await refetch()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc quyền hạn' : 'Permission filters reset')
   }
 
   const modulesList = RBAC_MODULES
@@ -281,14 +290,12 @@ export function PermissionsListTab({
       </button>
 
       <button
-        onClick={() => {
-          if (onRefresh) onRefresh()
-          refetch()
-        }}
-        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+        onClick={() => handleRefresh()}
+        disabled={isRefreshing || isLoading || isQueryLoading}
+        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-60"
         title={isVi ? 'Làm mới' : 'Refresh'}
       >
-        <RotateCcw className={`w-4 h-4 ${isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
+        <RotateCcw className={`w-4 h-4 ${isRefreshing || isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
       </button>
     </div>
   )

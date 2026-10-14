@@ -1,12 +1,8 @@
-/**
- * @file course.helper.ts
- * @description Mã nguồn thành phần course.helper.ts
- */
+// Helper tien ich xu ly slug, chuan hoa ten folder R2 va validate du lieu khoa hoc.
 
 import type { CourseFormData } from '@/features/courses/components/course.basic.info.tab'
 
 export type FilterCategory = 'ALL' | 'TOEIC_2_SKILLS' | 'TOEIC_4_SKILLS'
-export type FilterLevel = 'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type FilterStatus = 'ALL' | 'PUBLISHED' | 'DRAFT'
 
 export const getCategoryBadgeClass = (category: string): string => {
@@ -17,19 +13,6 @@ export const getCategoryBadgeClass = (category: string): string => {
       return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/60'
     default:
       return 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/60'
-  }
-}
-
-export const getLevelBadgeClass = (level: string): string => {
-  switch (level) {
-    case 'BEGINNER':
-      return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/50'
-    case 'INTERMEDIATE':
-      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/50'
-    case 'ADVANCED':
-      return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/50'
-    default:
-      return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
   }
 }
 
@@ -46,10 +29,18 @@ export function generateSlug(text: string): string {
     .trim()
 }
 
+export function generateCourseR2Folder(title?: string, slug?: string, suffix?: string): string {
+  const cleanSlug = (slug && slug.trim()) || (title && title.trim()) || ''
+  const normalized = cleanSlug ? generateSlug(cleanSlug) : 'khoa-hoc'
+  const safeSlug = normalized.length > 80 ? normalized.substring(0, 80).replace(/-+$/, '') : normalized
+  const randomSuffix = suffix || Math.random().toString(36).substring(2, 8)
+  return `courses/${safeSlug}-${randomSuffix}`
+}
+
 export const COURSE_REGEX = {
   SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  URL: /^(https?:\/\/.+|\/.*)$/,
+  URL: /^(https?:\/\/.+|\/.*|[a-zA-Z0-9_\-\/]+\.[a-zA-Z0-9]+)$/,
   INTEGER_NON_NEGATIVE: /^\d+$/,
   TOEIC_SCORE: /^(?:[1-9]\d{1,2}|990)$/,
   EXCEL_FILE: /\.(xlsx|xls)$/i,
@@ -70,6 +61,11 @@ export function validateCourseFormData(formData: Partial<CourseFormData>, isVi: 
     return isVi
       ? 'Đường dẫn rút gọn (Slug) không hợp lệ. Chỉ chấp nhận chữ thường, số và dấu gạch ngang (VD: khoa-hoc-toeic-550)'
       : 'Invalid slug format. Use lowercase letters, numbers, and hyphens (e.g. toeic-550-course)'
+  }
+  if (!formData.category || (formData.category !== 'TOEIC_2_SKILLS' && formData.category !== 'TOEIC_4_SKILLS')) {
+    return isVi
+      ? 'Thể loại khóa học không hợp lệ. Vui lòng chọn TOEIC 2 Kỹ Năng hoặc TOEIC 4 Kỹ Năng'
+      : 'Invalid course category. Must be TOEIC 2 Skills or TOEIC 4 Skills'
   }
   if (formData.target_score !== undefined && formData.target_score !== null) {
     const score = Number(formData.target_score)

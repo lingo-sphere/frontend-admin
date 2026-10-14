@@ -1,7 +1,4 @@
-/**
- * @file auth.guard.tsx
- * @description Component giao diện AuthGuard phục vụ khu vực Quản trị Admin
- */
+// Component giao diện AuthGuard phục vụ khu vực Quản trị Admin.
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -9,6 +6,7 @@ import { LoginPage } from '@/features/auth/pages/login.page'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
   const initAuth = useAuthStore((state) => state.initAuth)
   const [isChecking, setIsChecking] = useState(true)
 
@@ -31,6 +29,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     return <LoginPage />
+  }
+
+  const role = (user?.role || '').toUpperCase()
+  if (role !== 'ADMIN' && role !== 'INSTRUCTOR') {
+    return <LoginPage initialError="Tài khoản học viên (USER/LEARNER) không có quyền truy cập trang quản trị Admin." />
   }
 
   return <>{children}</>

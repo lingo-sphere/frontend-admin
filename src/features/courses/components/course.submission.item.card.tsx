@@ -35,11 +35,13 @@ export function CourseSubmissionItemCard({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
-                {submission.user_name || 'Học viên'}
+                {submission.user_name}
               </span>
-              <span className="text-[11px] text-slate-400">
-                ({submission.user_email || 'Chưa có email'})
-              </span>
+              {submission.user_email && (
+                <span className="text-[11px] text-slate-400">
+                  ({submission.user_email})
+                </span>
+              )}
               <span
                 className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
                   isSpeaking

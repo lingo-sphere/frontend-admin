@@ -1,4 +1,4 @@
-// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ course và roadmap trong Admin.
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ khóa học trong Admin.
 
 import { z } from 'zod'
 import { PaginationMetaSchema } from '@/features/users/schemas/user.schema'
@@ -16,7 +16,7 @@ export const QuizQuestionItemSchema = z.object({
   _id: z.string().optional(),
   lesson_id: z.string().optional(),
   prompt: z.string().optional(),
-  question_text: z.string().optional(),
+  question_text: z.string().default(''),
   options: z.array(QuizQuestionOptionSchema).default([]),
   correct_option: z.string().nullable().optional(),
   correct_answer: z.string().nullable().optional(),
@@ -101,7 +101,6 @@ export const CourseBaseSchema = z.object({
   slug: z.string().optional(),
   description: z.string().default(''),
   category: z.string().default('TOEIC'),
-  level: z.string().default('BEGINNER'),
   target_score: z.number().nullable().optional(),
   price: z.number().default(0),
   discount_price: z.number().nullable().optional(),
@@ -128,6 +127,7 @@ export const CourseBaseSchema = z.object({
   final_test_writing_file_url: z.string().nullable().optional(),
   rating: z.number().nullable().optional(),
   students_count: z.number().nullable().optional(),
+  is_bestseller: z.boolean().nullable().optional(),
   total_modules: z.number().nullable().optional(),
   total_lessons: z.number().nullable().optional(),
   skills: z.array(z.string()).optional(),
@@ -165,42 +165,9 @@ export const PaginatedCoursesSchema = z.object({
   meta: PaginationMetaSchema.optional(),
 }).passthrough()
 
-export const LearningRoadmapStageSchema = z.object({
-  stage_order: z.number().default(1),
-  stage_title: z.string().default(''),
-  stage_description: z.string().nullable().optional(),
-  course_id: z.string().default(''),
-  target_band: z.string().nullable().optional(),
-  checkpoint_exam_id: z.string().nullable().optional(),
-  passing_score: z.number().nullable().optional(),
-  is_optional: z.boolean().optional(),
-  course: CourseBaseSchema.nullable().optional(),
-})
-
-export const LearningRoadmapSchema = z.object({
-  _id: z.string().default(''),
-  id: z.string().optional(),
-  title: z.string(),
-  slug: z.string(),
-  description: z.string().nullable().optional(),
-  skills_focus: z.string().default('2SKILLS'),
-  target_score: z.number().default(500),
-  min_entry_score: z.number().default(0),
-  max_entry_score: z.number().default(990),
-  stages: z.array(LearningRoadmapStageSchema).default([]),
-  bundle_price: z.number().nullable().optional(),
-  original_price: z.number().nullable().optional(),
-  version: z.number().nullable().optional(),
-  is_published: z.boolean().default(false),
-  created_at: z.string().nullable().optional(),
-  updated_at: z.string().nullable().optional(),
-})
-
-export const RoadmapListSchema = z.array(LearningRoadmapSchema)
-
 export type QuizQuestionItem = z.infer<typeof QuizQuestionItemSchema>
 export type Lesson = z.infer<typeof LessonSchema>
 export type CourseModule = z.infer<typeof CourseModuleSchema>
 export type Course = z.infer<typeof CourseBaseSchema>
 export type PaginatedCourses = z.infer<typeof PaginatedCoursesSchema>
-export type LearningRoadmap = z.infer<typeof LearningRoadmapSchema>
+

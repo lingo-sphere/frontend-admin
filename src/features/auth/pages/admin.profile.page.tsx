@@ -18,8 +18,6 @@ import { evaluatePasswordStrength } from '@/features/auth/helpers/admin.profile.
 export function AdminProfilePage() {
   const navigate = useNavigate()
 
-  const authUser = useAuthStore((state) => state.user)
-  const authProfile = useAuthStore((state) => state.profile)
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
 
   const [profileData, setProfileData] = useState<AdminProfileData | null>(null)
@@ -45,62 +43,44 @@ export function AdminProfilePage() {
       setIsLoading(true)
       try {
         const res = await userService.getMyProfile()
-        const rawRole = String(authUser?.role || authProfile?.role || 'ADMIN').toUpperCase()
-        const userRole: 'ADMIN' | 'INSTRUCTOR' = rawRole === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN'
+        const userRole: 'ADMIN' | 'INSTRUCTOR' = res.role === 'INSTRUCTOR' ? 'INSTRUCTOR' : 'ADMIN'
 
         const loaded: AdminProfileData = {
-          id: res?.user_id || authUser?.user_id || 'admin-root',
-          name: res?.full_name || authUser?.full_name || 'Admin Master',
-          email: res?.email || authUser?.email || 'admin@lingosphere.edu.vn',
+          user_id: res.user_id,
+          full_name: res.full_name,
+          email: res.email,
           role: userRole,
-          avatar: res?.avatar_url || authUser?.avatar_url || '',
-          phone: res?.phone_number || '',
-          bio: res?.bio || '',
-          is_active: res?.status === 'ACTIVE',
+          avatar_url: res.avatar_url || undefined,
+          phone_number: res.phone_number || undefined,
+          bio: res.bio || undefined,
+          is_active: res.status === 'ACTIVE',
           last_active: 'Vừa xong',
-          created_at: res?.created_at ? new Date(res.created_at).toLocaleDateString('vi-VN') : '01/01/2026',
+          created_at: res.created_at ? new Date(res.created_at).toLocaleDateString('vi-VN') : '',
         }
 
         setProfileData(loaded)
         setForm((prev) => ({
           ...prev,
-          name: loaded.name,
-          phone: loaded.phone || '',
+          name: loaded.full_name,
+          phone: loaded.phone_number || '',
           bio: loaded.bio || '',
         }))
-      } catch (err) {
-        console.warn('Could not fetch latest profile from backend, using fallback auth state:', err)
-        const fallback: AdminProfileData = {
-          id: authUser?.user_id || 'admin-root',
-          name: authUser?.full_name || 'Admin Master',
-          email: authUser?.email || 'admin@lingosphere.edu.vn',
-          role: (authUser?.role || 'ADMIN').toUpperCase() as 'ADMIN' | 'INSTRUCTOR',
-          avatar: authUser?.avatar_url || '',
-          phone: '',
-          bio: '',
-          is_active: true,
-          last_active: 'Vừa xong',
-          created_at: '01/01/2026',
-        }
-        setProfileData(fallback)
-        setForm((prev) => ({
-          ...prev,
-          name: fallback.name,
-        }))
+      } catch {
+        toast.error('Không thể tải thông tin hồ sơ quản trị')
       } finally {
         setIsLoading(false)
       }
     }
 
     loadProfile()
-  }, [authUser, authProfile])
+  }, [])
 
   const handleAvatarChange = async (url: string) => {
     if (!url || !profileData) return
     setIsUploadingAvatar(true)
     try {
       await userService.updateMyProfile({ avatar_url: url })
-      setProfileData((prev) => (prev ? { ...prev, avatar: url } : null))
+      setProfileData((prev) => (prev ? { ...prev, avatar_url: url } : null))
       await fetchCurrentUser()
       toast.success('Cập nhật ảnh đại diện quản trị viên thành công!')
     } catch (err: unknown) {
@@ -134,7 +114,7 @@ export function AdminProfilePage() {
           setIsSaving(false)
           return
         }
-        await authService.changePassword(profileData.id, {
+        await authService.changePassword(profileData.user_id, {
           old_password: form.currentPassword,
           new_password: form.newPassword,
         })
@@ -151,8 +131,8 @@ export function AdminProfilePage() {
         prev
           ? {
               ...prev,
-              name: form.name.trim(),
-              phone: form.phone.trim(),
+              full_name: form.name.trim(),
+              phone_number: form.phone.trim(),
               bio: form.bio.trim(),
             }
           : null
@@ -239,7 +219,7 @@ export function AdminProfilePage() {
         </div>
 
         <StickyFormActionBar
-          title={profileData.name || profileData.email}
+          title={profileData.full_name || profileData.email}
           statusText="Tài khoản:"
           badgeText={profileData.role === 'ADMIN' ? 'Quản trị viên' : 'Giảng viên'}
           cancelText="Quay Lại"

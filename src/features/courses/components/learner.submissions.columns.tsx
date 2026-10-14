@@ -30,10 +30,10 @@ export function createLearnerSubmissionsColumns({
       render: (sub) => (
         <div className="space-y-0.5 min-w-[150px]">
           <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-            {sub.user_name || 'Học viên'}
+            {sub.user_name}
           </div>
           <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
-            {sub.user_email || 'Email chưa cập nhật'}
+            {sub.user_email}
           </div>
           <div className="text-[10px] text-slate-400">
             {sub.created_at ? new Date(sub.created_at).toLocaleDateString('vi-VN') : 'Mới nộp'}

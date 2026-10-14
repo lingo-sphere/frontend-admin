@@ -1,6 +1,7 @@
 // Component biên soạn đề thi và ngân hàng câu hỏi tích hợp thanh tác vụ lưu biểu mẫu cố định.
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { downloadSampleZip } from '@/features/exams/helpers/zip.exam.helper'
 import { ExamEditorHeader } from '@/features/courses/components/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/features/courses/components/exam.editor.global.audio'
@@ -17,6 +18,7 @@ export interface CourseExamQuestionsEditorProps {
   existingExams: ToeicExamItem[]
   isVi: boolean
   onBack: () => void
+  examContext?: 'TOEIC' | 'PLACEMENT' | 'COURSE'
 }
 
 export function CourseExamQuestionsEditor({
@@ -25,6 +27,7 @@ export function CourseExamQuestionsEditor({
   existingExams,
   isVi,
   onBack,
+  examContext,
 }: CourseExamQuestionsEditorProps) {
   const [formTitle, setFormTitle] = useState<string>(initialExam.title || '')
   const [formPlacementSkills, setFormPlacementSkills] = useState<'2SKILLS' | '4SKILLS'>(
@@ -36,33 +39,58 @@ export function CourseExamQuestionsEditor({
   const [formPassingScore, setFormPassingScore] = useState<number>(initialExam.passing_score ?? 0)
   const [formDescription, setFormDescription] = useState<string>(initialExam.description || '')
   const [formIsPublished, setFormIsPublished] = useState<boolean>(initialExam.is_published ?? true)
-  const [isConfigExpanded, setIsConfigExpanded] = useState<boolean>(isCreateMode)
+  const [isConfigExpanded, setIsConfigExpanded] = useState<boolean>(() => {
+    const savedCollapsed = storage.get<boolean>(STORAGE_KEYS.EXAM_CONFIG_COLLAPSED)
+    if (savedCollapsed !== null && savedCollapsed !== undefined) {
+      return !savedCollapsed
+    }
+    return isCreateMode
+  })
 
-  const isSystemPlacement = Boolean(
-    initialExam.is_system_placement || initialExam.type === 'DIAGNOSTIC_TEST' || !initialExam.course_id
+  const handleSetConfigExpanded = useCallback((val: boolean | ((prev: boolean) => boolean)) => {
+    setIsConfigExpanded((prev) => {
+      const next = typeof val === 'function' ? val(prev) : val
+      storage.set(STORAGE_KEYS.EXAM_CONFIG_COLLAPSED, !next)
+      return next
+    })
+  }, [])
+
+  const isPlacement = Boolean(
+    examContext === 'PLACEMENT' ||
+    initialExam.is_system_placement ||
+    initialExam.type === 'DIAGNOSTIC_TEST'
   )
+  const isToeic = Boolean(
+    examContext === 'TOEIC' ||
+    (!isPlacement && !initialExam.course_id && !initialExam.id?.startsWith('course_final_') && !initialExam.id?.startsWith('mod_challenge_'))
+  )
+  const isSystemPlacement = isPlacement
 
-  const currentEditingId = initialExam._id || initialExam.id
+  const currentEditingIds = useMemo(() => {
+    return new Set([initialExam._id, initialExam.id, initialExam.code].filter(Boolean) as string[])
+  }, [initialExam])
 
   const published2SkillsExam = useMemo(() => {
+    if (!isSystemPlacement) return undefined
     return existingExams.find(
       (e) =>
-        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST') &&
         (e.placement_type === '2SKILLS' || e.skills_enabled === 'LR') &&
         e.is_published &&
-        (e._id || e.id) !== currentEditingId
+        (isCreateMode || (!currentEditingIds.has(e._id ?? '') && !currentEditingIds.has(e.id ?? '') && (!e.code || !currentEditingIds.has(e.code))))
     )
-  }, [existingExams, currentEditingId])
+  }, [existingExams, currentEditingIds, isCreateMode, isSystemPlacement])
 
   const published4SkillsExam = useMemo(() => {
+    if (!isSystemPlacement) return undefined
     return existingExams.find(
       (e) =>
-        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST' || !e.course_id) &&
+        (e.is_system_placement || e.type === 'DIAGNOSTIC_TEST') &&
         (e.placement_type === '4SKILLS' || e.skills_enabled === 'ALL' || e.skills_enabled === 'FULL') &&
         e.is_published &&
-        (e._id || e.id) !== currentEditingId
+        (isCreateMode || (!currentEditingIds.has(e._id ?? '') && !currentEditingIds.has(e.id ?? '') && (!e.code || !currentEditingIds.has(e.code))))
     )
-  }, [existingExams, currentEditingId])
+  }, [existingExams, currentEditingIds, isCreateMode, isSystemPlacement])
 
   const currentActiveConflict = isSystemPlacement
     ? formPlacementSkills === '2SKILLS'
@@ -90,6 +118,19 @@ export function CourseExamQuestionsEditor({
     formIsPublished,
     formPlacementSkills,
   ])
+
+  const handleSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
+    setFormPlacementSkills(skills)
+    if (skills === '2SKILLS') {
+      setFormDuration((prev) => (prev <= 0 || prev === 90 || prev === 140 ? 60 : prev))
+      setFormPassingScore((prev) => (prev <= 0 || prev === 650 || prev === 70 ? 500 : prev))
+      if (published2SkillsExam) setFormIsPublished(false)
+    } else {
+      setFormDuration((prev) => (prev <= 0 || prev === 60 || prev === 120 ? 140 : prev))
+      setFormPassingScore((prev) => (prev <= 0 || prev === 500 ? 70 : prev))
+      if (published4SkillsExam) setFormIsPublished(false)
+    }
+  }
 
   const {
     questions,
@@ -124,9 +165,26 @@ export function CourseExamQuestionsEditor({
     isDirty,
   } = useExamQuestionEditor({
     isOpen: true,
-    exam: activeExamConfig,
+    exam: initialExam,
     is4Skills,
     isVi,
+    onSkillsAutoSwitched: (newSkills) => {
+      handleSkillsChange(newSkills)
+    },
+    onExamMetaLoaded: (meta) => {
+      if (typeof meta.duration_minutes === 'number' && meta.duration_minutes > 0) {
+        setFormDuration(meta.duration_minutes)
+      }
+      if (meta.title && meta.title.trim()) {
+        setFormTitle(meta.title.trim())
+      }
+      if (typeof meta.passing_score === 'number' && meta.passing_score > 0) {
+        setFormPassingScore(meta.passing_score)
+      }
+      if (meta.description) {
+        setFormDescription(meta.description)
+      }
+    },
     onExamUpdated: () => {},
     onClose: () => handleRequestCancel(),
   })
@@ -156,22 +214,9 @@ export function CourseExamQuestionsEditor({
     sessionUploadedUrlsRef,
     cleanupSessionMedia,
     isDirty,
-    setIsConfigExpanded,
+    setIsConfigExpanded: handleSetConfigExpanded,
     onBack,
   })
-
-  const handleSkillsChange = (skills: '2SKILLS' | '4SKILLS') => {
-    setFormPlacementSkills(skills)
-    if (skills === '2SKILLS') {
-      setFormDuration(60)
-      setFormPassingScore(500)
-      if (published2SkillsExam) setFormIsPublished(false)
-    } else {
-      setFormDuration(90)
-      setFormPassingScore(650)
-      if (published4SkillsExam) setFormIsPublished(false)
-    }
-  }
 
   return (
     <>
@@ -226,9 +271,10 @@ export function CourseExamQuestionsEditor({
             formIsPublished={formIsPublished}
             setFormIsPublished={setFormIsPublished}
             isConfigExpanded={isConfigExpanded}
-            setIsConfigExpanded={setIsConfigExpanded}
+            setIsConfigExpanded={handleSetConfigExpanded}
             currentActiveConflict={currentActiveConflict}
             isSystemPlacement={isSystemPlacement}
+            isToeic={isToeic}
             onCancelExam={handleRequestCancel}
             isCanceling={isCanceling}
           />
@@ -239,6 +285,7 @@ export function CourseExamQuestionsEditor({
               isVi={isVi}
               is4Skills={is4Skills}
               isSystemPlacement={isSystemPlacement}
+              isToeic={isToeic}
               questionsCount={questions.length}
               searchQuery={searchQuery}
               uploadingGlobalAudio={uploadingGlobalAudio}

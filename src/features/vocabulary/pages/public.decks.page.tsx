@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Plus, RotateCcw, Layers3 } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
 import type { FlashcardDeck } from '@/features/vocabulary/services/vocabulary.service'
 import { PublicDeckCard } from '@/features/vocabulary/components/public.deck.card'
@@ -14,6 +15,7 @@ export function PublicDecksPage() {
   const isVi = i18n.language === 'vi'
 
   const { data: decks = [], isLoading, refetch } = usePublicDecksQuery()
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const { mutateAsync: createDeckMutate } = useCreatePublicDeckMutation()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -81,10 +83,11 @@ export function PublicDecksPage() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => refetch()}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer disabled:opacity-60"
           >
-            <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-teal-500' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-teal-500' : ''}`} />
             <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
           </button>
           <button

@@ -3,7 +3,8 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Plus, RotateCcw, GraduationCap, FileCheck2 } from 'lucide-react'
+import { Plus, RotateCcw } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import type { Course } from '@/features/courses/data/courses.data'
 import { DataTable } from '@/components/data.table'
 import { usePermission } from '@/features/rbac/hooks/use.permission'
@@ -21,7 +22,7 @@ import { CourseStatsOverview } from '@/features/courses/components/course.stats.
 import { CourseFilterBar } from '@/features/courses/components/course.filter.bar'
 import { CourseGridCard } from '@/features/courses/components/course.grid.card'
 import { getCourseColumns } from '@/features/courses/components/course.table.columns'
-import type { FilterCategory, FilterLevel, FilterStatus } from '@/features/courses/helpers/course.helper'
+import type { FilterCategory, FilterStatus } from '@/features/courses/helpers/course.helper'
 
 export function CoursesPage() {
   const { i18n } = useTranslation()
@@ -31,11 +32,11 @@ export function CoursesPage() {
   const queryClient = useQueryClient()
 
   const { data: courses = [], isLoading, refetch } = useAdminCoursesQuery()
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const { mutateAsync: deleteCourseMutate } = useDeleteCourseMutation()
 
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('ALL')
-  const [filterLevel, setFilterLevel] = useState<FilterLevel>('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
     const saved = storage.get<'table' | 'grid'>(STORAGE_KEYS.COURSES_VIEW_MODE)
@@ -76,13 +77,12 @@ export function CoursesPage() {
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchCategory = filterCategory === 'ALL' || c.category === filterCategory
-      const matchLevel = filterLevel === 'ALL' || c.level === filterLevel
       const matchStatus =
         filterStatus === 'ALL' ||
         (filterStatus === 'PUBLISHED' && c.is_published) ||
         (filterStatus === 'DRAFT' && !c.is_published)
 
-      return matchSearch && matchCategory && matchLevel && matchStatus
+      return matchSearch && matchCategory && matchStatus
     })
 
     if (!sortKey || !sortOrder) return list
@@ -98,10 +98,10 @@ export function CoursesPage() {
         const comp = a.category.localeCompare(b.category)
         return sortOrder === 'asc' ? comp : -comp
       }
-      if (sortKey === 'level') {
-        const levelWeight: Record<string, number> = { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 3 }
-        const diff = (levelWeight[a.level] || 0) - (levelWeight[b.level] || 0)
-        return sortOrder === 'asc' ? diff : -diff
+      if (sortKey === 'target_score') {
+        const scoreA = a.target_score || 0
+        const scoreB = b.target_score || 0
+        return sortOrder === 'asc' ? scoreA - scoreB : scoreB - scoreA
       }
       if (sortKey === 'price') {
         const getEffectivePrice = (item: Course) => (item.discount_price && item.discount_price > 0 ? item.discount_price : item.price || 0)
@@ -111,21 +111,22 @@ export function CoursesPage() {
       }
       return 0
     })
-  }, [courses, searchQuery, filterCategory, filterLevel, filterStatus, sortKey, sortOrder])
+  }, [courses, searchQuery, filterCategory, filterStatus, sortKey, sortOrder])
 
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filteredCourses.slice(start, start + itemsPerPage)
   }, [filteredCourses, currentPage, itemsPerPage])
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSearchQuery('')
     setFilterCategory('ALL')
-    setFilterLevel('ALL')
     setFilterStatus('ALL')
     setSortKey(null)
     setSortOrder(null)
     setCurrentPage(1)
+    await refetch()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc khóa học' : 'Course filters reset')
   }
 
   const handleEditCourse = (courseId: string) => {
@@ -158,7 +159,7 @@ export function CoursesPage() {
       <CourseStatsOverview stats={stats} />
 
       <DataTable<Course>
-        title={isVi ? 'Quản Lý Khóa Học & Lộ Trình' : 'Course & Curriculum Management'}
+        title={isVi ? 'Quản Lý Khóa Học' : 'Course Management'}
         subtitle={
           isVi
             ? 'Soạn thảo giáo trình, modules bài giảng video, bài tập và hệ thống ngân hàng câu hỏi'
@@ -193,24 +194,11 @@ export function CoursesPage() {
         extraActions={
           <>
             <button
-              onClick={() => navigate('/course-learners')}
-              className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
+              onClick={() => handleRefresh()}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
             >
-              <GraduationCap className="w-4 h-4" />
-              <span>{isVi ? 'Quản lý học viên' : 'Learners'}</span>
-            </button>
-            <button
-              onClick={() => navigate('/course-exams')}
-              className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
-            >
-              <FileCheck2 className="w-4 h-4" />
-              <span>{isVi ? 'Quản lý bài thi' : 'Exams'}</span>
-            </button>
-            <button
-              onClick={() => refetch()}
-              className="flex items-center gap-2 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
+              <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`} />
               <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
             </button>
             <Can do="POST" on="/courses">
@@ -230,8 +218,6 @@ export function CoursesPage() {
             onSearchChange={setSearchQuery}
             filterCategory={filterCategory}
             onCategoryChange={setFilterCategory}
-            filterLevel={filterLevel}
-            onLevelChange={setFilterLevel}
             filterStatus={filterStatus}
             onStatusChange={setFilterStatus}
           />

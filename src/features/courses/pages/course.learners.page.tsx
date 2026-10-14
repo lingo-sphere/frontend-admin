@@ -18,6 +18,7 @@ import {
 } from '@/features/courses/hooks/use.course.learners.data'
 import type { StudentProgressItem, SkillSubmissionItem } from '@/features/progress/services/progress.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { toast } from '@/store/toast.store'
 
 export function CourseLearnersPage() {
   const { i18n } = useTranslation()
@@ -118,13 +119,15 @@ export function CourseLearnersPage() {
     return filteredStudents.slice(start, start + progressPageSize)
   }, [filteredStudents, progressCurrentPage, progressPageSize])
 
-  const handleResetProgressFilters = () => {
+  const handleResetProgressFilters = async () => {
     setProgressSearch('')
     setSelectedCourseId('ALL')
     setProgressStatusFilter('ALL')
     setProgressSortKey(null)
     setProgressSortOrder(null)
     setProgressCurrentPage(1)
+    await fetchProgress()
+    toast.success(isVi ? 'Đã đặt lại bộ lọc tiến độ học viên' : 'Learner progress filters reset')
   }
 
   const handleSort = (key: string, order: 'asc' | 'desc' | null) => {

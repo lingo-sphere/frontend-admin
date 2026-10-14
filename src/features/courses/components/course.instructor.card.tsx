@@ -1,7 +1,4 @@
-/**
- * @file course.instructor.card.tsx
- * @description Card hiển thị thông tin Giảng viên / Quản trị viên phụ trách khóa học kèm modal phóng to avatar
- */
+// Card hien thi thong tin Giang vien / Quan tri vien phu trach khoa hoc.
 
 import { useState } from 'react'
 import { UserCheck, X } from 'lucide-react'
@@ -82,10 +79,7 @@ export function CourseInstructorCard({ formData, isVi }: CourseInstructorCardPro
       </div>
 
       {previewAvatarModal && formData.author_avatar && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150 cursor-pointer"
-          onClick={() => setPreviewAvatarModal(false)}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] p-4 animate-in fade-in duration-150">
           <div
             className="relative max-w-md max-h-[85vh] overflow-hidden rounded-3xl bg-slate-900 shadow-2xl border border-slate-800 p-2"
             onClick={(e) => e.stopPropagation()}

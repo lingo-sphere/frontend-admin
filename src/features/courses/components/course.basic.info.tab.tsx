@@ -2,20 +2,20 @@
 
 import { useMemo, useEffect } from 'react'
 import { NumberInput } from '@/components/number.input'
-import { categoryLabels, levelLabels } from '@/features/courses/data/courses.data'
+import { categoryLabels } from '@/features/courses/data/courses.data'
 import { R2MediaUploader } from '@/features/media/components/r2.media.uploader'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 import type { QuizQuestionItem } from '@/features/courses/schemas/course.schema'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { CourseInstructorCard } from '@/features/courses/components/course.instructor.card'
 import { CourseFinalTestCard } from '@/features/courses/components/course.final.test.card'
+import { generateSlug } from '@/features/courses/helpers/course.helper'
 
 export interface CourseFormData {
   title: string
   slug: string
   description: string
   category: string
-  level: string
   target_score: number
   price: number
   discount_price: number
@@ -42,13 +42,7 @@ export interface CourseFormData {
   modules: CourseModule[]
 }
 
-export interface LessonQuestion {
-  id: string
-  question_text: string
-  options: string[]
-  correct_answer: string
-  explanation?: string
-}
+export type LessonQuestion = QuizQuestionItem
 
 export interface CourseLesson {
   id: string
@@ -61,7 +55,9 @@ export interface CourseLesson {
   lesson_order: number
   theory_file_url?: string
   theory_file_name?: string
-  questions?: LessonQuestion[]
+  pending_video_name?: string
+  pending_theory_name?: string
+  questions?: QuizQuestionItem[]
 }
 
 export interface CourseModule {
@@ -71,6 +67,7 @@ export interface CourseModule {
   module_order: number
   theory_file_url?: string
   theory_file_name?: string
+  pending_theory_name?: string
   created_at_timestamp?: number
   is_free_preview?: boolean
   passing_score?: number
@@ -116,27 +113,16 @@ export function CourseBasicInfoTab({
     }))
   }, [isVi])
 
-  const levelOptions: SelectOption[] = useMemo(() => {
-    return Object.entries(levelLabels).map(([key, label]) => ({
-      value: key,
-      label: isVi ? label.vi : label.en,
-    }))
-  }, [isVi])
-
   useEffect(() => {
     if (!formData.author_name && (profile || user)) {
-      const userPayload = user as unknown as Record<string, unknown>
-      const fullName =
-        profile?.full_name ||
-        (userPayload?.full_name as string) ||
-        (userPayload?.name as string) ||
-        (user?.email ? user.email.split('@')[0] : '')
-      if (fullName) {
+      const currentAuthorId = user?.user_id || profile?.user_id
+      const currentFullName = profile?.full_name || user?.full_name
+      if (currentFullName && currentAuthorId) {
         onChange({
-          author_id: profile?.user_id || user?.user_id,
-          author_name: String(fullName),
+          author_id: currentAuthorId,
+          author_name: currentFullName,
           author_email: profile?.email || user?.email || '',
-          author_avatar: profile?.avatar_url || (userPayload?.avatar_url as string) || (userPayload?.avatar as string) || '',
+          author_avatar: profile?.avatar_url || user?.avatar_url || '',
           author_title: (profile?.role || user?.role) === 'INSTRUCTOR' ? 'Giảng viên chuyên môn' : 'Quản trị viên học thuật',
         })
       }
@@ -180,7 +166,16 @@ export function CourseBasicInfoTab({
                 type="text"
                 required
                 value={formData.title}
-                onChange={(e) => onChange({ title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value
+                  const currentSlug = formData.slug ? formData.slug.trim() : ''
+                  const prevAutoSlug = formData.title ? generateSlug(formData.title.trim()) : ''
+                  if (!currentSlug || currentSlug === prevAutoSlug) {
+                    onChange({ title: newTitle, slug: generateSlug(newTitle) })
+                  } else {
+                    onChange({ title: newTitle })
+                  }
+                }}
                 placeholder={isVi ? 'VD: Khóa học TOEIC 4 Kỹ Năng 750+ Bứt Phá' : 'Enter course title...'}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-medium"
               />
@@ -202,21 +197,6 @@ export function CourseBasicInfoTab({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {isVi ? 'Trình độ phù hợp' : 'Level'}
-                </label>
-                <CustomSelect
-                  options={levelOptions}
-                  value={formData.level}
-                  onChange={(val) => onChange({ level: val })}
-                  placeholder={isVi ? 'Chọn trình độ...' : 'Select level...'}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Mục tiêu điểm' : 'Target Score'}
                 </label>
                 <NumberInput
@@ -229,7 +209,9 @@ export function CourseBasicInfoTab({
                   className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900 dark:text-slate-100 font-semibold"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isVi ? 'Giá gốc (VNĐ)' : 'Price (VND)'}

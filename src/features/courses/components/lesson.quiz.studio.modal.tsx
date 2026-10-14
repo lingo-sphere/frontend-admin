@@ -32,11 +32,14 @@ export function LessonQuizStudioModal({
   const initialQuestions: ExamQuestionItem[] = (lesson.questions || []).map((q, idx) => ({
     id: q.id || `q_init_${idx}`,
     question_text: q.question_text || '',
-    options: q.options && q.options.length ? q.options : ['', '', '', ''],
+    options:
+      q.options && q.options.length
+        ? q.options.map((opt) => (typeof opt === 'string' ? opt : opt?.text || ''))
+        : ['', '', '', ''],
     correct_answer: q.correct_answer || 'A',
     explanation: q.explanation || '',
-    media_url: (q as { media_url?: string }).media_url || (q as { audio_url?: string }).audio_url || '',
-    image_url: (q as { image_url?: string }).image_url || '',
+    media_url: q.media_url || q.audio_url || '',
+    image_url: q.image_url || '',
   }))
 
   const handleSave = (savedQuestions: ExamQuestionItem[]) => {

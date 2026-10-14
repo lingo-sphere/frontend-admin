@@ -1,28 +1,12 @@
-/**
- * @file use.r2.uploader.ts
- * @description Custom hook quản lý trạng thái tải lên media lên Cloudflare R2, đọc thời lượng video và theo dõi tiến trình
- */
+// Custom hook quản lý trạng thái tải lên media trực tiếp lên Cloudflare R2, đọc thời lượng video và theo dõi tiến trình.
 
 import { useState, useRef, useEffect } from 'react'
 import { mediaService } from '@/features/media/services/media.service'
-import { API_CONFIG } from '@/config/api.config'
 import { videoDimensionsCache } from '@/components/video.preview.modal'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 export const resolveStreamUrl = (url: string) => {
-  if (!url) return ''
-  if (
-    url.includes('pub-') ||
-    url.includes('r2.cloudflarestorage.com') ||
-    url.includes('.r2.dev')
-  ) {
-    try {
-      const parsed = new URL(url)
-      return `${API_CONFIG.BASE_URL}/media/stream${parsed.pathname}`
-    } catch {
-      return url
-    }
-  }
-  return url
+  return resolveMediaUrl(url)
 }
 
 interface UseR2UploaderOptions {
@@ -169,7 +153,7 @@ export function useR2Uploader({
     setUploadBytes({ loaded: 0, total: file.size })
 
     try {
-      const response = await mediaService.uploadFile(
+      const response = await mediaService.uploadDirectR2(
         file,
         folder,
         (percent, loaded, total) => {
@@ -180,8 +164,7 @@ export function useR2Uploader({
       setUploadProgress(100)
       setUploadBytes({ loaded: file.size, total: file.size })
 
-      const uploadedUrl =
-        response?.file_url || response?.url || response?.public_url
+      const uploadedUrl = response.file_url
 
       if (uploadedUrl) {
         onChange(uploadedUrl)

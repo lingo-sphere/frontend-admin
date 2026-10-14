@@ -4,13 +4,13 @@ import { courseService, type CourseFilterParams } from '@/features/courses/servi
 import { courseAdminKeys } from '@/features/courses/keys/course.admin.keys'
 import { optimisticUpdateCollection, rollbackCollection, type CollectionRollbackContext } from '@/lib/query.optimistic'
 import type { Course } from '@/features/courses/data/courses.data'
-import type { Course as ApiCourse } from '@/types/api.types'
+import type { Course as ApiCourse } from '@/features/courses/services/course.service'
 
 export async function fetchAdminCourses(
   queryParams: CourseFilterParams & { current?: number; pageSize?: number }
 ): Promise<Course[]> {
   const res = await courseService.getAllCourses(queryParams)
-  const data: ApiCourse[] = Array.isArray(res) ? res : (res?.result || [])
+  const data: ApiCourse[] = res.result ?? []
   return data.map((c: ApiCourse) => ({
     id: c._id || '',
     title: c.title,
@@ -19,7 +19,6 @@ export async function fetchAdminCourses(
     thumbnail_url: c.thumbnail_url || '',
     target_score: c.target_score ?? 0,
     category: (c.category as Course['category']) || 'TOEIC_2_SKILLS',
-    level: (c.level as Course['level']) || 'BEGINNER',
     total_modules: c.total_modules || 0,
     total_lessons: c.total_lessons || 0,
     price: c.price || 0,
@@ -50,7 +49,7 @@ export const adminCourseQueries = {
       queryKey: courseAdminKeys.apiList(queryParams),
       queryFn: async () => {
         const res = await courseService.getAllCourses(queryParams)
-        return Array.isArray(res) ? res : (res?.result || [])
+        return res.result ?? []
       },
       staleTime: 0,
     })

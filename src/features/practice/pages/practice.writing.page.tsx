@@ -1,11 +1,8 @@
-/**
- * @file practice.writing.page.tsx
- * @description Trang quản trị PracticeWritingPage trong giao diện Admin
- */
-
+// Trang quản trị bài tập luyện viết TOEIC trong giao diện Admin.
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, Search, PenTool } from 'lucide-react'
+import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { practiceService } from '@/features/practice/services/practice.service'
 import { toast } from '@/store/toast.store'
 import type { WritingExercise } from '@/types/api.types'
@@ -41,6 +38,8 @@ export function PracticeWritingPage() {
       setIsLoading(false)
     }
   }
+
+  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(fetchExercises)
 
   useEffect(() => {
     fetchExercises()
@@ -102,10 +101,11 @@ export function PracticeWritingPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={fetchExercises}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            onClick={() => handleRefresh()}
+            disabled={isRefreshing || isLoading}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer disabled:opacity-60"
           >
-            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-4 h-4 ${isRefreshing || isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowAddModal(true)}

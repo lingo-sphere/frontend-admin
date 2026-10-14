@@ -5,11 +5,13 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 import {
   AuthUserSchema,
   LoginResponseSchema,
+  RegisterResponseSchema,
   type AuthUser,
   type LoginResponse,
+  type RegisterResponse,
 } from '@/features/users/schemas/user.schema'
 
-export type { AuthUser, LoginResponse }
+export type { AuthUser, LoginResponse, RegisterResponse }
 
 export interface LoginCredentials {
   email: string
@@ -41,25 +43,37 @@ export const authService = {
     )
   },
 
-  async register(payload: RegisterPayload): Promise<LoginResponse> {
-    return api.post<LoginResponse>(
+  async register(payload: RegisterPayload): Promise<RegisterResponse> {
+    return api.post<RegisterResponse>(
       API_CONFIG.ENDPOINTS.AUTH.REGISTER,
       payload,
-      LoginResponseSchema
+      RegisterResponseSchema
     )
   },
 
   async logout(): Promise<{ message: string }> {
     try {
-      const res = await apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
+      const refreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+      const res = await apiClient.post<{ message: string }>(
+        API_CONFIG.ENDPOINTS.AUTH.LOGOUT,
+        {},
+        {
+          headers: refreshToken ? { 'x-refresh-token': refreshToken } : undefined,
+        },
+      )
       return res.data
     } catch {
       return { message: 'Logged out successfully' }
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
       storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.session.remove(STORAGE_KEYS.USER)
+      storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      storage.cookie.remove(STORAGE_KEYS.USER)
     }
   },
 

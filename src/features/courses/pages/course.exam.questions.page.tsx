@@ -1,7 +1,7 @@
 // Trang điều phối tải dữ liệu và studio biên soạn đề thi bài kiểm tra khóa học với TanStack Query.
 import { useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Loader2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
@@ -9,24 +9,28 @@ import { examAdminService, type ToeicExamItem } from '@/features/exams/services/
 import { toast } from '@/store/toast.store'
 import { CourseExamQuestionsEditor } from '@/features/courses/components/course.exam.questions.editor'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
-import type { Course } from '@/types/api.types'
+import type { Course } from '@/features/courses/schemas/course.schema'
 
 interface CourseExamQuestionsPageProps {
   examId: string
 }
 
-function createNewExamTemplate(): ToeicExamItem {
+function createNewExamTemplate(type: '2SKILLS' | '4SKILLS' = '2SKILLS'): ToeicExamItem {
+  const is4Skills = type === '4SKILLS'
+  const stableId = is4Skills ? 'exam_new_placement_4skills' : 'exam_new_placement_2skills'
   return {
-    id: `exam_new_${Date.now()}`,
-    _id: `exam_new_${Date.now()}`,
-    title: 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC (Placement Test)',
+    id: stableId,
+    _id: stableId,
+    title: is4Skills
+      ? 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 4 Kỹ Năng (Full Skills)'
+      : 'Đề Thi Đánh Giá Năng Lực Đầu Vào TOEIC 2 Kỹ Năng (LR)',
     type: 'DIAGNOSTIC_TEST',
     is_system_placement: true,
-    skills_enabled: 'LR',
-    placement_type: '2SKILLS',
-    duration_minutes: 60,
+    skills_enabled: is4Skills ? 'ALL' : 'LR',
+    placement_type: is4Skills ? '4SKILLS' : '2SKILLS',
+    duration_minutes: is4Skills ? 90 : 60,
     total_questions: 0,
-    passing_score: 500,
+    passing_score: is4Skills ? 650 : 500,
     total_attempts: 0,
     avg_score: 0,
     is_published: true,
@@ -40,17 +44,33 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const requestedType: '2SKILLS' | '4SKILLS' =
+    searchParams.get('type') === '4SKILLS' || searchParams.get('skills') === '4SKILLS'
+      ? '4SKILLS'
+      : '2SKILLS'
 
   const isCreateMode = examId === 'new'
 
   const initialCachedExam = useMemo(() => {
-    if (isCreateMode) return createNewExamTemplate()
+    if (isCreateMode) {
+      const cached = storage.session.get<ToeicExamItem>(STORAGE_KEYS.ACTIVE_EXAM)
+      if (cached && cached.is_system_placement) {
+        const cachedType =
+          (cached.placement_type as '2SKILLS' | '4SKILLS') ||
+          (cached.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS')
+        if (cachedType === requestedType) {
+          return cached
+        }
+      }
+      return createNewExamTemplate(requestedType)
+    }
     const cached = storage.session.get<ToeicExamItem>(STORAGE_KEYS.ACTIVE_EXAM)
     if (cached && (cached._id === examId || cached.id === examId) && cached.title) {
       return cached
     }
     return undefined
-  }, [examId, isCreateMode])
+  }, [examId, isCreateMode, requestedType])
 
   const { data: existingExams = [] } = useQuery<ToeicExamItem[]>({
     queryKey: ['exams-all-existing'],
@@ -58,16 +78,28 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       const allExams = await examAdminService.getExams()
       return Array.isArray(allExams) ? allExams : []
     },
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 
   const {
     data: exam = null,
     isLoading,
   } = useQuery<ToeicExamItem | null>({
-    queryKey: ['exam-question-studio', examId],
+    queryKey: ['exam-question-studio', examId, requestedType],
     queryFn: async () => {
-      if (isCreateMode) return createNewExamTemplate()
+      if (isCreateMode) {
+        const cached = storage.session.get<ToeicExamItem>(STORAGE_KEYS.ACTIVE_EXAM)
+        if (cached && cached.is_system_placement) {
+          const cachedType =
+            (cached.placement_type as '2SKILLS' | '4SKILLS') ||
+            (cached.skills_enabled === 'ALL' ? '4SKILLS' : '2SKILLS')
+          if (cachedType === requestedType) {
+            return cached
+          }
+        }
+        return createNewExamTemplate(requestedType)
+      }
 
       if (examId.startsWith('course_final_')) {
         const courseId = examId.replace('course_final_', '')
@@ -149,13 +181,41 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
       return null
     },
     initialData: initialCachedExam,
-    staleTime: 0,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   })
+
+  const { pathname } = useLocation()
+  const isPlacementContext = Boolean(
+    pathname.includes('/placement-tests') ||
+    exam?.is_system_placement ||
+    exam?.type === 'DIAGNOSTIC_TEST'
+  )
+  const isCourseContext = Boolean(
+    pathname.startsWith('/course-exams') ||
+    exam?.course_id ||
+    String(examId).startsWith('course_final_') ||
+    String(examId).startsWith('mod_challenge_')
+  )
+  const examContext: 'TOEIC' | 'PLACEMENT' | 'COURSE' = isPlacementContext
+    ? 'PLACEMENT'
+    : isCourseContext
+    ? 'COURSE'
+    : 'TOEIC'
 
   const handleBack = useCallback(() => {
     storage.session.remove(STORAGE_KEYS.ACTIVE_EXAM)
-    navigate('/course-exams')
-  }, [navigate])
+    if (examContext === 'PLACEMENT') {
+      navigate('/practice/placement-tests')
+    } else if (examContext === 'TOEIC') {
+      navigate('/practice/exams')
+    } else {
+      navigate('/course-exams')
+    }
+  }, [navigate, examContext])
 
   if (isLoading && !exam) {
     return (
@@ -198,11 +258,13 @@ export function CourseExamQuestionsPage({ examId }: CourseExamQuestionsPageProps
 
   return (
     <CourseExamQuestionsEditor
+      key={`${exam._id || exam.id}_${exam.placement_type || requestedType}`}
       initialExam={exam}
       isCreateMode={isCreateMode}
       existingExams={existingExams}
       isVi={isVi}
       onBack={handleBack}
+      examContext={examContext}
     />
   )
 }

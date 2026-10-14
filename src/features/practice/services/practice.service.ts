@@ -7,6 +7,17 @@ import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { PracticeSet, PracticeQuestion, ListeningExercise, SpeakingExercise, WritingExercise } from '@/types/api.types'
 
+// Practice Context types
+export interface PracticeContext {
+  _id: string
+  name: string
+  name_vi: string
+  code: string
+  level: number
+  parent_id?: string
+  domains?: string[]
+}
+
 export const practiceService = {
 
   async getAllPracticeSets(): Promise<PracticeSet[]> {
@@ -67,5 +78,14 @@ export const practiceService = {
 
   async getDailyJournalPrompt(): Promise<{ prompt: string; topic: string; tips: string[] }> {
     return api.get<{ prompt: string; topic: string; tips: string[] }>(API_CONFIG.ENDPOINTS.PRACTICE.JOURNAL_PROMPT)
+  },
+
+  // Practice Context taxonomy
+  async getContexts(): Promise<PracticeContext[]> {
+    return api.get<PracticeContext[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS)
+  },
+
+  async getContextsByLevel(level: number): Promise<PracticeContext[]> {
+    return api.get<PracticeContext[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_BY_LEVEL(level))
   },
 }

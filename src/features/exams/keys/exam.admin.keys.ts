@@ -4,6 +4,7 @@ export const examAdminKeys = {
   list: (params?: Record<string, unknown>) => [...examAdminKeys.all, 'list', params] as const,
   detail: (id: string) => [...examAdminKeys.all, 'detail', id] as const,
   placementAttempts: (params?: Record<string, unknown>) => [...examAdminKeys.all, 'placement-attempts', params] as const,
+  toeicAttempts: (params?: Record<string, unknown>) => [...examAdminKeys.all, 'toeic-attempts', params] as const,
   attemptResult: (attemptId: string) => [...examAdminKeys.all, 'attempt-result', attemptId] as const,
   userAttempts: (userId: string) => [...examAdminKeys.all, 'user-attempts', userId] as const,
 }
