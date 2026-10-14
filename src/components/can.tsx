@@ -5,7 +5,7 @@
 
 import React from 'react'
 import { usePermission } from '@/features/rbac/hooks/use.permission'
-
+ 
 interface CanProps {
   do?: string
   on?: string
