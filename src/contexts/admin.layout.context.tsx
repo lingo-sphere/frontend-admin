@@ -28,15 +28,15 @@ const applyThemeToDOM = (theme: ThemeMode) => {
 }
 
 const getInitialTheme = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'dark'
+  if (typeof window === 'undefined') return 'light'
   const savedTheme = storage.get<ThemeMode>(STORAGE_KEYS.THEME)
-  const theme = savedTheme === 'light' ? 'light' : 'dark'
+  const theme = savedTheme === 'dark' ? 'dark' : 'light'
   applyThemeToDOM(theme)
   return theme
 }
 
 export const AdminLayoutContext = createContext<AdminLayoutContextType>({
-  theme: 'dark',
+  theme: 'light',
   setTheme: () => {},
   toggleTheme: () => {},
   sidebarCollapsed: false,
