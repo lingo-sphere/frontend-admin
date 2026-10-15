@@ -170,7 +170,7 @@ export function pathToNavItem(pathname: string): string {
   if (cleanPath === '/public-decks') return 'public-decks'
   if (cleanPath === '/progress') return 'progress'
   if (cleanPath === '/analytics/posthog' || cleanPath === '/posthog') return 'analytics-posthog'
-  if (cleanPath === '/monitoring-betterstack' || cleanPath === '/betterstack') return 'monitoring-betterstack'
+  if (cleanPath === '/monitoring/betterstack' || cleanPath === '/monitoring-betterstack' || cleanPath === '/betterstack') return 'monitoring-betterstack'
   if (cleanPath === '/notifications') return 'notifications'
   if (cleanPath === '/settings' || cleanPath === '/settings/plans') return 'settings-plans'
   if (cleanPath === '/settings/ai' || cleanPath === '/ai-management' || cleanPath === '/ai') return 'settings-ai'
