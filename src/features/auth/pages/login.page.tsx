@@ -23,9 +23,12 @@ import {
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useAdminLayout } from '@/contexts/admin.layout.context'
 
 export function LoginPage({ initialError }: { initialError?: string } = {}) {
   const { t, i18n } = useTranslation()
+  const { theme, toggleTheme } = useAdminLayout()
+  const isDark = theme === 'dark'
   const [email, setEmail] = useState('admin@lingosphere.local')
   const [password, setPassword] = useState('admin123')
   const [showPassword, setShowPassword] = useState(false)
@@ -33,31 +36,8 @@ export function LoginPage({ initialError }: { initialError?: string } = {}) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null)
   const [selectedRole, setSelectedRole] = useState<'admin' | 'teacher'>('admin')
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = storage.get<string>(STORAGE_KEYS.THEME)
-      return stored === 'dark' || document.documentElement.classList.contains('dark')
-    }
-    return false
-  })
 
   const login = useAuthStore((state) => state.login)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (isDark) {
-        document.documentElement.classList.add('dark')
-        storage.set(STORAGE_KEYS.THEME, 'dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-        storage.set(STORAGE_KEYS.THEME, 'light')
-      }
-    }
-  }, [isDark])
-
-  const toggleTheme = () => {
-    setIsDark((prev) => !prev)
-  }
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'en' ? 'vi' : 'en'
