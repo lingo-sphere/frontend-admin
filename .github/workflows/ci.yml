@@ -38,5 +38,6 @@ jobs:
       - name: Production Build
         run: npm run build
         env:
+          NODE_OPTIONS: "--max-old-space-size=5120"
           VITE_API_BASE_URL: https://api.lingosphere.io.vn
           VITE_R2_PUBLIC_URL: https://assets.lingosphere.io.vn
