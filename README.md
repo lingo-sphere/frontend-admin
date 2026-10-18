@@ -127,7 +127,7 @@ Populate the required configuration variables:
 
 ```env
 # URL pointing to LingoSphere API Gateway
-VITE_API_BASE_URL=https://api.lingosphere.online/api/v1
+VITE_API_BASE_URL=https://api.lingosphere.online
 
 # Public CDN URL for Cloudflare R2 asset storage (audio, video, images)
 VITE_R2_PUBLIC_URL=https://cdn.lingosphere.online
