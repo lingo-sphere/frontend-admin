@@ -1,10 +1,11 @@
-# Quy trình CI tự động kiểm tra typecheck và build production cho Frontend Admin khi deploy lên main
+# Quy trình CI tự động kiểm tra typecheck và build production cho Frontend Admin khi deploy lên main hoặc develop
 name: Frontend Admin CI
 
 on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
 
 concurrency:
@@ -38,5 +39,6 @@ jobs:
       - name: Production Build
         run: npm run build
         env:
-          VITE_API_BASE_URL: https://api.lingosphere.io.vn
-          VITE_R2_PUBLIC_URL: https://assets.lingosphere.io.vn
+          NODE_OPTIONS: "--max-old-space-size=5120"
+          VITE_API_BASE_URL: https://api.lingosphere.online
+          VITE_R2_PUBLIC_URL: https://assets.lingosphere.online
