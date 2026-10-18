@@ -10,7 +10,7 @@
 
 **Next-generation, high-performance back-office administration suite for the LingoSphere language learning ecosystem.**
 
-[Live Admin Portal](https://admin.lingosphere.io.vn) • [API Documentation](https://api.lingosphere.io.vn)
+[Live Admin Portal](https://admin.lingosphere.online) • [API Documentation](https://api.lingosphere.online)
 
 </div>
 
@@ -127,10 +127,10 @@ Populate the required configuration variables:
 
 ```env
 # URL pointing to LingoSphere API Gateway
-VITE_API_BASE_URL=https://api.lingosphere.io.vn/api/v1
+VITE_API_BASE_URL=https://api.lingosphere.online/api/v1
 
 # Public CDN URL for Cloudflare R2 asset storage (audio, video, images)
-VITE_R2_PUBLIC_URL=https://cdn.lingosphere.io.vn
+VITE_R2_PUBLIC_URL=https://cdn.lingosphere.online
 ```
 
 ### 3. Launch Development Server
