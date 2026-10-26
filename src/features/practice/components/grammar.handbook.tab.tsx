@@ -1,14 +1,10 @@
-/**
- * @file grammar.handbook.tab.tsx
- * @description Tab Quản lý Sổ tay 44 Chủ điểm Ngữ pháp chi tiết trong Admin
- */
+// Tab quản lý sổ tay 44 chủ điểm ngữ pháp chi tiết dành cho quản trị viên.
 
 import React, { useState } from 'react'
 import {
   Table,
   Button,
   Input,
-  Select,
   Switch,
   Space,
   Tag,
@@ -28,16 +24,17 @@ import {
 } from '@ant-design/icons'
 import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
+import { CustomSelect } from '@/components/custom.select'
 import {
   useGrammarHandbookListQuery,
   useGrammarHandbookMutations,
-} from '../hooks/use.grammar-handbook.admin'
-import { GrammarHandbookDrawer } from './grammar.handbook.drawer'
+} from '@/features/practice/hooks/use.grammar-handbook.admin'
+import { GrammarHandbookDrawer } from '@/features/practice/components/grammar.handbook.drawer'
 import type {
   GrammarHandbookItem,
   GrammarHandbookQuery,
   GrammarHandbookPayload,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 const CATEGORY_OPTIONS = [
   { value: 'ALL', label: 'Tất cả nhóm' },
@@ -294,7 +291,7 @@ export function GrammarHandbookTab() {
               style={{ width: 260 }}
             />
 
-            <Select
+            <CustomSelect
               value={query.category}
               onChange={handleCategoryChange}
               options={CATEGORY_OPTIONS}
@@ -302,7 +299,7 @@ export function GrammarHandbookTab() {
               placeholder="Chọn nhóm"
             />
 
-            <Select
+            <CustomSelect
               value={query.cefr_level}
               onChange={handleCefrChange}
               options={CEFR_OPTIONS}

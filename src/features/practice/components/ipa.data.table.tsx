@@ -1,30 +1,33 @@
-import { usePracticeText } from '../hooks/use.practice.text'
+// Bảng dữ liệu dùng chung (IpaDataTable) cho các module luyện tập.
+
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Checkbox, DatePicker, Dropdown, Input, InputNumber, Select, Space, Table, Tag, TreeSelect } from 'antd'
+import { Alert, Button, Checkbox, DatePicker, Dropdown, Input, InputNumber, Space, Table } from 'antd'
 import type { ColumnType, FilterDropdownProps } from 'antd/es/table/interface'
-import { Filter, Columns3 } from 'lucide-react'
+import { Filter, Columns3, Search, X, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
-import type { useIpaTableState } from '../hooks/use.ipa.table-state'
+import { CustomSelect, type SelectOption } from '@/components/custom.select'
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import type { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
 import { Pagination } from '@/components/pagination'
 
 export interface IpaColumn<T> extends ColumnType<T> {
   key: string; label: string
   filterKind?: 'text' | 'enum' | 'media' | 'date' | 'number' | 'tree'
-  filterOptions?: { value: string; label: string; pId?: string }[]
+  filterOptions?: SelectOption[]
   initiallyHidden?: boolean
 }
 
-function ColumnFilter({ kind, options, selectedKeys, setSelectedKeys, confirm, clearFilters }: FilterDropdownProps & { kind: string; options?: { value: string; label: string; pId?: string }[] }) {
+function ColumnFilter({ kind, options, selectedKeys, setSelectedKeys, confirm, clearFilters }: FilterDropdownProps & { kind: string; options?: SelectOption[] }) {
   const p = usePracticeText()
   const { i18n } = useTranslation();
   const isVi = i18n.language === 'vi';
   return <div style={{ padding: 12, width: 280 }} onKeyDown={event => event.stopPropagation()}>
     {kind === 'number' ? <Space><InputNumber aria-label={isVi ? p("Từ") : "From"} placeholder={isVi ? p("Từ") : "From"} min={0} value={selectedKeys[0] ? Number(selectedKeys[0]) : null} onChange={value => setSelectedKeys([value === null ? '' : String(value), String(selectedKeys[1] || '')])} style={{ width: 115 }} /><InputNumber aria-label={isVi ? p("Đến") : "To"} placeholder={isVi ? p("Đến") : "To"} min={0} value={selectedKeys[1] ? Number(selectedKeys[1]) : null} onChange={value => setSelectedKeys([String(selectedKeys[0] || ''), value === null ? '' : String(value)])} style={{ width: 115 }} /></Space>
-      : kind === 'tree' ? <TreeSelect aria-label={p("Giá trị lọc cột")} multiple treeDataSimpleMode allowClear showSearch treeNodeFilterProp="title" style={{ width: '100%' }} value={selectedKeys} treeData={options?.map(option => ({ ...option, id: option.value, title: option.label }))} onChange={value => setSelectedKeys(value)} />
+      : kind === 'tree' ? <CustomSelect aria-label={p("Giá trị lọc cột")} style={{ width: '100%' }} mode="multiple" allowClear placeholder={p("Chọn giá trị")} value={selectedKeys} options={options} onChange={value => setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])} />
       : kind === 'text' ? <Input aria-label={p("Lọc cột")} value={String(selectedKeys[0] || '')} onChange={event => setSelectedKeys(event.target.value ? [event.target.value] : [])} onPressEnter={() => confirm()} allowClear />
       : kind === 'date' ? <DatePicker.RangePicker value={selectedKeys.length === 2 ? [dayjs(String(selectedKeys[0])), dayjs(String(selectedKeys[1]))] : null} onChange={dates => setSelectedKeys(dates?.[0] && dates[1] ? [dates[0].startOf('day').toISOString(), dates[1].endOf('day').toISOString()] : [])} />
-        : <Select aria-label={p("Giá trị lọc cột")} style={{ width: '100%' }} mode={kind === 'media' ? undefined : 'multiple'} allowClear placeholder={p("Chọn giá trị")} value={kind === 'media' ? selectedKeys[0] : selectedKeys} options={kind === 'media' ? [{ value: 'present', label: isVi ? p("Có media") : 'Has media' }, { value: 'missing', label: isVi ? p("Thiếu media") : 'Missing media' }] : options} onChange={value => setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])} />}
+        : <CustomSelect aria-label={p("Giá trị lọc cột")} style={{ width: '100%' }} mode={kind === 'media' ? undefined : 'multiple'} allowClear placeholder={p("Chọn giá trị")} value={kind === 'media' ? selectedKeys[0] : selectedKeys} options={kind === 'media' ? [{ value: 'present', label: isVi ? p("Có media") : 'Has media' }, { value: 'missing', label: isVi ? p("Thiếu media") : 'Missing media' }] : options} onChange={value => setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])} />}
     <Space style={{ marginTop: 12 }}><Button type="primary" size="small" onClick={() => confirm()}>{isVi ? p("Áp dụng") : 'Apply'}</Button><Button size="small" onClick={() => clearFilters?.({ confirm: true })}>{isVi ? p("Xóa lọc") : 'Clear'}</Button></Space>
   </div>
 }
@@ -45,14 +48,63 @@ export function IpaDataTable<T extends object>({ columns, items, total, loading,
       ...(filterKind ? { filteredValue: state.filters[column.key] || null, filterOnClose: false, filterIcon: (active: boolean) => <Filter size={13} color={active ? '#4f46e5' : undefined} />, filterDropdown: (props: FilterDropdownProps) => <ColumnFilter {...props} kind={filterKind} options={filterOptions} /> } : {}),
     }
   })
-  return <div className="space-y-3">
-    <div className="flex flex-wrap items-center gap-2">
-      <Input.Search aria-label={resolvedSearchLabel} placeholder={resolvedSearchPlaceholder} value={state.search} onChange={event => state.setSearch(event.target.value)} allowClear style={{ width: 310 }} />
-      {extraFilters}
-      <Button onClick={state.reset}>{isVi ? p("Đặt lại") : 'Reset'}</Button>
-      <Dropdown trigger={['click']} popupRender={() => <div className="rounded-xl bg-white p-4 shadow-lg dark:bg-slate-800"><Checkbox.Group value={visible} options={columns.filter(column => column.key !== 'actions').map(column => ({ label: column.label, value: column.key }))} onChange={values => setVisible(values.map(String))} style={{ display: 'flex', flexDirection: 'column', gap: 8 }} /></div>}><Button icon={<Columns3 size={15} />}>{isVi ? p("Cột") : 'Columns'}</Button></Dropdown>
+  return <div className="space-y-4">
+    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+        <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+          <input
+            type="text"
+            aria-label={resolvedSearchLabel}
+            value={state.search}
+            onChange={(e) => state.setSearch(e.target.value)}
+            placeholder={resolvedSearchPlaceholder}
+            className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+          />
+          {state.search && (
+            <button
+              type="button"
+              onClick={() => state.setSearch('')}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+        {extraFilters}
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={state.reset}
+          className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>{isVi ? p("Đặt lại") : 'Reset'}</span>
+        </button>
+        <Dropdown
+          trigger={['click']}
+          popupRender={() => (
+            <div className="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-3 shadow-xl backdrop-blur-xl">
+              <Checkbox.Group
+                value={visible}
+                options={columns.filter(column => column.key !== 'actions').map(column => ({ label: column.label, value: column.key }))}
+                onChange={values => setVisible(values.map(String))}
+                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+              />
+            </div>
+          )}
+        >
+          <button
+            type="button"
+            className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+          >
+            <Columns3 className="w-3.5 h-3.5" />
+            <span>{isVi ? p("Cột") : 'Columns'}</span>
+          </button>
+        </Dropdown>
+      </div>
     </div>
-    <div className="flex flex-wrap gap-1">{Object.entries(state.filters).filter(([key]) => key !== 'exercise_type').map(([key, values]) => <Tag key={key} closable onClose={() => state.setFilter(key, [])}>{columns.find(column => column.key === key)?.label || key}: {values.join(', ')}</Tag>)}</div>
     {error ? (
       <Alert type="error" showIcon title={isVi ? p("Không tải được dữ liệu") : "Failed to load data"} description={error.message} action={<Button onClick={() => retry()}>{isVi ? p("Thử lại") : "Retry"}</Button>} />
     ) : (

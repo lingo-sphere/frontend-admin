@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet, Volume2 } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
+import { useDebounce } from '@/hooks/use.debounce'
 import { DataTable } from '@/components/data.table'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
@@ -35,34 +36,32 @@ export function VocabularyPage() {
 
   const [activeTab, setActiveTab] = useState<VocabularyTabType>('words')
   const [searchWord, setSearchWord] = useState<string>('')
+  const debouncedSearch = useDebounce(searchWord, 300)
   const [filterLevel, setFilterLevel] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
 
-  // Modals state
   const [detailModalId, setDetailModalId] = useState<string | null>(null)
 
-  // Topic modals state
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false)
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null)
 
-  // Deck modals state
   const [isDeckModalOpen, setIsDeckModalOpen] = useState(false)
   const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null)
   const [initialDeckTopicId, setInitialDeckTopicId] = useState<string | undefined>(undefined)
   const [selectedTopicIdForDecks, setSelectedTopicIdForDecks] = useState<string>('ALL')
 
-  // Cards Manager modal state
   const [isCardsManagerOpen, setIsCardsManagerOpen] = useState(false)
   const [selectedDeckForCards, setSelectedDeckForCards] = useState<FlashcardDeck | null>(null)
 
-  // Server-side query với params
-  const { data: wordsResponse, isLoading: isWordsLoading, refetch: refetchWords } = useVocabularyWordsQuery({
+  const queryParams = useMemo(() => ({
     page: currentPage,
     limit: pageSize,
-    q: searchWord || undefined,
+    q: debouncedSearch.trim() || undefined,
     cefr_level: filterLevel !== 'ALL' ? filterLevel : undefined,
-  })
+  }), [currentPage, pageSize, debouncedSearch, filterLevel])
+
+  const { data: wordsResponse, isLoading: isWordsLoading, refetch: refetchWords } = useVocabularyWordsQuery(queryParams)
 
   const { data: topics = [], isLoading: isTopicsLoading, refetch: refetchTopics } = useVocabularyTopicsQuery()
   const { data: decks = [], isLoading: isDecksLoading, refetch: refetchDecks } = useVocabularyDecksQuery()

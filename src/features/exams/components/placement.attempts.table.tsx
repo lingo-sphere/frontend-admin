@@ -18,6 +18,7 @@ import type { PlacementAttemptItem } from '@/features/exams/services/exam.servic
 import { PlacementAttemptDetailModal } from '@/features/exams/components/placement.attempt.detail.modal'
 import { useDebounce } from '@/hooks/use.debounce'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { CustomSelect } from '@/components/custom.select'
 import { toast } from '@/store/toast.store'
 
 interface PlacementAttemptsTableProps {
@@ -35,6 +36,14 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
   const [sortKey, setSortKey] = useState<string | null>('submitted_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>('desc')
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
+
+  const scoreOptions = useMemo(() => [
+    { value: 'ALL', label: isVi ? 'Mọi mức điểm TOEIC' : 'All Score Brackets' },
+    { value: '0-250', label: '0 - 250 (A1 - Mới bắt đầu)' },
+    { value: '255-500', label: '255 - 500 (A2 - Sơ cấp)' },
+    { value: '505-750', label: '505 - 750 (B1 - Trung cấp)' },
+    { value: '755-990', label: '755 - 990 (B2+/C1 - Nâng cao)' },
+  ], [isVi])
 
   const queryParams = useMemo(() => {
     let minScore: number | undefined
@@ -350,20 +359,15 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
               />
             </div>
 
-            <select
+            <CustomSelect
               value={scoreBracket}
-              onChange={(e) => {
-                setScoreBracket(e.target.value)
+              onChange={(val) => {
+                setScoreBracket(val)
                 setCurrentPage(1)
               }}
-              className="h-10 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-2xs cursor-pointer"
-            >
-              <option value="ALL">Mọi mức điểm TOEIC</option>
-              <option value="0-250">0 - 250 (A1 - Mới bắt đầu)</option>
-              <option value="255-500">255 - 500 (A2 - Sơ cấp)</option>
-              <option value="505-750">505 - 750 (B1 - Trung cấp)</option>
-              <option value="755-990">755 - 990 (B2+/C1 - Nâng cao)</option>
-            </select>
+              options={scoreOptions}
+              className="w-full sm:w-60"
+            />
           </div>
         }
       />

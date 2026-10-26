@@ -1,14 +1,10 @@
-/**
- * @file toeic.tips.tab.tsx
- * @description Tab Quản lý Chiến thuật & Mẹo làm bài thi TOEIC 4 Kỹ năng trong Admin
- */
+// Tab quản lý chiến thuật & mẹo làm bài thi TOEIC 4 kỹ năng dành cho quản trị viên.
 
 import React, { useState } from 'react'
 import {
   Table,
   Button,
   Input,
-  Select,
   Switch,
   Space,
   Tag,
@@ -28,16 +24,17 @@ import {
 } from '@ant-design/icons'
 import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
+import { CustomSelect } from '@/components/custom.select'
 import {
   useToeicTipsListQuery,
   useToeicTipsMutations,
-} from '../hooks/use.grammar-handbook.admin'
-import { ToeicTipsDrawer } from './toeic.tips.drawer'
+} from '@/features/practice/hooks/use.grammar-handbook.admin'
+import { ToeicTipsDrawer } from '@/features/practice/components/toeic.tips.drawer'
 import type {
   ToeicTipItem,
   ToeicTipQuery,
   ToeicTipPayload,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 const SKILL_OPTIONS = [
   { value: 'ALL', label: 'Tất cả Kỹ năng' },
@@ -276,7 +273,7 @@ export function ToeicTipsTab() {
               style={{ width: 260 }}
             />
 
-            <Select
+            <CustomSelect
               value={query.skill}
               onChange={handleSkillChange}
               options={SKILL_OPTIONS}
@@ -284,7 +281,7 @@ export function ToeicTipsTab() {
               placeholder="Chọn kỹ năng"
             />
 
-            <Select
+            <CustomSelect
               value={query.part}
               onChange={handlePartChange}
               options={PART_OPTIONS}

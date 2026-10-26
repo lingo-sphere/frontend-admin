@@ -8,6 +8,7 @@ import type { IpaSymbol } from "@/features/vocabulary/data/vocabulary.data";
 import { ipaSymbolTypeLabels } from "@/features/vocabulary/data/vocabulary.data";
 import { playIpaAudio } from "@/features/vocabulary/helpers/ipa.helper";
 import { useUploadIpaAudioMutation } from "@/features/vocabulary/hooks/use.vocabulary.admin.query";
+import { CustomSelect } from "@/components/custom.select";
 
 interface IpaSymbolEditModalProps {
   isOpen: boolean;
@@ -190,20 +191,20 @@ export function IpaSymbolEditModal({
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               CEFR Level
             </label>
-            <select
+            <CustomSelect
+              size="sm"
               value={formData.cefr_min_level}
-              onChange={(e) =>
-                setFormData({ ...formData, cefr_min_level: e.target.value })
-              }
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-            >
-              <option value="A1">A1 - Beginner</option>
-              <option value="A2">A2 - Elementary</option>
-              <option value="B1">B1 - Intermediate</option>
-              <option value="B2">B2 - Upper Intermediate</option>
-              <option value="C1">C1 - Advanced</option>
-              <option value="C2">C2 - Proficiency</option>
-            </select>
+              onChange={(val) => setFormData({ ...formData, cefr_min_level: val })}
+              options={[
+                { value: 'A1', label: 'A1 - Beginner' },
+                { value: 'A2', label: 'A2 - Elementary' },
+                { value: 'B1', label: 'B1 - Intermediate' },
+                { value: 'B2', label: 'B2 - Upper Intermediate' },
+                { value: 'C1', label: 'C1 - Advanced' },
+                { value: 'C2', label: 'C2 - Proficiency' },
+              ]}
+              className="w-full"
+            />
           </div>
 
           <div className="space-y-1.5">

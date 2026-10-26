@@ -1,8 +1,4 @@
-/**
- * @file dashboard.activity.chart.tsx
- * @description Component giao diện DashboardActivityChart phục vụ khu vực Quản trị Admin
- */
-
+// Component biểu đồ cột phân tích phiên học tập theo ngày với hiệu ứng trực quan hiện đại.
 export interface ChartItem {
   value: number
   label: string
@@ -29,12 +25,15 @@ export function SimpleChart({ items }: { items: ChartItem[] }) {
               title={`${item.fullDate}: ${item.value} phiên học`}
               className="flex-1 flex flex-col justify-end items-center h-full group relative"
             >
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 px-2 py-0.5 rounded-md bg-slate-900 text-white text-[10px] font-bold pointer-events-none whitespace-nowrap z-20 shadow-md">
+                {item.value}
+              </div>
               <div
                 style={{ height: `${heightPercent}%` }}
-                className={`w-full rounded-t-md transition-all duration-300 group-hover:bg-teal-400 ${
+                className={`w-full rounded-t-lg transition-all duration-300 ${
                   isLatest
-                    ? 'bg-teal-500 shadow-lg shadow-teal-500/30'
-                    : 'bg-teal-500/30'
+                    ? 'bg-gradient-to-t from-teal-500 to-emerald-400 shadow-sm shadow-teal-500/30'
+                    : 'bg-teal-500/25 dark:bg-teal-500/20 group-hover:bg-teal-500/80'
                 }`}
               />
             </div>
@@ -46,7 +45,7 @@ export function SimpleChart({ items }: { items: ChartItem[] }) {
         {items.map((item, index) => (
           <span
             key={index}
-            className="flex-1 text-center text-[10px] text-slate-400 truncate"
+            className="flex-1 text-center text-[10.5px] font-medium text-slate-400 dark:text-slate-500 truncate"
           >
             {item.label}
           </span>

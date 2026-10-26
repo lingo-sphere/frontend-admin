@@ -8,6 +8,11 @@ import {
   ChevronDown,
   Check,
   RefreshCw,
+  Server,
+  Activity,
+  Cpu,
+  Brain,
+  BookOpen,
 } from 'lucide-react'
 import {
   useSystemAnalyticsQuery,
@@ -177,17 +182,17 @@ export function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between shadow-xs">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 {isVietnamese ? 'Phiên Học & Luyện Tập Mỗi Ngày' : 'Daily Study & Practice Sessions'}
               </h3>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                 {isVietnamese ? 'Số lượng học viên tham gia học từ vựng và làm bài TOEIC' : 'Learners practicing vocabulary and taking TOEIC tests'}
               </p>
             </div>
-            <span className="text-xs font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-3 py-1.5 rounded-full">
+            <span className="text-xs font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/60 px-3 py-1.5 rounded-full">
               {formatDateRange(selectedRange, isVietnamese)}
             </span>
           </div>
@@ -197,60 +202,90 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-5">
-            {isVietnamese ? 'Trạng Thái Hệ Thống Microservices' : 'Microservices Health'}
-          </h3>
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between shadow-xs">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-1">
+              {isVietnamese ? 'Trạng Thái Hệ Thống Microservices' : 'Microservices Health'}
+            </h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">
+              {isVietnamese ? 'Giám sát độ trễ và độ sẵn sàng của các service' : 'Live latency and availability tracking'}
+            </p>
+          </div>
 
-          <div className="space-y-3 flex-1">
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">User & Auth Gateway</span>
+          <div className="space-y-2.5 flex-1">
+            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/50">
+                  <Server className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">User & Auth Gateway</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
-                24ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                  24ms
+                </span>
+              </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Course & Curriculum Service</span>
+            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50">
+                  <BookOpen className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Course & Curriculum</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
-                38ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                  38ms
+                </span>
+              </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Vocabulary & Spaced Repetition</span>
+            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-200/50">
+                  <Activity className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Vocabulary Service</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
-                19ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                  19ms
+                </span>
+              </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">AI Assessment (Gemini 2.5)</span>
+            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-200/50">
+                  <Brain className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">AI Assessment Engine</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
-                240ms · {isVietnamese ? 'Trực tuyến' : 'Online'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                  240ms
+                </span>
+              </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">TOEIC Exam Engine</span>
+            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50">
+                  <Cpu className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">TOEIC Exam Engine</span>
               </div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
-                32ms · {isVietnamese ? 'Hoạt động tốt' : 'Healthy'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                  32ms
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,21 +1,24 @@
+// Trang quản lý phát âm ngữ âm (IPA) dành cho quản trị viên.
+
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Popconfirm, Segmented, Select, Space, Switch, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Popconfirm, Segmented, Space, Switch, Tabs, Tag, theme as antdTheme } from 'antd'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
-import { IpaDataTable, type IpaColumn } from '../components/ipa.data.table'
-import { IpaAudioPreview } from '../components/ipa.audio.field'
-import { IpaSymbolEditor } from '../components/ipa.symbol.editor'
-import { IpaExerciseEditor } from '../components/ipa.exercise.editor'
-import { useIpaTableState } from '../hooks/use.ipa.table-state'
-import { useIpaExercises, useIpaMutations, useIpaSymbols } from '../hooks/use.ipa.admin'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { ipaAdminService } from '../services/ipa-admin.service'
-import { exercisePayload, ipaError, symbolPayload } from '../helpers/ipa-admin.helper'
-import { ipaAudioFields, ipaLevels, ipaTypes, ipaTypeLabels, type IpaExerciseRecord, type IpaSymbolRecord } from '../types/ipa-admin.types'
+import { CustomSelect } from '@/components/custom.select'
+import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
+import { IpaSymbolEditor } from '@/features/practice/components/ipa.symbol.editor'
+import { IpaExerciseEditor } from '@/features/practice/components/ipa.exercise.editor'
+import { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
+import { useIpaExercises, useIpaMutations, useIpaSymbols } from '@/features/practice/hooks/use.ipa.admin'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { ipaAdminService } from '@/features/practice/services/ipa-admin.service'
+import { exercisePayload, ipaError, symbolPayload } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaAudioFields, ipaLevels, ipaTypes, ipaTypeLabels, type IpaExerciseRecord, type IpaSymbolRecord } from '@/features/practice/types/ipa-admin.types'
 
 const ipaEnTypes: Record<string, string> = {
   MINIMAL_PAIR_LISTEN: 'Minimal Pairs (Listen)',
@@ -91,9 +94,9 @@ function SymbolsTable() {
       <Button icon={<RotateCcw size={14} />} loading={result.isFetching} onClick={() => result.refetch()}>{isVi ? 'Làm mới' : 'Refresh'}</Button>
     </div>
     <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} extraFilters={<>
-      <Select mode="multiple" aria-label={isVi ? "Lọc loại âm" : "Filter type"} placeholder={isVi ? "Loại âm" : "Type"} style={{ minWidth: 170 }} allowClear options={types} value={state.filters.symbol_type || []} onChange={values => state.setFilter('symbol_type', values)} />
-      <Select mode="multiple" aria-label="Lọc CEFR" placeholder="CEFR" style={{ minWidth: 110 }} allowClear options={levels} value={state.filters.cefr_min_level || []} onChange={values => state.setFilter('cefr_min_level', values)} />
-      <Select mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} style={{ minWidth: 170 }} allowClear options={symbolStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc loại âm" : "Filter type"} placeholder={isVi ? "Loại âm" : "Type"} className="w-40" allowClear options={types} value={state.filters.symbol_type || []} onChange={values => state.setFilter('symbol_type', values)} />
+      <CustomSelect mode="multiple" aria-label="Lọc CEFR" placeholder="CEFR" className="w-28" allowClear options={levels} value={state.filters.cefr_min_level || []} onChange={values => state.setFilter('cefr_min_level', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} className="w-36" allowClear options={symbolStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
     </>} />
     {editor && <IpaSymbolEditor key={editor.id} {...editor} onClose={() => setEditor(null)} />}
   </>
@@ -184,9 +187,9 @@ function ExercisesTable() {
       </Space>
     </div>
     <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? "Tìm kiếm bài tập" : "Search exercises"} searchPlaceholder={isVi ? "Tìm tiêu đề, từ, âm, mô tả..." : "Search title, word, phoneme, description..."} extraFilters={<>
-      <Select mode="multiple" aria-label={isVi ? "Lọc CEFR" : "Filter CEFR"} placeholder="CEFR" style={{ minWidth: 110 }} allowClear options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
-      <Select mode="multiple" aria-label={isVi ? "Lọc độ khó" : "Filter difficulty"} placeholder={isVi ? "Độ khó" : "Difficulty"} style={{ minWidth: 130 }} allowClear options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
-      <Select mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} style={{ minWidth: 165 }} allowClear options={exerciseStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc CEFR" : "Filter CEFR"} placeholder="CEFR" className="w-28" allowClear options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc độ khó" : "Filter difficulty"} placeholder={isVi ? "Độ khó" : "Difficulty"} className="w-32" allowClear options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} className="w-40" allowClear options={exerciseStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
     </>} />
     {editor && <IpaExerciseEditor key={editor.id || 'new'} {...editor} type={state.filters.exercise_type?.length === 1 ? state.filters.exercise_type[0] as typeof ipaTypes[number] : 'MINIMAL_PAIR_LISTEN'} trash={trash} onClose={() => setEditor(null)} />}
   </>

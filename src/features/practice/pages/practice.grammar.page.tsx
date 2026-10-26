@@ -1,25 +1,28 @@
-import { useEffect, useState } from 'react'
+// Trang quản lý ngữ pháp (Grammar Topics, Questions, Sổ tay ngữ pháp) dành cho quản trị viên.
+
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, ConfigProvider, Popconfirm, Segmented, Select, Space, Switch, Tabs, Tag, Tree, TreeSelect, theme as antdTheme } from 'antd'
+import { Alert, Button, Card, ConfigProvider, Popconfirm, Segmented, Space, Switch, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
 import { BookOutlined, BulbOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
-import { IpaDataTable, type IpaColumn } from '../components/ipa.data.table'
-import { GrammarTopicEditor } from '../components/grammar.topic.editor'
-import { GrammarQuestionEditor } from '../components/grammar.question.editor'
-import { GrammarHandbookTab } from '../components/grammar.handbook.tab'
-import { ToeicTipsTab } from '../components/toeic.tips.tab'
-import { useIpaTableState } from '../hooks/use.ipa.table-state'
-import { grammarAdminKeys, useGrammarMutations, useGrammarTree } from '../hooks/use.grammar.admin'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { grammarAdminService } from '../services/grammar-admin.service'
-import { grammarQuestionPayload, grammarTopicPayload } from '../helpers/grammar-admin.helper'
-import { ipaError } from '../helpers/ipa-admin.helper'
-import { ipaLevels, type IpaPage } from '../types/ipa-admin.types'
-import { grammarTypes, grammarLabels, grammarCategories, grammarCategoryLabels, type GrammarKind, type GrammarTopic, type GrammarQuestion, type GrammarTreeNode } from '../types/grammar-admin.types'
+import { CustomSelect } from '@/components/custom.select'
+import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { GrammarTopicEditor } from '@/features/practice/components/grammar.topic.editor'
+import { GrammarQuestionEditor } from '@/features/practice/components/grammar.question.editor'
+import { GrammarHandbookTab } from '@/features/practice/components/grammar.handbook.tab'
+import { ToeicTipsTab } from '@/features/practice/components/toeic.tips.tab'
+import { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
+import { grammarAdminKeys, useGrammarMutations, useGrammarTree } from '@/features/practice/hooks/use.grammar.admin'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { grammarAdminService } from '@/features/practice/services/grammar-admin.service'
+import { grammarQuestionPayload, grammarTopicPayload } from '@/features/practice/helpers/grammar-admin.helper'
+import { ipaError } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaLevels, type IpaPage } from '@/features/practice/types/ipa-admin.types'
+import { grammarTypes, grammarLabels, grammarCategories, grammarCategoryLabels, type GrammarKind, type GrammarTopic, type GrammarQuestion, type GrammarTreeNode } from '@/features/practice/types/grammar-admin.types'
 
 interface TopicTreeData {
   key: string
@@ -59,7 +62,7 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
 
   const state = useIpaTableState()
   const mutations = useGrammarMutations()
-  const { contexts = [] } = usePracticeContexts()
+  const { contexts = [], isLoading: loadingContexts } = usePracticeContexts()
   const result = useQuery<IpaPage<GrammarRecord>>({
     queryKey: [...grammarAdminKeys, kind, state.query],
     queryFn: () => kind === 'topics' ? grammarAdminService.topics(state.query) : grammarAdminService.questions(state.query),
@@ -70,6 +73,67 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
   const trash = state.query.trash === 'true'
   const topicOptions = safeTree.map(row => ({ value: row._id, label: isVi ? (row.name_vi || row.name_en || row.code) : (row.name_en || row.name_vi || row.code), pId: row.parent_id }))
   const contextOptions = contexts.map(row => ({ value: row._id, label: isVi ? (row.name_vi || row.name || row.code) : (row.name || row.name_vi || row.code), pId: row.parent_id }))
+
+  const topicSelectOptions = useMemo(() => {
+    const roots = safeTree.filter(row => !row.parent_id)
+    if (roots.length > 0) {
+      return roots.map(parent => {
+        const parentName = isVi ? (parent.name_vi || parent.name_en || parent.code) : (parent.name_en || parent.name_vi || parent.code)
+        const children = safeTree.filter(row => row.parent_id === parent._id)
+        if (children.length === 0) {
+          return {
+            value: parent._id,
+            label: parentName,
+          }
+        }
+        return {
+          label: parentName,
+          options: [
+            { value: parent._id, label: `${parentName} (${isVi ? 'Tất cả' : 'All'})` },
+            ...children.map(child => ({
+              value: child._id,
+              label: isVi ? (child.name_vi || child.name_en || child.code) : (child.name_en || child.name_vi || child.code),
+            }))
+          ]
+        }
+      })
+    }
+    return safeTree.map(row => ({
+      value: row._id,
+      label: isVi ? (row.name_vi || row.name_en || row.code) : (row.name_en || row.name_vi || row.code),
+    }))
+  }, [safeTree, isVi])
+
+  const contextSelectOptions = useMemo(() => {
+    const l0 = contexts.filter(c => c.level === 0 || !c.parent_id)
+    if (l0.length > 0) {
+      return l0.map(parent => {
+        const parentName = isVi ? (parent.name_vi || parent.name || parent.code) : (parent.name || parent.name_vi || parent.code)
+        const children = contexts.filter(c => c.parent_id === parent._id)
+        if (children.length === 0) {
+          return {
+            value: parent._id,
+            label: parentName,
+          }
+        }
+        return {
+          label: parentName,
+          options: [
+            { value: parent._id, label: `${parentName} (${isVi ? 'Tất cả' : 'All'})` },
+            ...children.map(child => ({
+              value: child._id,
+              label: isVi ? (child.name_vi || child.name || child.code) : (child.name || child.name_vi || child.code),
+            }))
+          ]
+        }
+      })
+    }
+    return contexts.map(c => ({
+      value: c._id,
+      label: isVi ? (c.name_vi || c.name || c.code) : (c.name || c.name_vi || c.code),
+    }))
+  }, [contexts, isVi])
+
   const statuses = kind === 'topics' ? topicStatuses : questionStatuses
 
   useEffect(() => {
@@ -113,14 +177,14 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
     { key: 'name_en', label: isVi ? 'Tên tiếng Anh' : 'English Name', fixed: 'left', width: 230, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{(row as GrammarTopic).name_en}</Button> },
     { key: 'name_vi', label: isVi ? 'Tên tiếng Việt' : 'Vietnamese Name', width: 220, filterKind: 'text' },
     { key: 'category', label: isVi ? 'Nhóm' : 'Category', width: 190, filterKind: 'enum', filterOptions: categories, render: value => (isVi ? grammarCategoryLabels[value] : value) || value },
-    { key: 'parent_id', label: isVi ? 'Chủ điểm cha' : 'Parent Topic', width: 200, filterKind: 'tree', filterOptions: topicOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Gốc' : 'Root') },
+    { key: 'parent_id', label: isVi ? 'Chủ điểm cha' : 'Parent Topic', width: 200, filterKind: 'tree', filterOptions: topicSelectOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Gốc' : 'Root') },
     { key: 'level', label: isVi ? 'Cấp trong cây' : 'Level in Tree', width: 130, filterKind: 'number', initiallyHidden: true },
     { key: 'usage_count', label: isVi ? 'Câu liên kết' : 'Linked Questions', width: 140, filterKind: 'number' },
   ] : [
     { key: 'question_text_en', label: isVi ? 'Câu hỏi (Anh)' : 'Question Text (EN)', fixed: 'left', width: 280, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, maxWidth: 260, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{(row as GrammarQuestion).question_text_en || (isVi ? '(Chưa có nội dung)' : '(No content)')}</Button> },
     { key: 'question_text_vi', label: isVi ? 'Câu hỏi (Việt)' : 'Question Text (VI)', width: 240, filterKind: 'text', initiallyHidden: true },
-    { key: 'grammar_knowledge_id', label: isVi ? 'Chủ điểm ngữ pháp' : 'Grammar Topic', width: 210, filterKind: 'tree', filterOptions: topicOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
-    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 190, filterKind: 'tree', filterOptions: contextOptions, render: value => contextOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'grammar_knowledge_id', label: isVi ? 'Chủ điểm ngữ pháp' : 'Grammar Topic', width: 210, filterKind: 'tree', filterOptions: topicSelectOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 190, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     { key: 'domain', label: isVi ? 'Ngân hàng' : 'Question Bank', width: 160, filterKind: 'enum', filterOptions: [{ value: 'GRAMMAR', label: isVi ? 'Ngữ pháp' : 'Grammar' }, { value: 'VOCABULARY', label: isVi ? 'Từ vựng liên kết' : 'Linked Vocab' }], render: value => value === 'VOCABULARY' ? (isVi ? 'Từ vựng liên kết' : 'Linked Vocab') : (isVi ? 'Ngữ pháp' : 'Grammar') },
     { key: 'question_type', label: isVi ? 'Dạng câu hỏi' : 'Question Type', width: 170, filterKind: 'enum', filterOptions: grammarTypes.map(value => ({ value, label: isVi ? grammarLabels[value] : (grammarEnLabels[value] || value) })), render: value => (isVi ? grammarLabels[value as keyof typeof grammarLabels] : grammarEnLabels[value as string]) || value },
     { key: 'cefr_level', label: 'CEFR', width: 100, filterKind: 'enum', filterOptions: levels },
@@ -155,72 +219,67 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
       searchPlaceholder={kind === 'topics' ? (isVi ? 'Tìm tên, mã, giải thích...' : 'Search name, code, description...') : (isVi ? 'Tìm câu hỏi, giải thích...' : 'Search question, explanation...')}
       extraFilters={<>
         {kind === 'topics' ? (
-          <Select
+          <CustomSelect
             aria-label={isVi ? 'Lọc nhóm ngữ pháp' : 'Filter category'}
             mode="multiple"
             placeholder={isVi ? 'Nhóm ngữ pháp' : 'Category'}
             allowClear
-            style={{ minWidth: 170 }}
+            className="w-44"
             options={categories}
             value={state.filters.category || []}
             onChange={values => state.setFilter('category', values)}
           />
         ) : (
           <>
-            <TreeSelect
+            <CustomSelect
               aria-label={isVi ? 'Lọc chủ điểm ngữ pháp' : 'Filter topic'}
-              multiple
-              treeDataSimpleMode
-              showSearch
-              treeNodeFilterProp="title"
+              mode="multiple"
               placeholder={isVi ? 'Chủ điểm' : 'Topic'}
               allowClear
-              style={{ minWidth: 180 }}
-              treeData={topicOptions.map(row => ({ ...row, id: row.value, title: row.label }))}
+              className="w-44"
+              options={topicSelectOptions}
               value={state.filters.grammar_knowledge_id || []}
               onChange={values => state.setFilter('grammar_knowledge_id', values)}
             />
-            <TreeSelect
+            <CustomSelect
               aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'}
-              multiple
-              treeDataSimpleMode
-              showSearch
-              treeNodeFilterProp="title"
+              mode="multiple"
               placeholder={isVi ? 'Chủ đề' : 'Context'}
               allowClear
-              style={{ minWidth: 160 }}
-              treeData={contextOptions.map(row => ({ ...row, id: row.value, title: row.label }))}
+              className="w-40"
+              options={contextSelectOptions}
+              loading={loadingContexts}
               value={state.filters.context_id || []}
               onChange={values => state.setFilter('context_id', values)}
             />
-            <Select
+            <CustomSelect
               aria-label={isVi ? 'Lọc dạng câu hỏi' : 'Filter question type'}
               mode="multiple"
               placeholder={isVi ? 'Dạng câu' : 'Question type'}
               allowClear
-              style={{ minWidth: 150 }}
+              className="w-40"
               options={grammarTypes.map(value => ({ value, label: isVi ? grammarLabels[value] : (grammarEnLabels[value] || value) }))}
               value={state.filters.question_type || []}
               onChange={values => state.setFilter('question_type', values)}
             />
           </>
         )}
-        <Select
+        <CustomSelect
           aria-label={isVi ? 'Lọc CEFR' : 'Filter CEFR'}
           mode="multiple"
           placeholder="CEFR"
           allowClear
-          style={{ minWidth: 110 }}
+          className="w-28"
           options={levels}
           value={state.filters.cefr_level || []}
           onChange={values => state.setFilter('cefr_level', values)}
         />
-        <Select
+        <CustomSelect
           aria-label={isVi ? 'Lọc trạng thái' : 'Filter status'}
           mode="multiple"
           placeholder={isVi ? 'Trạng thái' : 'Status'}
           allowClear
-          style={{ minWidth: 150 }}
+          className="w-36"
           options={statuses}
           value={state.filters.status || []}
           onChange={values => state.setFilter('status', values)}

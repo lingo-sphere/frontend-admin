@@ -1,10 +1,7 @@
-/**
- * @file exam.stats.overview.tsx
- * @description Component giao diện ExamStatsOverview phục vụ khu vực Quản trị Admin
- */
-
+// Component hiển thị các thẻ số liệu thống kê đề thi TOEIC theo phong cách SaaS hiện đại.
 import { useTranslation } from 'react-i18next'
-import { FileText, CheckCircle, Award, Clock } from 'lucide-react'
+import { FileText, CheckCircle, Award, Users } from 'lucide-react'
+import { StatCard } from '@/components/stat.card'
 
 interface ExamStatsOverviewProps {
   stats: {
@@ -21,61 +18,43 @@ export function ExamStatsOverview({ stats }: ExamStatsOverviewProps) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {isVi ? 'Tổng Đề Thi' : 'Total Exams'}
-          </p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
-            {stats.total}
-          </p>
-        </div>
-        <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20">
-          <FileText className="w-5 h-5" />
-        </div>
-      </div>
+      <StatCard
+        title={isVi ? 'Tổng Đề Thi' : 'Total Exams'}
+        value={stats.total}
+        subtitle={isVi ? 'Ngân hàng đề thi TOEIC' : 'TOEIC test repository'}
+        icon={FileText}
+        color="emerald"
+        trend={stats.total > 0 ? `${stats.total}` : undefined}
+        trendType="neutral"
+      />
 
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {isVi ? 'Đã Xuất Bản' : 'Published Exams'}
-          </p>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {stats.published}
-          </p>
-        </div>
-        <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-          <CheckCircle className="w-5 h-5" />
-        </div>
-      </div>
+      <StatCard
+        title={isVi ? 'Đã Xuất Bản' : 'Published Exams'}
+        value={stats.published}
+        subtitle={isVi ? 'Đang mở cho thí sinh luyện tập' : 'Active for practice'}
+        icon={CheckCircle}
+        color="blue"
+        trend={stats.total > 0 ? `${Math.round((stats.published / stats.total) * 100)}%` : undefined}
+        trendType="up"
+      />
 
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {isVi ? 'Lượt Thi Toàn Hệ Thống' : 'System-wide Attempts'}
-          </p>
-          <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-            {stats.totalAttempts.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
-          </p>
-        </div>
-        <div className="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
-          <Clock className="w-5 h-5" />
-        </div>
-      </div>
+      <StatCard
+        title={isVi ? 'Lượt Thi Hệ Thống' : 'System Attempts'}
+        value={stats.totalAttempts.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+        subtitle={isVi ? 'Tổng lượt làm bài hoàn thành' : 'Completed test attempts'}
+        icon={Users}
+        color="amber"
+      />
 
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {isVi ? 'Điểm Trung Bình ETS' : 'ETS Average Score'}
-          </p>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-            {stats.avgScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
-          </p>
-        </div>
-        <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
-          <Award className="w-5 h-5" />
-        </div>
-      </div>
+      <StatCard
+        title={isVi ? 'Điểm Trung Bình ETS' : 'ETS Avg Score'}
+        value={stats.avgScore > 0 ? stats.avgScore : '-'}
+        subtitle={isVi ? 'Thang điểm chuẩn 990 TOEIC' : 'Out of 990 TOEIC scale'}
+        icon={Award}
+        color="purple"
+        trend={stats.avgScore > 0 ? `${stats.avgScore}/990` : undefined}
+        trendType="neutral"
+      />
     </div>
   )
 }

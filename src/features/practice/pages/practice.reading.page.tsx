@@ -1,22 +1,25 @@
-import { useEffect, useState } from 'react'
+// Trang quản lý bài luyện đọc (Reading) dành cho quản trị viên.
+
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Popconfirm, Segmented, Select, Space, Switch, Tabs, Tag, TreeSelect, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Popconfirm, Segmented, Space, Switch, Tabs, Tag, theme as antdTheme } from 'antd'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
-import { IpaDataTable, type IpaColumn } from '../components/ipa.data.table'
-import { ReadingMediaPreview } from '../components/reading.media.field'
-import { ReadingAdminEditor } from '../components/reading.admin.editor'
-import { useIpaTableState } from '../hooks/use.ipa.table-state'
-import { useReadingAdmin, useReadingMutations } from '../hooks/use.reading.admin'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { readingAdminService } from '../services/reading-admin.service'
-import { readingPayload } from '../helpers/reading-admin.helper'
-import { ipaError } from '../helpers/ipa-admin.helper'
-import { ipaLevels } from '../types/ipa-admin.types'
-import { readingLabels, readingTypes, type ReadingRecord, type ReadingType } from '../types/reading-admin.types'
+import { CustomSelect } from '@/components/custom.select'
+import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { ReadingMediaPreview } from '@/features/practice/components/reading.media.field'
+import { ReadingAdminEditor } from '@/features/practice/components/reading.admin.editor'
+import { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
+import { useReadingAdmin, useReadingMutations } from '@/features/practice/hooks/use.reading.admin'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { readingAdminService } from '@/features/practice/services/reading-admin.service'
+import { readingPayload } from '@/features/practice/helpers/reading-admin.helper'
+import { ipaError } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaLevels } from '@/features/practice/types/ipa-admin.types'
+import { readingLabels, readingTypes, type ReadingRecord, type ReadingType } from '@/features/practice/types/reading-admin.types'
 
 const readingEnLabels: Record<ReadingType, string> = {
   PART_6: 'Part 6 · Text Completion',
@@ -44,12 +47,41 @@ function ReadingTable({ type }: { type: ReadingType }) {
   const state = useIpaTableState()
   const result = useReadingAdmin({ ...state.query, filters: JSON.stringify({ ...state.filters, reading_type: [type] }) })
   const mutations = useReadingMutations()
-  const { contexts } = usePracticeContexts()
+  const { contexts, isLoading: loadingContexts } = usePracticeContexts()
   const contextOptions = contexts.map(context => ({
     value: context._id,
     label: isVi ? (context.name_vi || context.name || context.code) : (context.name || context.name_vi || context.code),
     pId: context.parent_id
   }))
+  const contextSelectOptions = useMemo(() => {
+    const l0 = contexts.filter(c => c.level === 0 || !c.parent_id)
+    if (l0.length > 0) {
+      return l0.map(parent => {
+        const parentName = isVi ? (parent.name_vi || parent.name || parent.code) : (parent.name || parent.name_vi || parent.code)
+        const children = contexts.filter(c => c.parent_id === parent._id)
+        if (children.length === 0) {
+          return {
+            value: parent._id,
+            label: parentName,
+          }
+        }
+        return {
+          label: parentName,
+          options: [
+            { value: parent._id, label: `${parentName} (${isVi ? 'Tất cả' : 'All'})` },
+            ...children.map(child => ({
+              value: child._id,
+              label: isVi ? (child.name_vi || child.name || child.code) : (child.name || child.name_vi || child.code),
+            }))
+          ]
+        }
+      })
+    }
+    return contexts.map(c => ({
+      value: c._id,
+      label: isVi ? (c.name_vi || c.name || c.code) : (c.name || c.name_vi || c.code),
+    }))
+  }, [contexts, isVi])
   const [editor, setEditor] = useState<{ id: string | null; readOnly: boolean } | null>(null)
   const [working, setWorking] = useState<string | null>(null)
   const trash = state.query.trash === 'true'
@@ -88,7 +120,7 @@ function ReadingTable({ type }: { type: ReadingType }) {
   const columns: IpaColumn<ReadingRecord>[] = [
     { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', fixed: 'left', width: 240, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, maxWidth: 220, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{row.title}</Button> },
     { key: 'title_vi', label: isVi ? 'Tiêu đề tiếng Việt' : 'Vietnamese Title', width: 220, filterKind: 'text', initiallyHidden: true },
-    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 180, filterKind: 'tree', filterOptions: contextOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 180, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     { key: 'media_id', label: 'Media', width: 180, filterKind: 'media', initiallyHidden: type !== 'PART_7', render: (value, row) => value ? <ReadingMediaPreview value={value} kind={row.media_type === 'VIDEO' ? 'VIDEO' : 'IMAGE'} /> : (isVi ? 'Chưa có' : 'None') },
     { key: 'word_count', label: isVi ? 'Số từ' : 'Words', width: 175, filterKind: 'number' },
     { key: 'question_count', label: isVi ? 'Số câu' : 'Questions', width: 175, filterKind: 'number' },
@@ -109,10 +141,10 @@ function ReadingTable({ type }: { type: ReadingType }) {
       </Space>
     </div>
     <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài đọc' : 'Search reading exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, đề bài, văn bản, bối cảnh, đoạn thông tin...' : 'Search title, passage, context, question...'} extraFilters={<>
-      <TreeSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} multiple treeDataSimpleMode showSearch treeNodeFilterProp="title" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear style={{ minWidth: 190 }} treeData={contextOptions.map(item => ({ ...item, id: item.value, title: item.label }))} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
-      <Select aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear style={{ minWidth: 110 }} options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
-      <Select aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear style={{ minWidth: 130 }} options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
-      <Select aria-label={isVi ? 'Lọc trạng thái' : 'Filter status'} mode="multiple" placeholder={isVi ? 'Trạng thái' : 'Status'} allowClear style={{ minWidth: 170 }} options={statuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+      <CustomSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} mode="multiple" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear className="w-48" options={contextSelectOptions} loading={loadingContexts} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
+      <CustomSelect aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear className="w-28" options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
+      <CustomSelect aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear className="w-32" options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
+      <CustomSelect aria-label={isVi ? 'Lọc trạng thái' : 'Filter status'} mode="multiple" placeholder={isVi ? 'Trạng thái' : 'Status'} allowClear className="w-40" options={statuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
     </>} />
     {editor && <ReadingAdminEditor key={editor.id || 'new'} type={type} {...editor} trash={trash} onClose={() => setEditor(null)} />}
   </>

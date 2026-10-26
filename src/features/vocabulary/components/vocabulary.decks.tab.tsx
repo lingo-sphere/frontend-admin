@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import type { FlashcardDeck, Topic } from '@/features/vocabulary/data/vocabulary.data'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { CustomSelect } from '@/components/custom.select'
 
 interface VocabularyDecksTabProps {
   decks: FlashcardDeck[]
@@ -42,6 +43,14 @@ export function VocabularyDecksTab({
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
+
+  const topicOptions = useMemo(() => [
+    { value: 'ALL', label: `Tất cả chủ đề (${topics.length})` },
+    ...topics.map((t) => ({
+      value: t.id || t._id || '',
+      label: t.name_vi || t.name_en || 'Chủ đề',
+    })),
+  ], [topics])
 
   // Filter decks by topic and search query
   const filteredDecks = useMemo(() => {
@@ -247,25 +256,16 @@ export function VocabularyDecksTab({
       }
       filterSlot={
         <div className="flex flex-wrap items-center gap-2">
-          {/* Topic Dropdown Filter */}
-          <div className="flex items-center gap-1.5 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs">
-            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <select
-              value={selectedTopicId}
-              onChange={(e) => {
-                onSelectTopicId(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="bg-transparent border-none text-slate-900 dark:text-slate-100 text-xs focus:outline-none cursor-pointer max-w-[160px] truncate"
-            >
-              <option value="ALL">Tất cả chủ đề ({topics.length})</option>
-              {topics.map((t) => (
-                <option key={t.id || t._id} value={t.id || t._id}>
-                  {t.name_vi || t.name_en}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomSelect
+            size="sm"
+            value={selectedTopicId || 'ALL'}
+            onChange={(val) => {
+              onSelectTopicId(val)
+              setCurrentPage(1)
+            }}
+            options={topicOptions}
+            className="w-56"
+          />
 
           {/* Search Input */}
           <div className="relative">

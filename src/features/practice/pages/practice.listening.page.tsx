@@ -1,23 +1,26 @@
-import { useEffect, useState } from 'react'
+// Trang quản lý bài luyện nghe (Listening) dành cho quản trị viên.
+
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Image, Popconfirm, Segmented, Select, Space, Switch, Tabs, Tag, TreeSelect, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Image, Popconfirm, Segmented, Space, Switch, Tabs, Tag, theme as antdTheme } from 'antd'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
-import { IpaDataTable, type IpaColumn } from '../components/ipa.data.table'
-import { IpaAudioPreview } from '../components/ipa.audio.field'
-import { ListeningAdminEditor } from '../components/listening.admin.editor'
-import { useIpaTableState } from '../hooks/use.ipa.table-state'
-import { useListeningAdmin, useListeningMutations } from '../hooks/use.listening.admin'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { listeningAdminService } from '../services/listening-admin.service'
-import { listeningPayload } from '../helpers/listening-admin.helper'
-import { ipaError } from '../helpers/ipa-admin.helper'
-import { ipaLevels } from '../types/ipa-admin.types'
-import { listeningLabels, listeningSubtypes, listeningTypes, type ListeningRecord, type ListeningType } from '../types/listening-admin.types'
+import { CustomSelect } from '@/components/custom.select'
+import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
+import { ListeningAdminEditor } from '@/features/practice/components/listening.admin.editor'
+import { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
+import { useListeningAdmin, useListeningMutations } from '@/features/practice/hooks/use.listening.admin'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { listeningAdminService } from '@/features/practice/services/listening-admin.service'
+import { listeningPayload } from '@/features/practice/helpers/listening-admin.helper'
+import { ipaError } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaLevels } from '@/features/practice/types/ipa-admin.types'
+import { listeningLabels, listeningSubtypes, listeningTypes, type ListeningRecord, type ListeningType } from '@/features/practice/types/listening-admin.types'
 
 const listeningEnLabels: Record<ListeningType, string> = {
   part1: 'Part 1 · Photographs',
@@ -53,12 +56,41 @@ function ListeningTable({ type }: { type: ListeningType }) {
   const state = useIpaTableState()
   const result = useListeningAdmin(type, state.query)
   const mutations = useListeningMutations(type)
-  const { contexts } = usePracticeContexts()
+  const { contexts, isLoading: loadingContexts } = usePracticeContexts()
   const contextOptions = contexts.map(context => ({
     value: context._id,
     label: isVi ? (context.name_vi || context.name || context.code) : (context.name || context.name_vi || context.code),
     pId: context.parent_id
   }))
+  const contextSelectOptions = useMemo(() => {
+    const l0 = contexts.filter(c => c.level === 0 || !c.parent_id)
+    if (l0.length > 0) {
+      return l0.map(parent => {
+        const parentName = isVi ? (parent.name_vi || parent.name || parent.code) : (parent.name || parent.name_vi || parent.code)
+        const children = contexts.filter(c => c.parent_id === parent._id)
+        if (children.length === 0) {
+          return {
+            value: parent._id,
+            label: parentName,
+          }
+        }
+        return {
+          label: parentName,
+          options: [
+            { value: parent._id, label: `${parentName} (${isVi ? 'Tất cả' : 'All'})` },
+            ...children.map(child => ({
+              value: child._id,
+              label: isVi ? (child.name_vi || child.name || child.code) : (child.name || child.name_vi || child.code),
+            }))
+          ]
+        }
+      })
+    }
+    return contexts.map(c => ({
+      value: c._id,
+      label: isVi ? (c.name_vi || c.name || c.code) : (c.name || c.name_vi || c.code),
+    }))
+  }, [contexts, isVi])
   const [editor, setEditor] = useState<{ id: string | null; readOnly: boolean } | null>(null)
   const [working, setWorking] = useState<string | null>(null)
   const trash = state.query.trash === 'true'
@@ -98,7 +130,7 @@ function ListeningTable({ type }: { type: ListeningType }) {
   const columns: IpaColumn<ListeningRecord>[] = [
     { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', fixed: 'left', width: 240, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, maxWidth: 220, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{row.title}</Button> },
     { key: 'title_vi', label: isVi ? 'Tiêu đề tiếng Việt' : 'Vietnamese Title', width: 220, filterKind: 'text', initiallyHidden: true },
-    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 180, filterKind: 'tree', filterOptions: contextOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 180, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     ...(subtype.field ? [{ key: subtype.field, label: isVi ? subtype.label : (subtypeEnLabels[subtype.field] || subtype.label), width: 170, filterKind: 'enum' as const, filterOptions: subtype.values.map(value => ({ value, label: value })) }] : []),
     { key: 'audio_url', label: 'Audio', width: 210, filterKind: 'media', render: value => value ? <IpaAudioPreview value={value} /> : (isVi ? 'Chưa có' : 'None') },
     ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 110, filterKind: 'media' as const, render: (value: string) => value ? <Image width={70} height={50} style={{ objectFit: 'contain' }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
@@ -122,10 +154,10 @@ function ListeningTable({ type }: { type: ListeningType }) {
       </Space>
     </div>
     <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài nghe' : 'Search listening exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, transcript, mô tả...' : 'Search title, transcript, description...'} extraFilters={<>
-      <TreeSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} multiple treeDataSimpleMode showSearch treeNodeFilterProp="title" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear style={{ minWidth: 190 }} treeData={contextOptions.map(context => ({ ...context, id: context.value, title: context.label }))} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
-      <Select aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear style={{ minWidth: 110 }} options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
-      <Select aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear style={{ minWidth: 130 }} options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
-      <Select aria-label={isVi ? 'Lọc trạng thái' : 'Filter status'} mode="multiple" placeholder={isVi ? 'Trạng thái' : 'Status'} allowClear style={{ minWidth: 170 }} options={statuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+      <CustomSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} mode="multiple" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear className="w-48" options={contextSelectOptions} loading={loadingContexts} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
+      <CustomSelect aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear className="w-28" options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
+      <CustomSelect aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear className="w-32" options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
+      <CustomSelect aria-label={isVi ? 'Lọc trạng thái' : 'Filter status'} mode="multiple" placeholder={isVi ? 'Trạng thái' : 'Status'} allowClear className="w-40" options={statuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
     </>} />
     {editor && <ListeningAdminEditor key={editor.id || 'new'} type={type} {...editor} trash={trash} onClose={() => setEditor(null)} />}
   </>

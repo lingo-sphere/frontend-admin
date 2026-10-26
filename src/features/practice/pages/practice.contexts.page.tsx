@@ -1,3 +1,5 @@
+// Trang quản lý ngữ cảnh luyện tập (Practice Contexts) dành cho quản trị viên.
+
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
@@ -9,7 +11,6 @@ import {
   InputNumber,
   Modal,
   Popconfirm,
-  Select,
   Space,
   Switch,
   Table,
@@ -30,14 +31,15 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
+import { CustomSelect } from '@/components/custom.select'
 import {
   usePracticeContextsAdmin,
-} from '../hooks/use.practice.contexts'
+} from '@/features/practice/hooks/use.practice.contexts'
 import type {
   CreatePracticeContextPayload,
   PracticeContext,
   UpdatePracticeContextPayload,
-} from '../services/practice.service'
+} from '@/features/practice/services/practice.service'
 
 const DOMAIN_OPTIONS = [
   { value: 'SPEAKING', label: 'Luyện nói (Speaking)', color: 'blue' },
@@ -512,7 +514,7 @@ export function PracticeContextsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          <Select
+          <CustomSelect
             value={selectedLevel}
             onChange={(val) => setSelectedLevel(val)}
             options={[
@@ -523,7 +525,7 @@ export function PracticeContextsPage() {
             ]}
           />
 
-          <Select
+          <CustomSelect
             value={selectedDomain}
             onChange={(val) => setSelectedDomain(val)}
             options={[
@@ -532,7 +534,7 @@ export function PracticeContextsPage() {
             ]}
           />
 
-          <Select
+          <CustomSelect
             value={selectedStatus}
             onChange={(val) => setSelectedStatus(val)}
             options={[
@@ -621,7 +623,7 @@ export function PracticeContextsPage() {
               }
               tooltip="Chọn ngữ cảnh cha. Nếu để trống, ngữ cảnh này sẽ là Chủ đề lớn (Level 0). Chỉ có thể chọn ngữ cảnh Level 0 hoặc Level 1 làm cha."
             >
-              <Select
+              <CustomSelect
                 placeholder="-- Là ngữ cảnh gốc (Level 0) --"
                 allowClear
                 options={[
@@ -654,7 +656,7 @@ export function PracticeContextsPage() {
               label="Kỹ năng áp dụng"
               tooltip="Các kỹ năng có thể gắn bài tập vào ngữ cảnh này"
             >
-              <Select
+              <CustomSelect
                 mode="multiple"
                 placeholder="Chọn kỹ năng áp dụng"
                 options={DOMAIN_OPTIONS}
@@ -662,7 +664,7 @@ export function PracticeContextsPage() {
             </Form.Item>
 
             <Form.Item name="cefr_level" label="Trình độ CEFR khuyến nghị">
-              <Select
+              <CustomSelect
                 placeholder="-- Chọn trình độ --"
                 allowClear
                 options={CEFR_LEVELS.map((lvl) => ({ value: lvl, label: lvl }))}
@@ -672,7 +674,7 @@ export function PracticeContextsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
             <Form.Item name="status" label="Trạng thái">
-              <Select
+              <CustomSelect
                 options={[
                   { value: 'ACTIVE', label: 'Hoạt động (ACTIVE)' },
                   { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },

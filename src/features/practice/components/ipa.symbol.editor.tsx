@@ -1,15 +1,18 @@
-import { usePracticeText } from '../hooks/use.practice.text'
-import { applyPracticeFormError } from '../helpers/practice-form-error.helper'
+// Drawer chỉnh sửa ký hiệu âm IPA (IpaSymbolEditor).
+
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Button, Divider, Drawer, Form, Input, Modal, Select, Space, Spin } from 'antd'
+import { Alert, Button, Divider, Drawer, Form, Input, Modal, Space, Spin } from 'antd'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
-import { ipaAdminService } from '../services/ipa-admin.service'
-import { ipaAdminKeys, useIpaMutations } from '../hooks/use.ipa.admin'
-import { ipaAudioFields, ipaLevels, type SaveIpaSymbol } from '../types/ipa-admin.types'
-import { ipaError, mediaKeyRule, symbolPayload } from '../helpers/ipa-admin.helper'
-import { IpaAudioField } from './ipa.audio.field'
+import { CustomSelect } from '@/components/custom.select'
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import { applyPracticeFormError } from '@/features/practice/helpers/practice-form-error.helper'
+import { ipaAdminService } from '@/features/practice/services/ipa-admin.service'
+import { ipaAdminKeys, useIpaMutations } from '@/features/practice/hooks/use.ipa.admin'
+import { ipaAudioFields, ipaLevels, type SaveIpaSymbol } from '@/features/practice/types/ipa-admin.types'
+import { ipaError, mediaKeyRule, symbolPayload } from '@/features/practice/helpers/ipa-admin.helper'
+import { IpaAudioField } from '@/features/practice/components/ipa.audio.field'
 
 export function IpaSymbolEditor({ id, readOnly, onClose }: { id: string; readOnly: boolean; onClose: () => void }) {
   const p = usePracticeText()
@@ -54,14 +57,14 @@ export function IpaSymbolEditor({ id, readOnly, onClose }: { id: string; readOnl
       {unconfirmed && <Alert type="warning" title={p("Đã lưu dữ liệu, nhưng audio chưa được xác nhận lưu trữ. Hãy thử lại.")} action={<Button onClick={() => { void confirm(unconfirmed).catch(() => toast.error(p("Chưa xác nhận được audio"))) }}>{p("Thử lại")}</Button>} style={{ marginBottom: 16 }} />}
       <Form form={form} layout="vertical" disabled={!editing || saving || busy > 0 || Boolean(unconfirmed)} onValuesChange={() => setDirty(true)} onFinish={save}>
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-          <Form.Item name="symbol_type" label={p("Loại âm")} rules={[{ required: true }]}><Select options={['VOWEL', 'CONSONANT', 'DIPHTHONG'].map(value => ({ value, label: { VOWEL: p("Nguyên âm"), CONSONANT: p("Phụ âm"), DIPHTHONG: p("Nguyên âm đôi") }[value] }))} /></Form.Item>
-          <Form.Item name="status" label={p("Trạng thái")} rules={[{ required: true }]}><Select options={[{ value: 'ACTIVE', label: p("Hoạt động") }, { value: 'INACTIVE', label: p("Tạm ẩn") }]} /></Form.Item>
+          <Form.Item name="symbol_type" label={p("Loại âm")} rules={[{ required: true }]}><CustomSelect options={['VOWEL', 'CONSONANT', 'DIPHTHONG'].map(value => ({ value, label: { VOWEL: p("Nguyên âm"), CONSONANT: p("Phụ âm"), DIPHTHONG: p("Nguyên âm đôi") }[value] }))} /></Form.Item>
+          <Form.Item name="status" label={p("Trạng thái")} rules={[{ required: true }]}><CustomSelect options={[{ value: 'ACTIVE', label: p("Hoạt động") }, { value: 'INACTIVE', label: p("Tạm ẩn") }]} /></Form.Item>
           <Form.Item name="example_word" label={p("Từ ví dụ")} rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
           <Form.Item name="example_word_ipa" label={p("Phiên âm từ ví dụ")} rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
           <Form.Item name="description_en" label={p("Mô tả tiếng Anh")}><Input.TextArea rows={3} /></Form.Item>
           <Form.Item name="description_vi" label={p("Mô tả tiếng Việt")}><Input.TextArea rows={3} /></Form.Item>
-          <Form.Item name="cefr_min_level" label="CEFR" rules={[{ required: true }]}><Select options={ipaLevels.map(value => ({ value }))} /></Form.Item>
-          <Form.Item name="related_symbols" label={p("Âm liên quan")}><Select mode="multiple" showSearch optionFilterProp="label" options={related?.items.filter(item => item.id !== id).map(item => ({ value: item.symbol, label: `/${item.symbol}/` }))} /></Form.Item>
+          <Form.Item name="cefr_min_level" label="CEFR" rules={[{ required: true }]}><CustomSelect options={ipaLevels.map(value => ({ value }))} /></Form.Item>
+          <Form.Item name="related_symbols" label={p("Âm liên quan")}><CustomSelect mode="multiple" showSearch options={related?.items.filter(item => item.id !== id).map(item => ({ value: item.symbol, label: `/${item.symbol}/` }))} /></Form.Item>
         </div>
         <Divider>{p("Audio âm IPA")}</Divider>
         {ipaAudioFields.slice(0, 3).map((field, index) => <Form.Item key={field} name={field} label={[p("Audio chung"), p("Giọng Mỹ (US)"), p("Giọng Anh (UK)")][index]} rules={[mediaKeyRule]}><IpaAudioField onBusy={onBusy} /></Form.Item>)}

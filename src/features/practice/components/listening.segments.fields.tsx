@@ -1,10 +1,13 @@
-import { usePracticeText } from '../hooks/use.practice.text'
+// Trường danh sách đoạn nghe và phân đoạn lời thoại (ListeningSegmentsFields).
+
 import { useRef, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Select, Space, Tag } from 'antd'
 import type { FormInstance } from 'antd'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
-import type { ListeningPayload, ListeningSegment } from '../types/listening-admin.types'
+import { CustomSelect } from '@/components/custom.select'
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import type { ListeningPayload, ListeningSegment } from '@/features/practice/types/listening-admin.types'
 
 function SegmentClip({ audio, start, end }: { audio?: string; start: number; end: number }) {
   const p = usePracticeText()
@@ -34,7 +37,7 @@ export function ListeningSegmentsFields({ form, dictation, dirty, disabled }: { 
         <Form.Item name={[field.name, 'start_time']} label={p("Bắt đầu (giây)")} rules={[{ required: true }]}><InputNumber min={0} precision={2} style={{ width: '100%' }} /></Form.Item>
         <Form.Item name={[field.name, 'end_time']} label={p("Kết thúc (giây)")} rules={[{ required: true }]}><InputNumber min={0} precision={2} style={{ width: '100%' }} /></Form.Item>
       </div>
-      {!dictation && <Form.Item name={[field.name, 'speaker']} label={p("Người nói")}><Select options={[{ value: 'MALE', label: p("Nam") }, { value: 'FEMALE', label: p("Nữ") }]} /></Form.Item>}
+      {!dictation && <Form.Item name={[field.name, 'speaker']} label={p("Người nói")}><CustomSelect options={[{ value: 'MALE', label: p("Nam") }, { value: 'FEMALE', label: p("Nữ") }]} /></Form.Item>}
       <Form.Item name={[field.name, 'text']} label={dictation ? p("Transcript đoạn (bôi đen từ để tạo chỗ trống)") : p("Lời thoại")} rules={[{ required: true, whitespace: true }]}><Input.TextArea rows={3} onSelect={event => { const target = event.target as HTMLTextAreaElement; setSelection({ index, start: target.selectionStart, end: target.selectionEnd }) }} onChange={() => {
         if (segments[index]?.blanks?.length) { form.setFieldValue(['segments', index, 'blanks'], []); toast.warning(p("Transcript đổi: hãy chọn lại chỗ trống để khớp vị trí mới")) }
       }} /></Form.Item>
@@ -45,7 +48,7 @@ export function ListeningSegmentsFields({ form, dictation, dirty, disabled }: { 
         {(segments[index]?.blanks || []).map((blank: ListeningSegment['blanks'][number], blankIndex: number) => <div key={`${blank.start_char}-${blank.end_char}`} className="mb-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
           <Space wrap><Tag color="blue">{blank.correct_answer}</Tag><span className="text-xs text-slate-500">{p("Vị trí")} {blank.start_char}–{blank.end_char}</span><Button disabled={disabled} size="small" danger type="text" onClick={() => { form.setFieldValue(['segments', index, 'blanks'], segments[index].blanks.filter((_: unknown, position: number) => position !== blankIndex)); dirty() }}>{p("Bỏ chỗ trống")}</Button></Space>
           <Form.Item name={[field.name, 'blanks', blankIndex, 'alternative_answers']} label={p("Đáp án thay thế")}><Select mode="tags" placeholder={p("Nhập đáp án, nhấn Enter")} /></Form.Item>
-          <Form.Item name={[field.name, 'blanks', blankIndex, 'blank_type']} label={p("Loại chỗ trống")}><Select options={['WORD', 'PHRASE', 'SENTENCE'].map(value => ({ value }))} /></Form.Item>
+          <Form.Item name={[field.name, 'blanks', blankIndex, 'blank_type']} label={p("Loại chỗ trống")}><CustomSelect options={['WORD', 'PHRASE', 'SENTENCE'].map(value => ({ value }))} /></Form.Item>
           <Form.Item name={[field.name, 'blanks', blankIndex, 'difficulty_weight']} label={p("Trọng số độ khó")}><InputNumber min={0} max={100} /></Form.Item>
         </div>)}
         {segments[index]?.blanks?.length > 0 && <p className="text-sm text-slate-500">{p("Xem trước:")} {(() => { let text = segments[index].text; for (const blank of [...segments[index].blanks].reverse()) text = text.slice(0, blank.start_char) + '____' + text.slice(blank.end_char); return text })()}</p>}

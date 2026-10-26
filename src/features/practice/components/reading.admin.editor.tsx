@@ -1,21 +1,24 @@
-import { usePracticeText, localizedPracticeName } from '../hooks/use.practice.text'
-import { applyPracticeFormError } from '../helpers/practice-form-error.helper'
+// Drawer chỉnh sửa bài tập luyện đọc (ReadingAdminEditor).
+
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Collapse, Drawer, Form, Input, Modal, Select, Space, Spin, Tabs, TreeSelect } from 'antd'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { readingAdminKeys, useReadingMutations } from '../hooks/use.reading.admin'
-import { readingAdminService } from '../services/reading-admin.service'
-import { readingPayload, readingFormValues } from '../helpers/reading-admin.helper'
-import { ipaError } from '../helpers/ipa-admin.helper'
-import { ipaLevels } from '../types/ipa-admin.types'
-import { readingLabels, type ReadingPayload, type ReadingType } from '../types/reading-admin.types'
-import { ReadingMediaField } from './reading.media.field'
-import { ReadingMetadataFields } from './reading.metadata.fields'
-import { ReadingQuestionsFields } from './reading.questions.fields'
-import { ReadingPreview } from './reading.preview'
+import { CustomSelect } from '@/components/custom.select'
+import { usePracticeText, localizedPracticeName } from '@/features/practice/hooks/use.practice.text'
+import { applyPracticeFormError } from '@/features/practice/helpers/practice-form-error.helper'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { readingAdminKeys, useReadingMutations } from '@/features/practice/hooks/use.reading.admin'
+import { readingAdminService } from '@/features/practice/services/reading-admin.service'
+import { readingPayload, readingFormValues } from '@/features/practice/helpers/reading-admin.helper'
+import { ipaError } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaLevels } from '@/features/practice/types/ipa-admin.types'
+import { readingLabels, type ReadingPayload, type ReadingType } from '@/features/practice/types/reading-admin.types'
+import { ReadingMediaField } from '@/features/practice/components/reading.media.field'
+import { ReadingMetadataFields } from '@/features/practice/components/reading.metadata.fields'
+import { ReadingQuestionsFields } from '@/features/practice/components/reading.questions.fields'
+import { ReadingPreview } from '@/features/practice/components/reading.preview'
 
 export function ReadingAdminEditor({ type, id, readOnly, trash, onClose }: { type: ReadingType; id: string | null; readOnly: boolean; trash: boolean; onClose: () => void }) {
   const p = usePracticeText()
@@ -72,15 +75,15 @@ export function ReadingAdminEditor({ type, id, readOnly, trash, onClose }: { typ
           <Form.Item name="title" label={p("Tiêu đề")} rules={[{ required: true, whitespace: true, max: 300 }]}><Input /></Form.Item>
           <Form.Item name="title_vi" label={p("Tiêu đề tiếng Việt")}><Input /></Form.Item>
           <Form.Item name="context_id" label={p("Chủ đề")}><TreeSelect allowClear showSearch treeDataSimpleMode treeNodeFilterProp="title" treeData={contexts.map(context => ({ id: context._id, value: context._id, pId: context.parent_id, title: localizedPracticeName(context) }))} /></Form.Item>
-          <Form.Item name="status" label={p("Trạng thái")}><Select options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
-          <Form.Item name="cefr_level" label="CEFR"><Select options={ipaLevels.map(value => ({ value }))} /></Form.Item>
-          <Form.Item name="difficulty_level" label={p("Độ khó")}><Select options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
+          <Form.Item name="status" label={p("Trạng thái")}><CustomSelect options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
+          <Form.Item name="cefr_level" label="CEFR"><CustomSelect options={ipaLevels.map(value => ({ value }))} /></Form.Item>
+          <Form.Item name="difficulty_level" label={p("Độ khó")}><CustomSelect options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
         </div>
         <Form.Item name="tags" label={p("Nhãn bài đọc")}><Select mode="tags" /></Form.Item>
         <Collapse style={{ marginBottom: 16 }} items={[{ key: 'source', label: p("Tóm tắt, nguồn và media (tùy chọn)"), forceRender: true, children: <>
           <Form.Item name="content_summary" label={p("Tóm tắt")}><Input.TextArea rows={3} /></Form.Item>
           <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2"><Form.Item name="source" label={p("Tên nguồn")}><Input /></Form.Item><Form.Item name="source_url" label={p("URL nguồn tham khảo")}><Input type="url" /></Form.Item><Form.Item name="author" label={p("Tác giả")}><Input /></Form.Item><Form.Item name="published_date" label={p("Ngày xuất bản nguồn")}><Input type="date" /></Form.Item></div>
-          <Form.Item name="media_type" label={p("Loại media")}><Select allowClear options={[{ value: 'IMAGE', label: p("Ảnh") }, { value: 'VIDEO', label: 'Video' }]} onChange={() => form.setFieldValue('media_id', '')} /></Form.Item>
+          <Form.Item name="media_type" label={p("Loại media")}><CustomSelect allowClear options={[{ value: 'IMAGE', label: p("Ảnh") }, { value: 'VIDEO', label: 'Video' }]} onChange={() => form.setFieldValue('media_id', '')} /></Form.Item>
           {(mediaType === 'IMAGE' || mediaType === 'VIDEO') && <Form.Item name="media_id" label={p("Tệp đính kèm")}><ReadingMediaField kind={mediaType} disabled={disabled} onBusy={onBusy} /></Form.Item>}
         </> }]} />
         <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
