@@ -1,8 +1,9 @@
 // Component hiển thị nhóm điều hướng thanh bên Admin, các mục menu và hiệu ứng kích hoạt.
 import { Link } from 'react-router-dom'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import type { NavGroup } from '@/layouts/sidebar.nav.config'
 import { navItemToPath } from '@/routes/navigation'
+import { SidebarBranchedSubmenu } from '@/layouts/sidebar.branched.submenu'
 
 interface SidebarNavGroupProps {
   group: NavGroup
@@ -210,32 +211,12 @@ export function SidebarNavGroup({
                   }`}
                 >
                   <div className="min-h-0 overflow-hidden">
-                    <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 py-1">
-                      {item.children!.map((child) => {
-                        const isChildActive = activeNavItem === child.id
-
-                        return (
-                          <Link
-                            key={child.id}
-                            to={navItemToPath(child.id)}
-                            onClick={() => onNavigate(child.id)}
-                            className={`relative w-full flex items-center justify-between pl-3 pr-2.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
-                              isChildActive
-                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50/90 dark:bg-blue-950/50 font-bold'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 font-medium'
-                            }`}
-                          >
-                            {isChildActive && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
-                            )}
-                            <span className="truncate">{child.label}</span>
-                            {isChildActive && (
-                              <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                            )}
-                          </Link>
-                        )
-                      })}
-                    </div>
+                    <SidebarBranchedSubmenu
+                      children={item.children!}
+                      activeNavItem={activeNavItem}
+                      isExpanded={isExpanded}
+                      onNavigate={onNavigate}
+                    />
                   </div>
                 </div>
               )}

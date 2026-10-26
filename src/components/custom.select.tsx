@@ -248,10 +248,10 @@ export function CustomSelect({
     if (option.disabled) return
 
     if (isMultiple) {
-      const exists = selectedValues.some((v) => v === option.value)
+      const exists = selectedValues.some((v) => String(v) === String(option.value))
       if (!exists && maxCount && selectedValues.length >= maxCount) return
       const nextValues = exists
-        ? selectedValues.filter((v) => v !== option.value)
+        ? selectedValues.filter((v) => String(v) !== String(option.value))
         : [...selectedValues, option.value]
       onChange?.(nextValues)
     } else {
@@ -369,22 +369,26 @@ export function CustomSelect({
         type="button"
         disabled={option.disabled}
         onClick={() => handleOptionSelect(option)}
-        className={`w-full px-2.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 transition-all duration-150 cursor-pointer text-left ${
+        className={`group w-full px-2.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 transition-colors duration-150 cursor-pointer text-left border ${
           isSelected
-            ? 'bg-indigo-50/90 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200/70 dark:border-indigo-800/60 shadow-2xs'
-            : 'text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-100/80 dark:hover:bg-slate-800/80 dark:hover:text-white'
-        } ${option.disabled ? 'opacity-40 cursor-not-allowed' : 'active:scale-[0.99]'}`}
+            ? 'bg-indigo-50/90 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-medium border-indigo-200/70 dark:border-indigo-800/60 shadow-2xs'
+            : 'border-transparent text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-100/80 dark:hover:bg-slate-800/80 dark:hover:text-white'
+        } ${option.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {isMultiple ? (
             <div
-              className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border transition-all duration-150 ${
+              className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border transition-all duration-200 ease-out ${
                 isSelected
                   ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs'
-                  : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'
+                  : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 group-hover:border-indigo-300 dark:group-hover:border-indigo-600'
               }`}
             >
-              {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+              <Check
+                className={`w-3 h-3 stroke-[3] transition-all duration-200 ease-out transform ${
+                  isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                }`}
+              />
             </div>
           ) : null}
 
@@ -478,7 +482,7 @@ export function CustomSelect({
         <div
           className={`absolute ${alignRight ? 'right-0' : 'left-0'} ${
             placement === 'top' ? 'bottom-full mb-1.5 origin-bottom' : 'top-full mt-1.5 origin-top'
-          } z-50 min-w-full w-max max-w-[min(420px,calc(100vw-32px))] rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-1.5 shadow-xl shadow-slate-900/10 dark:shadow-black/70 ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-xl transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          } z-50 min-w-[max(100%,148px)] w-max max-w-[min(420px,calc(100vw-32px))] rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-1.5 shadow-xl shadow-slate-900/10 dark:shadow-black/70 ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-xl transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             visible
               ? 'opacity-100 scale-100 translate-y-0'
               : `opacity-0 scale-[0.98] pointer-events-none ${placement === 'top' ? 'translate-y-1' : '-translate-y-1'}`
@@ -499,27 +503,6 @@ export function CustomSelect({
                 onBlur={onBlur}
                 className="w-full pl-7.5 pr-2.5 py-1 text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500"
               />
-            </div>
-          )}
-
-          {isMultiple && selectedValues.length > 0 && (
-            <div className="flex items-center justify-between px-2.5 py-1.5 mb-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[11px]">
-              <span className="font-medium text-slate-500 dark:text-slate-400">
-                {isVi ? 'Đã chọn' : 'Selected'}:{' '}
-                <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
-                  {selectedValues.length}
-                </strong>
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onChange?.([])
-                }}
-                className="text-[11px] font-medium text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
-              >
-                {isVi ? 'Bỏ chọn tất cả' : 'Clear all'}
-              </button>
             </div>
           )}
 
@@ -546,6 +529,27 @@ export function CustomSelect({
               </div>
             )}
           </div>
+
+          {isMultiple && selectedValues.length > 0 && (
+            <div className="flex items-center justify-between px-2.5 py-1.5 mt-1 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[11px] transition-all duration-150">
+              <span className="font-medium text-slate-500 dark:text-slate-400">
+                {isVi ? 'Đã chọn' : 'Selected'}:{' '}
+                <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
+                  {selectedValues.length}
+                </strong>
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChange?.([])
+                }}
+                className="text-[11px] font-medium text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+              >
+                {isVi ? 'Bỏ chọn' : 'Clear all'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

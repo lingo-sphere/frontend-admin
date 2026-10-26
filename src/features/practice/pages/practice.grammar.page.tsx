@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, ConfigProvider, Popconfirm, Segmented, Space, Switch, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
+import { Alert, Button, Card, ConfigProvider, Segmented, Space, Switch, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
 import { BookOutlined, BulbOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
@@ -15,6 +15,7 @@ import { GrammarTopicEditor } from '@/features/practice/components/grammar.topic
 import { GrammarQuestionEditor } from '@/features/practice/components/grammar.question.editor'
 import { GrammarHandbookTab } from '@/features/practice/components/grammar.handbook.tab'
 import { ToeicTipsTab } from '@/features/practice/components/toeic.tips.tab'
+import { IpaRowActions } from '@/features/practice/components/ipa.row.actions'
 import { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
 import { grammarAdminKeys, useGrammarMutations, useGrammarTree } from '@/features/practice/hooks/use.grammar.admin'
 import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
@@ -176,27 +177,27 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
     { key: 'code', label: isVi ? 'Mã' : 'Code', width: 180, filterKind: 'text' },
     { key: 'name_en', label: isVi ? 'Tên tiếng Anh' : 'English Name', fixed: 'left', width: 230, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{(row as GrammarTopic).name_en}</Button> },
     { key: 'name_vi', label: isVi ? 'Tên tiếng Việt' : 'Vietnamese Name', width: 220, filterKind: 'text' },
-    { key: 'category', label: isVi ? 'Nhóm' : 'Category', width: 190, filterKind: 'enum', filterOptions: categories, render: value => (isVi ? grammarCategoryLabels[value] : value) || value },
-    { key: 'parent_id', label: isVi ? 'Chủ điểm cha' : 'Parent Topic', width: 200, filterKind: 'tree', filterOptions: topicSelectOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Gốc' : 'Root') },
-    { key: 'level', label: isVi ? 'Cấp trong cây' : 'Level in Tree', width: 130, filterKind: 'number', initiallyHidden: true },
-    { key: 'usage_count', label: isVi ? 'Câu liên kết' : 'Linked Questions', width: 140, filterKind: 'number' },
+    { key: 'category', label: isVi ? 'Nhóm' : 'Category', width: 140, filterKind: 'enum', filterOptions: categories, render: value => (isVi ? grammarCategoryLabels[value] : value) || value },
+    { key: 'parent_id', label: isVi ? 'Chủ điểm cha' : 'Parent Topic', width: 140, filterKind: 'tree', filterOptions: topicSelectOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Gốc' : 'Root') },
+    { key: 'level', label: isVi ? 'Cấp trong cây' : 'Level in Tree', width: 100, filterKind: 'number', initiallyHidden: true },
+    { key: 'usage_count', label: isVi ? 'Câu liên kết' : 'Linked Questions', width: 90, filterKind: 'number' },
   ] : [
-    { key: 'question_text_en', label: isVi ? 'Câu hỏi (Anh)' : 'Question Text (EN)', fixed: 'left', width: 280, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, maxWidth: 260, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{(row as GrammarQuestion).question_text_en || (isVi ? '(Chưa có nội dung)' : '(No content)')}</Button> },
-    { key: 'question_text_vi', label: isVi ? 'Câu hỏi (Việt)' : 'Question Text (VI)', width: 240, filterKind: 'text', initiallyHidden: true },
-    { key: 'grammar_knowledge_id', label: isVi ? 'Chủ điểm ngữ pháp' : 'Grammar Topic', width: 210, filterKind: 'tree', filterOptions: topicSelectOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
-    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 190, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
-    { key: 'domain', label: isVi ? 'Ngân hàng' : 'Question Bank', width: 160, filterKind: 'enum', filterOptions: [{ value: 'GRAMMAR', label: isVi ? 'Ngữ pháp' : 'Grammar' }, { value: 'VOCABULARY', label: isVi ? 'Từ vựng liên kết' : 'Linked Vocab' }], render: value => value === 'VOCABULARY' ? (isVi ? 'Từ vựng liên kết' : 'Linked Vocab') : (isVi ? 'Ngữ pháp' : 'Grammar') },
-    { key: 'question_type', label: isVi ? 'Dạng câu hỏi' : 'Question Type', width: 170, filterKind: 'enum', filterOptions: grammarTypes.map(value => ({ value, label: isVi ? grammarLabels[value] : (grammarEnLabels[value] || value) })), render: value => (isVi ? grammarLabels[value as keyof typeof grammarLabels] : grammarEnLabels[value as string]) || value },
-    { key: 'cefr_level', label: 'CEFR', width: 100, filterKind: 'enum', filterOptions: levels },
-    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 110, filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(item => item.value === value)?.label || value },
-    { key: 'media_id', label: 'Media', width: 110, filterKind: 'media', initiallyHidden: true, render: value => value ? (isVi ? 'Có tệp' : 'Has file') : (isVi ? 'Chưa có' : 'None') },
+    { key: 'question_text_en', label: isVi ? 'Câu hỏi (Anh)' : 'Question Text (EN)', width: 200, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, textAlign: 'left', whiteSpace: 'normal', height: 'auto', lineHeight: '1.3' }} onClick={() => setEditor({ id: row._id, readOnly: true })}><span className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline">{(row as GrammarQuestion).question_text_en || (isVi ? '(Chưa có nội dung)' : '(No content)')}</span></Button> },
+    { key: 'question_text_vi', label: isVi ? 'Câu hỏi (Việt)' : 'Question Text (VI)', width: 180, filterKind: 'text', initiallyHidden: true },
+    { key: 'grammar_knowledge_id', label: isVi ? 'Chủ điểm ngữ pháp' : 'Grammar Topic', width: 140, filterKind: 'tree', filterOptions: topicSelectOptions, render: value => topicOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 120, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(row => row.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'domain', label: isVi ? 'Ngân hàng' : 'Question Bank', width: 100, filterKind: 'enum', filterOptions: [{ value: 'GRAMMAR', label: isVi ? 'Ngữ pháp' : 'Grammar' }, { value: 'VOCABULARY', label: isVi ? 'Từ vựng liên kết' : 'Linked Vocab' }], render: value => value === 'VOCABULARY' ? (isVi ? 'Từ vựng liên kết' : 'Linked Vocab') : (isVi ? 'Ngữ pháp' : 'Grammar') },
+    { key: 'question_type', label: isVi ? 'Dạng câu hỏi' : 'Question Type', width: 110, filterKind: 'enum', filterOptions: grammarTypes.map(value => ({ value, label: isVi ? grammarLabels[value] : (grammarEnLabels[value] || value) })), render: value => (isVi ? grammarLabels[value as keyof typeof grammarLabels] : grammarEnLabels[value as string]) || value },
+    { key: 'cefr_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },
+    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 65, filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(item => item.value === value)?.label || value },
+    { key: 'media_id', label: 'Media', width: 90, filterKind: 'media', initiallyHidden: true, render: value => value ? (isVi ? 'Có tệp' : 'Has file') : (isVi ? 'Chưa có' : 'None') },
   ]
 
   const sharedColumns: IpaColumn<GrammarRecord>[] = [
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 160, filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <Space orientation="vertical" size={0}><Switch aria-label={`Trạng thái ${row._id}`} checked={kind === 'topics' ? (row as GrammarTopic).status === 'ACTIVE' : (row as GrammarQuestion).status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void toggle(row, value) }} /><span>{statuses.find(item => item.value === (kind === 'topics' ? (row as GrammarTopic).status : (row as GrammarQuestion).status))?.label}</span></Space> },
-    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 170, filterKind: 'date', initiallyHidden: true, render: value => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—' },
-    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 170, filterKind: 'date', render: value => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—' },
-    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', fixed: 'right', width: 220, render: (_, row) => <Space><Button size="small" onClick={() => setEditor({ id: row._id, readOnly: true })}>{isVi ? 'Xem' : 'View'}</Button>{!trash && <Button size="small" type="primary" onClick={() => setEditor({ id: row._id, readOnly: false })}>{isVi ? 'Sửa' : 'Edit'}</Button>}<Popconfirm title={trash ? (isVi ? 'Khôi phục bản ghi?' : 'Restore record?') : (isVi ? 'Chuyển vào thùng rác?' : 'Move to trash?')} description={isVi ? 'Giữ lại lịch sử liên kết dữ liệu.' : 'Preserves linked attempt data.'} okText={trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')} cancelText={isVi ? 'Hủy' : 'Cancel'} onConfirm={() => removeOrRestore(row)}><Button size="small" danger={!trash} disabled={Boolean(working)} loading={working === row._id}>{trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')}</Button></Popconfirm></Space> },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><Switch size="small" aria-label={`Trạng thái ${row._id}`} checked={kind === 'topics' ? (row as GrammarTopic).status === 'ACTIVE' : (row as GrammarQuestion).status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void toggle(row, value) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{statuses.find(item => item.value === (kind === 'topics' ? (row as GrammarTopic).status : (row as GrammarQuestion).status))?.label}</span></div> },
+    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', initiallyHidden: true, render: value => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
+    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: value => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
+    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, row) => <IpaRowActions onView={() => setEditor({ id: row._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: row._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(row)} trash={trash} loading={working === row._id} disabled={Boolean(working)} isVi={isVi} deleteTitle={trash ? (isVi ? 'Khôi phục bản ghi?' : 'Restore record?') : (isVi ? 'Chuyển vào thùng rác?' : 'Move to trash?')} deleteDescription={isVi ? 'Giữ lại lịch sử liên kết dữ liệu.' : 'Preserves linked attempt data.'} /> },
   ]
 
   return <>

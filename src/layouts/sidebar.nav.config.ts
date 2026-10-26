@@ -1,5 +1,26 @@
 // Cấu hình danh mục nhóm và các mục điều hướng thanh bên Admin.
 import React from 'react'
+import type { IconSvgElement } from '@hugeicons/react'
+import {
+  UserMultiple02Icon,
+  Shield01Icon,
+  Book02Icon,
+  UserGroupIcon,
+  FileEditIcon,
+  Layers01Icon,
+  HeadphonesIcon,
+  BookOpen01Icon,
+  Mic01Icon,
+  PencilEdit02Icon,
+  TextFontIcon,
+  AudioWave01Icon,
+  ChartLineData02Icon,
+  CursorPointer01Icon,
+  Activity01Icon,
+  Rocket01Icon,
+  AiBrain01Icon,
+  Settings02Icon,
+} from '@hugeicons/core-free-icons'
 import {
   LayoutDashboard,
   Users,
@@ -18,6 +39,7 @@ import {
 export interface NavSubItem {
   id: string
   label: string
+  icon?: React.ReactNode | IconSvgElement
 }
 
 export interface NavItem {
@@ -49,8 +71,8 @@ export const navGroups: NavGroup[] = [
         icon: Users,
         label: 'Người dùng',
         children: [
-          { id: 'users-list', label: 'Học viên' },
-          { id: 'admins', label: 'Quản trị viên' },
+          { id: 'users-list', label: 'Học viên', icon: UserMultiple02Icon },
+          { id: 'admins', label: 'Quản trị viên', icon: Shield01Icon },
         ],
       },
     ],
@@ -72,9 +94,9 @@ export const navGroups: NavGroup[] = [
         icon: Library,
         label: 'Khóa học',
         children: [
-          { id: 'courses-list', label: 'Quản lý khóa học' },
-          { id: 'course-learners', label: 'Quản lý học viên' },
-          { id: 'course-exams', label: 'Quản lý bài thi' },
+          { id: 'courses-list', label: 'Quản lý khóa học', icon: Book02Icon },
+          { id: 'course-learners', label: 'Quản lý học viên', icon: UserGroupIcon },
+          { id: 'course-exams', label: 'Quản lý bài thi', icon: FileEditIcon },
         ],
       },
       { id: 'vocabulary', icon: BookOpen, label: 'Từ vựng' },
@@ -83,13 +105,13 @@ export const navGroups: NavGroup[] = [
         icon: Activity,
         label: 'Luyện tập kỹ năng',
         children: [
-          { id: 'practice-contexts', label: 'Quản lý ngữ cảnh' },
-          { id: 'practice-listening', label: 'Luyện nghe' },
-          { id: 'practice-reading', label: 'Luyện đọc' },
-          { id: 'practice-speaking', label: 'Luyện nói' },
-          { id: 'practice-writing', label: 'Luyện viết' },
-          { id: 'practice-grammar', label: 'Ngữ pháp' },
-          { id: 'practice-ipa', label: 'Ngữ âm & IPA' },
+          { id: 'practice-contexts', label: 'Quản lý ngữ cảnh', icon: Layers01Icon },
+          { id: 'practice-listening', label: 'Luyện nghe', icon: HeadphonesIcon },
+          { id: 'practice-reading', label: 'Luyện đọc', icon: BookOpen01Icon },
+          { id: 'practice-speaking', label: 'Luyện nói', icon: Mic01Icon },
+          { id: 'practice-writing', label: 'Luyện viết', icon: PencilEdit02Icon },
+          { id: 'practice-grammar', label: 'Ngữ pháp', icon: TextFontIcon },
+          { id: 'practice-ipa', label: 'Ngữ âm & IPA', icon: AudioWave01Icon },
         ],
       },
     ],
@@ -111,9 +133,9 @@ export const navGroups: NavGroup[] = [
         icon: BarChart3,
         label: 'Thống kê dữ liệu',
         children: [
-          { id: 'progress', label: 'Phân tích học tập' },
-          { id: 'analytics-posthog', label: 'Phân tích Web' },
-          { id: 'monitoring-betterstack', label: 'Giám sát hệ thống' },
+          { id: 'progress', label: 'Phân tích học tập', icon: ChartLineData02Icon },
+          { id: 'analytics-posthog', label: 'Phân tích Web', icon: CursorPointer01Icon },
+          { id: 'monitoring-betterstack', label: 'Giám sát hệ thống', icon: Activity01Icon },
         ],
       },
     ],
@@ -128,9 +150,9 @@ export const navGroups: NavGroup[] = [
         icon: Settings2,
         label: 'Cài đặt',
         children: [
-          { id: 'settings-plans', label: 'Gói dịch vụ' },
-          { id: 'settings-ai', label: 'AI & Mô hình' },
-          { id: 'settings-system', label: 'Hệ thống' },
+          { id: 'settings-plans', label: 'Gói dịch vụ', icon: Rocket01Icon },
+          { id: 'settings-ai', label: 'AI & Mô hình', icon: AiBrain01Icon },
+          { id: 'settings-system', label: 'Hệ thống', icon: Settings02Icon },
         ],
       },
     ],
