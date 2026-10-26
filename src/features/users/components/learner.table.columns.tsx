@@ -1,5 +1,5 @@
 // Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
-import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw, Trophy } from 'lucide-react'
+import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw, Trophy, Bell } from 'lucide-react'
 import type { User } from '@/features/users/types/learner.types'
 import type { DataTableColumn } from '@/components/data.table'
 import { Popconfirm } from '@/components/popconfirm'
@@ -11,6 +11,7 @@ interface GetLearnerColumnsOptions {
   onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
   onOpenAiQuotaModal?: (user: User) => void
   onResetData?: (user: User) => Promise<void> | void
+  onRemindLearner?: (user: User) => void
 }
 
 export function getLearnerColumns({
@@ -20,6 +21,7 @@ export function getLearnerColumns({
   onOpenStatusModal,
   onOpenAiQuotaModal,
   onResetData,
+  onRemindLearner,
 }: GetLearnerColumnsOptions): DataTableColumn<User>[] {
   const handleView = onViewProfile || onViewDetails || (() => {})
   return [
@@ -134,6 +136,16 @@ export function getLearnerColumns({
         const isActive = u.status === 'ACTIVE'
         return (
           <div className="flex items-center justify-end gap-1.5">
+            {onRemindLearner && (
+              <button
+                className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 transition-colors cursor-pointer"
+                title={isVi ? 'Nhắc nhở học tập' : 'Send study reminder'}
+                type="button"
+                onClick={() => onRemindLearner(u)}
+              >
+                <Bell className="w-3.5 h-3.5" />
+              </button>
+            )}
             {onOpenAiQuotaModal && (
               <button
                 className="p-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition-colors cursor-pointer"

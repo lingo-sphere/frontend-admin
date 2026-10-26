@@ -1,7 +1,7 @@
 // Trang quản trị danh sách học viên trong giao diện Admin.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, BellRing } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { DataTable } from '@/components/data.table'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +20,7 @@ import { LearnerStatsOverview } from '@/features/users/components/learner.stats.
 import { LearnerFilterBar } from '@/features/users/components/learner.filter.bar'
 import { getLearnerColumns } from '@/features/users/components/learner.table.columns'
 import { LearnerAiQuotaModal } from '@/features/users/components/learner.ai.quota.modal'
+import { LearnerReminderModal } from '@/features/users/components/learner.reminder.modal'
 import { useDebounce } from '@/hooks/use.debounce'
 
 export function LearnersPage() {
@@ -105,6 +106,8 @@ export function LearnersPage() {
   }
 
   const [aiQuotaModalUser, setAiQuotaModalUser] = useState<User | null>(null)
+  const [reminderModalUser, setReminderModalUser] = useState<User | null>(null)
+  const [isRemindAllOpen, setIsRemindAllOpen] = useState(false)
 
   const columns = useMemo(() => {
     return getLearnerColumns({
@@ -113,6 +116,7 @@ export function LearnersPage() {
       onOpenStatusModal: handleStatusChange,
       onOpenAiQuotaModal: (u) => setAiQuotaModalUser(u),
       onResetData: handleResetData,
+      onRemindLearner: (u) => setReminderModalUser(u),
     })
   }, [isVi, navigate, resetLearnerData])
 
@@ -140,14 +144,23 @@ export function LearnersPage() {
         }}
         onResetFilters={handleResetFilters}
         extraActions={
-          <button
-            onClick={() => handleRefresh()}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
-          >
-            <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`} />
-            <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsRemindAllOpen(true)}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold text-white transition-colors cursor-pointer shadow-xs shadow-indigo-500/20"
+            >
+              <BellRing className="w-3.5 h-3.5" />
+              <span>{isVi ? 'Nhắc nhở tất cả' : 'Remind All'}</span>
+            </button>
+            <button
+              onClick={() => handleRefresh()}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`} />
+              <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
+            </button>
+          </div>
         }
         filterSlot={
           <LearnerFilterBar
@@ -187,6 +200,16 @@ export function LearnersPage() {
         user={aiQuotaModalUser}
         isOpen={Boolean(aiQuotaModalUser)}
         onClose={() => setAiQuotaModalUser(null)}
+        onSuccess={() => refetch()}
+      />
+
+      <LearnerReminderModal
+        isOpen={isRemindAllOpen || Boolean(reminderModalUser)}
+        user={reminderModalUser}
+        onClose={() => {
+          setIsRemindAllOpen(false)
+          setReminderModalUser(null)
+        }}
         onSuccess={() => refetch()}
       />
     </div>

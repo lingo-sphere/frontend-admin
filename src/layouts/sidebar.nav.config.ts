@@ -92,7 +92,6 @@ export const navGroups: NavGroup[] = [
           { id: 'practice-ipa', label: 'Ngữ âm & IPA' },
         ],
       },
-      { id: 'media-storage', icon: Layers3, label: 'Kho tài nguyên' },
     ],
   },
   {
