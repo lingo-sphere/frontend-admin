@@ -86,6 +86,7 @@ export const API_CONFIG = {
       PUBLIC_DECKS: '/vocabulary/flashcards/decks/public/explore',
       DECK_BY_ID: (id: string) => `/vocabulary/flashcards/decks/${id}`,
       ADD_CARD: (deckId: string) => `/vocabulary/flashcards/decks/${deckId}/cards`,
+      REMOVE_CARD: (deckId: string, cardId: string) => `/vocabulary/flashcards/decks/${deckId}/cards/${cardId}`,
     },
 
     PRACTICE: {
@@ -104,6 +105,9 @@ export const API_CONFIG = {
       // Practice Context taxonomy - dùng cho mapping câu hỏi với context
       CONTEXTS: '/practice/contexts',
       CONTEXTS_BY_LEVEL: (level: number) => `/practice/contexts?level=${level}`,
+      CONTEXT_BY_ID: (id: string) => `/practice/contexts/${id}`,
+      CONTEXTS_REORDER: '/practice/contexts/reorder',
+      CONTEXTS_TREE: '/practice/contexts/tree',
     },
 
     EXAMS: {

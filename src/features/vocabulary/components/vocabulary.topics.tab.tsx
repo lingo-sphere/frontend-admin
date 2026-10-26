@@ -1,113 +1,300 @@
 /**
  * @file vocabulary.topics.tab.tsx
- * @description Component giao diện VocabularyTopicsTab phục vụ khu vực Quản trị Admin
+ * @description Component giao diện VocabularyTopicsTab phục vụ khu vực Quản trị Admin, đồng bộ DataTable và phân trang như Khóa học.
  */
 
-import { useState, useMemo } from 'react'
-import { Folder, Edit2, Plus } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Folder, Edit2, Plus, Trash2, Layers, Search, Sparkles } from 'lucide-react'
 import type { Topic } from '@/features/vocabulary/data/vocabulary.data'
-import { toast } from '@/store/toast.store'
-import { Pagination } from '@/components/pagination'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
 
 interface VocabularyTopicsTabProps {
   topics: Topic[]
-  onEditTopic?: (topicId: string) => void
-  onCreateTopic?: () => void
+  onEditTopic: (topic: Topic) => void
+  onCreateTopic: () => void
+  onDeleteTopic: (topicId: string) => void
+  onViewDecksOfTopic: (topicId: string) => void
 }
 
 export function VocabularyTopicsTab({
   topics,
-  onEditTopic = () => toast.info('Đang mở form chỉnh sửa chủ đề...'),
-  onCreateTopic = () => toast.info('Đang mở form tạo chủ đề mới...'),
+  onEditTopic,
+  onCreateTopic,
+  onDeleteTopic,
+  onViewDecksOfTopic,
 }: VocabularyTopicsTabProps) {
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid')
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(6)
+  const [pageSize, setPageSize] = useState(10)
+  const [searchTopic, setSearchTopic] = useState('')
 
-  const totalPages = Math.ceil(topics.length / pageSize) || 1
+  const filteredTopics = useMemo(() => {
+    if (!searchTopic.trim()) return topics
+    const q = searchTopic.toLowerCase().trim()
+    return topics.filter(
+      (t) =>
+        t.name_vi?.toLowerCase().includes(q) ||
+        t.name_en?.toLowerCase().includes(q) ||
+        t.slug?.toLowerCase().includes(q)
+    )
+  }, [topics, searchTopic])
 
   const paginatedTopics = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return topics.slice(start, start + pageSize)
-  }, [topics, currentPage, pageSize])
+    return filteredTopics.slice(start, start + pageSize)
+  }, [filteredTopics, currentPage, pageSize])
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent, topic: Topic) => {
+      e.stopPropagation()
+      const id = topic.id || topic._id
+      if (!id) return
+      const topicName = topic.name_vi || topic.name_en || 'chủ đề này'
+      if (confirm(`Bạn có chắc chắn muốn xóa chủ đề "${topicName}"? Các liên kết từ vựng sẽ không bị mất.`)) {
+        onDeleteTopic(id)
+      }
+    },
+    [onDeleteTopic]
+  )
+
+  const columns: DataTableColumn<Topic>[] = useMemo(
+    () => [
+      {
+        key: 'topic_info',
+        title: 'Chủ đề',
+        render: (topic) => (
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/50 dark:border-indigo-800/50 font-bold shrink-0">
+              {topic.icon_url || topic.icon ? (
+                <span className="text-base">{topic.icon_url || topic.icon}</span>
+              ) : (
+                <Folder className="w-4 h-4" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                  {topic.name_vi || topic.name_en}
+                </span>
+                {topic.is_featured && (
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" aria-label="Chủ đề nổi bật" />
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400 font-mono">{topic.name_en}</p>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'cefr_level',
+        title: 'Khung CEFR',
+        width: '120px',
+        align: 'center',
+        render: (topic) => (
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+            {topic.cefr_level || 'B1-B2'}
+          </span>
+        ),
+      },
+      {
+        key: 'lexical_count',
+        title: 'Từ vựng',
+        width: '120px',
+        align: 'center',
+        render: (topic) => (
+          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs">
+            {topic.lexical_count || 0} từ
+          </span>
+        ),
+      },
+      {
+        key: 'deck_count',
+        title: 'Bộ thẻ liên kết',
+        width: '150px',
+        align: 'center',
+        render: (topic) => {
+          const topicId = topic.id || topic._id || ''
+          return (
+            <button
+              type="button"
+              onClick={() => onViewDecksOfTopic(topicId)}
+              className="px-2.5 py-1 rounded-md bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 hover:bg-violet-100 font-semibold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{topic.deck_count || 0} bộ thẻ</span>
+            </button>
+          )
+        },
+      },
+      {
+        key: 'actions',
+        title: 'Thao tác',
+        width: '100px',
+        align: 'right',
+        sticky: 'right',
+        render: (topic) => (
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => onEditTopic(topic)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Chỉnh sửa chủ đề"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleDelete(e, topic)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+              title="Xóa chủ đề"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [onEditTopic, onViewDecksOfTopic, handleDelete]
+  )
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Danh Sách Chủ Đề Từ Vựng (Topics)
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Phân loại từ vựng theo ngữ cảnh TOEIC (Business, Office, Travel, Shopping, Banking)
-          </p>
+    <DataTable<Topic>
+      title={
+        <div className="flex items-center gap-2">
+          <span>Danh Sách Chủ Đề Từ Vựng (Topics)</span>
+          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+            {filteredTopics.length} chủ đề
+          </span>
         </div>
+      }
+      subtitle="Phân loại từ vựng theo ngữ cảnh TOEIC. Nhấp vào chủ đề để xem và quản lý các bộ thẻ tương ứng."
+      columns={columns}
+      data={paginatedTopics}
+      rowKey={(t) => t.id || t._id || ''}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+      onResetFilters={() => {
+        setSearchTopic('')
+        setCurrentPage(1)
+      }}
+      extraActions={
         <button
           onClick={onCreateTopic}
-          className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-xs transition-all cursor-pointer"
+          className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-xs transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Thêm Chủ Đề</span>
         </button>
-      </div>
+      }
+      filterSlot={
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchTopic}
+            onChange={(e) => {
+              setSearchTopic(e.target.value)
+              setCurrentPage(1)
+            }}
+            placeholder="Tìm chủ đề..."
+            className="h-9 pl-8 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 w-52 sm:w-64"
+          />
+        </div>
+      }
+      renderGridItem={(topic) => {
+        const topicId = topic.id || topic._id || ''
+        const deckCount = topic.deck_count ?? 0
+        const wordCount = topic.lexical_count ?? 0
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedTopics.map((topic) => (
+        return (
           <div
-            key={topic.id}
-            className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-indigo-500/50 transition-all flex flex-col justify-between"
+            key={topicId}
+            onClick={() => onViewDecksOfTopic(topicId)}
+            className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-indigo-500/50 hover:shadow-md transition-all flex flex-col justify-between cursor-pointer min-h-[220px]"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/50 dark:border-indigo-800/50 font-bold">
-                  {topic.icon ? (
-                    <span className="text-lg">{topic.icon}</span>
+                  {topic.icon_url || topic.icon ? (
+                    <span className="text-lg">{topic.icon_url || topic.icon}</span>
                   ) : (
                     <Folder className="w-5 h-5" />
                   )}
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                  {topic.cefr_level || 'B1-B2'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {topic.is_featured && (
+                    <span className="p-1 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400" aria-label="Chủ đề nổi bật">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                    {topic.cefr_level || 'B1-B2'}
+                  </span>
+                </div>
               </div>
-              <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+
+              <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 {topic.name_vi || topic.name_en}
               </h4>
               <p className="text-xs text-slate-400 font-mono mt-0.5">{topic.name_en}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-2">
-                {topic.description || 'Chủ đề từ vựng trọng tâm trong đề thi TOEIC.'}
+                {topic.description_vi || topic.description || 'Chủ đề từ vựng trọng tâm trong đề thi TOEIC.'}
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="font-semibold text-slate-600 dark:text-slate-400">
-                {topic.lexical_count || 0} từ vựng
-              </span>
-              <button
-                onClick={() => onEditTopic(topic.id)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                title="Chỉnh sửa chủ đề"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
+            <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[11px]">
+                  {wordCount} từ
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onViewDecksOfTopic(topicId)
+                  }}
+                  className="px-2 py-0.5 rounded-md bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 hover:bg-violet-100 font-semibold text-[11px] flex items-center gap-1 transition-colors"
+                >
+                  <Layers className="w-3 h-3" />
+                  <span>{deckCount} bộ thẻ</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEditTopic(topic)
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Chỉnh sửa chủ đề"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleDelete(e, topic)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                  title="Xóa chủ đề"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-
-      {topics.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          pageSizeOptions={[6, 9, 12, 18]}
-          totalItems={topics.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
-            setCurrentPage(1)
-          }}
-        />
-      )}
-    </div>
+        )
+      }}
+      pagination={{
+        currentPage,
+        pageSize,
+        totalItems: filteredTopics.length,
+        onPageChange: setCurrentPage,
+        onPageSizeChange: (limit) => {
+          setPageSize(limit)
+          setCurrentPage(1)
+        },
+      }}
+    />
   )
 }

@@ -1,192 +1,156 @@
-// Trang quản trị bài tập luyện nghe TOEIC trong giao diện Admin.
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw, Search, Headphones } from 'lucide-react'
-import { useReloadAnimation } from '@/hooks/use.reload.animation'
-import { practiceService } from '@/features/practice/services/practice.service'
+import { Button, ConfigProvider, Image, Popconfirm, Segmented, Select, Space, Switch, Tabs, Tag, TreeSelect, theme as antdTheme } from 'antd'
+import { Plus, RotateCcw } from 'lucide-react'
+import dayjs from 'dayjs'
+import { useAdminLayout } from '@/contexts/admin.layout.context'
+import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
-import type { ListeningExercise } from '@/types/api.types'
-import { PracticeListeningCard } from '@/features/practice/components/practice.listening.card'
-import { CreateListeningModal } from '@/features/practice/components/create.listening.modal'
-import { CustomSelect } from '@/components/custom.select'
-import { Pagination } from '@/components/pagination'
+import { IpaDataTable, type IpaColumn } from '../components/ipa.data.table'
+import { IpaAudioPreview } from '../components/ipa.audio.field'
+import { ListeningAdminEditor } from '../components/listening.admin.editor'
+import { useIpaTableState } from '../hooks/use.ipa.table-state'
+import { useListeningAdmin, useListeningMutations } from '../hooks/use.listening.admin'
+import { usePracticeContexts } from '../hooks/use.practice.contexts'
+import { listeningAdminService } from '../services/listening-admin.service'
+import { listeningPayload } from '../helpers/listening-admin.helper'
+import { ipaError } from '../helpers/ipa-admin.helper'
+import { ipaLevels } from '../types/ipa-admin.types'
+import { listeningLabels, listeningSubtypes, listeningTypes, type ListeningRecord, type ListeningType } from '../types/listening-admin.types'
 
-export function PracticeListeningPage() {
+const listeningEnLabels: Record<ListeningType, string> = {
+  part1: 'Part 1 · Photographs',
+  part2: 'Part 2 · Question & Response',
+  part3: 'Part 3 · Conversations',
+  part4: 'Part 4 · Short Talks',
+  dictation: 'Dictation'
+}
+
+const subtypeEnLabels: Record<string, string> = {
+  picture_type: 'Picture Type',
+  question_type: 'Question Type',
+  conversation_type: 'Conversation Type',
+  talk_type: 'Talk Type'
+}
+
+function ListeningTable({ type }: { type: ListeningType }) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const [exercises, setExercises] = useState<ListeningExercise[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterType, setFilterType] = useState('ALL')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(9)
-  const [showAddModal, setShowAddModal] = useState(false)
+  const statuses = [
+    { value: 'DRAFT', label: isVi ? 'Nháp' : 'Draft' },
+    { value: 'PUBLISHED', label: isVi ? 'Đã xuất bản' : 'Published' },
+    { value: 'ARCHIVED', label: isVi ? 'Lưu trữ' : 'Archived' }
+  ]
+  const levels = ipaLevels.map(value => ({ value, label: value }))
+  const difficulties = [
+    { value: 'EASY', label: isVi ? 'Dễ' : 'Easy' },
+    { value: 'MEDIUM', label: isVi ? 'Vừa' : 'Medium' },
+    { value: 'HARD', label: isVi ? 'Khó' : 'Hard' }
+  ]
 
-  const [newTitle, setNewTitle] = useState('')
-  const [newType, setNewType] = useState<'DICTATION' | 'MULTIPLE_CHOICE' | 'FILL_BLANK'>('DICTATION')
-  const [newAudioUrl, setNewAudioUrl] = useState('')
-  const [newDuration, setNewDuration] = useState(45)
-
-  const fetchExercises = async () => {
-    setIsLoading(true)
-    try {
-      const data = await practiceService.getAllListeningExercises()
-      setExercises(Array.isArray(data) ? data : [])
-    } catch {
-      setExercises([])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(fetchExercises)
+  const state = useIpaTableState()
+  const result = useListeningAdmin(type, state.query)
+  const mutations = useListeningMutations(type)
+  const { contexts } = usePracticeContexts()
+  const contextOptions = contexts.map(context => ({
+    value: context._id,
+    label: isVi ? (context.name_vi || context.name || context.code) : (context.name || context.name_vi || context.code),
+    pId: context.parent_id
+  }))
+  const [editor, setEditor] = useState<{ id: string | null; readOnly: boolean } | null>(null)
+  const [working, setWorking] = useState<string | null>(null)
+  const trash = state.query.trash === 'true'
+  const subtype = listeningSubtypes[type]
 
   useEffect(() => {
-    fetchExercises()
-  }, [])
-
-  const handleDelete = (id: string) => {
-    setExercises((prev) => prev.filter((e) => e._id !== id))
-    toast.success('Đã xóa bài luyện nghe thành công!')
-  }
-
-  const filteredExercises = useMemo(() => {
-    return exercises.filter((ex) => {
-      const matchSearch = ex.title.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchType = filterType === 'ALL' || ex.exercise_type === filterType
-      return matchSearch && matchType
-    })
-  }, [exercises, searchQuery, filterType])
-
-  const totalPages = Math.ceil(filteredExercises.length / pageSize) || 1
-
-  const paginatedExercises = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredExercises.slice(start, start + pageSize)
-  }, [filteredExercises, currentPage, pageSize])
-
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTitle.trim()) return
-
-    const newItem: ListeningExercise = {
-      _id: `list_${Date.now()}`,
-      title: newTitle,
-      exercise_type: newType,
-      audio_url: newAudioUrl,
-      duration_seconds: newDuration,
-      difficulty: 'INTERMEDIATE',
-      transcript: '',
+    if (!result.isPlaceholderData && result.data && state.query.page > Math.max(1, result.data.pagination.totalPages)) {
+      state.change({ page: String(Math.max(1, result.data.pagination.totalPages)) })
     }
-    setExercises([newItem, ...exercises])
-    toast.success('Tạo bài luyện nghe mới thành công!')
-    setShowAddModal(false)
-    setNewTitle('')
-    setNewAudioUrl('')
+  }, [result.data, result.isPlaceholderData, state])
+
+  const changeStatus = async (row: ListeningRecord, published: boolean) => {
+    setWorking(row._id)
+    try {
+      const detail = await listeningAdminService.detail(type, row._id)
+      await mutations.save.mutateAsync({ id: row._id, payload: { ...listeningPayload(type, detail), status: published ? 'PUBLISHED' : 'DRAFT' } })
+      toast.success(isVi ? 'Đã cập nhật trạng thái bài nghe' : 'Listening exercise status updated')
+    } catch (error) {
+      toast.error(ipaError(error))
+    } finally {
+      setWorking(null)
+    }
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <Headphones className="w-7 h-7 text-sky-600 dark:text-sky-400" />
-            <span>Luyện Nghe TOEIC Listening (Part 1 - 4)</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý kho bài nghe, audio transcript và bài tập Dictation chép chính tả
-          </p>
-        </div>
+  const removeOrRestore = async (row: ListeningRecord) => {
+    setWorking(row._id)
+    try {
+      await (trash ? mutations.restore : mutations.remove).mutateAsync({ id: row._id, revision: row.revision })
+      toast.success(trash ? (isVi ? 'Đã khôi phục về nháp' : 'Restored to draft') : (isVi ? 'Đã chuyển vào thùng rác' : 'Moved to trash'))
+    } catch (error) {
+      toast.error(ipaError(error))
+    } finally {
+      setWorking(null)
+    }
+  }
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleRefresh()}
-            disabled={isRefreshing || isLoading}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-60"
-            title="Làm mới"
-          >
-            <RotateCcw className={`w-4 h-4 ${isRefreshing || isLoading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white shadow-lg shadow-sky-600/30 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Thêm bài nghe mới</span>
-          </button>
-        </div>
-      </div>
+  const columns: IpaColumn<ListeningRecord>[] = [
+    { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', fixed: 'left', width: 240, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, maxWidth: 220, whiteSpace: 'normal', textAlign: 'left' }} onClick={() => setEditor({ id: row._id, readOnly: true })}>{row.title}</Button> },
+    { key: 'title_vi', label: isVi ? 'Tiêu đề tiếng Việt' : 'Vietnamese Title', width: 220, filterKind: 'text', initiallyHidden: true },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 180, filterKind: 'tree', filterOptions: contextOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    ...(subtype.field ? [{ key: subtype.field, label: isVi ? subtype.label : (subtypeEnLabels[subtype.field] || subtype.label), width: 170, filterKind: 'enum' as const, filterOptions: subtype.values.map(value => ({ value, label: value })) }] : []),
+    { key: 'audio_url', label: 'Audio', width: 210, filterKind: 'media', render: value => value ? <IpaAudioPreview value={value} /> : (isVi ? 'Chưa có' : 'None') },
+    ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 110, filterKind: 'media' as const, render: (value: string) => value ? <Image width={70} height={50} style={{ objectFit: 'contain' }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
+    { key: type === 'part2' ? 'audio_duration_seconds' : 'duration_seconds', label: isVi ? 'Thời lượng (giây)' : 'Duration (s)', width: 150, filterKind: 'number' },
+    ...(type === 'dictation' ? [{ key: 'total_segments', label: isVi ? 'Số đoạn' : 'Segments', width: 100, filterKind: 'number' as const }, { key: 'total_words', label: isVi ? 'Số từ' : 'Words', width: 100, filterKind: 'number' as const }, { key: 'total_blanks', label: isVi ? 'Số ô trống' : 'Blanks', width: 120, filterKind: 'number' as const }] : []),
+    { key: 'transcript', label: 'Transcript', width: 250, filterKind: 'text', ellipsis: true, initiallyHidden: true },
+    { key: 'cefr_level', label: 'CEFR', width: 100, filterKind: 'enum', filterOptions: levels },
+    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 110, filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(option => option.value === value)?.label || value },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 165, filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <Space orientation="vertical" size={0}><Switch aria-label={`Xuất bản ${row.title}`} checked={row.status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void changeStatus(row, value) }} /><span>{statuses.find(option => option.value === row.status)?.label}</span></Space> },
+    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 170, filterKind: 'date', initiallyHidden: true, render: value => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—' },
+    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 170, filterKind: 'date', render: value => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—' },
+    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 220, fixed: 'right', render: (_, row) => <Space><Button size="small" onClick={() => setEditor({ id: row._id, readOnly: true })}>{isVi ? 'Xem' : 'View'}</Button>{!trash && <Button size="small" type="primary" onClick={() => setEditor({ id: row._id, readOnly: false })}>{isVi ? 'Sửa' : 'Edit'}</Button>}<Popconfirm title={trash ? (isVi ? 'Khôi phục bài về nháp?' : 'Restore exercise to draft?') : (isVi ? 'Chuyển bài vào thùng rác?' : 'Move exercise to trash?')} description={isVi ? 'Giữ lại lịch sử làm bài và file media.' : 'Preserves attempt history and media files.'} okText={trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')} cancelText={isVi ? 'Hủy' : 'Cancel'} onConfirm={() => removeOrRestore(row)}><Button size="small" danger={!trash} loading={working === row._id} disabled={Boolean(working)}>{trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')}</Button></Popconfirm></Space> },
+  ]
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isVi ? 'Tìm kiếm theo tiêu đề bài nghe...' : 'Search listening exercises...'}
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-sky-500"
-          />
-        </div>
-
-        <CustomSelect
-          value={filterType}
-          onChange={setFilterType}
-          options={[
-            { value: 'ALL', label: isVi ? 'Tất cả định dạng' : 'All Formats' },
-            { value: 'DICTATION', label: isVi ? 'Chép chính tả' : 'Dictation' },
-            { value: 'MULTIPLE_CHOICE', label: isVi ? 'Trắc nghiệm nghe' : 'Multiple Choice' },
-            { value: 'FILL_BLANK', label: isVi ? 'Điền từ còn thiếu' : 'Fill in Blank' },
-          ]}
-          className="w-48"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedExercises.length === 0 ? (
-          <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            {isVi ? 'Không tìm thấy bài nghe nào phù hợp' : 'No listening exercises found'}
-          </div>
-        ) : (
-          paginatedExercises.map((item) => (
-            <PracticeListeningCard
-              key={item._id}
-              item={item}
-              onDelete={handleDelete}
-            />
-          ))
-        )}
-      </div>
-
-      {filteredExercises.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          pageSizeOptions={[6, 9, 18, 36]}
-          totalItems={filteredExercises.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
-            setCurrentPage(1)
-          }}
-        />
-      )}
-
-      <CreateListeningModal
-        isOpen={showAddModal}
-        title={newTitle}
-        type={newType}
-        audioUrl={newAudioUrl}
-        totalQuestions={newDuration}
-        onTitleChange={setNewTitle}
-        onTypeChange={(val) => setNewType(val as 'DICTATION' | 'MULTIPLE_CHOICE' | 'FILL_BLANK')}
-        onAudioUrlChange={setNewAudioUrl}
-        onTotalQuestionsChange={setNewDuration}
-        onClose={() => setShowAddModal(false)}
-        onSubmit={handleCreate}
-      />
+  return <>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <Segmented value={String(trash)} options={[{ value: 'false', label: isVi ? 'Bài nghe' : 'Exercises' }, { value: 'true', label: isVi ? 'Thùng rác' : 'Trash' }]} onChange={value => state.change({ trash: value, page: '1' })} />
+      <Space>
+        <Button icon={<RotateCcw size={14} />} loading={result.isFetching} onClick={() => result.refetch()}>{isVi ? 'Làm mới' : 'Refresh'}</Button>
+        {!trash && <Button type="primary" icon={<Plus size={15} />} onClick={() => setEditor({ id: null, readOnly: false })}>{isVi ? 'Thêm bài nghe' : 'Add Exercise'}</Button>}
+      </Space>
     </div>
-  )
+    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài nghe' : 'Search listening exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, transcript, mô tả...' : 'Search title, transcript, description...'} extraFilters={<>
+      <TreeSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} multiple treeDataSimpleMode showSearch treeNodeFilterProp="title" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear style={{ minWidth: 190 }} treeData={contextOptions.map(context => ({ ...context, id: context.value, title: context.label }))} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
+      <Select aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear style={{ minWidth: 110 }} options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
+      <Select aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear style={{ minWidth: 130 }} options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
+      <Select aria-label={isVi ? 'Lọc trạng thái' : 'Filter status'} mode="multiple" placeholder={isVi ? 'Trạng thái' : 'Status'} allowClear style={{ minWidth: 170 }} options={statuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+    </>} />
+    {editor && <ListeningAdminEditor key={editor.id || 'new'} type={type} {...editor} trash={trash} onClose={() => setEditor(null)} />}
+  </>
+}
+
+export function PracticeListeningPage() {
+  const [params] = useSearchParams()
+  const state = useIpaTableState()
+  const { theme } = useAdminLayout()
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
+  const type = listeningTypes.includes(params.get('tab') as ListeningType) ? params.get('tab') as ListeningType : 'part1'
+  const switchTab = (tab: string) => {
+    const common = Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))
+    state.change({ tab, filters: JSON.stringify(common), page: '1', sort: undefined, order: undefined })
+  }
+
+  return <ConfigProvider theme={{ algorithm: theme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm, token: { colorPrimary: '#4f46e5', borderRadius: 10 } }}>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện nghe' : 'Listening Management'}</h1>
+        <p className="mt-1 text-sm text-slate-500">{isVi ? 'Một kho bài cho mỗi Part. Lọc Chủ đề để tìm nội dung theo ngữ cảnh.' : 'Manage exercises per TOEIC Part. Filter by Context to find content.'}</p>
+      </div>
+      <Tabs activeKey={type} onChange={switchTab} destroyOnHidden items={listeningTypes.map(value => ({ key: value, label: isVi ? listeningLabels[value] : listeningEnLabels[value], children: <ListeningTable key={value} type={value} /> }))} />
+    </div>
+  </ConfigProvider>
 }

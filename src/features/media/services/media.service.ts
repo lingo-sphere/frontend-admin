@@ -5,7 +5,6 @@ import { API_CONFIG } from '@/config/api.config'
 import {
   type StorageQuota,
   RawStorageUsageResponseSchema,
-  MediaUploadResponseSchema,
   PresignedUploadResponseSchema,
   TtsGenerateResponseSchema,
   type MediaUploadResponse,
@@ -25,7 +24,11 @@ export interface MediaFileItem {
   created_at?: string
 }
 
+export interface LibraryMedia { _id: string; filename: string; storage_key: string; content_type: string; mime_type: string; file_size_bytes: number; duration_seconds?: number }
+export type LibraryMediaKind = 'IMAGE' | 'AUDIO' | 'VIDEO'
+
 export const mediaAdminService = {
+  library: (query: { kind: LibraryMediaKind; search?: string; page: number; limit: number }) => api.get<{ items: LibraryMedia[]; pagination: { total: number } }>('/media/admin/library', query),
   async getStorageUsage(): Promise<StorageQuota> {
     const res = await api.get(
       API_CONFIG.ENDPOINTS.MEDIA.STORAGE_USAGE,
@@ -97,7 +100,7 @@ export const mediaAdminService = {
       const onAbort = () => {
         try {
           xhr.abort()
-        } catch {}
+        } catch { /* Abort remains idempotent if the request has already finished. */ }
         reject(new DOMException('Aborted', 'AbortError'))
       }
 
@@ -152,6 +155,7 @@ export const mediaAdminService = {
 
     return {
       id: cleanStorageKey,
+      media_id: presigned.media_id,
       filename: file.name,
       file_name: file.name,
       file_url: cleanStorageKey,

@@ -113,19 +113,60 @@ export function useVocabularyTopicsQuery() {
       }
       return (items || []).map((t: ApiTopic) => ({
         id: t._id,
+        _id: t._id,
         name_vi: t.name_vi || undefined,
         name_en: t.name_en || t.name || undefined,
         slug: t.slug,
         description: t.description || '',
+        description_en: t.description_en || t.description || '',
+        description_vi: t.description_vi || '',
         icon: t.icon_url || undefined,
+        icon_url: t.icon_url || undefined,
+        cefr_level: t.cefr_level || undefined,
         is_featured: t.is_featured,
+        display_order: t.display_order ?? undefined,
         status: t.status,
         lexical_count: t.lexical_count || 0,
+        deck_count: t.deck_count || 0,
         created_at: typeof t.created_at === 'string' ? t.created_at : (t.created_at ? new Date(t.created_at).toISOString() : ''),
       }))
     },
     placeholderData: keepPreviousData,
     staleTime: 0,
+  })
+}
+
+export function useCreateTopicMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Partial<ApiTopic>) => vocabularyService.createTopic(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.topics() })
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
+    },
+  })
+}
+
+export function useUpdateTopicMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<ApiTopic> }) =>
+      vocabularyService.updateTopic(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.topics() })
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
+    },
+  })
+}
+
+export function useDeleteTopicMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => vocabularyService.deleteTopic(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.topics() })
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.all })
+    },
   })
 }
 
@@ -143,12 +184,96 @@ export function useVocabularyDecksQuery() {
         name_vi: d.name_vi || d.title || d.name,
         name_en: d.title || d.name,
         description: d.description || '',
-        card_count: d.card_count ?? d.total_cards ?? 0,
-        total_cards: d.total_cards ?? d.card_count ?? 0,
+        description_vi: d.description_vi || '',
+        topic_id: d.topic_id || undefined,
+        topic_name: d.topic_name || undefined,
+        cefr_level: d.cefr_level || undefined,
+        card_count: d.card_count ?? d.total_cards ?? (d.cards?.length || 0),
+        total_cards: d.total_cards ?? d.card_count ?? (d.cards?.length || 0),
+        visibility: d.visibility || 'PUBLIC',
+        cards: d.cards as FlashcardDeck['cards'] || [],
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
     },
     staleTime: 0,
+  })
+}
+
+export function useDeckDetailsQuery(deckId?: string) {
+  return useQuery<FlashcardDeck>({
+    queryKey: [...vocabAdminKeys.decks(), deckId],
+    queryFn: async () => {
+      if (!deckId) throw new Error('Deck ID is required')
+      const d = await vocabularyService.getFlashcardDeckById(deckId)
+      return {
+        id: d._id,
+        _id: d._id,
+        name: d.name || d.title || 'Bộ thẻ',
+        title: d.title || d.name || 'Bộ thẻ',
+        name_vi: d.name_vi || d.title || d.name,
+        name_en: d.title || d.name,
+        description: d.description || '',
+        description_vi: d.description_vi || '',
+        topic_id: d.topic_id || undefined,
+        topic_name: d.topic_name || undefined,
+        cefr_level: d.cefr_level || undefined,
+        card_count: d.card_count ?? d.total_cards ?? (d.cards?.length || 0),
+        total_cards: d.total_cards ?? d.card_count ?? (d.cards?.length || 0),
+        visibility: d.visibility || 'PUBLIC',
+        cards: d.cards as FlashcardDeck['cards'] || [],
+        created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
+      }
+    },
+    enabled: Boolean(deckId),
+  })
+}
+
+export function useUpdateDeckMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<ApiFlashcardDeck> }) =>
+      vocabularyService.updateFlashcardDeck(id, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.decks() })
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.publicDecks() })
+      queryClient.invalidateQueries({ queryKey: [...vocabAdminKeys.decks(), variables.id] })
+    },
+  })
+}
+
+export function useDeleteDeckMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => vocabularyService.deleteFlashcardDeck(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.decks() })
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.publicDecks() })
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.topics() })
+    },
+  })
+}
+
+export function useAddCardToDeckMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ deckId, payload }: { deckId: string; payload: Record<string, unknown> }) =>
+      vocabularyService.addCardToDeck(deckId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.decks() })
+      queryClient.invalidateQueries({ queryKey: [...vocabAdminKeys.decks(), variables.deckId] })
+    },
+  })
+}
+
+export function useRemoveCardFromDeckMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ deckId, cardId }: { deckId: string; cardId: string }) =>
+      vocabularyService.removeCardFromDeck(deckId, cardId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: vocabAdminKeys.decks() })
+      queryClient.invalidateQueries({ queryKey: [...vocabAdminKeys.decks(), variables.deckId] })
+    },
   })
 }
 

@@ -6,6 +6,11 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { ApiResponse } from '@/types/api.types'
 import type { ZodType } from 'zod'
 
+export interface ApiFieldError { path: (string | number)[]; messages: string[] }
+export class ApiRequestError extends Error {
+  constructor(message: string, public readonly status?: number, public readonly fieldErrors: ApiFieldError[] = []) { super(message); this.name = 'ApiRequestError' }
+}
+
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
@@ -50,7 +55,7 @@ apiClient.interceptors.response.use(
   (response) => {
     return response
   },
-  async (error: AxiosError<{ message?: string | string[]; error?: string; statusCode?: number }>) => {
+  async (error: AxiosError<{ message?: string | string[]; error?: string; statusCode?: number; field_errors?: unknown }>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
     if (error.response?.status === 401 && originalRequest) {
@@ -176,7 +181,7 @@ apiClient.interceptors.response.use(
     }
   }
 
-    let rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
+    const rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
     const rawStr = Array.isArray(rawError) ? rawError.join(', ') : String(rawError || '')
 
     let cleanMessage = rawStr
@@ -203,7 +208,13 @@ apiClient.interceptors.response.use(
       cleanMessage = i18n.t('errors.notFoundDesc')
     }
 
-    return Promise.reject(new Error(cleanMessage))
+    const fields: unknown = error.response?.data?.field_errors
+    const fieldErrors: ApiFieldError[] = Array.isArray(fields) ? fields.filter((field: unknown): field is ApiFieldError => {
+      if (!field || typeof field !== 'object') return false
+      const item = field as ApiFieldError
+      return Array.isArray(item.path) && item.path.length > 0 && item.path.every(part => typeof part === 'string' || (typeof part === 'number' && Number.isInteger(part) && part >= 0)) && Array.isArray(item.messages) && item.messages.every(message => typeof message === 'string')
+    }) : []
+    return Promise.reject(new ApiRequestError(cleanMessage, error.response?.status, fieldErrors))
   },
 )
 
@@ -225,7 +236,7 @@ function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): 
 
 export const api = {
   async get<T>(url: string, params?: Record<string, unknown>, schema?: ZodType<T>): Promise<T> {
-    const res = await apiClient.get<any>(url, { params })
+    const res = await apiClient.get<unknown>(url, { params })
 
     const responseData = res.data
     let raw: unknown
@@ -233,13 +244,13 @@ export const api = {
     if (Array.isArray(responseData)) {
       raw = responseData
     } else if (responseData && typeof responseData === 'object') {
-      if ('items' in responseData && Array.isArray((responseData as any).items)) {
+      if ('items' in responseData && Array.isArray(responseData.items)) {
         raw = responseData
       } else if ('data' in responseData) {
-        if (Array.isArray((responseData as any).data)) {
-          raw = (responseData as any).data
+        if (Array.isArray(responseData.data)) {
+          raw = responseData.data
         } else {
-          raw = (responseData as any).data
+          raw = responseData.data
         }
       } else {
         raw = responseData
@@ -251,8 +262,8 @@ export const api = {
     return parseWithSchema<T>(raw as T, schema, url)
   },
 
-  async post<T>(url: string, data?: unknown, schema?: ZodType<T>): Promise<T> {
-    const res = await apiClient.post<ApiResponse<T> | T>(url, data)
+  async post<T>(url: string, data?: unknown, schema?: ZodType<T>, options?: { timeout?: number }): Promise<T> {
+    const res = await apiClient.post<ApiResponse<T> | T>(url, data, options)
     const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
     return parseWithSchema<T>(raw, schema, url)
   },
