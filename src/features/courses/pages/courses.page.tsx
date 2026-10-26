@@ -109,6 +109,21 @@ export function CoursesPage() {
         const priceB = getEffectivePrice(b)
         return sortOrder === 'asc' ? priceA - priceB : priceB - priceA
       }
+      if (sortKey === 'stats') {
+        const countA = (a.total_modules || 0) * 100 + (a.total_lessons || 0)
+        const countB = (b.total_modules || 0) * 100 + (b.total_lessons || 0)
+        return sortOrder === 'asc' ? countA - countB : countB - countA
+      }
+      if (sortKey === 'enrollments') {
+        const countA = a.enrollments || 0
+        const countB = b.enrollments || 0
+        return sortOrder === 'asc' ? countA - countB : countB - countA
+      }
+      if (sortKey === 'status') {
+        const statA = a.is_published ? 1 : 0
+        const statB = b.is_published ? 1 : 0
+        return sortOrder === 'asc' ? statA - statB : statB - statA
+      }
       return 0
     })
   }, [courses, searchQuery, filterCategory, filterStatus, sortKey, sortOrder])

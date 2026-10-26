@@ -1,5 +1,6 @@
 // Thẻ số liệu thống kê quản trị SaaS với dải màu viền và biểu đồ sóng mini theo phong cách hiện đại.
-import type { ComponentType } from 'react'
+import { useId, type ComponentType } from 'react'
+import { StatCardSkeleton } from '@/components/skeleton'
 
 export type StatCardColor = 'emerald' | 'teal' | 'blue' | 'amber' | 'purple' | 'indigo' | 'rose'
 
@@ -14,6 +15,7 @@ export interface StatCardProps {
   sparklineData?: number[]
   className?: string
   onClick?: () => void
+  loading?: boolean
 }
 
 const colorStyles: Record<
@@ -119,9 +121,16 @@ export function StatCard({
   sparklineData,
   className = '',
   onClick,
+  loading = false,
 }: StatCardProps) {
+  const reactId = useId().replace(/[^a-zA-Z0-9]/g, '')
+
+  if (loading) {
+    return <StatCardSkeleton />
+  }
+
   const c = colorStyles[color] || colorStyles.blue
-  const gradientId = `stat-grad-${color}-${title.replace(/\s+/g, '-').toLowerCase()}`
+  const gradientId = `stat-grad-${color}-${reactId}`
   const { linePath, areaPath } = buildSvgPaths(sparklineData)
 
   return (

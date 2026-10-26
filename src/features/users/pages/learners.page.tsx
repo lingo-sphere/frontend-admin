@@ -46,7 +46,14 @@ export function LearnersPage() {
       search: debouncedSearch.trim() || undefined,
       status: selectedStatus !== 'ALL' ? (selectedStatus === 'BANNED' ? 'BLOCKED' : selectedStatus) : undefined,
       plan: selectedPlan !== 'ALL' ? selectedPlan : undefined,
-      sortBy: sortKey === 'user' ? 'full_name' : sortKey || undefined,
+      sortBy:
+        sortKey === 'user'
+          ? 'full_name'
+          : sortKey === 'target'
+          ? 'target_toeic_score'
+          : sortKey === 'plan'
+          ? 'is_premium'
+          : sortKey || undefined,
       sortOrder: sortOrder || undefined,
     }
   }, [currentPage, pageSize, debouncedSearch, selectedStatus, selectedPlan, sortKey, sortOrder])
@@ -65,6 +72,19 @@ export function LearnersPage() {
       banned: list.filter((u) => u.status === 'BANNED').length,
     }
   }, [data])
+
+  const sortedLearners = useMemo(() => {
+    const list = data?.items || []
+    if (!sortKey || !sortOrder) return list
+    if (sortKey === 'gamification') {
+      return [...list].sort((a, b) => {
+        const xpA = a.total_xp ?? 0
+        const xpB = b.total_xp ?? 0
+        return sortOrder === 'asc' ? xpA - xpB : xpB - xpA
+      })
+    }
+    return list
+  }, [data?.items, sortKey, sortOrder])
 
   const handleResetFilters = async () => {
     setSearchTerm('')
@@ -133,7 +153,7 @@ export function LearnersPage() {
         }
         isLoading={isLoading}
         columns={columns}
-        data={data?.items || []}
+        data={sortedLearners}
         rowKey={(u) => u.user_id}
         sortKey={sortKey}
         sortOrder={sortOrder}

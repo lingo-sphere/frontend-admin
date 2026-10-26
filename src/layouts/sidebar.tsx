@@ -1,9 +1,9 @@
 // Thanh điều hướng thanh bên Admin hỗ trợ thu gọn và phân quyền truy cập.
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useLocation, useNavigate, Link } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import { PanelLeftClose, Shield } from 'lucide-react'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
-import { pathToNavItem, navItemToPath, getEffectiveNavId } from '@/routes/navigation'
+import { pathToNavItem, getEffectiveNavId } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { navGroups, type NavGroup, type NavItem } from '@/layouts/sidebar.nav.config'
@@ -17,7 +17,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const location = useLocation()
-  const navigate = useNavigate()
   const activeNavItem = getEffectiveNavId(pathToNavItem(location.pathname))
   const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useAdminLayout()
   const user = useAuthStore((state) => state.user)
@@ -74,7 +73,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const isAdmin = currentRole === 'ADMIN'
   const hasPermission = useAuthStore((state) => state.hasPermission)
   const hasModulePermission = useAuthStore((state) => state.hasModulePermission)
-  const permissions = useAuthStore((state) => state.permissions)
 
   const isNavAllowed = useCallback(
     (id: string): boolean => {
@@ -111,7 +109,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'practice-speaking':
         case 'practice-listening':
         case 'practice-contexts':
-          return false // IPA management endpoints are restricted to ADMIN.
+          return false
         case 'toeic-tests':
         case 'placement-tests':
           return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE')
@@ -158,7 +156,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         return { ...group, items: filteredItems }
       })
       .filter(Boolean) as NavGroup[]
-  }, [isAdmin, isNavAllowed, permissions, hasModulePermission])
+  }, [isAdmin, isNavAllowed, hasModulePermission])
 
   const toCamelCase = (str: string) =>
     str.toLowerCase().replace(/[-_]([a-z0-9])/g, (_, c) => c.toUpperCase())
@@ -209,26 +207,28 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           to="/dashboard"
           onClick={() => handleNavigate('dashboard')}
           title={isVietnamese ? 'Về trang Tổng quan' : 'Go to Dashboard'}
-          className={`w-full shrink-0 flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-all ${
-            sidebarCollapsed && !mobile ? 'justify-center' : ''
+          className={`w-full shrink-0 flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group transition-[padding] duration-300 ${
+            sidebarCollapsed && !mobile ? 'justify-center px-0' : 'px-1'
           }`}
         >
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-md shadow-teal-500/25 shrink-0 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 group-hover:shadow-teal-500/40 transition-all duration-200">
             <Shield className="w-4.5 h-4.5 text-white group-hover:rotate-6 transition-transform duration-200" />
           </div>
-          {(!sidebarCollapsed || mobile) && (
-            <div className="min-w-0 flex-1">
-              <p className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                LingoSphere
+          <div
+            className={`min-w-0 flex-1 overflow-hidden transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+              sidebarCollapsed && !mobile ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[170px] opacity-100'
+            }`}
+          >
+            <p className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              LingoSphere
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+              <p className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider truncate">
+                {t('common.adminConsole')}
               </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-                <p className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">
-                  {t('common.adminConsole')}
-                </p>
-              </div>
             </div>
-          )}
+          </div>
         </Link>
 
         <nav className="my-2 flex-1 sidebar-scroll space-y-2 pr-0.5 overflow-y-auto">
@@ -251,16 +251,25 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       <div className="pt-2 shrink-0 border-t border-slate-200/80 dark:border-slate-800/80">
         {!mobile && (
           <button
-            className={`w-full flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer ${
-              sidebarCollapsed ? 'px-0' : ''
+            className={`w-full flex items-center gap-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${
+              sidebarCollapsed ? 'justify-center px-0' : ''
             }`}
             onClick={toggleSidebarCollapsed}
             type="button"
+            title={sidebarCollapsed ? (t('nav.expandMenu') || 'Mở rộng menu') : (t('nav.collapseMenu') || 'Thu gọn menu')}
           >
-            <PanelLeftClose className="w-4 h-4 shrink-0" />
-            {!sidebarCollapsed && (
-              <span>{t('nav.collapseMenu')}</span>
-            )}
+            <PanelLeftClose
+              className={`w-4 h-4 shrink-0 transition-transform duration-300 ${
+                sidebarCollapsed ? 'rotate-180 text-slate-600 dark:text-slate-300' : ''
+              }`}
+            />
+            <span
+              className={`overflow-hidden transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)] truncate whitespace-nowrap ${
+                sidebarCollapsed ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[130px] opacity-100'
+              }`}
+            >
+              {t('nav.collapseMenu')}
+            </span>
           </button>
         )}
       </div>
@@ -277,7 +286,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   return (
     <aside
-      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 p-4 transition-all duration-300 shadow-sm dark:shadow-none ${
+      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 transition-[width,padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)] shadow-sm dark:shadow-none ${
         sidebarCollapsed ? 'w-[72px] p-2.5' : 'w-64 p-4'
       }`}
     >

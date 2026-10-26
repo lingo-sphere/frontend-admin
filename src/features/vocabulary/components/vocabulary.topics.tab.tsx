@@ -1,12 +1,10 @@
-/**
- * @file vocabulary.topics.tab.tsx
- * @description Component giao diện VocabularyTopicsTab phục vụ khu vực Quản trị Admin, đồng bộ DataTable và phân trang như Khóa học.
- */
+// Component giao diện VocabularyTopicsTab phục vụ khu vực Quản trị Admin, đồng bộ DataTable và phân trang như Khóa học.
 
 import { useState, useMemo, useCallback } from 'react'
 import { Folder, Edit2, Plus, Trash2, Layers, Search, Sparkles } from 'lucide-react'
 import type { Topic } from '@/features/vocabulary/data/vocabulary.data'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { TableRowActions } from '@/components/table.row.actions'
 
 interface VocabularyTopicsTabProps {
   topics: Topic[]
@@ -61,6 +59,7 @@ export function VocabularyTopicsTab({
     () => [
       {
         key: 'topic_info',
+        dataIndex: 'name_vi',
         title: 'Chủ đề',
         render: (topic) => (
           <div className="flex items-center gap-3">
@@ -130,31 +129,23 @@ export function VocabularyTopicsTab({
         key: 'actions',
         title: 'Thao tác',
         width: '100px',
-        align: 'right',
+        align: 'center',
         sticky: 'right',
-        render: (topic) => (
-          <div className="flex items-center justify-end gap-1">
-            <button
-              type="button"
-              onClick={() => onEditTopic(topic)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Chỉnh sửa chủ đề"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => handleDelete(e, topic)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-              title="Xóa chủ đề"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ),
+        render: (topic) => {
+          const id = topic.id || topic._id || ''
+          const topicName = topic.name_vi || topic.name_en || 'chủ đề này'
+          return (
+            <TableRowActions
+              onEdit={() => onEditTopic(topic)}
+              onDelete={() => onDeleteTopic(id)}
+              deleteTitle={`Xóa chủ đề "${topicName}"?`}
+              deleteDescription="Các liên kết từ vựng sẽ không bị mất."
+            />
+          )
+        },
       },
     ],
-    [onEditTopic, onViewDecksOfTopic, handleDelete]
+    [onEditTopic, onViewDecksOfTopic, onDeleteTopic]
   )
 
   return (

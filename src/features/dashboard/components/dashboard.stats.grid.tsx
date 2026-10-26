@@ -7,12 +7,14 @@ interface DashboardStatsGridProps {
   analytics: SystemAnalyticsOverview | null
   totalCoursesCount: number
   isVietnamese: boolean
+  loading?: boolean
 }
 
 export function DashboardStatsGrid({
   analytics,
   totalCoursesCount,
   isVietnamese,
+  loading = false,
 }: DashboardStatsGridProps) {
   const totalUsers = analytics?.overview?.total_users || 0
   const activeLearners = analytics?.overview?.active_users_today || 0
@@ -30,6 +32,7 @@ export function DashboardStatsGrid({
         color="emerald"
         trend="+12.5%"
         trendType="up"
+        loading={loading}
       />
 
       <StatCard
@@ -40,6 +43,7 @@ export function DashboardStatsGrid({
         color="teal"
         trend="+8.2%"
         trendType="up"
+        loading={loading}
       />
 
       <StatCard
@@ -50,6 +54,7 @@ export function DashboardStatsGrid({
         color="amber"
         trend={totalCourses > 0 ? `${totalCourses} khóa` : undefined}
         trendType="neutral"
+        loading={loading}
       />
 
       <StatCard
@@ -60,6 +65,7 @@ export function DashboardStatsGrid({
         color="purple"
         trend={vipUsers > 0 ? `${vipUsers}` : undefined}
         trendType="neutral"
+        loading={loading}
       />
     </div>
   )

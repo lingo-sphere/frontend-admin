@@ -1,22 +1,20 @@
-/**
- * @file vocabulary.decks.tab.tsx
- * @description Component giao diện VocabularyDecksTab phục vụ khu vực Quản trị Admin, đồng bộ DataTable và phân trang như Khóa học.
- */
+// Quản lý danh sách bộ thẻ flashcard học từ vựng.
 
 import { useState, useMemo, useCallback } from 'react'
+import { Button, Tooltip } from 'antd'
 import {
   Layers,
   Edit2,
   Plus,
   Trash2,
   Search,
-  Filter,
   Sparkles,
   BookOpen,
 } from 'lucide-react'
 import type { FlashcardDeck, Topic } from '@/features/vocabulary/data/vocabulary.data'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { CustomSelect } from '@/components/custom.select'
+import { TableRowActions } from '@/components/table.row.actions'
 
 interface VocabularyDecksTabProps {
   decks: FlashcardDeck[]
@@ -100,6 +98,7 @@ export function VocabularyDecksTab({
     () => [
       {
         key: 'deck_info',
+        dataIndex: 'name_vi',
         title: 'Bộ thẻ',
         render: (deck) => {
           const isPublic = deck.visibility === 'PUBLIC' || deck.visibility === 'public'
@@ -184,39 +183,32 @@ export function VocabularyDecksTab({
         key: 'actions',
         title: 'Thao tác',
         width: '120px',
-        align: 'right',
+        align: 'center',
         sticky: 'right',
-        render: (deck) => (
-          <div className="flex items-center justify-end gap-1">
-            <button
-              type="button"
-              onClick={() => onManageCards(deck)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
-              title="Quản lý từ trong bộ thẻ"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onEditDeck(deck)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Chỉnh sửa thông tin bộ thẻ"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => handleDelete(e, deck)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-              title="Xóa bộ thẻ"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ),
+        render: (deck) => {
+          const id = deck.id || deck._id || ''
+          const deckName = deck.name_vi || deck.name || 'bộ thẻ này'
+          return (
+            <TableRowActions
+              onEdit={() => onEditDeck(deck)}
+              onDelete={() => onDeleteDeck(id)}
+              deleteTitle={`Xóa bộ thẻ "${deckName}"?`}
+              deleteDescription="Hành động này sẽ xóa toàn bộ thẻ flashcard bên trong và không thể hoàn tác."
+              extraActions={
+                <Tooltip title="Quản lý từ trong bộ thẻ">
+                  <Button
+                    size="small"
+                    icon={<BookOpen className="w-3.5 h-3.5" />}
+                    onClick={() => onManageCards(deck)}
+                  />
+                </Tooltip>
+              }
+            />
+          )
+        },
       },
     ],
-    [topics, onManageCards, onEditDeck, handleDelete]
+    [topics, onManageCards, onEditDeck, onDeleteDeck]
   )
 
   return (

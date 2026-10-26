@@ -1,9 +1,11 @@
-// Component cấu hình cột bảng dữ liệu danh sách khóa học cho Quản trị Admin
-import { BookOpen, Target, Layers, Users, Edit2, Trash2, Headphones, GraduationCap } from 'lucide-react'
+// Component cấu hình cột bảng dữ liệu danh sách khóa học cho Quản trị Admin.
+
+import { BookOpen, Target, Layers, Users, Headphones, GraduationCap } from 'lucide-react'
+import { Button, Tooltip } from 'antd'
 import type { Course } from '@/features/courses/data/courses.data'
 import { categoryLabels } from '@/features/courses/data/courses.data'
 import type { DataTableColumn } from '@/components/data.table'
-import { Popconfirm } from '@/components/popconfirm'
+import { TableRowActions } from '@/components/table.row.actions'
 import { getCategoryBadgeClass } from '@/features/courses/helpers/course.helper'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/media.utils'
@@ -185,6 +187,7 @@ export function getCourseColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      align: 'center',
       render: (course) => (
         <div className="whitespace-nowrap py-1">
           <span
@@ -207,63 +210,39 @@ export function getCourseColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
-      align: 'right',
+      align: 'center',
       render: (course) => (
-        <div className="flex items-center justify-end gap-1.5 py-1">
-          {onViewStudentScores && (
-            <button
-              onClick={() => onViewStudentScores(course)}
-              className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer shadow-2xs"
-              title={isVi ? 'Xem bảng điểm & tiến độ học viên' : 'View student scores & progress'}
-              type="button"
-            >
-              <GraduationCap className="w-4 h-4" />
-            </button>
-          )}
-          {onViewSubmissions && (
-            <button
-              onClick={() => onViewSubmissions(course)}
-              className="p-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer shadow-2xs"
-              title={isVi ? 'Xem bài nộp Speaking & Writing' : 'View submissions'}
-              type="button"
-            >
-              <Headphones className="w-4 h-4" />
-            </button>
-          )}
-          {canEdit && (
-            <button
-              onClick={() => onEdit(course.id)}
-              className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all cursor-pointer shadow-2xs"
-              title={isVi ? 'Chỉnh sửa khóa học' : 'Edit course'}
-              type="button"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title={isVi ? 'Xóa khóa học này?' : 'Delete this course?'}
-              description={
-                isVi
-                  ? 'Hành động này không thể hoàn tác.'
-                  : 'This action cannot be undone.'
-              }
-              okText={isVi ? 'Xóa' : 'Delete'}
-              cancelText={isVi ? 'Hủy' : 'Cancel'}
-              okType="danger"
-              placement="topRight"
-              onConfirm={() => onDelete(course.id)}
-            >
-              <button
-                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer shadow-2xs"
-                title={isVi ? 'Xóa khóa học' : 'Delete course'}
-                type="button"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </Popconfirm>
-          )}
-        </div>
+        <TableRowActions
+          isVi={isVi}
+          onEdit={canEdit ? () => onEdit(course.id) : undefined}
+          onDelete={canDelete ? () => onDelete(course.id) : undefined}
+          deleteTitle={isVi ? 'Xóa khóa học này?' : 'Delete this course?'}
+          deleteDescription={isVi ? 'Hành động này không thể hoàn tác.' : 'This action cannot be undone.'}
+          extraActions={
+            <>
+              {onViewStudentScores && (
+                <Tooltip title={isVi ? 'Xem bảng điểm & tiến độ học viên' : 'View student scores & progress'}>
+                  <Button
+                    size="small"
+                    icon={<GraduationCap size={14} />}
+                    onClick={() => onViewStudentScores(course)}
+                    className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                  />
+                </Tooltip>
+              )}
+              {onViewSubmissions && (
+                <Tooltip title={isVi ? 'Xem bài nộp Speaking & Writing' : 'View submissions'}>
+                  <Button
+                    size="small"
+                    icon={<Headphones size={14} />}
+                    onClick={() => onViewSubmissions(course)}
+                    className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                  />
+                </Tooltip>
+              )}
+            </>
+          }
+        />
       ),
     },
   ]

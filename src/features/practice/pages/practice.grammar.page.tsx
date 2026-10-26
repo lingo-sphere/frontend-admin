@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, ConfigProvider, Segmented, Space, Switch, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
+import { Alert, Button, Card, ConfigProvider, Segmented, Space, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
+import { CustomSwitch } from '@/components/custom.switch'
 import { BookOutlined, BulbOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
@@ -194,7 +195,7 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
   ]
 
   const sharedColumns: IpaColumn<GrammarRecord>[] = [
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><Switch size="small" aria-label={`Trạng thái ${row._id}`} checked={kind === 'topics' ? (row as GrammarTopic).status === 'ACTIVE' : (row as GrammarQuestion).status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void toggle(row, value) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{statuses.find(item => item.value === (kind === 'topics' ? (row as GrammarTopic).status : (row as GrammarQuestion).status))?.label}</span></div> },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><CustomSwitch size="sm" color="emerald" aria-label={`Trạng thái ${row._id}`} checked={kind === 'topics' ? (row as GrammarTopic).status === 'ACTIVE' : (row as GrammarQuestion).status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void toggle(row, value) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{statuses.find(item => item.value === (kind === 'topics' ? (row as GrammarTopic).status : (row as GrammarQuestion).status))?.label}</span></div> },
     { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', initiallyHidden: true, render: value => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
     { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: value => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
     { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, row) => <IpaRowActions onView={() => setEditor({ id: row._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: row._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(row)} trash={trash} loading={working === row._id} disabled={Boolean(working)} isVi={isVi} deleteTitle={trash ? (isVi ? 'Khôi phục bản ghi?' : 'Restore record?') : (isVi ? 'Chuyển vào thùng rác?' : 'Move to trash?')} deleteDescription={isVi ? 'Giữ lại lịch sử liên kết dữ liệu.' : 'Preserves linked attempt data.'} /> },
@@ -348,10 +349,13 @@ export function PracticeGrammarPage() {
           </p>
         </div>
 
-        {/* Main High-Level Tabs */}
         <Tabs
           activeKey={mainTab}
-          onChange={(key) => setMainTab(key as any)}
+          onChange={(key) => {
+            if (key === 'handbook' || key === 'toeic_tips' || key === 'practice_bank') {
+              setMainTab(key)
+            }
+          }}
           type="line"
           size="large"
           className="font-medium"

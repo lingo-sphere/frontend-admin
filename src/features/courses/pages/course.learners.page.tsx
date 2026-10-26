@@ -110,6 +110,12 @@ export function CourseLearnersPage() {
         const diff = growthA - growthB
         return progressSortOrder === 'asc' ? diff : -diff
       }
+      if (progressSortKey === 'schedule') {
+        const missedA = a.schedule?.consecutive_missed_sessions || 0
+        const missedB = b.schedule?.consecutive_missed_sessions || 0
+        const diff = missedA - missedB
+        return progressSortOrder === 'asc' ? diff : -diff
+      }
       return 0
     })
   }, [allStudentsProgress, progressSearch, progressStatusFilter, usersMap, progressSortKey, progressSortOrder])

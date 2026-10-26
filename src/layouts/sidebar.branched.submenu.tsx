@@ -15,10 +15,11 @@ interface SidebarBranchedSubmenuProps {
 
 const PAD = 4
 const ROW_HEIGHT = 34
-const INDENT = 38
+const INDENT = 36
 const TRUNK = 14
 const RADIUS = 8
 const LINE_WIDTH = 1.5
+const END_X = INDENT - 6
 
 const renderChildIcon = (icon?: React.ReactNode | IconSvgElement) => {
   if (!icon) return null
@@ -37,7 +38,7 @@ export function SidebarBranchedSubmenu({
   onNavigate,
 }: SidebarBranchedSubmenuProps) {
   const r = Math.min(RADIUS, ROW_HEIGHT / 2 - 2)
-  const endX = INDENT - 6
+  const endX = END_X
   const rowY = (k: number) => PAD + k * ROW_HEIGHT + ROW_HEIGHT / 2
   const branch = (k: number) => `M ${TRUNK} ${rowY(k) - r} A ${r} ${r} 0 0 0 ${TRUNK + r} ${rowY(k)} H ${endX}`
   const reach = (k: number) => `M ${TRUNK} 0 V ${rowY(k) - r} A ${r} ${r} 0 0 0 ${TRUNK + r} ${rowY(k)} H ${endX}`
@@ -98,10 +99,10 @@ export function SidebarBranchedSubmenu({
             to={navItemToPath(child.id)}
             onClick={() => onNavigate(child.id)}
             tabIndex={isExpanded ? 0 : -1}
-            className={`relative box-border flex w-full items-center gap-2 rounded-xl text-xs transition-colors duration-200 cursor-pointer ${
+            className={`group relative box-border flex w-full items-center gap-2 rounded-xl text-xs bg-transparent transition-colors duration-200 cursor-pointer ${
               isChildActive
-                ? 'text-blue-600 dark:text-blue-400 bg-blue-50/90 dark:bg-blue-950/50 font-bold shadow-2xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/40 font-medium'
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-medium'
             }`}
             style={{
               height: ROW_HEIGHT,
@@ -114,7 +115,7 @@ export function SidebarBranchedSubmenu({
                 className={`inline-flex shrink-0 transition-colors ${
                   isChildActive
                     ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                 }`}
                 aria-hidden="true"
               >

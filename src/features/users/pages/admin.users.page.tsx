@@ -46,14 +46,26 @@ export function AdminUsersPage() {
     if (!sortKey || !sortOrder) return list
 
     return [...list].sort((a, b) => {
-      if (sortKey === 'name') {
+      if (sortKey === 'user' || sortKey === 'name') {
         const comp = a.name.localeCompare(b.name)
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'role') {
+        const comp = a.role.localeCompare(b.role)
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'phone') {
+        const comp = (a.phone || '').localeCompare(b.phone || '')
         return sortOrder === 'asc' ? comp : -comp
       }
       if (sortKey === 'created_at') {
         const timeA = new Date(a.created_at).getTime()
         const timeB = new Date(b.created_at).getTime()
         return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      if (sortKey === 'status') {
+        const comp = Number(b.is_active) - Number(a.is_active)
+        return sortOrder === 'asc' ? comp : -comp
       }
       return 0
     })

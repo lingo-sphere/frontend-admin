@@ -1,19 +1,11 @@
-/**
- * @file vocabulary.table.columns.tsx
- * @description Component giao diện vocabulary-table-columns phục vụ khu vực Quản trị Admin
- */
+// Định nghĩa các cột hiển thị bảng từ vựng trong trang quản trị.
 
 import {
   Volume2,
-  Edit2,
-  Trash2,
   AudioLines,
   Hash,
-  Zap,
   Star,
-  BookMarked,
   Globe,
-  Eye,
 } from "lucide-react";
 import type { LexicalItem } from "@/features/vocabulary/data/vocabulary.data";
 import {
@@ -21,7 +13,7 @@ import {
   sourceLabels,
 } from "@/features/vocabulary/data/vocabulary.data";
 import type { DataTableColumn } from "@/components/data.table";
-import { Popconfirm } from "@/components/popconfirm";
+import { TableRowActions, renderTableDate } from "@/components/table.row.actions";
 import { playAudio } from "@/features/vocabulary/helpers/vocabulary.helper";
 
 interface GetVocabularyColumnsOptions {
@@ -123,9 +115,9 @@ export function getVocabularyColumns({
         );
       },
     },
-    // NOTE: word_type (Part of Speech) được hiển thị trong mỗi Meaning, không phải ở cấp LexicalItem
     {
       key: "cefr",
+      dataIndex: "cefr_level",
       title: isVi ? "CEFR" : "CEFR",
       width: "w-[70px]",
       sortable: true,
@@ -239,60 +231,25 @@ export function getVocabularyColumns({
     {
       key: "created_at",
       title: isVi ? "Ngày tạo" : "Created",
-      width: "w-[100px]",
+      width: "w-[110px]",
+      align: "center",
       sortable: true,
-      render: (w) => (
-        <span className="text-xs text-slate-500 dark:text-slate-400">
-          {w.created_at
-            ? new Date(w.created_at).toLocaleDateString(
-                isVi ? "vi-VN" : "en-US",
-                {
-                  day: "2-digit",
-                  month: "short",
-                  year: "2-digit",
-                }
-              )
-            : "—"}
-        </span>
-      ),
+      render: (w) => renderTableDate(w.created_at),
     },
     {
       key: "actions",
       title: isVi ? "Thao tác" : "Actions",
-      width: "w-[80px]",
-      align: "right",
+      width: "w-[100px]",
+      align: "center",
       render: (w) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => onEditWord(w.id)}
-            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title={isVi ? "Chỉnh sửa từ vựng" : "Edit vocabulary"}
-            type="button"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <Popconfirm
-            title={isVi ? "Xóa từ vựng này?" : "Delete this word?"}
-            description={
-              isVi
-                ? "Hành động này không thể hoàn tác."
-                : "This action cannot be undone."
-            }
-            okText={isVi ? "Xóa" : "Delete"}
-            cancelText={isVi ? "Hủy" : "Cancel"}
-            okType="danger"
-            placement="topRight"
-            onConfirm={() => onDeleteWord(w.id)}
-          >
-            <button
-              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-              title={isVi ? "Xóa từ vựng" : "Delete word"}
-              type="button"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </Popconfirm>
-        </div>
+        <TableRowActions
+          isVi={isVi}
+          onView={onViewDetail ? () => onViewDetail(w.id) : undefined}
+          onEdit={() => onEditWord(w.id)}
+          onDelete={() => onDeleteWord(w.id)}
+          deleteTitle={isVi ? "Xóa từ vựng này?" : "Delete this word?"}
+          deleteDescription={isVi ? "Hành động này không thể hoàn tác." : "This action cannot be undone."}
+        />
       ),
     },
   ];

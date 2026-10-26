@@ -38,23 +38,25 @@ import { ExamsPage } from '@/features/exams/pages/exams.page'
 import { PlacementTestsPage } from '@/features/exams/pages/placement.tests.page'
 import { ForbiddenPage, NotFoundPage } from '@/features/system/pages/status.result.page'
 
+import { ListTablePageSkeleton } from '@/components/skeleton'
+
 const ContextsPage = lazy(() => import('@/features/practice/pages/practice.contexts.page').then(module => ({ default: module.PracticeContextsPage })))
-function ContextsPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Ngữ cảnh...</div>}><ContextsPage /></Suspense> }
+function ContextsPageRoute() { return <Suspense fallback={<ListTablePageSkeleton />}><ContextsPage /></Suspense> }
 const IpaPage = lazy(() => import('@/features/practice/pages/practice.ipa.page').then(module => ({ default: module.PracticeIpaPage })))
 const ListeningPage = lazy(() => import('@/features/practice/pages/practice.listening.page').then(module => ({ default: module.PracticeListeningPage })))
 const GrammarPage = lazy(() => import('@/features/practice/pages/practice.grammar.page').then(module => ({ default: module.PracticeGrammarPage })))
-function GrammarPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Grammar...</div>}><GrammarPage /></Suspense> }
+function GrammarPageRoute() { return <Suspense fallback={<ListTablePageSkeleton />}><GrammarPage /></Suspense> }
 const ReadingPage = lazy(() => import('@/features/practice/pages/practice.reading.page').then(module => ({ default: module.PracticeReadingPage })))
-function ReadingPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Reading...</div>}><ReadingPage /></Suspense> }
+function ReadingPageRoute() { return <Suspense fallback={<ListTablePageSkeleton />}><ReadingPage /></Suspense> }
 const WritingPage = lazy(() => import('@/features/practice/pages/practice.writing.page').then(module => ({ default: module.PracticeWritingPage })))
-function WritingPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Writing...</div>}><WritingPage /></Suspense> }
+function WritingPageRoute() { return <Suspense fallback={<ListTablePageSkeleton />}><WritingPage /></Suspense> }
 const SpeakingPage = lazy(() => import('@/features/practice/pages/practice.speaking.page').then(module => ({ default: module.PracticeSpeakingPage })))
-function SpeakingPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Speaking...</div>}><SpeakingPage /></Suspense> }
+function SpeakingPageRoute() { return <Suspense fallback={<ListTablePageSkeleton />}><SpeakingPage /></Suspense> }
 function ListeningPageRoute() {
-  return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Listening...</div>}><ListeningPage /></Suspense>
+  return <Suspense fallback={<ListTablePageSkeleton />}><ListeningPage /></Suspense>
 }
 function IpaPageRoute() {
-  return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý IPA...</div>}><IpaPage /></Suspense>
+  return <Suspense fallback={<ListTablePageSkeleton />}><IpaPage /></Suspense>
 }
 
 const pageMap: Record<string, React.ComponentType> = {

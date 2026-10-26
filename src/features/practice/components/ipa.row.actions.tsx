@@ -1,7 +1,9 @@
 // Thành phần các nút thao tác icon thu gọn (Xem, Sửa, Xóa/Khôi phục) cho bảng dữ liệu Luyện tập.
 
-import { Button, Popconfirm, Space, Tooltip } from 'antd'
+import { useState } from 'react'
+import { Button, Space, Tooltip } from 'antd'
 import { Edit2, Eye, RotateCcw, Trash2 } from 'lucide-react'
+import { ActionPopconfirmButton } from '@/components/table.row.actions'
 
 interface IpaRowActionsProps {
   onView: () => void
@@ -26,6 +28,7 @@ export function IpaRowActions({
   deleteTitle,
   deleteDescription,
 }: IpaRowActionsProps) {
+  const [popOpen, setPopOpen] = useState(false)
   const defaultTitle = trash
     ? (isVi ? 'Khôi phục bài về nháp?' : 'Restore exercise to draft?')
     : (isVi ? 'Chuyển bài vào thùng rác?' : 'Move exercise to trash?')
@@ -33,7 +36,7 @@ export function IpaRowActions({
 
   return (
     <Space size={4}>
-      <Tooltip title={isVi ? 'Xem' : 'View'}>
+      <Tooltip title={popOpen ? '' : (isVi ? 'Xem' : 'View')} open={popOpen ? false : undefined}>
         <Button
           size="small"
           icon={<Eye size={14} />}
@@ -42,7 +45,7 @@ export function IpaRowActions({
         />
       </Tooltip>
       {!trash && onEdit && (
-        <Tooltip title={isVi ? 'Sửa' : 'Edit'}>
+        <Tooltip title={popOpen ? '' : (isVi ? 'Sửa' : 'Edit')} open={popOpen ? false : undefined}>
           <Button
             size="small"
             type="primary"
@@ -53,24 +56,22 @@ export function IpaRowActions({
         </Tooltip>
       )}
       {onDeleteOrRestore && (
-        <Popconfirm
+        <ActionPopconfirmButton
           title={deleteTitle || defaultTitle}
           description={deleteDescription || defaultDesc}
+          tooltipTitle={trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')}
           okText={trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')}
           cancelText={isVi ? 'Hủy' : 'Cancel'}
+          okType={trash ? 'primary' : 'danger'}
+          danger={!trash}
+          icon={trash ? <RotateCcw size={14} /> : <Trash2 size={14} />}
+          disabled={disabled}
+          loading={loading}
+          className={trash ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400' : undefined}
+          open={popOpen}
+          onOpenChange={setPopOpen}
           onConfirm={onDeleteOrRestore}
-        >
-          <Tooltip title={trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')}>
-            <Button
-              size="small"
-              danger={!trash}
-              icon={trash ? <RotateCcw size={14} /> : <Trash2 size={14} />}
-              disabled={disabled}
-              loading={loading}
-              className={trash ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400' : undefined}
-            />
-          </Tooltip>
-        </Popconfirm>
+        />
       )}
     </Space>
   )

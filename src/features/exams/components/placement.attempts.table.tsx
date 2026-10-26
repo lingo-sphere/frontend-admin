@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Search,
   RotateCcw,
-  Eye,
   Trophy,
   Headphones,
   BookOpen,
@@ -18,6 +17,7 @@ import type { PlacementAttemptItem } from '@/features/exams/services/exam.servic
 import { PlacementAttemptDetailModal } from '@/features/exams/components/placement.attempt.detail.modal'
 import { useDebounce } from '@/hooks/use.debounce'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 import { CustomSelect } from '@/components/custom.select'
 import { toast } from '@/store/toast.store'
 
@@ -69,7 +69,16 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       search: debouncedSearch.trim() || undefined,
       minScore,
       maxScore,
-      sortBy: sortKey === 'learner' ? 'user_id' : sortKey || undefined,
+      sortBy:
+        sortKey === 'learner'
+          ? 'user_id'
+          : sortKey === 'score'
+          ? 'total_score'
+          : sortKey === 'duration'
+          ? 'total_time_seconds'
+          : sortKey === 'accuracy'
+          ? 'correct_questions'
+          : sortKey || undefined,
       sortOrder: sortOrder || undefined,
     }
   }, [currentPage, pageSize, debouncedSearch, scoreBracket, sortKey, sortOrder])
@@ -85,18 +94,6 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
     const secs = seconds % 60
     if (mins === 0) return `${secs}s`
     return `${mins}p ${secs}s`
-  }
-
-  const formatDateTime = (dateStr?: string) => {
-    if (!dateStr) return '-'
-    const d = new Date(dateStr)
-    return d.toLocaleString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
   }
 
   const getScoreBadge = (score: number) => {
@@ -221,26 +218,20 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'submitted_at',
         title: 'Ngày nộp bài',
+        align: 'center',
         sortable: true,
-        render: (item) => (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {formatDateTime(item.submitted_at || item.created_at)}
-          </span>
-        ),
+        render: (item) => renderTableDate(item.submitted_at || item.created_at),
       },
       {
         key: 'actions',
         title: 'Thao tác',
-        align: 'right',
+        align: 'center',
         render: (item) => (
-          <button
-            type="button"
-            onClick={() => setSelectedAttemptId(item._id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-2xs"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Xem bài làm</span>
-          </button>
+          <TableRowActions
+            isVi={isVi}
+            onView={() => setSelectedAttemptId(item._id)}
+            viewTooltip={isVi ? 'Xem bài làm' : 'View attempt'}
+          />
         ),
       },
     ],
@@ -324,6 +315,13 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
           setSortKey(k)
           setSortOrder(o)
           setCurrentPage(1)
+        }}
+        pagination={{
+          currentPage,
+          pageSize,
+          totalItems: data?.meta?.total || 0,
+          onPageChange: (p: number) => setCurrentPage(p),
+          onPageSizeChange: (s: number) => setPageSize(s),
         }}
         onResetFilters={async () => {
           setSearchTerm('')

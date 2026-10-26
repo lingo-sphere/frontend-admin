@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Segmented, Space, Switch, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Segmented, Space, Tabs, Tag, theme as antdTheme } from 'antd'
+import { CustomSwitch } from '@/components/custom.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
@@ -83,7 +84,7 @@ function SymbolsTable() {
     { key: 'related_symbols', label: isVi ? 'Âm liên quan' : 'Related Symbols', width: 120, filterKind: 'text', initiallyHidden: true, render: values => ((values || []) as string[]).map(value => `/${value}/`).join(', ') },
     { key: 'cefr_min_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },
     ...ipaAudioFields.map((field, index): IpaColumn<IpaSymbolRecord> => ({ key: field, label: isVi ? audioLabelsVi[index] : audioLabelsEn[index], width: 155, filterKind: 'media', render: value => audio(value), initiallyHidden: index !== 0 })),
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: symbolStatuses, render: (_, record) => <Switch size="small" checked={record.status === 'ACTIVE'} checkedChildren={isVi ? "Hoạt động" : "Active"} unCheckedChildren={isVi ? "Tạm ẩn" : "Inactive"} loading={working === record.id} disabled={Boolean(working)} onChange={active => { void toggle(record, active) }} /> },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: symbolStatuses, render: (_, record) => <CustomSwitch size="sm" color="emerald" checked={record.status === 'ACTIVE'} loading={working === record.id} disabled={Boolean(working)} onChange={active => { void toggle(record, active) }} /> },
     { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
     { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
     { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, record) => <IpaRowActions onView={() => setEditor({ id: record.id, readOnly: true })} onEdit={() => setEditor({ id: record.id, readOnly: false })} isVi={isVi} /> },
@@ -173,7 +174,7 @@ function ExercisesTable() {
     { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 120, filterOptions: contextOptions, filterKind: 'enum', render: value => contextOptions.find(item => item.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     { key: 'cefr_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },
     { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 65, filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(item => item.value === value)?.label || value },
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: exerciseStatuses, render: (_, record) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><Switch size="small" checked={record.status === 'PUBLISHED'} loading={working === record._id} disabled={Boolean(working)} onChange={checked => { void toggle(record, checked) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{exerciseStatuses.find(item => item.value === record.status)?.label}</span></div> },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: exerciseStatuses, render: (_, record) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><CustomSwitch size="sm" color="emerald" checked={record.status === 'PUBLISHED'} loading={working === record._id} disabled={Boolean(working)} onChange={checked => { void toggle(record, checked) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{exerciseStatuses.find(item => item.value === record.status)?.label}</span></div> },
     { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
     { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
     { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, record) => <IpaRowActions onView={() => setEditor({ id: record._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: record._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(record)} trash={trash} loading={working === record._id} disabled={Boolean(working)} isVi={isVi} deleteTitle={trash ? (isVi ? 'Khôi phục bài tập về nháp?' : 'Restore exercise to draft?') : (isVi ? 'Chuyển bài tập vào thùng rác?' : 'Move exercise to trash?')} /> },

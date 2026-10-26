@@ -180,96 +180,98 @@ export function LearnerExamHistorySection({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-4">Bài thi</th>
-                  <th className="py-3 px-4">Loại đề</th>
-                  <th className="py-3 px-4">Điểm TOEIC</th>
-                  <th className="py-3 px-4">Kỹ năng (L / R)</th>
-                  <th className="py-3 px-4">Độ chính xác</th>
-                  <th className="py-3 px-4">Thời gian</th>
-                  <th className="py-3 px-4">Ngày nộp</th>
-                  <th className="py-3 px-4 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                {attempts.map((att) => {
-                  const isPlacement = att.attempt_type === 'PLACEMENT' || att.exam_type === 'DIAGNOSTIC_TEST'
-                  const badge = getScoreBand(att.total_scaled_score)
-                  return (
-                    <tr key={att._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <p className="font-semibold text-slate-900 dark:text-slate-100">
-                          {att.exam_title || 'Đề thi TOEIC'}
-                        </p>
-                        <span className="text-[10px] text-slate-400">{att.exam_code}</span>
-                      </td>
+          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-700 dark:text-slate-200 font-bold text-[13px] tracking-wide">
+                    <th className="py-3 px-4 text-center">Bài thi</th>
+                    <th className="py-3 px-4 text-center">Loại đề</th>
+                    <th className="py-3 px-4 text-center">Điểm TOEIC</th>
+                    <th className="py-3 px-4 text-center">Kỹ năng (L / R)</th>
+                    <th className="py-3 px-4 text-center">Độ chính xác</th>
+                    <th className="py-3 px-4 text-center">Thời gian</th>
+                    <th className="py-3 px-4 text-center">Ngày nộp</th>
+                    <th className="py-3 px-4 text-center">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                  {attempts.map((att) => {
+                    const isPlacement = att.attempt_type === 'PLACEMENT' || att.exam_type === 'DIAGNOSTIC_TEST'
+                    const badge = getScoreBand(att.total_scaled_score)
+                    return (
+                      <tr key={att._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3 px-4">
+                          <p className="font-semibold text-slate-900 dark:text-slate-100">
+                            {att.exam_title || 'Đề thi TOEIC'}
+                          </p>
+                          <span className="text-[10px] text-slate-400">{att.exam_code}</span>
+                        </td>
 
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                            isPlacement
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                          }`}
-                        >
-                          {isPlacement ? <Sparkles className="w-3 h-3" /> : null}
-                          <span>{isPlacement ? 'Test đầu vào' : 'Luyện đề Full'}</span>
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-sm text-slate-900 dark:text-slate-100">
-                            {att.total_scaled_score}
+                        <td className="py-3 px-4 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              isPlacement
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                            }`}
+                          >
+                            {isPlacement ? <Sparkles className="w-3 h-3" /> : null}
+                            <span>{isPlacement ? 'Test đầu vào' : 'Luyện đề Full'}</span>
                           </span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.color}`}>
-                            {badge.text}
-                          </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
-                        <span className="font-semibold text-blue-600 dark:text-blue-400">{att.listening_scaled_score}</span>
-                        <span className="mx-1 text-slate-300">/</span>
-                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">{att.reading_scaled_score}</span>
-                      </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="font-black text-sm text-slate-900 dark:text-slate-100">
+                              {att.total_scaled_score}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.color}`}>
+                              {badge.text}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{att.correct_questions}/{att.total_questions}</span>
-                        </div>
-                      </td>
+                        <td className="py-3 px-4 text-center text-slate-600 dark:text-slate-400">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">{att.listening_scaled_score}</span>
+                          <span className="mx-1 text-slate-300">/</span>
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400">{att.reading_scaled_score}</span>
+                        </td>
 
-                      <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{formatDuration(att.total_time_seconds)}</span>
-                        </div>
-                      </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{att.correct_questions}/{att.total_questions}</span>
+                          </div>
+                        </td>
 
-                      <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                        {formatDateTime(att.submitted_at || att.created_at)}
-                      </td>
+                        <td className="py-3 px-4 text-center text-slate-500 dark:text-slate-400">
+                          <div className="flex items-center justify-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{formatDuration(att.total_time_seconds)}</span>
+                          </div>
+                        </td>
 
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedAttemptId(att._id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Chi tiết</span>
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        <td className="py-3 px-4 text-center text-slate-500 dark:text-slate-400">
+                          {formatDateTime(att.submitted_at || att.created_at)}
+                        </td>
+
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedAttemptId(att._id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Chi tiết</span>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

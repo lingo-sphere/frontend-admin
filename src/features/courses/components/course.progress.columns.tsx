@@ -1,4 +1,5 @@
 // Định nghĩa các cột hiển thị bảng tiến độ học viên, lịch học và email nhắc nhở trong trang quản trị.
+import { Button, Space, Tooltip } from 'antd'
 import { BookOpen, TrendingUp, BarChart3, Mail, Clock, ShieldAlert, AlertTriangle } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
 import type { StudentProgressItem } from '@/features/progress/services/progress.service'
@@ -249,30 +250,26 @@ export function createCourseProgressColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
-      align: 'right',
-      width: '85px',
+      align: 'center',
+      width: '90px',
       sticky: 'right',
       render: (st) => (
-        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-          <button
-            type="button"
-            onClick={() => onSelectReminderHistory(st)}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 transition-colors cursor-pointer shrink-0"
-            title={isVi ? 'Xem lịch học và lịch sử gửi email nhắc nhở' : 'View schedule and reminder email history'}
-            aria-label={isVi ? 'Lịch & Email' : 'Schedule & Reminders'}
-          >
-            <Mail className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelectStudentDetail(st)}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
-            title={isVi ? 'Xem chi tiết tiến độ các chương và bài thi' : 'View detailed chapter progress and test results'}
-            aria-label={isVi ? 'Tiến độ' : 'Progress details'}
-          >
-            <BarChart3 className="w-4 h-4" />
-          </button>
-        </div>
+        <Space size={4}>
+          <Tooltip title={isVi ? 'Xem lịch học và lịch sử gửi email nhắc nhở' : 'View schedule and reminder email history'}>
+            <Button
+              size="small"
+              icon={<Mail className="w-3.5 h-3.5" />}
+              onClick={() => onSelectReminderHistory(st)}
+            />
+          </Tooltip>
+          <Tooltip title={isVi ? 'Xem chi tiết tiến độ các chương và bài thi' : 'View detailed chapter progress and test results'}>
+            <Button
+              size="small"
+              icon={<BarChart3 className="w-3.5 h-3.5" />}
+              onClick={() => onSelectStudentDetail(st)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ]

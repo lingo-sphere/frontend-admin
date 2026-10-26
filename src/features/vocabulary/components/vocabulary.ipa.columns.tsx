@@ -1,12 +1,10 @@
-/**
- * @file vocabulary.ipa.columns.tsx
- * @description Columns cho bảng IPA symbols dùng chung DataTable
- */
+// Định nghĩa các cột hiển thị cho DataTable quản lý ký hiệu ngữ âm IPA.
 
-import { Volume2, Edit2, Headphones, Tag } from "lucide-react";
+import { Volume2 } from "lucide-react";
 import type { IpaSymbol } from "@/features/vocabulary/data/vocabulary.data";
 import { ipaSymbolTypeLabels } from "@/features/vocabulary/data/vocabulary.data";
 import type { DataTableColumn } from "@/components/data.table";
+import { TableRowActions } from "@/components/table.row.actions";
 import { playIpaAudio } from "@/features/vocabulary/helpers/ipa.helper";
 
 interface GetIpaColumnsOptions {
@@ -172,6 +170,7 @@ export function getIpaColumns({
       key: "status",
       title: isVi ? "Trạng thái" : "Status",
       width: "w-[110px]",
+      align: "center",
       render: (s) => (
         <span
           className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
@@ -191,33 +190,15 @@ export function getIpaColumns({
     {
       key: "actions",
       title: isVi ? "Thao tác" : "Actions",
-      width: "w-[90px]",
-      align: "right",
+      width: "90px",
+      align: "center",
       render: (s) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewSymbol(s);
-            }}
-            className="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/20 transition-colors cursor-pointer"
-            title={isVi ? "Xem chi tiết" : "View detail"}
-            type="button"
-          >
-            <Headphones className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditSymbol(s);
-            }}
-            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title={isVi ? "Chỉnh sửa" : "Edit"}
-            type="button"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <TableRowActions
+          onView={() => onViewSymbol(s)}
+          viewTitle={isVi ? "Xem chi tiết" : "View detail"}
+          onEdit={() => onEditSymbol(s)}
+          editTitle={isVi ? "Chỉnh sửa" : "Edit"}
+        />
       ),
     },
   ];

@@ -5,13 +5,13 @@ import {
   Sparkles,
   Volume2,
   FileText,
-  Edit3,
   CheckCircle2,
   Clock,
 } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
 import type { SkillSubmissionItem } from '@/features/progress/services/progress.service'
 import { resolveMediaUrl } from '@/features/media/utils/media.utils'
+import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 
 interface CreateLearnerSubmissionsColumnsParams {
   isVi: boolean
@@ -28,15 +28,12 @@ export function createLearnerSubmissionsColumns({
       title: isVi ? 'Học Viên' : 'Student',
       sortable: true,
       render: (sub) => (
-        <div className="space-y-0.5 min-w-[150px]">
+        <div className="space-y-0.5 min-w-[140px]">
           <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
             {sub.user_name}
           </div>
           <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
             {sub.user_email}
-          </div>
-          <div className="text-[10px] text-slate-400">
-            {sub.created_at ? new Date(sub.created_at).toLocaleDateString('vi-VN') : 'Mới nộp'}
           </div>
         </div>
       ),
@@ -151,20 +148,25 @@ export function createLearnerSubmissionsColumns({
       },
     },
     {
+      key: 'created_at',
+      title: isVi ? 'Thời Gian Nộp' : 'Submitted At',
+      align: 'center',
+      width: '130px',
+      sortable: true,
+      render: (sub) => renderTableDate(sub.created_at),
+    },
+    {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Action',
-      align: 'right',
+      width: '90px',
+      align: 'center',
       render: (sub) => {
         const isReviewed = sub.is_teacher_reviewed || sub.status === 'TEACHER_REVIEWED'
         return (
-          <button
-            type="button"
-            onClick={() => onOpenReview(sub)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer whitespace-nowrap ml-auto"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>{isReviewed ? (isVi ? 'Sửa điểm' : 'Edit') : (isVi ? 'Chấm bài' : 'Grade')}</span>
-          </button>
+          <TableRowActions
+            onEdit={() => onOpenReview(sub)}
+            editTitle={isReviewed ? (isVi ? 'Sửa điểm' : 'Edit') : (isVi ? 'Chấm bài' : 'Grade')}
+          />
         )
       },
     },

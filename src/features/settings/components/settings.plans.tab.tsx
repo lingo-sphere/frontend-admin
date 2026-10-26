@@ -1,7 +1,4 @@
-/**
- * @file settings.plans.tab.tsx
- * @description Component giao diện SettingsPlansTab phục vụ khu vực Quản trị Admin, hỗ trợ đầy đủ giao diện sáng và tối
- */
+// Tab hiển thị và quản lý các gói cước dịch vụ và thuê bao VIP.
 
 import { useState } from 'react'
 import { Crown, Star, Check, Edit3, Sparkles } from 'lucide-react'
@@ -45,7 +42,7 @@ export function SettingsPlansTab({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <span>{isVietnamese ? 'Quản lý gói dịch vụ' : 'Subscription Plans'}</span>
+            <span>{isVietnamese ? 'Danh sách gói dịch vụ' : 'Active Subscription Plans'}</span>
             <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[11px] font-mono font-bold">
               {paidPlans.length} {isVietnamese ? 'gói VIP' : 'VIP plans'}
             </span>
