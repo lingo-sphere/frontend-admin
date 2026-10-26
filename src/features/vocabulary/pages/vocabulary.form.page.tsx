@@ -33,6 +33,7 @@ export function VocabularyFormPage({
     stress_pattern: '',
     frequency_rank: 0,
     source: 'curated',
+    topic_ids: [],
   })
 
   const [meanings, setMeanings] = useState<Meaning[]>([
@@ -64,6 +65,7 @@ export function VocabularyFormPage({
               stress_pattern: data.stress_pattern || '',
               frequency_rank: data.frequency_rank || 0,
               source: data.source || 'curated',
+              topic_ids: data.topic_ids || [],
             })
             if (data.meanings && data.meanings.length > 0) {
               setMeanings(
@@ -169,6 +171,7 @@ export function VocabularyFormPage({
           frequency_rank: basicData.frequency_rank,
           source: basicData.source,
           meanings: formattedMeanings,
+          topic_ids: basicData.topic_ids || [],
         })
       } else {
         await vocabularyService.createLexicalItem({
@@ -183,6 +186,7 @@ export function VocabularyFormPage({
           frequency_rank: basicData.frequency_rank,
           source: basicData.source,
           meanings: formattedMeanings,
+          topic_ids: basicData.topic_ids || [],
         })
       }
 

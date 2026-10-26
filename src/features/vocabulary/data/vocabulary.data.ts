@@ -23,6 +23,7 @@ export interface LexicalItem {
   is_active?: boolean
   is_verified?: boolean
   source?: string
+  primary_meaning_vi?: string
   meanings_count?: number
   examples_count?: number
   // Optional detailed meanings (từ detail API)
@@ -35,6 +36,15 @@ export interface LexicalItem {
     examples?: Array<{ sentence_en: string; sentence_vi?: string }>
     synonyms?: string[]
     antonyms?: string[]
+    is_primary?: boolean
+  }>
+  topic_ids?: string[]
+  topics?: Array<{
+    id?: string
+    _id?: string
+    name_en?: string
+    name_vi?: string
+    slug?: string
     is_primary?: boolean
   }>
   created_at?: string
@@ -56,13 +66,19 @@ export const sourceLabels: Record<string, { vi: string; en: string }> = {
 
 export interface Topic {
   id: string
+  _id?: string
   name_en?: string
   name_vi?: string
   slug?: string
   description?: string
+  description_en?: string
+  description_vi?: string
   icon?: string
+  icon_url?: string
   cefr_level?: string
   lexical_count?: number
+  deck_count?: number
+  display_order?: number
   is_featured?: boolean
   status?: string
   created_at?: string
@@ -76,7 +92,9 @@ export interface FlashcardDeck {
   name_en?: string
   name_vi?: string
   description?: string
+  description_vi?: string
   creator_name?: string
+  topic_id?: string
   topic_name?: string
   cefr_level?: string
   card_count?: number
@@ -89,7 +107,23 @@ export interface FlashcardDeck {
   visibility?: string
   is_featured?: boolean
   is_premium?: boolean
+  cards?: FlashcardItem[]
   created_at?: string
+}
+
+export interface FlashcardItem {
+  id?: string
+  _id?: string
+  lexical_item_id?: string
+  front_text?: string
+  back_text?: string
+  ipa?: string
+  part_of_speech?: string
+  audio_url?: string
+  definition?: string
+  definition_vi?: string
+  example?: string
+  example_vi?: string
 }
 
 export interface IpaSymbol {

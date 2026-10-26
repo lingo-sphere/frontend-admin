@@ -103,10 +103,15 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return hasModulePermission('VOCABULARY')
         case 'practice':
         case 'practice-exercises':
-        case 'practice-listening':
-        case 'practice-speaking':
-        case 'practice-writing':
           return hasModulePermission('PRACTICE')
+        case 'practice-grammar':
+        case 'practice-reading':
+        case 'practice-writing':
+        case 'practice-ipa':
+        case 'practice-speaking':
+        case 'practice-listening':
+        case 'practice-contexts':
+          return false // IPA management endpoints are restricted to ADMIN.
         case 'toeic-tests':
         case 'placement-tests':
           return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE')

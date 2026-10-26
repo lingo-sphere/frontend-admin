@@ -53,8 +53,8 @@ export const vocabularyService = {
     )
   },
 
-  async listVocabulary(params?: SearchVocabParams & { page?: number; limit?: number }): Promise<LexicalItem[]> {
-    return api.get<LexicalItem[]>(
+  async listVocabulary(params?: SearchVocabParams & { page?: number; limit?: number }): Promise<LexicalItem[] | { items: LexicalItem[]; total?: number; page?: number; limit?: number; total_pages?: number; next_cursor?: string | null }> {
+    return api.get(
       API_CONFIG.ENDPOINTS.VOCABULARY.LIST,
       params as Record<string, unknown>
     )
@@ -146,6 +146,18 @@ export const vocabularyService = {
     )
   },
 
+  async updateTopic(id: string, payload: Partial<Topic>): Promise<Topic> {
+    return api.put<Topic>(
+      API_CONFIG.ENDPOINTS.VOCABULARY.TOPIC_BY_ID(id),
+      payload,
+      TopicSchema
+    )
+  },
+
+  async deleteTopic(id: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.VOCABULARY.TOPIC_BY_ID(id))
+  },
+
   async getAllIpaSymbols(symbolType?: string): Promise<IpaSymbol[]> {
     return api.get<IpaSymbol[]>(
       API_CONFIG.ENDPOINTS.VOCABULARY.IPA_SYMBOLS,
@@ -232,7 +244,23 @@ export const vocabularyService = {
     )
   },
 
+  async updateFlashcardDeck(id: string, payload: Partial<FlashcardDeck>): Promise<FlashcardDeck> {
+    return api.put<FlashcardDeck>(
+      API_CONFIG.ENDPOINTS.VOCABULARY.DECK_BY_ID(id),
+      payload,
+      FlashcardDeckSchema
+    )
+  },
+
+  async deleteFlashcardDeck(id: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.VOCABULARY.DECK_BY_ID(id))
+  },
+
   async addCardToDeck(deckId: string, payload: Record<string, unknown>): Promise<{ message: string }> {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.VOCABULARY.ADD_CARD(deckId), payload)
+  },
+
+  async removeCardFromDeck(deckId: string, cardId: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(API_CONFIG.ENDPOINTS.VOCABULARY.REMOVE_CARD(deckId, cardId))
   },
 }

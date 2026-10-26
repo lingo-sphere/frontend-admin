@@ -53,10 +53,14 @@ export function navItemToPath(navItem: string): string {
     return `/vocabulary/${id}/edit`
   }
   if (navItem === 'vocabulary-import') return '/vocabulary/import'
-  if (navItem === 'practice' || navItem === 'practice-exercises') return '/practice'
+  if (navItem === 'practice-contexts') return '/practice/contexts'
+  if (navItem === 'practice' || navItem === 'practice-exercises') return '/practice/listening'
   if (navItem === 'practice-listening') return '/practice/listening'
   if (navItem === 'practice-speaking') return '/practice/speaking'
+  if (navItem === 'practice-grammar') return '/practice/grammar'
+  if (navItem === 'practice-reading') return '/practice/reading'
   if (navItem === 'practice-writing') return '/practice/writing'
+  if (navItem === 'practice-ipa') return '/practice/ipa'
   if (navItem === 'toeic-tests') return '/practice/exams'
   if (navItem === 'toeic-exam-create') return '/practice/exams/create'
   if (navItem.startsWith('toeic-exam-questions:')) {
@@ -146,10 +150,14 @@ export function pathToNavItem(pathname: string): string {
     return `vocab-edit:${id}`
   }
   if (cleanPath === '/vocabulary/import') return 'vocabulary-import'
-  if (cleanPath === '/practice' || cleanPath === '/practice/exercises') return 'practice-exercises'
+  if (cleanPath === '/practice/contexts') return 'practice-contexts'
+  if (cleanPath === '/practice' || cleanPath === '/practice/exercises') return 'practice-listening'
   if (cleanPath === '/practice/listening') return 'practice-listening'
   if (cleanPath === '/practice/speaking') return 'practice-speaking'
+  if (cleanPath === '/practice/grammar') return 'practice-grammar'
+  if (cleanPath === '/practice/reading') return 'practice-reading'
   if (cleanPath === '/practice/writing') return 'practice-writing'
+  if (cleanPath === '/practice/ipa') return 'practice-ipa'
   if (cleanPath === '/practice/exams') return 'toeic-tests'
   if (cleanPath === '/practice/exams/create') return 'toeic-exam-create'
   if (cleanPath.startsWith('/practice/exams/') && cleanPath.endsWith('/questions')) {
