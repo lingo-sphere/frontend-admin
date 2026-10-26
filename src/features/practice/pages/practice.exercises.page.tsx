@@ -16,12 +16,12 @@ export function PracticeExercisesPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const { data: serverSets = [], isLoading, refetch } = usePracticeSetsQuery()
+  const { data: serverSets = [], isLoading: _isLoading, refetch } = usePracticeSetsQuery()
   const [localSets, setLocalSets] = useState<PracticeSet[] | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(9)
+  const [pageSize, setPageSize] = useState(10)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [newTitle, setNewTitle] = useState('')
@@ -178,8 +178,9 @@ export function PracticeExercisesPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           pageSize={pageSize}
-          pageSizeOptions={[6, 9, 18, 36]}
+          pageSizeOptions={[10, 20, 50, 100]}
           totalItems={filteredSets.length}
+          showTotal={true}
           onPageChange={setCurrentPage}
           onPageSizeChange={(size) => {
             setPageSize(size)

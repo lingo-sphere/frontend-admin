@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, Volume2, Loader2, BookOpen, MessageSquare, CheckCircle, Edit2 } from 'lucide-react'
+import { X, Volume2, Loader2, BookOpen, MessageSquare, CheckCircle, Edit2, Folder, Star } from 'lucide-react'
 import { playAudio } from '@/features/vocabulary/helpers/vocabulary.helper'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 
@@ -34,6 +34,15 @@ interface VocabularyDetail {
   meanings?: Meaning[]
   meanings_count?: number
   examples_count?: number
+  topic_ids?: string[]
+  topics?: Array<{
+    id?: string
+    _id?: string
+    name_en?: string
+    name_vi?: string
+    slug?: string
+    is_primary?: boolean
+  }>
   created_at?: string
   updated_at?: string
 }
@@ -109,7 +118,7 @@ export function VocabularyDetailModal({
 
     try {
       const res = await vocabularyService.getLexicalItemById(vocabularyId)
-      const data = (res as any)?.data || res
+      const data = res as unknown as VocabularyDetail
       setVocabulary(data)
     } catch (err) {
       console.error('[VocabularyDetailModal] Error:', err)
@@ -252,6 +261,31 @@ export function VocabularyDetailModal({
                       <span>{isVi ? 'Tạo:' : 'Created:'} {formatDate(vocabulary.created_at)}</span>
                     )}
                   </div>
+
+                  {vocabulary.topics && vocabulary.topics.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <span className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">
+                        <Folder className="w-3.5 h-3.5 text-indigo-500" />
+                        {isVi ? 'Chủ đề:' : 'Topics:'}
+                      </span>
+                      {vocabulary.topics.map((t, idx) => {
+                        const isPrimary = t.is_primary ?? (idx === 0)
+                        return (
+                          <span
+                            key={t.id || t._id || idx}
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium ${
+                              isPrimary
+                                ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {isPrimary && <Star className="w-3 h-3 fill-amber-400 text-amber-400" />}
+                            <span>{isVi ? t.name_vi || t.name_en : t.name_en || t.name_vi}</span>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {onEdit && (

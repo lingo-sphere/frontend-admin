@@ -11,12 +11,47 @@ import type { PracticeSet, PracticeQuestion, ListeningExercise, SpeakingExercise
 export interface PracticeContext {
   _id: string
   name: string
-  name_vi: string
+  name_en?: string
+  name_vi?: string
+  description?: string
+  description_vi?: string
   code: string
   level: number
   parent_id?: string
   domains?: string[]
+  cefr_level?: string
+  target_level?: string
+  tags?: string[]
+  icon?: string
+  is_selectable?: boolean
+  sort_order?: number
+  status?: string
+  path?: string[]
+  path_string?: string
+  total_questions?: number
+  total_exercises?: number
+  created_at?: string
+  updated_at?: string
 }
+
+export interface CreatePracticeContextPayload {
+  code?: string
+  name_en: string
+  name_vi?: string
+  description?: string
+  description_vi?: string
+  parent_id?: string
+  domains?: string[]
+  cefr_level?: string
+  target_level?: string
+  tags?: string[]
+  icon?: string
+  is_selectable?: boolean
+  sort_order?: number
+  status?: string
+}
+
+export type UpdatePracticeContextPayload = Partial<CreatePracticeContextPayload>
 
 export const practiceService = {
 
@@ -81,11 +116,37 @@ export const practiceService = {
   },
 
   // Practice Context taxonomy
-  async getContexts(): Promise<PracticeContext[]> {
-    return api.get<PracticeContext[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS)
+  async getContexts(params?: { status?: string; include_disabled?: boolean; level?: number; parent_id?: string }): Promise<PracticeContext[]> {
+    const query = new URLSearchParams()
+    if (params?.status) query.append('status', params.status)
+    if (params?.include_disabled) query.append('include_disabled', 'true')
+    if (params?.level !== undefined) query.append('level', String(params.level))
+    if (params?.parent_id) query.append('parent_id', params.parent_id)
+    const qs = query.toString()
+    return api.get<PracticeContext[]>(`${API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS}${qs ? '?' + qs : ''}`)
   },
 
   async getContextsByLevel(level: number): Promise<PracticeContext[]> {
     return api.get<PracticeContext[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_BY_LEVEL(level))
+  },
+
+  async getContextTree(): Promise<any[]> {
+    return api.get<any[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_TREE)
+  },
+
+  async createContext(payload: CreatePracticeContextPayload): Promise<PracticeContext> {
+    return api.post<PracticeContext>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS, payload)
+  },
+
+  async updateContext(id: string, payload: UpdatePracticeContextPayload): Promise<PracticeContext> {
+    return api.put<PracticeContext>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXT_BY_ID(id), payload)
+  },
+
+  async deleteContext(id: string): Promise<{ message: string; id: string }> {
+    return api.delete<{ message: string; id: string }>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXT_BY_ID(id))
+  },
+
+  async reorderContexts(items: { id: string; sort_order: number }[]): Promise<{ success: boolean; count: number }> {
+    return api.put<{ success: boolean; count: number }>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_REORDER, { items })
   },
 }

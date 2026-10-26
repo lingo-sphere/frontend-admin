@@ -1,17 +1,20 @@
 // Trang quản trị kho từ vựng và bộ thẻ trong giao diện Admin.
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet, Volume2 } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { DataTable } from '@/components/data.table'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
-import type { LexicalItem, IpaSymbol } from '@/features/vocabulary/data/vocabulary.data'
+import type { LexicalItem, IpaSymbol, Topic, FlashcardDeck } from '@/features/vocabulary/data/vocabulary.data'
 import { VocabularyFilterBar } from '@/features/vocabulary/components/vocabulary.filter.bar'
 import { VocabularyTopicsTab } from '@/features/vocabulary/components/vocabulary.topics.tab'
 import { VocabularyDecksTab } from '@/features/vocabulary/components/vocabulary.decks.tab'
 import { VocabularyIpaTab } from '@/features/vocabulary/components/vocabulary.ipa.tab'
 import { VocabularyDetailModal } from '@/features/vocabulary/components/vocabulary.detail.modal'
+import { TopicFormModal } from '@/features/vocabulary/components/topic.form.modal'
+import { DeckFormModal } from '@/features/vocabulary/components/deck.form.modal'
+import { DeckCardsManagerModal } from '@/features/vocabulary/components/deck.cards.manager.modal'
 import { getVocabularyColumns } from '@/features/vocabulary/components/vocabulary.table.columns'
 import {
   useVocabularyWordsQuery,
@@ -19,6 +22,8 @@ import {
   useVocabularyDecksQuery,
   useVocabularyIpaSymbolsQuery,
   useDeleteWordMutation,
+  useDeleteTopicMutation,
+  useDeleteDeckMutation,
 } from '@/features/vocabulary/hooks/use.vocabulary.admin.query'
 
 type VocabularyTabType = 'words' | 'topics' | 'decks' | 'ipa'
@@ -34,8 +39,22 @@ export function VocabularyPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
 
-  // Modal state
+  // Modals state
   const [detailModalId, setDetailModalId] = useState<string | null>(null)
+
+  // Topic modals state
+  const [isTopicModalOpen, setIsTopicModalOpen] = useState(false)
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null)
+
+  // Deck modals state
+  const [isDeckModalOpen, setIsDeckModalOpen] = useState(false)
+  const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null)
+  const [initialDeckTopicId, setInitialDeckTopicId] = useState<string | undefined>(undefined)
+  const [selectedTopicIdForDecks, setSelectedTopicIdForDecks] = useState<string>('ALL')
+
+  // Cards Manager modal state
+  const [isCardsManagerOpen, setIsCardsManagerOpen] = useState(false)
+  const [selectedDeckForCards, setSelectedDeckForCards] = useState<FlashcardDeck | null>(null)
 
   // Server-side query với params
   const { data: wordsResponse, isLoading: isWordsLoading, refetch: refetchWords } = useVocabularyWordsQuery({
@@ -48,7 +67,10 @@ export function VocabularyPage() {
   const { data: topics = [], isLoading: isTopicsLoading, refetch: refetchTopics } = useVocabularyTopicsQuery()
   const { data: decks = [], isLoading: isDecksLoading, refetch: refetchDecks } = useVocabularyDecksQuery()
   const { data: ipaSymbols = [], isLoading: isIpaLoading, refetch: refetchIpa } = useVocabularyIpaSymbolsQuery()
+
   const { mutateAsync: deleteWordMutate } = useDeleteWordMutation()
+  const { mutateAsync: deleteTopicMutate } = useDeleteTopicMutation()
+  const { mutateAsync: deleteDeckMutate } = useDeleteDeckMutation()
 
   const isLoading = isWordsLoading || isTopicsLoading || isDecksLoading || isIpaLoading
 
@@ -63,13 +85,66 @@ export function VocabularyPage() {
     toast.info(isVi ? 'Vào chi tiết IPA để chỉnh sửa mô tả.' : 'Open IPA detail to edit description.')
   }
 
-  const handleDeleteWord = async (wordId: string) => {
+  const handleDeleteWord = useCallback(async (wordId: string) => {
     try {
       await deleteWordMutate(wordId)
       toast.success('Đã xóa từ vựng thành công!')
     } catch {
       toast.error('Xóa từ vựng thất bại')
     }
+  }, [deleteWordMutate])
+
+  // Topic handlers
+  const handleCreateTopic = () => {
+    setEditingTopic(null)
+    setIsTopicModalOpen(true)
+  }
+
+  const handleEditTopic = (topic: Topic) => {
+    setEditingTopic(topic)
+    setIsTopicModalOpen(true)
+  }
+
+  const handleDeleteTopic = async (topicId: string) => {
+    try {
+      await deleteTopicMutate(topicId)
+      toast.success('Đã xóa chủ đề thành công!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa chủ đề này'
+      toast.error(msg)
+    }
+  }
+
+  const handleViewDecksOfTopic = (topicId: string) => {
+    setSelectedTopicIdForDecks(topicId)
+    setActiveTab('decks')
+  }
+
+  // Deck handlers
+  const handleCreateDeck = (initialTopicId?: string) => {
+    setEditingDeck(null)
+    setInitialDeckTopicId(initialTopicId)
+    setIsDeckModalOpen(true)
+  }
+
+  const handleEditDeck = (deck: FlashcardDeck) => {
+    setEditingDeck(deck)
+    setIsDeckModalOpen(true)
+  }
+
+  const handleDeleteDeck = async (deckId: string) => {
+    try {
+      await deleteDeckMutate(deckId)
+      toast.success('Đã xóa bộ thẻ thành công!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa bộ thẻ'
+      toast.error(msg)
+    }
+  }
+
+  const handleManageCards = (deck: FlashcardDeck) => {
+    setSelectedDeckForCards(deck)
+    setIsCardsManagerOpen(true)
   }
 
   const handleResetFilters = async () => {
@@ -86,7 +161,7 @@ export function VocabularyPage() {
       onEditWord: (wordId) => navigate(`/vocabulary/${wordId}/edit`),
       onDeleteWord: handleDeleteWord,
     })
-  }, [isVi, navigate])
+  }, [isVi, navigate, handleDeleteWord])
 
   return (
     <div className="space-y-6">
@@ -97,6 +172,38 @@ export function VocabularyPage() {
         vocabularyId={detailModalId}
         onEdit={(id) => navigate(`/vocabulary/${id}/edit`)}
       />
+
+      {/* Topic Create / Edit Modal */}
+      <TopicFormModal
+        isOpen={isTopicModalOpen}
+        onClose={() => setIsTopicModalOpen(false)}
+        topic={editingTopic}
+        onSuccess={() => refetchTopics()}
+      />
+
+      {/* Deck Create / Edit Modal */}
+      <DeckFormModal
+        isOpen={isDeckModalOpen}
+        onClose={() => setIsDeckModalOpen(false)}
+        deck={editingDeck}
+        initialTopicId={initialDeckTopicId}
+        topics={topics}
+        onSuccess={() => {
+          refetchDecks()
+          refetchTopics()
+        }}
+      />
+
+      {/* Deck Cards Manager Modal */}
+      <DeckCardsManagerModal
+        isOpen={isCardsManagerOpen}
+        onClose={() => {
+          setIsCardsManagerOpen(false)
+          refetchDecks()
+        }}
+        deck={selectedDeckForCards}
+      />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -174,7 +281,7 @@ export function VocabularyPage() {
         >
           <Layers className="w-3.5 h-3.5" />
           <span>
-            {isVi ? `Bộ thẻ công khai (${decks.length})` : `Public Decks (${decks.length})`}
+            {isVi ? `Bộ thẻ (${decks.length})` : `Decks (${decks.length})`}
           </span>
         </button>
 
@@ -228,9 +335,28 @@ export function VocabularyPage() {
         />
       )}
 
-      {activeTab === 'topics' && <VocabularyTopicsTab topics={topics} />}
+      {activeTab === 'topics' && (
+        <VocabularyTopicsTab
+          topics={topics}
+          onCreateTopic={handleCreateTopic}
+          onEditTopic={handleEditTopic}
+          onDeleteTopic={handleDeleteTopic}
+          onViewDecksOfTopic={handleViewDecksOfTopic}
+        />
+      )}
 
-      {activeTab === 'decks' && <VocabularyDecksTab decks={decks} />}
+      {activeTab === 'decks' && (
+        <VocabularyDecksTab
+          decks={decks}
+          topics={topics}
+          selectedTopicId={selectedTopicIdForDecks}
+          onSelectTopicId={setSelectedTopicIdForDecks}
+          onCreateDeck={handleCreateDeck}
+          onEditDeck={handleEditDeck}
+          onDeleteDeck={handleDeleteDeck}
+          onManageCards={handleManageCards}
+        />
+      )}
 
       {activeTab === 'ipa' && <VocabularyIpaTab onEditIpaSymbol={handleEditIpaSymbol} />}
     </div>

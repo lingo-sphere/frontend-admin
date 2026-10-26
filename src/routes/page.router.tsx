@@ -1,6 +1,7 @@
 // Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
 
 import { useLocation } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import { pathToNavItem } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { DashboardPage } from '@/features/dashboard/pages/dashboard.page'
@@ -11,10 +12,7 @@ import { CourseLearnersPage } from '@/features/courses/pages/course.learners.pag
 import { CourseExamsPage } from '@/features/courses/pages/course.exams.page'
 import { CourseExamQuestionsPage } from '@/features/courses/pages/course.exam.questions.page'
 import { VocabularyPage } from '@/features/vocabulary/pages/vocabulary.page'
-import { PracticeExercisesPage } from '@/features/practice/pages/practice.exercises.page'
-import { PracticeListeningPage } from '@/features/practice/pages/practice.listening.page'
-import { PracticeSpeakingPage } from '@/features/practice/pages/practice.speaking.page'
-import { PracticeWritingPage } from '@/features/practice/pages/practice.writing.page'
+
 import { CommunityPage } from '@/features/community/pages/community.page'
 import { PublicDecksPage } from '@/features/vocabulary/pages/public.decks.page'
 import { ProgressPage } from '@/features/progress/pages/progress.page'
@@ -41,6 +39,25 @@ import { PlacementTestsPage } from '@/features/exams/pages/placement.tests.page'
 import { MediaStoragePage } from '@/features/media/pages/media.storage.page'
 import { ForbiddenPage, NotFoundPage } from '@/features/system/pages/status.result.page'
 
+const ContextsPage = lazy(() => import('@/features/practice/pages/practice.contexts.page').then(module => ({ default: module.PracticeContextsPage })))
+function ContextsPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Ngữ cảnh...</div>}><ContextsPage /></Suspense> }
+const IpaPage = lazy(() => import('@/features/practice/pages/practice.ipa.page').then(module => ({ default: module.PracticeIpaPage })))
+const ListeningPage = lazy(() => import('@/features/practice/pages/practice.listening.page').then(module => ({ default: module.PracticeListeningPage })))
+const GrammarPage = lazy(() => import('@/features/practice/pages/practice.grammar.page').then(module => ({ default: module.PracticeGrammarPage })))
+function GrammarPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Grammar...</div>}><GrammarPage /></Suspense> }
+const ReadingPage = lazy(() => import('@/features/practice/pages/practice.reading.page').then(module => ({ default: module.PracticeReadingPage })))
+function ReadingPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Reading...</div>}><ReadingPage /></Suspense> }
+const WritingPage = lazy(() => import('@/features/practice/pages/practice.writing.page').then(module => ({ default: module.PracticeWritingPage })))
+function WritingPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Writing...</div>}><WritingPage /></Suspense> }
+const SpeakingPage = lazy(() => import('@/features/practice/pages/practice.speaking.page').then(module => ({ default: module.PracticeSpeakingPage })))
+function SpeakingPageRoute() { return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Speaking...</div>}><SpeakingPage /></Suspense> }
+function ListeningPageRoute() {
+  return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý Listening...</div>}><ListeningPage /></Suspense>
+}
+function IpaPageRoute() {
+  return <Suspense fallback={<div className="p-6 text-slate-500">Đang tải quản lý IPA...</div>}><IpaPage /></Suspense>
+}
+
 const pageMap: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
   'users-list': LearnersPage,
@@ -57,11 +74,15 @@ const pageMap: Record<string, React.ComponentType> = {
   vocabulary: VocabularyPage,
   'vocab-create': VocabularyFormPage,
   'vocabulary-import': VocabularyImportPage,
-  practice: PracticeExercisesPage,
-  'practice-exercises': PracticeExercisesPage,
-  'practice-listening': PracticeListeningPage,
-  'practice-speaking': PracticeSpeakingPage,
-  'practice-writing': PracticeWritingPage,
+  practice: ListeningPageRoute,
+  'practice-contexts': ContextsPageRoute,
+  'practice-exercises': ListeningPageRoute,
+  'practice-listening': ListeningPageRoute,
+  'practice-speaking': SpeakingPageRoute,
+  'practice-writing': WritingPageRoute,
+  'practice-reading': ReadingPageRoute,
+  'practice-grammar': GrammarPageRoute,
+  'practice-ipa': IpaPageRoute,
   'toeic-tests': ExamsPage,
   'placement-tests': PlacementTestsPage,
   exams: ExamsPage,
@@ -98,6 +119,8 @@ export function PageRouter() {
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
+
+  if (['practice-ipa', 'practice-listening', 'practice-speaking', 'practice-writing', 'practice-reading', 'practice-grammar', 'practice-contexts'].includes(activeNavItem) && !isAdmin) return <ForbiddenPage key={pathname} />
 
   if (activeNavItem === 'not-found' || activeNavItem === '404') {
     return <NotFoundPage key={pathname} />

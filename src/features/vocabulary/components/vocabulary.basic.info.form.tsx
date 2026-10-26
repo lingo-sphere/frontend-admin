@@ -5,21 +5,10 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, Sparkles, Loader2, Volume2, AudioLines, Upload } from 'lucide-react'
+import { BookOpen, Sparkles, Loader2, Volume2, AudioLines, Upload, Folder, Check, X, Search, Star } from 'lucide-react'
 import { CustomSelect } from '@/components/custom.select'
 import { playAudio } from '@/features/vocabulary/helpers/vocabulary.helper'
-import { lexicalTypeLabels } from '@/features/vocabulary/data/vocabulary.data'
-
-const WORD_TYPES_MAP = [
-  { value: 'NOUN', vi: 'Danh từ', en: 'Noun' },
-  { value: 'VERB', vi: 'Động từ', en: 'Verb' },
-  { value: 'ADJECTIVE', vi: 'Tính từ', en: 'Adjective' },
-  { value: 'ADVERB', vi: 'Trạng từ', en: 'Adverb' },
-  { value: 'PREPOSITION', vi: 'Giới từ', en: 'Preposition' },
-  { value: 'CONJUNCTION', vi: 'Liên từ', en: 'Conjunction' },
-  { value: 'PRONOUN', vi: 'Đại từ', en: 'Pronoun' },
-  { value: 'PHRASE', vi: 'Cụm từ', en: 'Phrase' },
-]
+import { useVocabularyTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.admin.query'
 
 const CEFR_LEVELS_MAP = [
   { value: 'A1', vi: 'A1 - Sơ cấp cơ bản', en: 'A1 - Beginner' },
@@ -55,6 +44,7 @@ export interface BasicInfoFormData {
   stress_pattern: string
   frequency_rank: number
   source: string
+  topic_ids?: string[]
 }
 
 interface VocabularyBasicInfoFormProps {
@@ -77,13 +67,6 @@ export function VocabularyBasicInfoForm({
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const wordTypeOptions = useMemo(() => {
-    return WORD_TYPES_MAP.map((item) => ({
-      value: item.value,
-      label: isVi ? item.vi : item.en,
-    }))
-  }, [isVi])
-
   const cefrOptions = useMemo(() => {
     return CEFR_LEVELS_MAP.map((lvl) => ({
       value: lvl.value,
@@ -105,6 +88,41 @@ export function VocabularyBasicInfoForm({
       label: isVi ? item.vi : item.en,
     }))
   }, [isVi])
+
+  const { data: topics = [], isLoading: isLoadingTopics } = useVocabularyTopicsQuery()
+  const [topicSearch, setTopicSearch] = useState('')
+
+  const selectedTopicIds = useMemo(() => data.topic_ids || [], [data.topic_ids])
+
+  const selectedTopics = useMemo(() => {
+    return selectedTopicIds
+      .map((id) => topics.find((t) => t.id === id || t._id === id))
+      .filter(Boolean) as typeof topics
+  }, [selectedTopicIds, topics])
+
+  const filteredTopics = useMemo(() => {
+    const term = topicSearch.trim().toLowerCase()
+    if (!term) return topics
+    return topics.filter(
+      (t) =>
+        t.name_vi?.toLowerCase().includes(term) ||
+        t.name_en?.toLowerCase().includes(term) ||
+        t.slug?.toLowerCase().includes(term)
+    )
+  }, [topics, topicSearch])
+
+  const handleToggleTopic = (topicId: string) => {
+    const exists = selectedTopicIds.includes(topicId)
+    const nextIds = exists
+      ? selectedTopicIds.filter((id) => id !== topicId)
+      : [...selectedTopicIds, topicId]
+    onChange({ topic_ids: nextIds })
+  }
+
+  const handleSetPrimaryTopic = (topicId: string) => {
+    const remaining = selectedTopicIds.filter((id) => id !== topicId)
+    onChange({ topic_ids: [topicId, ...remaining] })
+  }
 
   return (
     <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
@@ -359,6 +377,152 @@ export function VocabularyBasicInfoForm({
           </div>
         </div>
       </div>
+
+      {/* Row 4: Gán Chủ đề Từ vựng (Vocabulary Topics) */}
+      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Folder className="w-4 h-4 text-indigo-500" />
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {isVi ? 'Chủ đề từ vựng liên kết' : 'Linked Vocabulary Topics'}
+            </label>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              {selectedTopicIds.length} {isVi ? 'chủ đề' : 'topics'}
+            </span>
+          </div>
+          {selectedTopicIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onChange({ topic_ids: [] })}
+              className="text-[11px] font-medium text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+            >
+              {isVi ? 'Xóa tất cả' : 'Clear all'}
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          {isVi
+            ? 'Chọn các chủ đề phù hợp để phân loại từ vựng vào các bộ flashcard và chủ đề luyện tập. Nhấn vào biểu tượng ngôi sao để chọn Chủ đề chính.'
+            : 'Select topics to categorize this word into topic decks and practice sets. Click the star icon to set Primary topic.'}
+        </p>
+
+        {/* Selected Topics Badges */}
+        {selectedTopics.length > 0 && (
+          <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40">
+            {selectedTopics.map((topic, index) => {
+              const topicId = topic.id || topic._id || ''
+              const isPrimary = index === 0
+              return (
+                <div
+                  key={topicId}
+                  className={`flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-xl text-xs font-medium transition-all ${
+                    isPrimary
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrimaryTopic(topicId)}
+                    title={isPrimary ? (isVi ? 'Chủ đề chính' : 'Primary topic') : (isVi ? 'Bấm để đặt làm chủ đề chính' : 'Click to make primary')}
+                    className="cursor-pointer hover:scale-110 transition-transform"
+                  >
+                    <Star
+                      className={`w-3.5 h-3.5 ${
+                        isPrimary
+                          ? 'fill-amber-300 text-amber-300'
+                          : 'text-slate-400 hover:text-amber-400'
+                      }`}
+                    />
+                  </button>
+                  <span>
+                    {isVi ? topic.name_vi || topic.name_en : topic.name_en || topic.name_vi}
+                  </span>
+                  {isPrimary && (
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/20 text-white font-bold ml-0.5">
+                      {isVi ? 'Chính' : 'Primary'}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleTopic(topicId)}
+                    className={`p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer ml-1 ${
+                      isPrimary ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Search & Topic Pill Grid */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={topicSearch}
+              onChange={(e) => setTopicSearch(e.target.value)}
+              placeholder={isVi ? 'Tìm kiếm trong các chủ đề...' : 'Search among topics...'}
+              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 text-xs"
+            />
+            {topicSearch && (
+              <button
+                type="button"
+                onClick={() => setTopicSearch('')}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-44 overflow-y-auto p-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex flex-wrap gap-1.5">
+            {isLoadingTopics ? (
+              <div className="w-full py-4 flex items-center justify-center text-xs text-slate-400 gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{isVi ? 'Đang tải danh sách chủ đề...' : 'Loading topics...'}</span>
+              </div>
+            ) : filteredTopics.length === 0 ? (
+              <p className="w-full py-3 text-center text-xs text-slate-400">
+                {isVi ? 'Không tìm thấy chủ đề phù hợp' : 'No matching topics'}
+              </p>
+            ) : (
+              filteredTopics.map((topic) => {
+                const topicId = topic.id || topic._id || ''
+                const isSelected = selectedTopicIds.includes(topicId)
+                return (
+                  <button
+                    key={topicId}
+                    type="button"
+                    onClick={() => handleToggleTopic(topicId)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    {isSelected ? (
+                      <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+                    )}
+                    <span>{isVi ? topic.name_vi || topic.name_en : topic.name_en || topic.name_vi}</span>
+                    {topic.cefr_level && (
+                      <span className="text-[9px] px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">
+                        {topic.cefr_level}
+                      </span>
+                    )}
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -377,4 +541,5 @@ export const DEFAULT_BASIC_INFO: BasicInfoFormData = {
   stress_pattern: '',
   frequency_rank: 0,
   source: 'curated',
+  topic_ids: [],
 }

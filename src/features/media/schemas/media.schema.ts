@@ -23,6 +23,7 @@ export const RawStorageUsageResponseSchema = z.object({
 }).passthrough()
 
 export const MediaUploadResponseSchema = z.object({
+  media_id: z.string().optional(),
   id: z.string(),
   file_url: z.string(),
   url: z.string().optional(),
@@ -36,6 +37,7 @@ export const MediaUploadResponseSchema = z.object({
 }).passthrough()
 
 export const PresignedUploadResponseSchema = z.object({
+  media_id: z.string().optional(),
   upload_url: z.string(),
   public_url: z.string(),
   file_url: z.string(),
