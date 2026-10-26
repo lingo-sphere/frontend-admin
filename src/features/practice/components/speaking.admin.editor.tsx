@@ -1,20 +1,23 @@
-import { usePracticeText, localizedPracticeName } from '../hooks/use.practice.text'
-import { applyPracticeFormError } from '../helpers/practice-form-error.helper'
-import { SpeakingTargetSelect } from './speaking.target.select'
+// Component chỉnh sửa và xuất bản bài luyện nói (Speaking).
+
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Collapse, Divider, Drawer, Form, Input, InputNumber, Modal, Select, Space, Spin, Switch, TreeSelect } from 'antd'
+import { CustomSelect } from '@/components/custom.select'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { speakingAdminKeys, useSpeakingMutations } from '../hooks/use.speaking.admin'
-import { speakingAdminService } from '../services/speaking-admin.service'
-import { speakingPayload } from '../helpers/speaking-admin.helper'
-import { ipaError } from '../helpers/ipa-admin.helper'
-import { ipaLevels } from '../types/ipa-admin.types'
-import { rubricFields, speakingLabels, type SpeakingPayload, type SpeakingType } from '../types/speaking-admin.types'
-import { SpeakingDialogueFields } from './speaking.dialogue.fields'
-import { SpeakingMediaField } from './speaking.media.field'
+import { usePracticeText, localizedPracticeName } from '@/features/practice/hooks/use.practice.text'
+import { applyPracticeFormError } from '@/features/practice/helpers/practice-form-error.helper'
+import { SpeakingTargetSelect } from '@/features/practice/components/speaking.target.select'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { speakingAdminKeys, useSpeakingMutations } from '@/features/practice/hooks/use.speaking.admin'
+import { speakingAdminService } from '@/features/practice/services/speaking-admin.service'
+import { speakingPayload } from '@/features/practice/helpers/speaking-admin.helper'
+import { ipaError } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaLevels } from '@/features/practice/types/ipa-admin.types'
+import { rubricFields, speakingLabels, type SpeakingPayload, type SpeakingType } from '@/features/practice/types/speaking-admin.types'
+import { SpeakingDialogueFields } from '@/features/practice/components/speaking.dialogue.fields'
+import { SpeakingMediaField } from '@/features/practice/components/speaking.media.field'
 
 export function SpeakingAdminEditor({ type, id, readOnly, trash, onClose }: { type: SpeakingType; id: string | null; readOnly: boolean; trash: boolean; onClose: () => void }) {
   const p = usePracticeText()
@@ -69,9 +72,9 @@ export function SpeakingAdminEditor({ type, id, readOnly, trash, onClose }: { ty
           <Form.Item name="title" label={p("Tiêu đề")} rules={[{ required: true, whitespace: true, max: 300 }]}><Input /></Form.Item>
           <Form.Item name="title_vi" label={p("Tiêu đề tiếng Việt")}><Input /></Form.Item>
           <Form.Item name="context_id" label={p("Chủ đề")}><TreeSelect allowClear showSearch treeDataSimpleMode treeNodeFilterProp="title" treeData={contexts.map(context => ({ id: context._id, value: context._id, pId: context.parent_id, title: localizedPracticeName(context) }))} /></Form.Item>
-          <Form.Item name="status" label={p("Trạng thái")}><Select options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
-          <Form.Item name="cefr_level" label="CEFR"><Select options={ipaLevels.map(value => ({ value }))} /></Form.Item>
-          <Form.Item name="difficulty_level" label={p("Độ khó")}><Select options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
+          <Form.Item name="status" label={p("Trạng thái")}><CustomSelect options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
+          <Form.Item name="cefr_level" label="CEFR"><CustomSelect options={ipaLevels.map(value => ({ value, label: value }))} /></Form.Item>
+          <Form.Item name="difficulty_level" label={p("Độ khó")}><CustomSelect options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
         </div>
         <Form.Item name="description" label={p("Mô tả (Anh)")}><Input.TextArea rows={2} /></Form.Item><Form.Item name="description_vi" label={p("Mô tả (Việt)")}><Input.TextArea rows={2} /></Form.Item>
         <Form.Item name="prompt_text_en" label={p("Đề bài (Anh)")}><Input.TextArea rows={3} /></Form.Item><Form.Item name="prompt_text_vi" label={p("Đề bài (Việt)")}><Input.TextArea rows={2} /></Form.Item>

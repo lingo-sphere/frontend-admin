@@ -1,8 +1,9 @@
 // Component hiển thị nhóm điều hướng thanh bên Admin, các mục menu và hiệu ứng kích hoạt.
 import { Link } from 'react-router-dom'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import type { NavGroup } from '@/layouts/sidebar.nav.config'
 import { navItemToPath } from '@/routes/navigation'
+import { SidebarBranchedSubmenu } from '@/layouts/sidebar.branched.submenu'
 
 interface SidebarNavGroupProps {
   group: NavGroup
@@ -25,183 +26,122 @@ export function SidebarNavGroup({
   onNavigate,
   onToggleExpand,
 }: SidebarNavGroupProps) {
+  const isCollapsedMode = sidebarCollapsed && !mobile
+
   return (
     <div className="space-y-1">
       {groupIdx > 0 && (
         <div className="pt-1.5 my-1 border-t border-slate-200/70 dark:border-slate-800/70" />
       )}
-      {(!sidebarCollapsed || mobile) && groupIdx > 0 && (
-        <div className="pt-0.5 pb-1 px-3 text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          {group.label}
-        </div>
-      )}
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-250 ease-[cubic-bezier(0.2,0,0,1)] ${
+          isCollapsedMode
+            ? 'max-h-0 opacity-0 pointer-events-none'
+            : groupIdx > 0
+            ? 'max-h-6 opacity-100 pt-0.5 pb-1 px-3 text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500'
+            : 'max-h-0 opacity-0'
+        }`}
+      >
+        {group.label}
+      </div>
       <div className="space-y-1">
         {group.items.map((item) => {
           const Icon = item.icon
-          const isActive =
-            activeNavItem === item.id ||
-            Boolean(item.children && item.children.some((c) => activeNavItem === c.id))
-          const isExactActive = activeNavItem === item.id
           const hasChildren = Boolean(item.children && item.children.length > 0)
+          const isExactActive = activeNavItem === item.id
+          const isChildActive = Boolean(item.children && item.children.some((c) => activeNavItem === c.id))
           const isExpanded = expandedItem === item.id
-          const isItemActive = (isExactActive && !hasChildren) || (isActive && hasChildren)
+          const isLeafActive = isExactActive && !hasChildren
+          const showActiveIndicator = isLeafActive || (isCollapsedMode && isChildActive)
+          const showActiveBg = isLeafActive || (isCollapsedMode && isChildActive)
+          const showSolidIcon = isLeafActive || (isCollapsedMode && isChildActive)
+          const showActiveText = isLeafActive || isChildActive
 
-          if (sidebarCollapsed && !mobile) {
-            if (hasChildren) {
-              return (
-                <button
-                  key={item.id}
-                  className={`relative w-full flex items-center justify-center p-1.5 rounded-2xl transition-all cursor-pointer ${
-                    isItemActive
-                      ? 'bg-blue-50/90 dark:bg-blue-950/40'
-                      : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                  }`}
-                  onClick={() => onToggleExpand(item.id)}
-                  type="button"
-                  title={item.label}
-                >
-                  {isItemActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
-                  )}
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                      isItemActive
-                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                        : 'bg-slate-100/90 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
-                </button>
-              )
-            }
+          const navButtonContent = (
+            <>
+              {showActiveIndicator && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
+              )}
 
-            return (
-              <Link
-                key={item.id}
-                to={navItemToPath(item.id)}
-                onClick={() => onNavigate(item.id)}
-                className={`relative w-full flex items-center justify-center p-1.5 rounded-2xl transition-all cursor-pointer ${
-                  isItemActive
-                    ? 'bg-blue-50/90 dark:bg-blue-950/40'
-                    : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                }`}
-                title={item.label}
-              >
-                {isItemActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
-                )}
+              <div className={`flex items-center min-w-0 ${isCollapsedMode ? 'justify-center' : 'gap-3 pl-1'}`}>
                 <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                    isItemActive
-                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                      : 'bg-slate-100/90 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'
+                  className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                    showSolidIcon
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
+                      : isChildActive
+                      ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                      : 'bg-slate-100/90 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-700/80 group-hover:text-slate-700 dark:group-hover:text-slate-200'
                   }`}
                 >
-                  <Icon className="w-4.5 h-4.5" />
+                  <Icon className="w-4 h-4" />
                 </div>
-              </Link>
-            )
-          }
+                <span
+                  className={`overflow-hidden transition-[max-width,opacity] duration-250 ease-[cubic-bezier(0.2,0,0,1)] whitespace-nowrap truncate ${
+                    isCollapsedMode ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[140px] opacity-100'
+                  } ${
+                    showActiveText
+                      ? 'text-blue-600 dark:text-blue-400 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-slate-200'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </div>
+
+              <div
+                className={`flex items-center gap-1.5 shrink-0 overflow-hidden transition-[max-width,opacity] duration-250 ease-[cubic-bezier(0.2,0,0,1)] ${
+                  isCollapsedMode ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[60px] opacity-100 pr-1'
+                }`}
+              >
+                {item.kicker && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
+                    {item.kicker}
+                  </span>
+                )}
+                {hasChildren && (
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                      isExpanded
+                        ? 'rotate-0 text-blue-600 dark:text-blue-400 opacity-100'
+                        : `-rotate-90 ${isChildActive ? 'text-blue-500 dark:text-blue-400 opacity-90' : 'text-slate-400 opacity-60'}`
+                    }`}
+                  />
+                )}
+              </div>
+            </>
+          )
+
+          const itemContainerClass = `group relative w-full flex items-center ${
+            isCollapsedMode ? 'justify-center p-1.5' : 'justify-between px-2.5 py-2'
+          } rounded-2xl text-xs sm:text-[13px] transition-[padding,background-color] duration-250 cursor-pointer ${
+            showActiveBg
+              ? 'bg-blue-50/90 dark:bg-blue-950/40'
+              : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+          }`
 
           return (
             <div key={item.id} className="space-y-0.5">
               {hasChildren ? (
                 <button
-                  className={`group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer ${
-                    isItemActive
-                      ? 'bg-blue-50/90 dark:bg-blue-950/40'
-                      : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                  }`}
+                  className={itemContainerClass}
                   onClick={() => onToggleExpand(item.id)}
                   type="button"
+                  title={item.label}
                 >
-                  {isItemActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
-                  )}
-
-                  <div className="flex items-center gap-3 min-w-0 pl-1">
-                    <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                        isItemActive
-                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
-                          : 'bg-slate-100/90 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-700/80 group-hover:text-slate-700 dark:group-hover:text-slate-200'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span
-                      className={`truncate ${
-                        isItemActive
-                          ? 'text-blue-600 dark:text-blue-400 font-bold'
-                          : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-slate-200'
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0 pr-1">
-                    {item.kicker && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
-                        {item.kicker}
-                      </span>
-                    )}
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        isExpanded
-                          ? 'rotate-0 text-blue-600 dark:text-blue-400 opacity-100'
-                          : `-rotate-90 ${isItemActive ? 'text-blue-500 dark:text-blue-400 opacity-90' : 'text-slate-400 opacity-60'}`
-                      }`}
-                    />
-                  </div>
+                  {navButtonContent}
                 </button>
               ) : (
                 <Link
                   to={navItemToPath(item.id)}
                   onClick={() => onNavigate(item.id)}
-                  className={`group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer ${
-                    isItemActive
-                      ? 'bg-blue-50/90 dark:bg-blue-950/40'
-                      : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                  }`}
+                  className={itemContainerClass}
+                  title={item.label}
                 >
-                  {isItemActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
-                  )}
-
-                  <div className="flex items-center gap-3 min-w-0 pl-1">
-                    <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                        isItemActive
-                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
-                          : 'bg-slate-100/90 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-700/80 group-hover:text-slate-700 dark:group-hover:text-slate-200'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span
-                      className={`truncate ${
-                        isItemActive
-                          ? 'text-blue-600 dark:text-blue-400 font-bold'
-                          : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-slate-200'
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-
-                  {item.kicker && (
-                    <div className="flex items-center gap-1.5 shrink-0 pr-1">
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
-                        {item.kicker}
-                      </span>
-                    </div>
-                  )}
+                  {navButtonContent}
                 </Link>
               )}
 
-              {hasChildren && (
+              {hasChildren && !isCollapsedMode && (
                 <div
                   className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                     isExpanded
@@ -210,32 +150,12 @@ export function SidebarNavGroup({
                   }`}
                 >
                   <div className="min-h-0 overflow-hidden">
-                    <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-800 space-y-0.5 py-1">
-                      {item.children!.map((child) => {
-                        const isChildActive = activeNavItem === child.id
-
-                        return (
-                          <Link
-                            key={child.id}
-                            to={navItemToPath(child.id)}
-                            onClick={() => onNavigate(child.id)}
-                            className={`relative w-full flex items-center justify-between pl-3 pr-2.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
-                              isChildActive
-                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50/90 dark:bg-blue-950/50 font-bold'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 font-medium'
-                            }`}
-                          >
-                            {isChildActive && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
-                            )}
-                            <span className="truncate">{child.label}</span>
-                            {isChildActive && (
-                              <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                            )}
-                          </Link>
-                        )
-                      })}
-                    </div>
+                    <SidebarBranchedSubmenu
+                      children={item.children!}
+                      activeNavItem={activeNavItem}
+                      isExpanded={isExpanded}
+                      onNavigate={onNavigate}
+                    />
                   </div>
                 </div>
               )}

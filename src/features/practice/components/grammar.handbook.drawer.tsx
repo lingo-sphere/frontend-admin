@@ -1,14 +1,10 @@
-/**
- * @file grammar.handbook.drawer.tsx
- * @description Drawer chỉnh sửa chi tiết Chủ điểm Lý thuyết Ngữ pháp & Thể công thức
- */
+// Drawer chỉnh sửa chi tiết chủ điểm lý thuyết ngữ pháp & thể công thức.
 
 import React, { useEffect, useState } from 'react'
 import {
   Drawer,
   Form,
   Input,
-  Select,
   InputNumber,
   Switch,
   Button,
@@ -30,11 +26,12 @@ import {
 } from '@ant-design/icons'
 import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
+import { CustomSelect } from '@/components/custom.select'
 import type {
   GrammarHandbookItem,
   GrammarHandbookPayload,
   GrammarFormulaDetail,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 interface Props {
   visible: boolean
@@ -257,14 +254,14 @@ export function GrammarHandbookDrawer({
                       label="Nhóm ngữ pháp"
                       rules={[{ required: true, message: 'Chọn nhóm' }]}
                     >
-                      <Select options={CATEGORY_OPTIONS} showSearch />
+                      <CustomSelect options={CATEGORY_OPTIONS} showSearch />
                     </Form.Item>
                     <Form.Item
                       name="cefr_level"
                       label="Cấp độ CEFR"
                       rules={[{ required: true, message: 'Chọn level' }]}
                     >
-                      <Select options={CEFR_OPTIONS} />
+                      <CustomSelect options={CEFR_OPTIONS} />
                     </Form.Item>
                   </div>
 
@@ -427,7 +424,7 @@ export function GrammarHandbookDrawer({
                                 label="Loại thể"
                                 rules={[{ required: true, message: 'Chọn loại' }]}
                               >
-                                <Select options={FORM_TYPE_OPTIONS} />
+                                <CustomSelect options={FORM_TYPE_OPTIONS} />
                               </Form.Item>
                               <Form.Item
                                 {...restField}

@@ -1,8 +1,4 @@
-/**
- * @file dashboard.recent.activity.tsx
- * @description Component giao diện DashboardRecentActivity phục vụ khu vực Quản trị Admin
- */
-
+// Component hiển thị nhật ký hoạt động người học gần đây trên trang Dashboard theo phong cách SaaS hiện đại.
 import {
   Target,
   BookOpenCheck,
@@ -56,10 +52,10 @@ export function DashboardRecentActivity({
   }
 
   return (
-    <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
+    <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             {isVietnamese ? 'Nhật Ký Hoạt Động Gần Đây' : 'Recent Activity Logs'}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -70,87 +66,93 @@ export function DashboardRecentActivity({
         </div>
         <button
           onClick={onViewAll}
-          className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+          className="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
         >
           <span>{isVietnamese ? 'Xem tất cả' : 'View all'}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
-              <th className="pb-3 px-3">{isVietnamese ? 'Học viên' : 'Learner'}</th>
-              <th className="pb-3 px-3">{isVietnamese ? 'Hành động' : 'Action'}</th>
-              <th className="pb-3 px-3">{isVietnamese ? 'Điểm / XP' : 'Score / XP'}</th>
-              <th className="pb-3 px-3">{isVietnamese ? 'Thời gian' : 'Time'}</th>
-              <th className="pb-3 px-3 text-right">{isVietnamese ? 'Chi tiết' : 'Details'}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-200">
-            {activities.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-8 text-center text-slate-400">
-                  {isVietnamese ? 'Chưa có hoạt động nào được ghi nhận gần đây' : 'No recent activities recorded'}
-                </td>
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-700 dark:text-slate-200 font-bold text-[13px] tracking-wide">
+                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Học viên' : 'Learner'}</th>
+                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Hành động' : 'Action'}</th>
+                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Điểm / XP' : 'Score / XP'}</th>
+                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Thời gian' : 'Time'}</th>
+                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Chi tiết' : 'Details'}</th>
               </tr>
-            ) : (
-              activities.slice(0, 6).map((log) => {
-                const EventIcon = getEventIcon(log.actionType)
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-200">
+              {activities.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-400 text-xs">
+                    {isVietnamese ? 'Chưa có hoạt động nào được ghi nhận gần đây' : 'No recent activities recorded'}
+                  </td>
+                </tr>
+              ) : (
+                activities.slice(0, 6).map((log) => {
+                  const EventIcon = getEventIcon(log.actionType)
 
-                return (
-                  <tr
-                    key={log.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
-                  >
-                    <td className="py-3 px-3">
-                      <div
-                        className="flex items-center gap-2.5 cursor-pointer"
-                        onClick={() => onSelectUser(log.userId ? log.userId : log.id)}
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs">
-                          {log.userName.slice(0, 2).toUpperCase()}
+                  return (
+                    <tr
+                      key={log.id}
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="py-3 px-3.5">
+                        <div
+                          className="flex items-center gap-2.5 cursor-pointer"
+                          onClick={() => onSelectUser(log.userId ? log.userId : log.id)}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs ring-1 ring-black/5 dark:ring-white/10 shrink-0">
+                            {log.userName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 dark:text-slate-200 hover:text-teal-600 dark:hover:text-teal-400 transition-colors truncate">
+                              {log.userName}
+                            </p>
+                            <p className="text-[10.5px] text-slate-400 dark:text-slate-500 truncate">
+                              {log.userEmail}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 dark:text-slate-200 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                            {log.userName}
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            {log.userEmail}
-                          </p>
+                      </td>
+                      <td className="py-3 px-3.5">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 border border-teal-200/50 flex items-center justify-center shrink-0">
+                            <EventIcon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            {isVietnamese ? log.actionNameVi : log.actionNameEn}
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-                          <EventIcon className="w-3.5 h-3.5" />
-                        </div>
-                        <span>
-                          {isVietnamese ? log.actionNameVi : log.actionNameEn}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-bold text-teal-600 dark:text-teal-400">
-                      {log.scoreOrXP ? log.scoreOrXP : '-'}
-                    </td>
-                    <td className="py-3 px-3 text-slate-500">{formatActivityTime(log.timestamp)}</td>
-                    <td className="py-3 px-3 text-right">
-                      <button
-                        onClick={() => onSelectUser(log.userId ? log.userId : log.id)}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                      </td>
+                      <td className="py-3 px-3.5 text-center font-bold text-teal-600 dark:text-teal-400 font-mono">
+                        {log.scoreOrXP ? log.scoreOrXP : '-'}
+                      </td>
+                      <td className="py-3 px-3.5 text-center text-slate-400 dark:text-slate-500 text-[11px] whitespace-nowrap">
+                        {formatActivityTime(log.timestamp)}
+                      </td>
+                      <td className="py-3 px-3.5 text-center">
+                        <button
+                          onClick={() => onSelectUser(log.userId ? log.userId : log.id)}
+                          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer inline-flex items-center justify-center"
+                          title={isVietnamese ? 'Xem chi tiết người dùng' : 'View user details'}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
 }
+

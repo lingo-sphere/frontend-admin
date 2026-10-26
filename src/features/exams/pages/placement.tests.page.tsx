@@ -26,6 +26,7 @@ import {
 import { useAdminExamsQuery, useUpdateExamMutation, useAdminPlacementAttemptsQuery, useDeleteExamMutation } from '@/features/exams/hooks/use.exams.admin.query'
 import { PlacementAttemptsTable } from '@/features/exams/components/placement.attempts.table'
 import { PlacementExamsTable } from '@/features/exams/components/placement.exams.table'
+import { StatCard } from '@/components/stat.card'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
@@ -445,62 +446,46 @@ export function PlacementTestsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900">
-            <Trophy className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
-              {isVi ? 'Tổng lượt thi' : 'Total Attempts'}
-            </p>
-            <p className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {stats ? stats.total_attempts.toLocaleString() : '0'}
-            </p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title={isVi ? 'Tổng lượt thi' : 'Total Attempts'}
+          value={stats ? stats.total_attempts.toLocaleString() : '0'}
+          subtitle={isVi ? 'Số bài kiểm tra đầu vào đã nộp' : 'Submitted placement tests'}
+          icon={Trophy}
+          color="indigo"
+          trend={stats && stats.total_attempts > 0 ? `${stats.total_attempts}` : undefined}
+          trendType="neutral"
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900">
-            <Users className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
-              {isVi ? 'Học viên tham gia' : 'Learners Evaluated'}
-            </p>
-            <p className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {stats ? stats.unique_learners_count.toLocaleString() : '0'}
-            </p>
-          </div>
-        </div>
+        <StatCard
+          title={isVi ? 'Học viên tham gia' : 'Learners Evaluated'}
+          value={stats ? stats.unique_learners_count.toLocaleString() : '0'}
+          subtitle={isVi ? 'Học viên hoàn thành bài test' : 'Learners completed test'}
+          icon={Users}
+          color="emerald"
+          trend={stats && stats.unique_learners_count > 0 ? `${stats.unique_learners_count}` : undefined}
+          trendType="up"
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-900">
-            <Award className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
-              {isVi ? 'Điểm TB toàn hệ thống' : 'System Avg Score'}
-            </p>
-            <p className="text-lg font-black text-purple-600 dark:text-purple-400">
-              {stats && stats.avg_total_score > 0 ? `${stats.avg_total_score} / 990` : '-'}
-            </p>
-          </div>
-        </div>
+        <StatCard
+          title={isVi ? 'Điểm TB toàn hệ thống' : 'System Avg Score'}
+          value={stats && stats.avg_total_score > 0 ? stats.avg_total_score : '-'}
+          subtitle={isVi ? 'Thang điểm chuẩn 990 ETS' : 'Out of 990 ETS scale'}
+          icon={Award}
+          color="purple"
+          trend={stats && stats.avg_total_score > 0 ? `${stats.avg_total_score}/990` : undefined}
+          trendType="neutral"
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900">
-            <Flame className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
-              {isVi ? 'Điểm cao nhất' : 'Highest Score'}
-            </p>
-            <p className="text-lg font-black text-amber-600 dark:text-amber-400">
-              {stats && stats.highest_score > 0 ? `${stats.highest_score} / 990` : '-'}
-            </p>
-          </div>
-        </div>
+        <StatCard
+          title={isVi ? 'Điểm cao nhất' : 'Highest Score'}
+          value={stats && stats.highest_score > 0 ? stats.highest_score : '-'}
+          subtitle={isVi ? 'Kỷ lục điểm số đầu vào' : 'Record score achieved'}
+          icon={Flame}
+          color="amber"
+          trend={stats && stats.highest_score > 0 ? `${stats.highest_score}/990` : undefined}
+          trendType="neutral"
+        />
       </div>
 
       <div className="border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">

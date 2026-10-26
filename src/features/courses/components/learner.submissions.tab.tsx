@@ -109,6 +109,10 @@ export function LearnerSubmissionsTab({
         const comp = (a.course_title || '').localeCompare(b.course_title || '')
         return subSortOrder === 'asc' ? comp : -comp
       }
+      if (subSortKey === 'skill') {
+        const comp = (a.skill || '').localeCompare(b.skill || '')
+        return subSortOrder === 'asc' ? comp : -comp
+      }
       if (subSortKey === 'ai_score') {
         const diff = (a.ai_score || 0) - (b.ai_score || 0)
         return subSortOrder === 'asc' ? diff : -diff
@@ -116,6 +120,16 @@ export function LearnerSubmissionsTab({
       if (subSortKey === 'teacher_score') {
         const diff = (a.teacher_score || 0) - (b.teacher_score || 0)
         return subSortOrder === 'asc' ? diff : -diff
+      }
+      if (subSortKey === 'submitted_at') {
+        const timeA = new Date(a.created_at || '').getTime()
+        const timeB = new Date(b.created_at || '').getTime()
+        return subSortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      if (subSortKey === 'status') {
+        const statA = a.is_teacher_reviewed ? 1 : 0
+        const statB = b.is_teacher_reviewed ? 1 : 0
+        return subSortOrder === 'asc' ? statA - statB : statB - statA
       }
       return 0
     })

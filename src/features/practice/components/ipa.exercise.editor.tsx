@@ -1,16 +1,19 @@
-import { usePracticeText, localizedPracticeName } from '../hooks/use.practice.text'
-import { applyPracticeFormError } from '../helpers/practice-form-error.helper'
+// Drawer chỉnh sửa bài tập ngữ âm IPA (IpaExerciseEditor).
+
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Divider, Drawer, Form, Input, Modal, Select, Space, Spin } from 'antd'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { ipaAdminKeys, useIpaMutations } from '../hooks/use.ipa.admin'
-import { ipaAdminService } from '../services/ipa-admin.service'
-import { ipaLevels, ipaTypeLabels, ipaTypes, type IpaExerciseRecord, type IpaExerciseType, type SaveIpaExercise } from '../types/ipa-admin.types'
-import { exercisePayload, ipaError, mediaKeyRule } from '../helpers/ipa-admin.helper'
-import { IpaAudioField } from './ipa.audio.field'
+import { CustomSelect } from '@/components/custom.select'
+import { usePracticeText, localizedPracticeName } from '@/features/practice/hooks/use.practice.text'
+import { applyPracticeFormError } from '@/features/practice/helpers/practice-form-error.helper'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { ipaAdminKeys, useIpaMutations } from '@/features/practice/hooks/use.ipa.admin'
+import { ipaAdminService } from '@/features/practice/services/ipa-admin.service'
+import { ipaLevels, ipaTypeLabels, ipaTypes, type IpaExerciseRecord, type IpaExerciseType, type SaveIpaExercise } from '@/features/practice/types/ipa-admin.types'
+import { exercisePayload, ipaError, mediaKeyRule } from '@/features/practice/helpers/ipa-admin.helper'
+import { IpaAudioField } from '@/features/practice/components/ipa.audio.field'
 
 export function IpaExerciseEditor({ id, type, readOnly, trash, onClose }: { id: string | null; type: IpaExerciseType; readOnly: boolean; trash: boolean; onClose: () => void }) {
   const p = usePracticeText()
@@ -69,11 +72,11 @@ export function IpaExerciseEditor({ id, type, readOnly, trash, onClose }: { id: 
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
           <Form.Item name="title" label={p("Tiêu đề")} rules={[{ required: true, whitespace: true, max: 300 }]}><Input /></Form.Item>
           <Form.Item name="title_vi" label={p("Tiêu đề tiếng Việt")}><Input /></Form.Item>
-          <Form.Item name="exercise_type" label={p("Dạng bài")} rules={[{ required: true }]}><Select options={ipaTypes.map(value => ({ value, label: p(ipaTypeLabels[value]) }))} onChange={() => form.setFieldsValue({ correct_answer: '' })} /></Form.Item>
-          <Form.Item name="status" label={p("Trạng thái")}><Select options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
-          <Form.Item name="cefr_level" label="CEFR"><Select options={ipaLevels.map(value => ({ value }))} /></Form.Item>
-          <Form.Item name="difficulty_level" label={p("Độ khó")}><Select options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
-          <Form.Item name="context_id" label={p("Chủ đề")}><Select allowClear showSearch optionFilterProp="label" loading={loadingContexts} options={contexts.map(context => ({ value: context._id, label: localizedPracticeName(context) }))} /></Form.Item>
+          <Form.Item name="exercise_type" label={p("Dạng bài")} rules={[{ required: true }]}><CustomSelect options={ipaTypes.map(value => ({ value, label: p(ipaTypeLabels[value]) }))} onChange={() => form.setFieldsValue({ correct_answer: '' })} /></Form.Item>
+          <Form.Item name="status" label={p("Trạng thái")}><CustomSelect options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
+          <Form.Item name="cefr_level" label="CEFR"><CustomSelect options={ipaLevels.map(value => ({ value }))} /></Form.Item>
+          <Form.Item name="difficulty_level" label={p("Độ khó")}><CustomSelect options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
+          <Form.Item name="context_id" label={p("Chủ đề")}><CustomSelect allowClear showSearch optionFilterProp="label" loading={loadingContexts} options={contexts.map(context => ({ value: context._id, label: localizedPracticeName(context) }))} /></Form.Item>
           <Form.Item name="target_phonemes" label={p("Âm mục tiêu")}><Select mode="tags" tokenSeparators={[',']} placeholder={p("Nhập âm và nhấn Enter")} /></Form.Item>
           <Form.Item name="target_words" label={p("Từ mục tiêu")}><Select mode="tags" tokenSeparators={[',']} placeholder={p("Nhập từ và nhấn Enter")} /></Form.Item>
           <Form.Item name="target_ipa" label={p("Phiên âm mục tiêu")}><Input /></Form.Item>
@@ -92,7 +95,7 @@ export function IpaExerciseEditor({ id, type, readOnly, trash, onClose }: { id: 
           </div>)}</div>
           <Form.Item name={['minimal_pair', 'phoneme_contrast']} label={p("Cặp âm đối chiếu")}><Input placeholder={p("/ɪ/ – /iː/")} /></Form.Item>
         </> : <Form.Item name="options" label={p("Các lựa chọn (ít nhất 2 khi xuất bản)")}><Select mode="tags" placeholder={p("Nhập lựa chọn, nhấn Enter")} /></Form.Item>}
-        <Form.Item name="correct_answer" label={p("Đáp án đúng")}><Select allowClear options={choices.map(value => ({ value }))} /></Form.Item>
+        <Form.Item name="correct_answer" label={p("Đáp án đúng")}><CustomSelect allowClear options={choices.map(value => ({ value }))} /></Form.Item>
         <Form.Item name="audio_id" label={p("Audio mẫu (key hoặc media ID)")} rules={[mediaKeyRule]}><IpaAudioField onBusy={onBusy} /></Form.Item>
       </Form>
     </>}

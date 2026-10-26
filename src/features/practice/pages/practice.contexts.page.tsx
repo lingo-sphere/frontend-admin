@@ -1,16 +1,17 @@
+// Trang quản lý ngữ cảnh luyện tập (Practice Contexts) dành cho quản trị viên.
+
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
   Badge,
   Button,
-  Card,
+  Checkbox,
+  ConfigProvider,
+  Dropdown,
   Form,
   Input,
   InputNumber,
   Modal,
-  Popconfirm,
-  Select,
-  Space,
   Switch,
   Table,
   Tag,
@@ -18,7 +19,6 @@ import {
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import {
-  AlertCircle,
   CheckCircle2,
   Edit3,
   FolderTree,
@@ -27,17 +27,21 @@ import {
   Plus,
   RotateCcw,
   Search,
-  Trash2,
+  X,
+  SlidersHorizontal,
+  Columns3,
+  ChevronDown,
 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
+import { CustomSelect } from '@/components/custom.select'
+import { TableRowActions } from '@/components/table.row.actions'
 import {
   usePracticeContextsAdmin,
-} from '../hooks/use.practice.contexts'
+} from '@/features/practice/hooks/use.practice.contexts'
 import type {
   CreatePracticeContextPayload,
   PracticeContext,
-  UpdatePracticeContextPayload,
-} from '../services/practice.service'
+} from '@/features/practice/services/practice.service'
 
 const DOMAIN_OPTIONS = [
   { value: 'SPEAKING', label: 'Luyện nói (Speaking)', color: 'blue' },
@@ -49,6 +53,27 @@ const DOMAIN_OPTIONS = [
 ]
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+const DENSITY_LABELS: Record<'compact' | 'normal' | 'comfortable', string> = {
+  compact: 'Gọn',
+  normal: 'Vừa',
+  comfortable: 'Rộng',
+}
+
+const DENSITY_TOKENS = {
+  compact: { cellPaddingBlockMD: 6, cellPaddingInlineMD: 8, borderColor: 'rgba(226, 232, 240, 0.8)' },
+  normal: { cellPaddingBlockMD: 10, cellPaddingInlineMD: 12, borderColor: 'rgba(226, 232, 240, 0.8)' },
+  comfortable: { cellPaddingBlockMD: 16, cellPaddingInlineMD: 16, borderColor: 'rgba(226, 232, 240, 0.8)' },
+}
+
+const CONTEXT_COLUMN_OPTIONS = [
+  { label: 'Tên ngữ cảnh', value: 'name_en' },
+  { label: 'Mã Code', value: 'code' },
+  { label: 'Cấp bậc', value: 'level' },
+  { label: 'Kỹ năng (Domains)', value: 'domains' },
+  { label: 'Bài tập', value: 'total_exercises' },
+  { label: 'Trạng thái', value: 'status' },
+]
 
 interface ContextFormValues {
   name_en: string
@@ -70,10 +95,18 @@ export function PracticeContextsPage() {
   const [selectedLevel, setSelectedLevel] = useState<number | 'ALL'>('ALL')
   const [selectedDomain, setSelectedDomain] = useState<string | 'ALL'>('ALL')
   const [selectedStatus, setSelectedStatus] = useState<string | 'ALL'>('ALL')
+  const [density, setDensity] = useState<'compact' | 'normal' | 'comfortable'>('normal')
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([
+    'name_en',
+    'code',
+    'level',
+    'domains',
+    'total_exercises',
+    'status',
+  ])
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<PracticeContext | null>(null)
-  const [presetParentId, setPresetParentId] = useState<string | undefined>(undefined)
 
   const [form] = Form.useForm<ContextFormValues>()
   const selectedParentId = Form.useWatch('parent_id', form)
@@ -88,19 +121,15 @@ export function PracticeContextsPage() {
     deleteContext,
   } = usePracticeContextsAdmin({ include_disabled: true })
 
-  // Phân loại contexts
   const level0Contexts = useMemo(() => contexts.filter((c) => c.level === 0), [contexts])
   const level1Contexts = useMemo(() => contexts.filter((c) => c.level === 1), [contexts])
-  const level2Contexts = useMemo(() => contexts.filter((c) => c.level === 2), [contexts])
 
-  // Context map để tra cứu nhanh
   const contextMap = useMemo(() => {
     const map = new Map<string, PracticeContext>()
     contexts.forEach((c) => map.set(c._id, c))
     return map
   }, [contexts])
 
-  // Tính level dự kiến dựa trên parent_id được chọn trong Form
   const calculatedLevel = useMemo(() => {
     if (!selectedParentId) return 0
     const parent = contextMap.get(selectedParentId)
@@ -108,10 +137,8 @@ export function PracticeContextsPage() {
     return Math.min(parent.level + 1, 2)
   }, [selectedParentId, contextMap])
 
-  // Lọc contexts hiển thị
   const filteredContexts = useMemo(() => {
     return contexts.filter((ctx) => {
-      // Search
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase()
         const matchNameEn = (ctx.name_en || ctx.name || '').toLowerCase().includes(query)
@@ -120,17 +147,14 @@ export function PracticeContextsPage() {
         if (!matchNameEn && !matchNameVi && !matchCode) return false
       }
 
-      // Level
       if (selectedLevel !== 'ALL' && ctx.level !== selectedLevel) {
         return false
       }
 
-      // Domain
       if (selectedDomain !== 'ALL') {
         if (!ctx.domains || !ctx.domains.includes(selectedDomain)) return false
       }
 
-      // Status
       if (selectedStatus !== 'ALL' && ctx.status !== selectedStatus) {
         return false
       }
@@ -139,14 +163,11 @@ export function PracticeContextsPage() {
     })
   }, [contexts, searchTerm, selectedLevel, selectedDomain, selectedStatus])
 
-  // Xây dựng cây phân cấp (Tree Table Data)
   const treeData = useMemo(() => {
-    // Nếu đang search hoặc lọc level cụ thể thì hiển thị dạng phẳng (Flat List) để dễ quan sát kết quả
     if (searchTerm.trim() || selectedLevel !== 'ALL' || selectedDomain !== 'ALL' || selectedStatus !== 'ALL') {
       return filteredContexts.map((c) => ({ ...c, key: c._id }))
     }
 
-    // Nếu không search/lọc: Hiển thị đúng cấu trúc Cây 3 Cấp Độ (Level 0 -> Level 1 -> Level 2)
     interface TreeNode extends PracticeContext {
       key: string
       children?: TreeNode[]
@@ -170,7 +191,6 @@ export function PracticeContextsPage() {
       }
     })
 
-    // Dọn dẹp mảng children rỗng
     const pruneEmptyChildren = (nodes: TreeNode[]) => {
       nodes.forEach((n) => {
         if (n.children && n.children.length > 0) {
@@ -185,10 +205,8 @@ export function PracticeContextsPage() {
     return roots
   }, [contexts, filteredContexts, searchTerm, selectedLevel, selectedDomain, selectedStatus])
 
-  // Mở modal tạo mới
   const handleOpenCreateModal = (parentId?: string) => {
     setEditingItem(null)
-    setPresetParentId(parentId)
     form.resetFields()
     form.setFieldsValue({
       parent_id: parentId,
@@ -200,10 +218,8 @@ export function PracticeContextsPage() {
     setModalOpen(true)
   }
 
-  // Mở modal chỉnh sửa
   const handleOpenEditModal = (record: PracticeContext) => {
     setEditingItem(record)
-    setPresetParentId(record.parent_id)
     form.resetFields()
     form.setFieldsValue({
       name_en: record.name_en || record.name,
@@ -222,7 +238,6 @@ export function PracticeContextsPage() {
     setModalOpen(true)
   }
 
-  // Submit Form
   const handleSubmitForm = async () => {
     try {
       const values = await form.validateFields()
@@ -253,14 +268,13 @@ export function PracticeContextsPage() {
       }
 
       setModalOpen(false)
-    } catch (err: any) {
-      if (err?.errorFields) return // Lỗi validate Form
-      const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra'
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errorFields' in err) return
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra'
       toast.error(msg)
     }
   }
 
-  // Chuyển đổi trạng thái Active/Inactive nhanh
   const handleToggleStatus = async (record: PracticeContext, checked: boolean) => {
     try {
       await updateContext.mutateAsync({
@@ -268,24 +282,23 @@ export function PracticeContextsPage() {
         payload: { status: checked ? 'ACTIVE' : 'INACTIVE' },
       })
       toast.success(checked ? 'Đã kích hoạt ngữ cảnh' : 'Đã tạm ẩn ngữ cảnh')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Không thể đổi trạng thái')
-    }
-  }
-
-  // Xóa context
-  const handleDeleteContext = async (id: string) => {
-    try {
-      await deleteContext.mutateAsync(id)
-      toast.success('Đã xóa ngữ cảnh thành công')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Không thể xóa ngữ cảnh này'
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể đổi trạng thái'
       toast.error(msg)
     }
   }
 
-  // Bảng phân cấp
-  const columns: ColumnsType<any> = [
+  const handleDeleteContext = async (id: string) => {
+    try {
+      await deleteContext.mutateAsync(id)
+      toast.success('Đã xóa ngữ cảnh thành công')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa ngữ cảnh này'
+      toast.error(msg)
+    }
+  }
+
+  const columns: ColumnsType<PracticeContext> = [
     {
       title: 'Tên ngữ cảnh',
       dataIndex: 'name_en',
@@ -391,66 +404,43 @@ export function PracticeContextsPage() {
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 180,
+      width: 150,
       fixed: 'right',
+      align: 'center',
       render: (_, record: PracticeContext) => {
         const canAddChild = record.level < 2
 
         return (
-          <Space orientation="horizontal" size="small">
-            {canAddChild ? (
-              <Tooltip title={`Thêm cấp con (Level ${record.level + 1})`}>
-                <Button
-                  size="small"
-                  type="text"
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  icon={<Plus size={14} />}
-                  onClick={() => handleOpenCreateModal(record._id)}
-                >
-                  Con
-                </Button>
-              </Tooltip>
-            ) : (
-              <Tooltip title="Đã đạt trần tối đa 3 cấp độ (Level 2). Không thể tạo cấp sâu hơn.">
-                <Button size="small" type="text" disabled className="text-slate-300">
-                  Đầy
-                </Button>
-              </Tooltip>
-            )}
-
-            <Button
-              size="small"
-              type="text"
-              icon={<Edit3 size={14} />}
-              onClick={() => handleOpenEditModal(record)}
-            >
-              Sửa
-            </Button>
-
-            <Popconfirm
-              title="Xóa ngữ cảnh"
-              description="Bạn có chắc chắn muốn xóa ngữ cảnh này? Không thể hoàn tác nếu không có ràng buộc."
-              okText="Xóa"
-              cancelText="Hủy"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => handleDeleteContext(record._id)}
-            >
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<Trash2 size={14} />}
-              />
-            </Popconfirm>
-          </Space>
+          <TableRowActions
+            onEdit={() => handleOpenEditModal(record)}
+            onDelete={() => handleDeleteContext(record._id)}
+            deleteTitle="Xóa ngữ cảnh"
+            deleteDescription="Bạn có chắc chắn muốn xóa ngữ cảnh này? Không thể hoàn tác nếu không có ràng buộc."
+            extraActions={
+              canAddChild ? (
+                <Tooltip title={`Thêm cấp con (Level ${record.level + 1})`}>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCreateModal(record._id)}
+                    className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/60 dark:border-blue-800/60 transition-colors cursor-pointer"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </Tooltip>
+              ) : null
+            }
+          />
         )
       },
     },
   ]
 
+  const displayedColumns = columns.filter(
+    (col) => col.key === 'actions' || visibleColumns.includes(String(col.key))
+  )
+
   return (
     <div className="space-y-4 p-4">
-      {/* Header & Badges quy tắc 3 cấp */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
@@ -501,18 +491,29 @@ export function PracticeContextsPage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <Card bodyStyle={{ padding: '16px' }} className="shadow-sm border-slate-200">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Input
-            placeholder="Tìm theo tên tiếng Anh, tiếng Việt, mã code..."
-            prefix={<Search size={15} className="text-slate-400" />}
-            value={searchTerm}
-            allowClear
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            <input
+              type="text"
+              placeholder="Tìm theo tên tiếng Anh, tiếng Việt, mã code..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
-          <Select
+          <CustomSelect
             value={selectedLevel}
             onChange={(val) => setSelectedLevel(val)}
             options={[
@@ -523,7 +524,7 @@ export function PracticeContextsPage() {
             ]}
           />
 
-          <Select
+          <CustomSelect
             value={selectedDomain}
             onChange={(val) => setSelectedDomain(val)}
             options={[
@@ -532,7 +533,7 @@ export function PracticeContextsPage() {
             ]}
           />
 
-          <Select
+          <CustomSelect
             value={selectedStatus}
             onChange={(val) => setSelectedStatus(val)}
             options={[
@@ -542,22 +543,82 @@ export function PracticeContextsPage() {
             ]}
           />
         </div>
-      </Card>
 
-      {/* Main Table */}
-      <Card bodyStyle={{ padding: '0px' }} className="shadow-sm border-slate-200 overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={treeData}
-          loading={isLoading}
-          pagination={false}
-          rowKey="_id"
-          scroll={{ x: 1100 }}
-          defaultExpandAllRows={false}
-        />
-      </Card>
+        <div className="flex items-center gap-2 shrink-0">
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: [
+                { key: 'compact', label: 'Gọn' },
+                { key: 'normal', label: 'Vừa' },
+                { key: 'comfortable', label: 'Rộng' },
+              ],
+              selectedKeys: [density],
+              onClick: ({ key }) => setDensity(key as 'compact' | 'normal' | 'comfortable'),
+            }}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{DENSITY_LABELS[density]}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+          </Dropdown>
 
-      {/* Modal Create / Edit */}
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm('')
+              setSelectedLevel('ALL')
+              setSelectedDomain('ALL')
+              setSelectedStatus('ALL')
+            }}
+            className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Đặt lại</span>
+          </button>
+
+          <Dropdown
+            trigger={['click']}
+            popupRender={() => (
+              <div className="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-3 shadow-xl backdrop-blur-xl">
+                <Checkbox.Group
+                  value={visibleColumns}
+                  options={CONTEXT_COLUMN_OPTIONS}
+                  onChange={(values) => setVisibleColumns(values.map(String))}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                />
+              </div>
+            )}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+            >
+              <Columns3 className="w-3.5 h-3.5" />
+              <span>Cột</span>
+            </button>
+          </Dropdown>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5">
+        <ConfigProvider theme={{ components: { Table: DENSITY_TOKENS[density] } }}>
+          <Table
+            columns={displayedColumns}
+            dataSource={treeData}
+            loading={isLoading}
+            pagination={false}
+            rowKey="_id"
+            scroll={{ x: 1100 }}
+            defaultExpandAllRows={false}
+          />
+        </ConfigProvider>
+      </div>
+
       <Modal
         title={
           <div className="flex items-center gap-2 text-base font-semibold">
@@ -621,7 +682,7 @@ export function PracticeContextsPage() {
               }
               tooltip="Chọn ngữ cảnh cha. Nếu để trống, ngữ cảnh này sẽ là Chủ đề lớn (Level 0). Chỉ có thể chọn ngữ cảnh Level 0 hoặc Level 1 làm cha."
             >
-              <Select
+              <CustomSelect
                 placeholder="-- Là ngữ cảnh gốc (Level 0) --"
                 allowClear
                 options={[
@@ -654,7 +715,7 @@ export function PracticeContextsPage() {
               label="Kỹ năng áp dụng"
               tooltip="Các kỹ năng có thể gắn bài tập vào ngữ cảnh này"
             >
-              <Select
+              <CustomSelect
                 mode="multiple"
                 placeholder="Chọn kỹ năng áp dụng"
                 options={DOMAIN_OPTIONS}
@@ -662,7 +723,7 @@ export function PracticeContextsPage() {
             </Form.Item>
 
             <Form.Item name="cefr_level" label="Trình độ CEFR khuyến nghị">
-              <Select
+              <CustomSelect
                 placeholder="-- Chọn trình độ --"
                 allowClear
                 options={CEFR_LEVELS.map((lvl) => ({ value: lvl, label: lvl }))}
@@ -672,7 +733,7 @@ export function PracticeContextsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
             <Form.Item name="status" label="Trạng thái">
-              <Select
+              <CustomSelect
                 options={[
                   { value: 'ACTIVE', label: 'Hoạt động (ACTIVE)' },
                   { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },

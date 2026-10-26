@@ -1,30 +1,34 @@
-import { usePracticeText } from '../hooks/use.practice.text'
+// Bảng dữ liệu dùng chung (IpaDataTable) cho các module luyện tập.
+
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Checkbox, DatePicker, Dropdown, Input, InputNumber, Select, Space, Table, Tag, TreeSelect } from 'antd'
+import { Alert, Button, Checkbox, ConfigProvider, DatePicker, Dropdown, Input, InputNumber, Space, Table } from 'antd'
 import type { ColumnType, FilterDropdownProps } from 'antd/es/table/interface'
-import { Filter, Columns3 } from 'lucide-react'
+import { Filter, Columns3, Search, X, RotateCcw, SlidersHorizontal, ChevronDown, Check } from 'lucide-react'
 import dayjs from 'dayjs'
-import type { useIpaTableState } from '../hooks/use.ipa.table-state'
+import { CustomSelect, type SelectOption } from '@/components/custom.select'
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import type { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
 import { Pagination } from '@/components/pagination'
+import type { TableDensity } from '@/components/table.controls'
 
 export interface IpaColumn<T> extends ColumnType<T> {
   key: string; label: string
   filterKind?: 'text' | 'enum' | 'media' | 'date' | 'number' | 'tree'
-  filterOptions?: { value: string; label: string; pId?: string }[]
+  filterOptions?: SelectOption[]
   initiallyHidden?: boolean
 }
 
-function ColumnFilter({ kind, options, selectedKeys, setSelectedKeys, confirm, clearFilters }: FilterDropdownProps & { kind: string; options?: { value: string; label: string; pId?: string }[] }) {
+function ColumnFilter({ kind, options, selectedKeys, setSelectedKeys, confirm, clearFilters }: FilterDropdownProps & { kind: string; options?: SelectOption[] }) {
   const p = usePracticeText()
   const { i18n } = useTranslation();
   const isVi = i18n.language === 'vi';
   return <div style={{ padding: 12, width: 280 }} onKeyDown={event => event.stopPropagation()}>
     {kind === 'number' ? <Space><InputNumber aria-label={isVi ? p("Từ") : "From"} placeholder={isVi ? p("Từ") : "From"} min={0} value={selectedKeys[0] ? Number(selectedKeys[0]) : null} onChange={value => setSelectedKeys([value === null ? '' : String(value), String(selectedKeys[1] || '')])} style={{ width: 115 }} /><InputNumber aria-label={isVi ? p("Đến") : "To"} placeholder={isVi ? p("Đến") : "To"} min={0} value={selectedKeys[1] ? Number(selectedKeys[1]) : null} onChange={value => setSelectedKeys([String(selectedKeys[0] || ''), value === null ? '' : String(value)])} style={{ width: 115 }} /></Space>
-      : kind === 'tree' ? <TreeSelect aria-label={p("Giá trị lọc cột")} multiple treeDataSimpleMode allowClear showSearch treeNodeFilterProp="title" style={{ width: '100%' }} value={selectedKeys} treeData={options?.map(option => ({ ...option, id: option.value, title: option.label }))} onChange={value => setSelectedKeys(value)} />
+      : kind === 'tree' ? <CustomSelect aria-label={p("Giá trị lọc cột")} style={{ width: '100%' }} mode="multiple" allowClear placeholder={p("Chọn giá trị")} value={selectedKeys} options={options} onChange={value => setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])} />
       : kind === 'text' ? <Input aria-label={p("Lọc cột")} value={String(selectedKeys[0] || '')} onChange={event => setSelectedKeys(event.target.value ? [event.target.value] : [])} onPressEnter={() => confirm()} allowClear />
       : kind === 'date' ? <DatePicker.RangePicker value={selectedKeys.length === 2 ? [dayjs(String(selectedKeys[0])), dayjs(String(selectedKeys[1]))] : null} onChange={dates => setSelectedKeys(dates?.[0] && dates[1] ? [dates[0].startOf('day').toISOString(), dates[1].endOf('day').toISOString()] : [])} />
-        : <Select aria-label={p("Giá trị lọc cột")} style={{ width: '100%' }} mode={kind === 'media' ? undefined : 'multiple'} allowClear placeholder={p("Chọn giá trị")} value={kind === 'media' ? selectedKeys[0] : selectedKeys} options={kind === 'media' ? [{ value: 'present', label: isVi ? p("Có media") : 'Has media' }, { value: 'missing', label: isVi ? p("Thiếu media") : 'Missing media' }] : options} onChange={value => setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])} />}
+        : <CustomSelect aria-label={p("Giá trị lọc cột")} style={{ width: '100%' }} mode={kind === 'media' ? undefined : 'multiple'} allowClear placeholder={p("Chọn giá trị")} value={kind === 'media' ? selectedKeys[0] : selectedKeys} options={kind === 'media' ? [{ value: 'present', label: isVi ? p("Có media") : 'Has media' }, { value: 'missing', label: isVi ? p("Thiếu media") : 'Missing media' }] : options} onChange={value => setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])} />}
     <Space style={{ marginTop: 12 }}><Button type="primary" size="small" onClick={() => confirm()}>{isVi ? p("Áp dụng") : 'Apply'}</Button><Button size="small" onClick={() => clearFilters?.({ confirm: true })}>{isVi ? p("Xóa lọc") : 'Clear'}</Button></Space>
   </div>
 }
@@ -39,44 +43,161 @@ export function IpaDataTable<T extends object>({ columns, items, total, loading,
   const resolvedSearchLabel = searchLabel || (isVi ? p("Tìm kiếm") : 'Search');
   const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? p("Tìm kiếm nội dung...") : 'Search content...');
   const [visible, setVisible] = useState(() => columns.filter(column => !column.initiallyHidden).map(column => column.key))
+  const [density, setDensity] = useState<TableDensity>('middle')
+  const [densityOpen, setDensityOpen] = useState(false)
+
+  const densityOptions = [
+    { key: 'compact' as const, label: isVi ? 'Nhỏ gọn' : 'Compact' },
+    { key: 'middle' as const, label: isVi ? 'Vừa' : 'Default' },
+    { key: 'comfortable' as const, label: isVi ? 'Thoải mái' : 'Spacious' },
+  ]
+
+  const antdSize = density === 'compact' ? 'small' : density === 'comfortable' ? 'large' : 'middle'
+
+  const densityTokens = {
+    compact: { cellPaddingBlockMD: 5, cellPaddingInlineMD: 6, cellPaddingBlockSM: 4, cellPaddingInlineSM: 5, cellPaddingBlock: 6, cellPaddingInline: 6, borderColor: 'rgba(226, 232, 240, 0.8)' },
+    middle: { cellPaddingBlockMD: 8, cellPaddingInlineMD: 8, cellPaddingBlockSM: 6, cellPaddingInlineSM: 6, cellPaddingBlock: 8, cellPaddingInline: 8, borderColor: 'rgba(226, 232, 240, 0.8)' },
+    comfortable: { cellPaddingBlockMD: 14, cellPaddingInlineMD: 12, cellPaddingBlockSM: 10, cellPaddingInlineSM: 10, cellPaddingBlock: 14, cellPaddingInline: 12, borderColor: 'rgba(226, 232, 240, 0.8)' },
+  }
+
   const allColumns = columns.filter(column => visible.includes(column.key) || column.key === 'actions').map(column => {
     const { filterKind, filterOptions, initiallyHidden: _hidden, label: _label, ...base } = column
     return { ...base, dataIndex: column.dataIndex || column.key, title: column.label, sorter: column.key !== 'actions', sortOrder: state.query.sort === column.key ? state.query.order === 'asc' ? 'ascend' as const : 'descend' as const : null,
       ...(filterKind ? { filteredValue: state.filters[column.key] || null, filterOnClose: false, filterIcon: (active: boolean) => <Filter size={13} color={active ? '#4f46e5' : undefined} />, filterDropdown: (props: FilterDropdownProps) => <ColumnFilter {...props} kind={filterKind} options={filterOptions} /> } : {}),
     }
   })
-  return <div className="space-y-3">
-    <div className="flex flex-wrap items-center gap-2">
-      <Input.Search aria-label={resolvedSearchLabel} placeholder={resolvedSearchPlaceholder} value={state.search} onChange={event => state.setSearch(event.target.value)} allowClear style={{ width: 310 }} />
-      {extraFilters}
-      <Button onClick={state.reset}>{isVi ? p("Đặt lại") : 'Reset'}</Button>
-      <Dropdown trigger={['click']} popupRender={() => <div className="rounded-xl bg-white p-4 shadow-lg dark:bg-slate-800"><Checkbox.Group value={visible} options={columns.filter(column => column.key !== 'actions').map(column => ({ label: column.label, value: column.key }))} onChange={values => setVisible(values.map(String))} style={{ display: 'flex', flexDirection: 'column', gap: 8 }} /></div>}><Button icon={<Columns3 size={15} />}>{isVi ? p("Cột") : 'Columns'}</Button></Dropdown>
+  return <div className="space-y-4">
+    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+        <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+          <input
+            type="text"
+            aria-label={resolvedSearchLabel}
+            value={state.search}
+            onChange={(e) => state.setSearch(e.target.value)}
+            placeholder={resolvedSearchPlaceholder}
+            className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+          />
+          {state.search && (
+            <button
+              type="button"
+              onClick={() => state.setSearch('')}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+        {extraFilters}
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Dropdown
+          trigger={['click']}
+          open={densityOpen}
+          onOpenChange={setDensityOpen}
+          popupRender={() => (
+            <div className="w-44 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50">
+              <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                {isVi ? 'Kích thước bảng' : 'Density'}
+              </div>
+              {densityOptions.map(opt => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    setDensity(opt.key)
+                    setDensityOpen(false)
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                    density === opt.key
+                      ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {density === opt.key && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
+                </button>
+              ))}
+            </div>
+          )}
+        >
+          <button
+            type="button"
+            className={`flex items-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer shadow-2xs ${
+              densityOpen
+                ? 'bg-indigo-50 dark:bg-indigo-600/15 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+            }`}
+            title={isVi ? 'Kích thước dòng bảng' : 'Row Density'}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>{densityOptions.find(opt => opt.key === density)?.label}</span>
+            <ChevronDown className="w-3 h-3 opacity-60" />
+          </button>
+        </Dropdown>
+        <button
+          type="button"
+          onClick={() => {
+            state.reset()
+            setDensity('middle')
+          }}
+          className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>{isVi ? p("Đặt lại") : 'Reset'}</span>
+        </button>
+        <Dropdown
+          trigger={['click']}
+          popupRender={() => (
+            <div className="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-3 shadow-xl backdrop-blur-xl">
+              <Checkbox.Group
+                value={visible}
+                options={columns.filter(column => column.key !== 'actions').map(column => ({ label: column.label, value: column.key }))}
+                onChange={values => setVisible(values.map(String))}
+                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+              />
+            </div>
+          )}
+        >
+          <button
+            type="button"
+            className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
+          >
+            <Columns3 className="w-3.5 h-3.5" />
+            <span>{isVi ? p("Cột") : 'Columns'}</span>
+          </button>
+        </Dropdown>
+      </div>
     </div>
-    <div className="flex flex-wrap gap-1">{Object.entries(state.filters).filter(([key]) => key !== 'exercise_type').map(([key, values]) => <Tag key={key} closable onClose={() => state.setFilter(key, [])}>{columns.find(column => column.key === key)?.label || key}: {values.join(', ')}</Tag>)}</div>
     {error ? (
       <Alert type="error" showIcon title={isVi ? p("Không tải được dữ liệu") : "Failed to load data"} description={error.message} action={<Button onClick={() => retry()}>{isVi ? p("Thử lại") : "Retry"}</Button>} />
     ) : (
       <>
-        <Table<T>
-          rowKey={record => String((record as { _id?: string; id?: string })._id || (record as { id?: string }).id)}
-          columns={allColumns}
-          dataSource={items}
-          loading={loading}
-          size="middle"
-          scroll={{ x: 'max-content' }}
-          pagination={false}
-          onChange={(_pagination, filters, sorter, extra) => {
-            if (extra.action === 'filter') {
-              const next = { ...state.filters }
-              Object.entries(filters).forEach(([key, values]) => { if (values?.length) next[key] = values.map(String); else delete next[key] })
-              state.setFilters(next)
-            }
-            if (extra.action === 'sort') {
-              const sort = Array.isArray(sorter) ? sorter[0] : sorter
-              state.change({ sort: sort.order ? String(sort.columnKey) : undefined, order: sort.order === 'ascend' ? 'asc' : 'desc', page: '1' })
-            }
-          }}
-        />
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex-initial [&_.ant-table-thead_.ant-table-column-title]:!flex-initial [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5">
+          <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
+            <Table<T>
+              rowKey={record => String((record as { _id?: string; id?: string })._id || (record as { id?: string }).id)}
+              columns={allColumns}
+              dataSource={items}
+              loading={loading}
+              size={antdSize}
+              scroll={{ x: 'max-content' }}
+              pagination={false}
+              onChange={(_pagination, filters, sorter, extra) => {
+                if (extra.action === 'filter') {
+                  const next = { ...state.filters }
+                  Object.entries(filters).forEach(([key, values]) => { if (values?.length) next[key] = values.map(String); else delete next[key] })
+                  state.setFilters(next)
+                }
+                if (extra.action === 'sort') {
+                  const sort = Array.isArray(sorter) ? sorter[0] : sorter
+                  state.change({ sort: sort.order ? String(sort.columnKey) : undefined, order: sort.order === 'ascend' ? 'asc' : 'desc', page: '1' })
+                }
+              }}
+            />
+          </ConfigProvider>
+        </div>
         {total > 0 && (
           <div className="pt-2">
             <Pagination

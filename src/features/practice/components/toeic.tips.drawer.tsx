@@ -1,7 +1,4 @@
-/**
- * @file toeic.tips.drawer.tsx
- * @description Drawer chỉnh sửa chi tiết Mẹo & Chiến thuật làm bài TOEIC 4 Kỹ năng & 7 Part
- */
+// Drawer chỉnh sửa chi tiết mẹo & chiến thuật làm bài TOEIC 4 kỹ năng & 7 Part.
 
 import React, { useEffect, useState } from 'react'
 import {
@@ -29,10 +26,11 @@ import {
 } from '@ant-design/icons'
 import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
+import { CustomSelect } from '@/components/custom.select'
 import type {
   ToeicTipItem,
   ToeicTipPayload,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 interface Props {
   visible: boolean
@@ -193,11 +191,11 @@ export function ToeicTipsDrawer({
                       label="Kỹ năng"
                       rules={[{ required: true, message: 'Chọn kỹ năng' }]}
                     >
-                      <Select options={SKILL_OPTIONS} />
+                      <CustomSelect options={SKILL_OPTIONS} />
                     </Form.Item>
 
                     <Form.Item name="part" label="Phần thi (Part)">
-                      <Select options={PART_OPTIONS} />
+                      <CustomSelect options={PART_OPTIONS} />
                     </Form.Item>
 
                     <Form.Item name="order" label="Thứ tự hiển thị">

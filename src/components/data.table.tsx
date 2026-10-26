@@ -18,7 +18,6 @@ import {
   type ColumnOption,
 } from '@/components/table.controls'
 import { Pagination } from '@/components/pagination'
-import { Loader2, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
 
 export { createColumnHelper }
 export type { ColumnDef }
@@ -123,8 +122,16 @@ export function DataTable<T extends object>({
 
   const tanstackColumns = useMemo<ColumnDef<T>[]>(() => {
     return columns.map((col) => {
+      const isActionsCol = col.key === 'actions' || col.key === 'action'
+      const isSortable = col.sortable !== undefined ? Boolean(col.sortable) : !isActionsCol
+
       const def: ColumnDef<T> = {
         id: col.key,
+        accessorFn: (row) => {
+          if (col.dataIndex) return row[col.dataIndex]
+          const rec = row as Record<string, unknown>
+          return rec[col.key]
+        },
         header: () => col.title,
         cell: (info) => {
           const row = info.row.original
@@ -139,7 +146,7 @@ export function DataTable<T extends object>({
           const val = rec[col.key]
           return val !== undefined && val !== null ? String(val) : ''
         },
-        enableSorting: Boolean(col.sortable),
+        enableSorting: isSortable,
       }
       return def
     })
@@ -184,9 +191,9 @@ export function DataTable<T extends object>({
   })
 
   const getCellPadding = () => {
-    if (density === 'compact') return 'py-2 px-4'
-    if (density === 'comfortable') return 'py-5 px-4'
-    return 'py-3.5 px-4'
+    if (density === 'compact') return 'py-1.5 px-3'
+    if (density === 'comfortable') return 'py-4 px-4'
+    return 'py-2.5 px-3.5'
   }
 
   const totalPages = pagination
@@ -251,10 +258,16 @@ export function DataTable<T extends object>({
       {viewMode === 'grid' && renderGridItem && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            <div className="col-span-full py-16 flex flex-col items-center justify-center gap-2 text-slate-400">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-              <span className="text-xs">{isVi ? 'Đang tải dữ liệu...' : 'Loading data...'}</span>
-            </div>
+            Array.from({ length: 6 }).map((_, idx) => (
+              <div
+                key={`skeleton-card-${idx}`}
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3"
+              >
+                <div className="h-4 w-3/4 rounded-md bg-slate-200/80 dark:bg-slate-800/80 animate-pulse" />
+                <div className="h-8 w-1/2 rounded-md bg-slate-200/80 dark:bg-slate-800/80 animate-pulse" />
+                <div className="h-3.5 w-full rounded-md bg-slate-200/80 dark:bg-slate-800/80 animate-pulse" />
+              </div>
+            ))
           ) : data.length === 0 ? (
             <div className="col-span-full py-16 text-center text-xs text-slate-400">
               {resolvedEmptyText}
@@ -268,7 +281,7 @@ export function DataTable<T extends object>({
       )}
 
       {viewMode === 'table' && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -286,12 +299,12 @@ export function DataTable<T extends object>({
                           key={header.id}
                           style={{ width: col?.width, minWidth: col?.minWidth }}
                           onClick={header.column.getToggleSortingHandler()}
-                          className={`py-3.5 px-3.5 whitespace-nowrap ${
+                          className={`py-3 px-3.5 whitespace-nowrap ${
                             col?.align === 'right'
                               ? 'text-right'
-                              : col?.align === 'center'
-                              ? 'text-center'
-                              : 'text-left'
+                              : col?.align === 'left'
+                              ? 'text-left'
+                              : 'text-center'
                           } ${
                             isSortable
                               ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
@@ -305,26 +318,43 @@ export function DataTable<T extends object>({
                           }`}
                         >
                           <div
-                            className={`inline-flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
+                            className={`inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
                               col?.align === 'right'
                                 ? 'justify-end'
-                                : col?.align === 'center'
-                                ? 'justify-center'
-                                : 'justify-start'
+                                : col?.align === 'left'
+                                ? 'justify-start'
+                                : 'justify-center'
                             }`}
                           >
                             <span className="tracking-tight whitespace-nowrap">
                               {flexRender(header.column.columnDef.header, header.getContext())}
                             </span>
                             {isSortable && (
-                              <span className="shrink-0 transition-colors">
-                                {sortState === 'asc' ? (
-                                  <ArrowUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
-                                ) : sortState === 'desc' ? (
-                                  <ArrowDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400 font-bold" />
-                                ) : (
-                                  <ChevronsUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
-                                )}
+                              <span className="inline-flex flex-col items-center justify-center shrink-0 leading-none ml-1">
+                                <svg
+                                  viewBox="0 0 1024 1024"
+                                  width="8"
+                                  height="8"
+                                  className={`transition-colors ${
+                                    sortState === 'asc'
+                                      ? 'text-indigo-600 dark:text-indigo-400 fill-current'
+                                      : 'text-slate-300 dark:text-slate-600 fill-current group-hover:text-slate-400 dark:group-hover:text-slate-500'
+                                  }`}
+                                >
+                                  <path d="M858.9 689L530.5 308.2c-9.4-10.9-27.5-10.9-37 0L165.1 689c-12.2 14.2-1.2 35 18.5 35h656.8c19.7 0 30.7-20.8 18.5-35z" />
+                                </svg>
+                                <svg
+                                  viewBox="0 0 1024 1024"
+                                  width="8"
+                                  height="8"
+                                  className={`-mt-0.5 transition-colors ${
+                                    sortState === 'desc'
+                                      ? 'text-indigo-600 dark:text-indigo-400 fill-current'
+                                      : 'text-slate-300 dark:text-slate-600 fill-current group-hover:text-slate-400 dark:group-hover:text-slate-500'
+                                  }`}
+                                >
+                                  <path d="M840.4 300H183.6c-19.7 0-30.7 20.8-18.5 35l328.4 380.8c9.4 10.9 27.5 10.9 37 0L858.9 335c12.2-14.2 1.2-35-18.5-35z" />
+                                </svg>
                               </span>
                             )}
                           </div>
@@ -336,17 +366,31 @@ export function DataTable<T extends object>({
               </thead>
               <tbody className="text-slate-700 dark:text-slate-200 text-xs">
                 {isLoading ? (
-                  <tr>
-                    <td
-                      colSpan={table.getVisibleLeafColumns().length || 1}
-                      className="py-16 text-center text-slate-400"
+                  Array.from({ length: 6 }).map((_, rIdx) => (
+                    <tr
+                      key={`skeleton-row-${rIdx}`}
+                      className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0"
                     >
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-                        <span className="text-xs">{isVi ? 'Đang tải dữ liệu...' : 'Loading data...'}</span>
-                      </div>
-                    </td>
-                  </tr>
+                      {table.getVisibleLeafColumns().map((col, cIdx) => (
+                        <td
+                          key={`skeleton-cell-${rIdx}-${col.id}`}
+                          className={`px-3.5 ${getCellPadding()}`}
+                        >
+                          <div
+                            className={`h-4 rounded-md bg-slate-200/80 dark:bg-slate-800/80 animate-pulse ${
+                              cIdx === 0
+                                ? 'w-3/4 max-w-[180px]'
+                                : cIdx === table.getVisibleLeafColumns().length - 1
+                                ? 'w-16 mx-auto'
+                                : cIdx % 2 === 0
+                                ? 'w-20 mx-auto'
+                                : 'w-28 mx-auto'
+                            }`}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
                 ) : table.getRowModel().rows.length === 0 ? (
                   <tr>
                     <td
