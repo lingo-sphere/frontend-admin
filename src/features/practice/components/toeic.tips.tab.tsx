@@ -154,6 +154,7 @@ export function ToeicTipsTab() {
               alt={row.title}
               width={48}
               height={48}
+              loading="lazy"
               style={{ objectFit: 'cover' }}
             />
           </div>

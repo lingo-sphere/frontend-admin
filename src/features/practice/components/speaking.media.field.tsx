@@ -24,7 +24,7 @@ export function SpeakingMediaPreview({ value, kind }: { value: string; kind: 'au
   const result = useQuery({ queryKey: ['speaking-media', value], queryFn: () => api.get<{ storage_key: string }>(`/media/files/${value}`), enabled: kind === 'image' && /^[a-f\d]{24}$/i.test(value) })
   if (kind === 'audio') return <SpeakingAudioPreview value={value} />
   const key = /^[a-f\d]{24}$/i.test(value) ? result.data?.storage_key : value
-  return key ? <Image width={160} style={{ maxHeight: 160, objectFit: 'contain' }} src={resolveMediaUrl(key)} /> : <span>{result.isError ? p("Không tải được ảnh") : p("Đang tải ảnh…")}</span>
+  return key ? <Image width={160} loading="lazy" style={{ maxHeight: 160, objectFit: 'contain' }} src={resolveMediaUrl(key)} /> : <span>{result.isError ? p("Không tải được ảnh") : p("Đang tải ảnh…")}</span>
 }
 export function SpeakingMediaField({ value = '', onChange, onBusy, disabled, kind, folder }: { folder?: string; value?: string; onChange?: (id: string) => void; onBusy: (delta: number) => void; disabled: boolean; kind: 'audio' | 'image' }) {
   const p = usePracticeText()

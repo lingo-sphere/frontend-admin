@@ -139,7 +139,7 @@ function ListeningTable({ type }: { type: ListeningType }) {
     { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 110, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     ...(subtype.field ? [{ key: subtype.field, label: isVi ? subtype.label : (subtypeEnLabels[subtype.field] || subtype.label), width: 110, align: 'center' as const, filterKind: 'enum' as const, filterOptions: subtype.values.map(value => ({ value, label: value })) }] : []),
     { key: 'audio_url', label: 'Audio', width: 155, align: 'center', filterKind: 'media', render: (value, row) => value ? <IpaAudioPreview value={value} duration={row.duration_seconds ?? row.audio_duration_seconds} /> : (isVi ? 'Chưa có' : 'None') },
-    ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 70, align: 'center' as const, filterKind: 'media' as const, render: (value: string) => value ? <Image width={52} height={38} style={{ objectFit: 'cover', borderRadius: 6 }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
+    ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 70, align: 'center' as const, filterKind: 'media' as const, render: (value: string) => value ? <Image width={52} height={38} loading="lazy" style={{ objectFit: 'cover', borderRadius: 6 }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
     {
       key: type === 'part2' ? 'audio_duration_seconds' : 'duration_seconds',
       label: isVi ? 'Thời lượng' : 'Duration',

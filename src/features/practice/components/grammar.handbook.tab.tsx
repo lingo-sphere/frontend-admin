@@ -174,6 +174,7 @@ export function GrammarHandbookTab() {
               alt={row.title_en}
               width={48}
               height={48}
+              loading="lazy"
               style={{ objectFit: 'cover' }}
             />
           </div>

@@ -101,7 +101,7 @@ export function CourseSubmissionItemCard({
             controls
             src={resolveMediaUrl(submission.audio_url)}
             className="w-full h-8"
-            preload="metadata"
+            preload="none"
           />
         </div>
       )}

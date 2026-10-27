@@ -15,7 +15,7 @@ export function ReadingMediaPreview({ value, kind }: { value: string; kind: 'IMA
   const [failed, setFailed] = useState('')
   const [retry, setRetry] = useState(0)
   if (kind === 'IMAGE') return <SpeakingMediaPreview value={value} kind="image" />
-  return <div className="space-y-2">{result.data && <video key={`${value}-${retry}`} controls preload="metadata" src={resolveMediaUrl(result.data.storage_key)} onError={() => setFailed(value)} style={{ width: 230, maxWidth: '100%', maxHeight: 180 }} />}{(result.error || failed === value) && <Alert type="error" title={p("Không tải/phát được video")} action={<Button disabled={false} onClick={() => { setFailed(''); setRetry(count => count + 1); void result.refetch() }}>{p("Thử lại")}</Button>} />}{!result.data && !result.error && <span>{p("Đang tải video…")}</span>}</div>
+  return <div className="space-y-2">{result.data && <video key={`${value}-${retry}`} controls preload="none" src={resolveMediaUrl(result.data.storage_key)} onError={() => setFailed(value)} style={{ width: 230, maxWidth: '100%', maxHeight: 180 }} />}{(result.error || failed === value) && <Alert type="error" title={p("Không tải/phát được video")} action={<Button disabled={false} onClick={() => { setFailed(''); setRetry(count => count + 1); void result.refetch() }}>{p("Thử lại")}</Button>} />}{!result.data && !result.error && <span>{p("Đang tải video…")}</span>}</div>
 }
 export function ReadingMediaField({ value = '', onChange, kind, disabled, onBusy }: { value?: string; onChange?: (value: string) => void; kind: 'IMAGE' | 'VIDEO'; disabled: boolean; onBusy: (delta: number) => void }) {
   const p = usePracticeText()
