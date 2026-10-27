@@ -15,8 +15,6 @@ import {
   Popconfirm,
   Upload,
   Image,
-  Tag,
-  Divider,
 } from 'antd'
 import {
   PlusOutlined,
@@ -114,7 +112,7 @@ export function ToeicTipsDrawer({
     }
   }, [visible, tip, form])
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: ToeicTipPayload) => {
     try {
       const payload: ToeicTipPayload = {
         ...values,
@@ -123,8 +121,9 @@ export function ToeicTipsDrawer({
       }
       await onSave(payload)
       onClose()
-    } catch (err: any) {
-      toast.error(err.message || 'Không thể lưu mẹo TOEIC')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu mẹo TOEIC'
+      toast.error(msg)
     }
   }
 
@@ -139,8 +138,9 @@ export function ToeicTipsDrawer({
       setCurrentImageUrl(res.image_url)
       form.setFieldValue('image_url', res.image_url)
       toast.success('Đã tải ảnh lên Cloudflare R2 thành công!')
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi tải ảnh lên R2')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi tải ảnh lên R2'
+      toast.error(msg)
     } finally {
       setUploadingImage(false)
     }

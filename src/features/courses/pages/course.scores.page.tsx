@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAdminCourseDetailQuery } from '@/features/courses/hooks/use.courses.admin.query'
 import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { StatCard } from '@/components/stat.card'
 import type { StudentProgressItem } from '@/features/progress/services/progress.service'
 
 interface CourseScoresPageProps {
@@ -274,53 +275,49 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Tổng học viên</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {totalStudents}
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Tổng Học Viên"
+          value={totalStudents.toLocaleString('vi-VN')}
+          subtitle="Học viên ghi danh khóa học"
+          icon={Users}
+          color="indigo"
+          trend={totalStudents > 0 ? `${totalStudents}` : undefined}
+          trendType="neutral"
+          loading={isLoading}
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Tiến độ trung bình</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {avgProgress}%
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Tiến Độ TB"
+          value={`${avgProgress}%`}
+          subtitle="Tỷ lệ hoàn thành nội dung"
+          icon={TrendingUp}
+          color="emerald"
+          trend={`${avgProgress}%`}
+          trendType={avgProgress >= 50 ? 'up' : 'neutral'}
+          loading={isLoading}
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Đã tốt nghiệp</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {completedStudents}
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Đã Tốt Nghiệp"
+          value={completedStudents.toLocaleString('vi-VN')}
+          subtitle="Đã hoàn thành toàn bộ khóa"
+          icon={CheckCircle2}
+          color="teal"
+          trend={totalStudents > 0 ? `${Math.round((completedStudents / totalStudents) * 100)}%` : undefined}
+          trendType="up"
+          loading={isLoading}
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-            <Award className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Mục tiêu đầu ra</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Mục Tiêu Đầu Ra"
+          value={courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
+          subtitle="Dải điểm cam kết khóa học"
+          icon={Award}
+          color="purple"
+          trend={courseInfo?.target_score ? `${courseInfo.target_score}+` : undefined}
+          trendType="neutral"
+          loading={isLoading}
+        />
       </div>
 
       <DataTable<StudentProgressItem>

@@ -1,7 +1,8 @@
+// Hook quản lý truy vấn và thao tác dữ liệu bài tập đọc Reading cho Quản trị viên.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { readingAdminService } from '../services/reading-admin.service'
-import type { IpaAdminQuery } from '../types/ipa-admin.types'
-import type { ReadingPayload } from '../types/reading-admin.types'
+import { readingAdminService } from '@/features/practice/services/reading-admin.service'
+import type { IpaAdminQuery } from '@/features/practice/types/ipa-admin.types'
+import type { ReadingPayload } from '@/features/practice/types/reading-admin.types'
 export const readingAdminKeys = ['reading-admin'] as const
 export function useReadingAdmin(query: IpaAdminQuery) { return useQuery({ queryKey: [...readingAdminKeys, query], queryFn: () => readingAdminService.list(query), placeholderData: keepPreviousData }) }
 export function useReadingMutations() {

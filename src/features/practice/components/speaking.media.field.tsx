@@ -1,5 +1,6 @@
-import { usePracticeText } from '../hooks/use.practice.text'
-import { PracticeMediaLibrary } from './practice.media.library'
+// Component chọn và xem trước tập tin đa phương tiện cho bài tập nói Speaking.
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import { PracticeMediaLibrary } from '@/features/practice/components/practice.media.library'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Image, Space, Upload } from 'antd'

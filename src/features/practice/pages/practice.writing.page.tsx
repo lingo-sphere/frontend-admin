@@ -10,7 +10,7 @@ import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
-import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { DataTable, type IpaColumn } from '@/components/data.table'
 import { SpeakingMediaPreview } from '@/features/practice/components/speaking.media.field'
 import { WritingAdminEditor } from '@/features/practice/components/writing.admin.editor'
 import { IpaRowActions } from '@/features/practice/components/ipa.row.actions'
@@ -47,7 +47,11 @@ function WritingTable({ type }: { type: WritingType }) {
   ]
 
   const state = useIpaTableState()
-  const result = useWritingAdmin({ ...state.query, filters: JSON.stringify({ ...state.filters, exercise_type: [type] }) })
+  const writingQuery = useMemo(() => ({
+    ...state.query,
+    filters: JSON.stringify({ ...state.filters, exercise_type: [type] })
+  }), [state.query, state.filters, type])
+  const result = useWritingAdmin(writingQuery)
   const mutations = useWritingMutations()
   const { contexts, isLoading: loadingContexts } = usePracticeContexts()
   const contextOptions = contexts.map(context => ({
@@ -88,11 +92,15 @@ function WritingTable({ type }: { type: WritingType }) {
   const [working, setWorking] = useState<string | null>(null)
   const trash = state.query.trash === 'true'
 
+  const totalPages = result.data?.pagination?.totalPages
+  const currentPage = state.query.page
+  const { change } = state
+
   useEffect(() => {
-    if (!result.isPlaceholderData && result.data && state.query.page > Math.max(1, result.data.pagination.totalPages)) {
-      state.change({ page: String(Math.max(1, result.data.pagination.totalPages)) })
+    if (!result.isPlaceholderData && totalPages !== undefined && currentPage > Math.max(1, totalPages)) {
+      change({ page: String(Math.max(1, totalPages)) })
     }
-  }, [result.data, result.isPlaceholderData, state])
+  }, [result.isPlaceholderData, totalPages, currentPage, change])
 
   const status = async (row: WritingRecord, published: boolean) => {
     setWorking(row._id)
@@ -143,7 +151,7 @@ function WritingTable({ type }: { type: WritingType }) {
         {!trash && <Button type="primary" icon={<Plus size={15} />} onClick={() => setEditor({ id: null, readOnly: false })}>{isVi ? 'Thêm bài viết' : 'Add Exercise'}</Button>}
       </Space>
     </div>
-    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài viết' : 'Search writing exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, đề bài, gợi ý...' : 'Search title, prompt, hints...'} extraFilters={<>
+    <DataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài viết' : 'Search writing exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, đề bài, gợi ý...' : 'Search title, prompt, hints...'} extraFilters={<>
       <CustomSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} mode="multiple" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear className="w-48" options={contextSelectOptions} loading={loadingContexts} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
       <CustomSelect aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear className="w-28" options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
       <CustomSelect aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear className="w-32" options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
@@ -167,7 +175,7 @@ export function PracticeWritingPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện viết' : 'Writing Management'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Quản lý các dạng bài viết và tiêu chí chấm điểm.' : 'Manage writing exercise types, rubrics, and model answers.'}</p>
       </div>
-      <Tabs activeKey={type} destroyOnHidden onChange={tab => state.change({ tab, page: '1', sort: undefined, order: undefined, filters: JSON.stringify(Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))) })} items={writingTypes.map(value => ({ key: value, label: isVi ? writingLabels[value] : writingEnLabels[value], children: <WritingTable key={value} type={value} /> }))} />
+      <Tabs activeKey={type} destroyOnHidden onChange={tab => state.change({ tab, page: '1', sort: undefined, order: undefined, filters: JSON.stringify(Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))) })} items={writingTypes.map(value => ({ key: value, label: isVi ? writingLabels[value] : writingEnLabels[value], children: value === type ? <WritingTable key={value} type={value} /> : null }))} />
     </div>
   </ConfigProvider>
 }

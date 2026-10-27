@@ -1,223 +1,468 @@
-// Component giao diện DataTable được vận hành bởi TanStack Table phục vụ khu vực Quản trị Admin.
+// Component bảng dữ liệu dùng chung (DataTable / AdminDataTable) chuẩn hóa giao diện cho toàn bộ Admin.
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-  type VisibilityState,
-  createColumnHelper,
-} from '@tanstack/react-table'
+  Alert,
+  Button,
+  ConfigProvider,
+  DatePicker,
+  Input,
+  InputNumber,
+  Space,
+  Table,
+} from 'antd'
+import type {
+  ColumnType,
+  FilterDropdownProps,
+  TableRowSelection,
+  FilterValue,
+} from 'antd/es/table/interface'
+import { Filter, Search, X } from 'lucide-react'
+import dayjs from 'dayjs'
 import {
   TableControls,
   type TableDensity,
   type ColumnOption,
 } from '@/components/table.controls'
 import { Pagination } from '@/components/pagination'
-
-export { createColumnHelper }
-export type { ColumnDef }
+import { CustomSelect, type SelectOption } from '@/components/custom.select'
+import type { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
 
 export interface DataTableColumn<T> {
   key: string
-  title: React.ReactNode
-  render?: (record: T, index: number) => React.ReactNode
-  dataIndex?: keyof T
-  width?: string
-  minWidth?: string
+  title?: ReactNode
+  label?: string
+  dataIndex?: (keyof T & (string | number)) | string
+  render?: (record: T, index: number) => ReactNode
+  width?: string | number
+  minWidth?: string | number
   align?: 'left' | 'center' | 'right'
   hidden?: boolean
+  initiallyHidden?: boolean
+  sortable?: boolean
+  sorter?: boolean | ((a: T, b: T) => number)
+  sticky?: 'left' | 'right'
+  fixed?: 'left' | 'right' | boolean
+  ellipsis?: boolean
+  filterKind?: 'text' | 'enum' | 'media' | 'date' | 'number' | 'tree'
+  filterOptions?: SelectOption[]
+  filteredValue?: FilterValue | null
+}
+
+export interface IpaColumn<T> extends Omit<ColumnType<T>, 'title'> {
+  key: string
+  title?: ReactNode
+  label?: string
+  initiallyHidden?: boolean
   sortable?: boolean
   sticky?: 'left' | 'right'
+  filterKind?: 'text' | 'enum' | 'media' | 'date' | 'number' | 'tree'
+  filterOptions?: SelectOption[]
+}
+
+function isIpaColumn<T>(col: DataTableColumn<T> | IpaColumn<T>): col is IpaColumn<T> {
+  return col.label !== undefined
 }
 
 export interface DataTableProps<T> {
-  columns: DataTableColumn<T>[]
-  data: T[]
-  rowKey?: (record: T) => string
+  columns: (DataTableColumn<T> | IpaColumn<T>)[]
+  data?: T[]
+  items?: T[]
+  dataSource?: T[]
+  rowKey?: string | ((record: T) => string)
   isLoading?: boolean
+  loading?: boolean
+  error?: Error | null
+  retry?: () => unknown
   emptyText?: string
 
-  title?: React.ReactNode
-  subtitle?: React.ReactNode
-  filterSlot?: React.ReactNode
-  extraActions?: React.ReactNode
+  title?: ReactNode
+  subtitle?: ReactNode
+  filterSlot?: ReactNode
+  extraFilters?: ReactNode
+  extraActions?: ReactNode
   onResetFilters?: () => void | Promise<void>
+  search?: string
+  onSearchChange?: (val: string) => void
+  searchLabel?: string
+  searchPlaceholder?: string
+
+  state?: ReturnType<typeof useIpaTableState>
+  total?: number
 
   viewMode?: 'table' | 'grid'
   onViewModeChange?: (mode: 'table' | 'grid') => void
-  renderGridItem?: (record: T, index: number) => React.ReactNode
+  renderGridItem?: (record: T, index: number) => ReactNode
 
   sortKey?: string | null
   sortOrder?: 'asc' | 'desc' | null
   onSortChange?: (key: string, order: 'asc' | 'desc' | null) => void
 
+  rowSelection?: TableRowSelection<T>
+  onRowClick?: (record: T) => void
+
+  scroll?: { x?: number | string | true; y?: number | string }
+  className?: string
+  hideTopBar?: boolean
+
   pagination?: {
     currentPage: number
     pageSize: number
     totalItems: number
+    totalPages?: number
+    pageSizeOptions?: number[]
+    showTotal?: boolean
     onPageChange: (page: number) => void
     onPageSizeChange?: (size: number) => void
     onPrefetchPage?: (page: number) => void
   }
+}
 
-  onRowClick?: (record: T) => void
+function normalizeWidth(width?: string | number): number | string | undefined {
+  if (typeof width === 'number') return width
+  if (!width) return undefined
+  const match = width.match(/\[([0-9]+)(px)?\]/)
+  if (match) return Number(match[1])
+  const numMatch = width.match(/^([0-9]+)px$/)
+  if (numMatch) return Number(numMatch[1])
+  if (/^[0-9]+$/.test(width)) return Number(width)
+  return width
+}
+
+function defaultCompare<T>(a: T, b: T, key: keyof T | string): number {
+  const valA = (a as Record<string, unknown>)[String(key)]
+  const valB = (b as Record<string, unknown>)[String(key)]
+  if (valA === valB) return 0
+  if (valA === null || valA === undefined) return -1
+  if (valB === null || valB === undefined) return 1
+  if (typeof valA === 'number' && typeof valB === 'number') return valA - valB
+  return String(valA).localeCompare(String(valB))
+}
+
+function ColumnFilter({
+  kind,
+  options,
+  selectedKeys,
+  setSelectedKeys,
+  confirm,
+  clearFilters,
+  isVi,
+}: FilterDropdownProps & { kind: string; options?: SelectOption[]; isVi: boolean }) {
+  return (
+    <div style={{ padding: 12, width: 280 }} onKeyDown={(event) => event.stopPropagation()}>
+      {kind === 'number' ? (
+        <Space>
+          <InputNumber
+            aria-label={isVi ? 'Từ' : 'From'}
+            placeholder={isVi ? 'Từ' : 'From'}
+            min={0}
+            value={selectedKeys[0] ? Number(selectedKeys[0]) : null}
+            onChange={(value) =>
+              setSelectedKeys([value === null ? '' : String(value), String(selectedKeys[1] || '')])
+            }
+            style={{ width: 115 }}
+          />
+          <InputNumber
+            aria-label={isVi ? 'Đến' : 'To'}
+            placeholder={isVi ? 'Đến' : 'To'}
+            min={0}
+            value={selectedKeys[1] ? Number(selectedKeys[1]) : null}
+            onChange={(value) =>
+              setSelectedKeys([String(selectedKeys[0] || ''), value === null ? '' : String(value)])
+            }
+            style={{ width: 115 }}
+          />
+        </Space>
+      ) : kind === 'tree' ? (
+        <CustomSelect
+          aria-label={isVi ? 'Giá trị lọc cột' : 'Column filter value'}
+          style={{ width: '100%' }}
+          mode="multiple"
+          allowClear
+          placeholder={isVi ? 'Chọn giá trị' : 'Select values'}
+          value={selectedKeys}
+          options={options}
+          onChange={(value) =>
+            setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])
+          }
+        />
+      ) : kind === 'text' ? (
+        <Input
+          aria-label={isVi ? 'Lọc cột' : 'Column filter'}
+          value={String(selectedKeys[0] || '')}
+          onChange={(event) => setSelectedKeys(event.target.value ? [event.target.value] : [])}
+          onPressEnter={() => confirm()}
+          allowClear
+        />
+      ) : kind === 'date' ? (
+        <DatePicker.RangePicker
+          value={
+            selectedKeys.length === 2
+              ? [dayjs(String(selectedKeys[0])), dayjs(String(selectedKeys[1]))]
+              : null
+          }
+          onChange={(dates) =>
+            setSelectedKeys(
+              dates?.[0] && dates[1]
+                ? [dates[0].startOf('day').toISOString(), dates[1].endOf('day').toISOString()]
+                : []
+            )
+          }
+        />
+      ) : (
+        <CustomSelect
+          aria-label={isVi ? 'Giá trị lọc cột' : 'Column filter value'}
+          style={{ width: '100%' }}
+          mode={kind === 'media' ? undefined : 'multiple'}
+          allowClear
+          placeholder={isVi ? 'Chọn giá trị' : 'Select value'}
+          value={kind === 'media' ? selectedKeys[0] : selectedKeys}
+          options={
+            kind === 'media'
+              ? [
+                  { value: 'present', label: isVi ? 'Có media' : 'Has media' },
+                  { value: 'missing', label: isVi ? 'Thiếu media' : 'Missing media' },
+                ]
+              : options
+          }
+          onChange={(value) =>
+            setSelectedKeys(value === undefined ? [] : Array.isArray(value) ? value : [value])
+          }
+        />
+      )}
+      <Space style={{ marginTop: 12 }}>
+        <Button type="primary" size="small" onClick={() => confirm()}>
+          {isVi ? 'Áp dụng' : 'Apply'}
+        </Button>
+        <Button size="small" onClick={() => clearFilters?.({ confirm: true })}>
+          {isVi ? 'Xóa lọc' : 'Clear'}
+        </Button>
+      </Space>
+    </div>
+  )
 }
 
 export function DataTable<T extends object>({
   columns,
   data,
-  rowKey = (record) => {
-    const rec = record as { _id?: string }
-    return rec._id ?? ''
-  },
+  items,
+  dataSource,
+  rowKey,
   isLoading = false,
+  loading,
+  error = null,
+  retry,
   emptyText,
   title,
   subtitle,
   filterSlot,
+  extraFilters,
   extraActions,
   onResetFilters,
+  search,
+  onSearchChange,
+  searchLabel,
+  searchPlaceholder,
+  state,
+  total,
   viewMode = 'table',
   onViewModeChange,
   renderGridItem,
   sortKey,
   sortOrder,
   onSortChange,
-  pagination,
+  rowSelection,
   onRowClick,
+  scroll,
+  className,
+  hideTopBar = false,
+  pagination,
 }: DataTableProps<T>) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
+  const effectiveData = useMemo(() => {
+    return data ?? items ?? dataSource ?? []
+  }, [data, items, dataSource])
 
+  const effectiveLoading = Boolean(loading ?? isLoading)
+  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
+  const resolvedSearchLabel = searchLabel || (isVi ? 'Tìm kiếm' : 'Search')
+  const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? 'Tìm kiếm nội dung...' : 'Search content...')
+
+  const [density, setDensity] = useState<TableDensity>('middle')
   const [internalSortKey, setInternalSortKey] = useState<string | null>(null)
   const [internalSortOrder, setInternalSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const activeSortKey = sortKey !== undefined ? sortKey : internalSortKey
   const activeSortOrder = sortOrder !== undefined ? sortOrder : internalSortOrder
 
-  const [density, setDensity] = useState<TableDensity>('middle')
-
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
     columns.map((col) => ({
       key: col.key,
-      label: typeof col.title === 'string' ? col.title : col.key,
-      visible: !col.hidden,
+      label: col.label || (typeof col.title === 'string' ? col.title : col.key),
+      visible: !(col.hidden || col.initiallyHidden),
     }))
   )
 
-  const columnVisibility = useMemo<VisibilityState>(() => {
-    const visibility: VisibilityState = {}
-    columnOptions.forEach((c) => {
-      visibility[c.key] = c.visible
-    })
-    return visibility
-  }, [columnOptions])
+  const visibleKeys = useMemo(
+    () => new Set(columnOptions.filter((c) => c.visible).map((c) => c.key)),
+    [columnOptions]
+  )
 
-  const tanstackColumns = useMemo<ColumnDef<T>[]>(() => {
-    return columns.map((col) => {
-      const isActionsCol = col.key === 'actions' || col.key === 'action'
-      const isSortable = col.sortable !== undefined ? Boolean(col.sortable) : !isActionsCol
-
-      const def: ColumnDef<T> = {
-        id: col.key,
-        accessorFn: (row) => {
-          if (col.dataIndex) return row[col.dataIndex]
-          const rec = row as Record<string, unknown>
-          return rec[col.key]
-        },
-        header: () => col.title,
-        cell: (info) => {
-          const row = info.row.original
-          if (col.render) {
-            return col.render(row, info.row.index)
-          }
-          if (col.dataIndex) {
-            const val = row[col.dataIndex]
-            return val !== undefined && val !== null ? String(val) : ''
-          }
-          const rec = row as Record<string, unknown>
-          const val = rec[col.key]
-          return val !== undefined && val !== null ? String(val) : ''
-        },
-        enableSorting: isSortable,
-      }
-      return def
-    })
-  }, [columns])
-
-  const sorting = useMemo<SortingState>(() => {
-    if (!activeSortKey || !activeSortOrder) return []
-    return [{ id: activeSortKey, desc: activeSortOrder === 'desc' }]
-  }, [activeSortKey, activeSortOrder])
-
-  const table = useReactTable({
-    data,
-    columns: tanstackColumns,
-    state: {
-      sorting,
-      columnVisibility,
+  const densityTokens: Record<TableDensity, Record<string, number | string>> = {
+    compact: {
+      cellPaddingBlockMD: 5,
+      cellPaddingInlineMD: 6,
+      cellPaddingBlockSM: 4,
+      cellPaddingInlineSM: 5,
+      cellPaddingBlock: 6,
+      cellPaddingInline: 6,
+      borderColor: 'rgba(226, 232, 240, 0.8)',
     },
-    onSortingChange: (updater) => {
-      const nextSorting = typeof updater === 'function' ? updater(sorting) : updater
-      if (nextSorting.length > 0) {
-        const item = nextSorting[0]
-        const order = item.desc ? 'desc' : 'asc'
-        if (onSortChange) {
-          onSortChange(item.id, order)
-        } else {
-          setInternalSortKey(item.id)
-          setInternalSortOrder(order)
-        }
-      } else {
-        if (onSortChange) {
-          onSortChange('', null)
-        } else {
-          setInternalSortKey(null)
-          setInternalSortOrder(null)
-        }
-      }
+    middle: {
+      cellPaddingBlockMD: 8,
+      cellPaddingInlineMD: 8,
+      cellPaddingBlockSM: 6,
+      cellPaddingInlineSM: 6,
+      cellPaddingBlock: 8,
+      cellPaddingInline: 8,
+      borderColor: 'rgba(226, 232, 240, 0.8)',
     },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: onSortChange ? undefined : getSortedRowModel(),
-    manualSorting: Boolean(onSortChange),
-    manualPagination: true,
-  })
-
-  const getCellPadding = () => {
-    if (density === 'compact') return 'py-1.5 px-3'
-    if (density === 'comfortable') return 'py-4 px-4'
-    return 'py-2.5 px-3.5'
+    comfortable: {
+      cellPaddingBlockMD: 14,
+      cellPaddingInlineMD: 12,
+      cellPaddingBlockSM: 10,
+      cellPaddingInlineSM: 10,
+      cellPaddingBlock: 14,
+      cellPaddingInline: 12,
+      borderColor: 'rgba(226, 232, 240, 0.8)',
+    },
   }
 
-  const totalPages = pagination
-    ? Math.ceil(pagination.totalItems / pagination.pageSize) || 1
-    : 1
+  const antdSize = density === 'compact' ? 'small' : density === 'comfortable' ? 'large' : 'middle'
+
+  const effectiveRowKey = (record: T): string => {
+    if (typeof rowKey === 'function') return rowKey(record)
+    if (typeof rowKey === 'string') return String((record as Record<string, unknown>)[rowKey] ?? '')
+    const rec = record as { _id?: string; id?: string }
+    return String(rec._id || rec.id || '')
+  }
 
   const handleResetFiltersInternal = async () => {
     setColumnOptions(
       columns.map((col) => ({
         key: col.key,
-        label: typeof col.title === 'string' ? col.title : col.key,
-        visible: !col.hidden,
+        label: col.label || (typeof col.title === 'string' ? col.title : col.key),
+        visible: !(col.hidden || col.initiallyHidden),
       }))
     )
     setDensity('middle')
     setInternalSortKey(null)
     setInternalSortOrder(null)
+    if (state) {
+      state.reset()
+    }
     if (onResetFilters) {
       await onResetFilters()
     }
   }
 
+  const hasSearch = Boolean(state || onSearchChange || search !== undefined)
+  const effectiveSearch = state ? state.search : (search || '')
+  const handleSearchChange = (val: string) => {
+    if (state) state.setSearch(val)
+    else onSearchChange?.(val)
+  }
+
+  const antdColumns = useMemo<ColumnType<T>[]>(() => {
+    return columns
+      .filter((col) => visibleKeys.has(col.key) || col.key === 'actions' || col.key === 'action')
+      .map((col) => {
+        const isActionsCol = col.key === 'actions' || col.key === 'action'
+        const isSortable =
+          col.sortable !== undefined
+            ? Boolean(col.sortable)
+            : col.sorter !== undefined
+            ? Boolean(col.sorter)
+            : !isActionsCol
+
+        const currentSortOrderForCol = state
+          ? state.query.sort === col.key
+            ? state.query.order === 'asc'
+              ? ('ascend' as const)
+              : ('descend' as const)
+            : null
+          : activeSortKey === col.key
+          ? activeSortOrder === 'asc'
+            ? ('ascend' as const)
+            : ('descend' as const)
+          : null
+
+        const normalizedW = normalizeWidth(col.width)
+        const isStickyLeft = col.sticky === 'left' || col.fixed === 'left'
+        const isStickyRight =
+          col.sticky === 'right' || col.fixed === 'right' || (isActionsCol && col.fixed !== false)
+
+        const effectiveDataIndex = (
+          col.dataIndex ? String(col.dataIndex) : col.render ? undefined : col.key
+        ) as (keyof T & (string | number)) | undefined
+
+        const antdCol: ColumnType<T> = {
+          key: col.key,
+          dataIndex: effectiveDataIndex,
+          title: col.title ?? col.label ?? col.key,
+          width: normalizedW,
+          align: col.align || (isActionsCol ? 'center' : 'left'),
+          ellipsis: col.ellipsis,
+          fixed: isStickyRight ? 'right' : isStickyLeft ? 'left' : undefined,
+          sorter: isSortable
+            ? onSortChange || state
+              ? true
+              : (a: T, b: T) => defaultCompare(a, b, String(col.dataIndex || col.key))
+            : false,
+          sortOrder: currentSortOrderForCol,
+          render: (value: unknown, record: T, index: number) => {
+            if (!col.render) {
+              return (value !== undefined && value !== null ? String(value) : '') as ReactNode
+            }
+            if (isIpaColumn(col)) {
+              return col.render(value, record, index)
+            }
+            return col.render(record, index)
+          },
+          ...(col.filterKind
+            ? {
+                filteredValue: (state?.filters[col.key] || col.filteredValue || null) as FilterValue | null,
+                filterOnClose: false,
+                filterIcon: (active: boolean) => (
+                  <Filter size={13} color={active ? '#4f46e5' : undefined} />
+                ),
+                filterDropdown: (dropdownProps: FilterDropdownProps) => (
+                  <ColumnFilter
+                    {...dropdownProps}
+                    kind={col.filterKind!}
+                    options={col.filterOptions}
+                    isVi={isVi}
+                  />
+                ),
+              }
+            : {}),
+        }
+        return antdCol
+      })
+  }, [columns, visibleKeys, state, activeSortKey, activeSortOrder, onSortChange, isVi])
+
+  const totalCount = pagination ? pagination.totalItems : total ?? effectiveData.length
+  const totalPages = pagination
+    ? Math.ceil(pagination.totalItems / pagination.pageSize) || 1
+    : state && total !== undefined
+    ? Math.ceil(total / state.query.limit) || 1
+    : 1
+
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className || ''}`}>
       {(title || extraActions) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -227,37 +472,70 @@ export function DataTable<T extends object>({
               </h1>
             )}
             {subtitle && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {subtitle}
-              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
             )}
           </div>
-          {extraActions && (
-            <div className="flex items-center gap-2.5">{extraActions}</div>
-          )}
+          {extraActions && <div className="flex items-center gap-2.5">{extraActions}</div>}
         </div>
       )}
 
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-          {filterSlot}
+      {!hideTopBar && (
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+            {hasSearch && (
+              <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <input
+                  type="text"
+                  aria-label={resolvedSearchLabel}
+                  value={effectiveSearch}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder={resolvedSearchPlaceholder}
+                  className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+                />
+                {effectiveSearch && (
+                  <button
+                    type="button"
+                    onClick={() => handleSearchChange('')}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+            {filterSlot}
+            {extraFilters}
+          </div>
+
+          <TableControls
+            density={density}
+            onDensityChange={setDensity}
+            columns={columnOptions}
+            onColumnsChange={setColumnOptions}
+            viewMode={renderGridItem ? viewMode : undefined}
+            onViewModeChange={onViewModeChange}
+            onResetFilters={handleResetFiltersInternal}
+            totalCount={totalCount}
+          />
         </div>
+      )}
 
-        <TableControls
-          density={density}
-          onDensityChange={setDensity}
-          columns={columnOptions}
-          onColumnsChange={setColumnOptions}
-          viewMode={renderGridItem ? viewMode : undefined}
-          onViewModeChange={onViewModeChange}
-          onResetFilters={onResetFilters ? handleResetFiltersInternal : undefined}
-          totalCount={pagination ? pagination.totalItems : data.length}
+      {error ? (
+        <Alert
+          type="error"
+          showIcon
+          title={isVi ? 'Không tải được dữ liệu' : 'Failed to load data'}
+          description={error.message}
+          action={
+            retry ? (
+              <Button onClick={() => void retry()}>{isVi ? 'Thử lại' : 'Retry'}</Button>
+            ) : undefined
+          }
         />
-      </div>
-
-      {viewMode === 'grid' && renderGridItem && (
+      ) : viewMode === 'grid' && renderGridItem ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
+          {effectiveLoading ? (
             Array.from({ length: 6 }).map((_, idx) => (
               <div
                 key={`skeleton-card-${idx}`}
@@ -268,194 +546,110 @@ export function DataTable<T extends object>({
                 <div className="h-3.5 w-full rounded-md bg-slate-200/80 dark:bg-slate-800/80 animate-pulse" />
               </div>
             ))
-          ) : data.length === 0 ? (
+          ) : effectiveData.length === 0 ? (
             <div className="col-span-full py-16 text-center text-xs text-slate-400">
               {resolvedEmptyText}
             </div>
           ) : (
-            data.map((record, idx) => (
-              <div key={rowKey(record)}>{renderGridItem(record, idx)}</div>
-            ))
+            effectiveData.map((record, index) => renderGridItem(record, index))
           )}
         </div>
-      )}
-
-      {viewMode === 'table' && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60">
-                    {headerGroup.headers.map((header) => {
-                      const col = columns.find((c) => c.key === header.id)
-                      const isStickyRight = col?.sticky === 'right'
-                      const isStickyLeft = col?.sticky === 'left'
-                      const isSortable = header.column.getCanSort()
-                      const sortState = header.column.getIsSorted()
-
-                      return (
-                        <th
-                          key={header.id}
-                          style={{ width: col?.width, minWidth: col?.minWidth }}
-                          onClick={header.column.getToggleSortingHandler()}
-                          className={`py-3 px-3.5 whitespace-nowrap ${
-                            col?.align === 'right'
-                              ? 'text-right'
-                              : col?.align === 'left'
-                              ? 'text-left'
-                              : 'text-center'
-                          } ${
-                            isSortable
-                              ? 'cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors'
-                              : ''
-                          } ${
-                            isStickyRight
-                              ? 'sticky right-0 bg-slate-50/95 dark:bg-slate-950/95 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.4)]'
-                              : isStickyLeft
-                              ? 'sticky left-0 bg-slate-50/95 dark:bg-slate-950/95 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_6px_-2px_rgba(0,0,0,0.4)]'
-                              : ''
-                          }`}
-                        >
-                          <div
-                            className={`inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap ${
-                              col?.align === 'right'
-                                ? 'justify-end'
-                                : col?.align === 'left'
-                                ? 'justify-start'
-                                : 'justify-center'
-                            }`}
-                          >
-                            <span className="tracking-tight whitespace-nowrap">
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                            </span>
-                            {isSortable && (
-                              <span className="inline-flex flex-col items-center justify-center shrink-0 leading-none ml-1">
-                                <svg
-                                  viewBox="0 0 1024 1024"
-                                  width="8"
-                                  height="8"
-                                  className={`transition-colors ${
-                                    sortState === 'asc'
-                                      ? 'text-indigo-600 dark:text-indigo-400 fill-current'
-                                      : 'text-slate-300 dark:text-slate-600 fill-current group-hover:text-slate-400 dark:group-hover:text-slate-500'
-                                  }`}
-                                >
-                                  <path d="M858.9 689L530.5 308.2c-9.4-10.9-27.5-10.9-37 0L165.1 689c-12.2 14.2-1.2 35 18.5 35h656.8c19.7 0 30.7-20.8 18.5-35z" />
-                                </svg>
-                                <svg
-                                  viewBox="0 0 1024 1024"
-                                  width="8"
-                                  height="8"
-                                  className={`-mt-0.5 transition-colors ${
-                                    sortState === 'desc'
-                                      ? 'text-indigo-600 dark:text-indigo-400 fill-current'
-                                      : 'text-slate-300 dark:text-slate-600 fill-current group-hover:text-slate-400 dark:group-hover:text-slate-500'
-                                  }`}
-                                >
-                                  <path d="M840.4 300H183.6c-19.7 0-30.7 20.8-18.5 35l328.4 380.8c9.4 10.9 27.5 10.9 37 0L858.9 335c12.2-14.2 1.2-35-18.5-35z" />
-                                </svg>
-                              </span>
-                            )}
-                          </div>
-                        </th>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="text-slate-700 dark:text-slate-200 text-xs">
-                {isLoading ? (
-                  Array.from({ length: 6 }).map((_, rIdx) => (
-                    <tr
-                      key={`skeleton-row-${rIdx}`}
-                      className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0"
-                    >
-                      {table.getVisibleLeafColumns().map((col, cIdx) => (
-                        <td
-                          key={`skeleton-cell-${rIdx}-${col.id}`}
-                          className={`px-3.5 ${getCellPadding()}`}
-                        >
-                          <div
-                            className={`h-4 rounded-md bg-slate-200/80 dark:bg-slate-800/80 animate-pulse ${
-                              cIdx === 0
-                                ? 'w-3/4 max-w-[180px]'
-                                : cIdx === table.getVisibleLeafColumns().length - 1
-                                ? 'w-16 mx-auto'
-                                : cIdx % 2 === 0
-                                ? 'w-20 mx-auto'
-                                : 'w-28 mx-auto'
-                            }`}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : table.getRowModel().rows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={table.getVisibleLeafColumns().length || 1}
-                      className="py-16 text-center text-slate-400"
-                    >
-                      {resolvedEmptyText}
-                    </td>
-                  </tr>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={rowKey(row.original)}
-                      onClick={() => onRowClick && onRowClick(row.original)}
-                      className={`group border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-[background-color] duration-100 ${
-                        onRowClick ? 'cursor-pointer' : ''
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => {
-                        const col = columns.find((c) => c.key === cell.column.id)
-                        const isStickyRight = col?.sticky === 'right'
-                        const isStickyLeft = col?.sticky === 'left'
-
-                        return (
-                          <td
-                            key={cell.id}
-                            style={{ width: col?.width, minWidth: col?.minWidth }}
-                            className={`${getCellPadding()} ${
-                              col?.align === 'right'
-                                ? 'text-right'
-                                : col?.align === 'center'
-                                ? 'text-center'
-                                : 'text-left'
-                            } ${
-                              isStickyRight
-                                ? 'sticky right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.4)] transition-colors'
-                                : isStickyLeft
-                                ? 'sticky left-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_6px_-2px_rgba(0,0,0,0.4)] transition-colors'
-                                : ''
-                            }`}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+      ) : (
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex-initial [&_.ant-table-thead_.ant-table-column-title]:!flex-initial [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5">
+          <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
+            <Table<T>
+              rowKey={effectiveRowKey}
+              columns={antdColumns}
+              dataSource={effectiveData}
+              loading={effectiveLoading}
+              size={antdSize}
+              scroll={{ x: scroll?.x ?? 'max-content', y: scroll?.y }}
+              pagination={false}
+              rowSelection={rowSelection}
+              locale={{
+                emptyText: (
+                  <div className="py-12 text-center text-xs text-slate-400">
+                    {resolvedEmptyText}
+                  </div>
+                ),
+              }}
+              onRow={
+                onRowClick
+                  ? (record) => ({
+                      onClick: (e: React.MouseEvent) => {
+                        const target = e.target as HTMLElement | null
+                        if (
+                          target?.closest(
+                            'button, a, input, textarea, select, [role="button"], .ant-btn, .ant-popover, .ant-popconfirm, .ant-dropdown, .ant-switch, .ant-checkbox, .ant-radio, .ant-select, [data-no-row-click]'
+                          )
+                        ) {
+                          return
+                        }
+                        onRowClick(record)
+                      },
+                      className:
+                        'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors',
+                    })
+                  : undefined
+              }
+              onChange={(_p, filters, sorter, extra) => {
+                if (extra.action === 'filter' && state) {
+                  const next = { ...state.filters }
+                  Object.entries(filters).forEach(([key, values]) => {
+                    if (values?.length) next[key] = values.map(String)
+                    else delete next[key]
+                  })
+                  state.setFilters(next)
+                }
+                if (extra.action === 'sort') {
+                  const sort = Array.isArray(sorter) ? sorter[0] : sorter
+                  const order = sort.order ? (sort.order === 'ascend' ? 'asc' : 'desc') : null
+                  const key = sort.order ? String(sort.columnKey || sort.field || '') : ''
+                  if (state) {
+                    state.change({ sort: key || undefined, order: order || undefined, page: '1' })
+                  } else if (onSortChange) {
+                    onSortChange(key, order)
+                  } else {
+                    setInternalSortKey(order ? key : null)
+                    setInternalSortOrder(order)
+                  }
+                }
+              }}
+            />
+          </ConfigProvider>
         </div>
       )}
 
-      {pagination && pagination.totalItems > 0 && (
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={totalPages}
-          totalItems={pagination.totalItems}
-          pageSize={pagination.pageSize}
-          onPageChange={pagination.onPageChange}
-          onPageSizeChange={pagination.onPageSizeChange}
-          onPrefetchPage={pagination.onPrefetchPage}
-        />
-      )}
+      {pagination && pagination.totalItems > 0 ? (
+        <div className="pt-2">
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={totalPages}
+            totalItems={pagination.totalItems}
+            pageSize={pagination.pageSize}
+            pageSizeOptions={[10, 20, 50, 100]}
+            showTotal={true}
+            onPageChange={pagination.onPageChange}
+            onPageSizeChange={pagination.onPageSizeChange}
+            onPrefetchPage={pagination.onPrefetchPage}
+          />
+        </div>
+      ) : state && total !== undefined && total > 0 ? (
+        <div className="pt-2">
+          <Pagination
+            currentPage={state.query.page}
+            totalPages={totalPages}
+            totalItems={total}
+            pageSize={state.query.limit}
+            pageSizeOptions={[10, 20, 50, 100]}
+            showTotal={true}
+            onPageChange={(page) => state.change({ page: String(page) })}
+            onPageSizeChange={(limit) => state.change({ limit: String(limit), page: '1' })}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }
+
+export { DataTable as AdminDataTable, DataTable as IpaDataTable }

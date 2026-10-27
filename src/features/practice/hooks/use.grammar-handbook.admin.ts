@@ -1,19 +1,15 @@
-/**
- * @file use.grammar-handbook.admin.ts
- * @description React Query hooks cho phân hệ Quản trị Sổ tay Ngữ pháp & Tips TOEIC
- */
-
+// Hook quản trị sổ tay ngữ pháp và bí quyết làm bài thi TOEIC cho Quản trị viên.
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   grammarHandbookAdminService,
   toeicTipsAdminService,
-} from '../services/grammar-handbook-admin.service'
+} from '@/features/practice/services/grammar-handbook-admin.service'
 import type {
   GrammarHandbookQuery,
   GrammarHandbookPayload,
   ToeicTipQuery,
   ToeicTipPayload,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 export const grammarHandbookKeys = {
   all: ['admin', 'grammar-handbook'] as const,

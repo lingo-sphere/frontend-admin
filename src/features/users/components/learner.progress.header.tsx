@@ -7,7 +7,9 @@ import {
   CheckCircle2,
   Award,
   BookOpen,
+  TrendingUp,
 } from 'lucide-react'
+import { StatCard } from '@/components/stat.card'
 
 interface LearnerProgressHeaderProps {
   displayName: string
@@ -90,57 +92,49 @@ export function LearnerProgressHeader({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-            <BarChart3 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Tiến độ khóa học</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{progressPct}%</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
-              {completedLessons} / {totalLessons} bài học
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Tiến Độ Khóa Học"
+          value={`${progressPct}%`}
+          subtitle={`${completedLessons} / ${totalLessons} bài học`}
+          icon={BarChart3}
+          color="indigo"
+          trend={`${progressPct}%`}
+          trendType={progressPct >= 50 ? 'up' : 'neutral'}
+          loading={isLoading}
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Đầu vào (Pre-test)</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {baselineScore !== undefined ? `${baselineScore}đ` : 'Chưa test'}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Thang điểm TOEIC</div>
-          </div>
-        </div>
+        <StatCard
+          title="Đầu Vào (Pre-test)"
+          value={baselineScore !== undefined ? `${baselineScore}đ` : 'Chưa test'}
+          subtitle="Thang điểm TOEIC xuất phát"
+          icon={CheckCircle2}
+          color="emerald"
+          trend={baselineScore !== undefined ? `${baselineScore}đ` : undefined}
+          trendType="neutral"
+          loading={isLoading}
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-            <Award className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Kết khóa (Final Test)</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {finalTestScore !== undefined ? `${finalTestScore}đ` : 'Chưa thi'}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Bài thi tốt nghiệp</div>
-          </div>
-        </div>
+        <StatCard
+          title="Kết Khóa (Final Test)"
+          value={finalTestScore !== undefined ? `${finalTestScore}đ` : 'Chưa thi'}
+          subtitle="Bài thi tốt nghiệp hoàn thành"
+          icon={Award}
+          color="purple"
+          trend={finalTestScore !== undefined ? `${finalTestScore}đ` : undefined}
+          trendType="neutral"
+          loading={isLoading}
+        />
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <BarChart3 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Tăng trưởng điểm số</div>
-            <div className={`text-lg font-black ${growth > 0 ? 'text-emerald-600' : growth < 0 ? 'text-rose-500' : 'text-slate-500'}`}>
-              {growth > 0 ? `+${growth}` : growth} điểm
-            </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">So với điểm xuất phát</div>
-          </div>
-        </div>
+        <StatCard
+          title="Tăng Trưởng Điểm Số"
+          value={growth > 0 ? `+${growth}đ` : `${growth}đ`}
+          subtitle="So với điểm xuất phát"
+          icon={TrendingUp}
+          color={growth > 0 ? 'emerald' : growth < 0 ? 'rose' : 'amber'}
+          trend={growth !== 0 ? `${growth > 0 ? `+${growth}` : growth}` : undefined}
+          trendType={growth > 0 ? 'up' : growth < 0 ? 'down' : 'neutral'}
+          loading={isLoading}
+        />
       </div>
     </div>
   )

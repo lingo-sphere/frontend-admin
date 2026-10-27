@@ -10,7 +10,7 @@ import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
-import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { DataTable, type DataTableColumn, type IpaColumn } from '@/components/data.table'
 import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
 import { IpaRowActions } from '@/features/practice/components/ipa.row.actions'
 import { IpaSymbolEditor } from '@/features/practice/components/ipa.symbol.editor'
@@ -95,7 +95,7 @@ function SymbolsTable() {
       <p className="text-sm text-slate-500">{isVi ? 'Danh mục âm cố định · chỉ xem và chỉnh sửa' : 'Fixed phoneme inventory · view and edit only'}</p>
       <Button icon={<RotateCcw size={14} />} loading={result.isFetching} onClick={() => result.refetch()}>{isVi ? 'Làm mới' : 'Refresh'}</Button>
     </div>
-    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} extraFilters={<>
+    <DataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} extraFilters={<>
       <CustomSelect mode="multiple" aria-label={isVi ? "Lọc loại âm" : "Filter type"} placeholder={isVi ? "Loại âm" : "Type"} className="w-40" allowClear options={types} value={state.filters.symbol_type || []} onChange={values => state.setFilter('symbol_type', values)} />
       <CustomSelect mode="multiple" aria-label="Lọc CEFR" placeholder="CEFR" className="w-28" allowClear options={levels} value={state.filters.cefr_min_level || []} onChange={values => state.setFilter('cefr_min_level', values)} />
       <CustomSelect mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} className="w-36" allowClear options={symbolStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
@@ -131,11 +131,15 @@ function ExercisesTable() {
   const [working, setWorking] = useState<string | null>(null)
   const trash = state.query.trash === 'true'
 
+  const totalPages = result.data?.pagination?.totalPages
+  const currentPage = state.query.page
+  const { change } = state
+
   useEffect(() => {
-    if (!result.isPlaceholderData && result.data && state.query.page > Math.max(1, result.data.pagination.totalPages)) {
-      state.change({ page: String(Math.max(1, result.data.pagination.totalPages)) })
+    if (!result.isPlaceholderData && totalPages !== undefined && currentPage > Math.max(1, totalPages)) {
+      change({ page: String(Math.max(1, totalPages)) })
     }
-  }, [result.data, result.isPlaceholderData, state])
+  }, [result.isPlaceholderData, totalPages, currentPage, change])
 
   const toggle = async (record: IpaExerciseRecord, published: boolean) => {
     setWorking(record._id)
@@ -188,7 +192,7 @@ function ExercisesTable() {
         {!trash && <Button type="primary" icon={<Plus size={15} />} onClick={() => setEditor({ id: null, readOnly: false })}>{isVi ? 'Thêm bài tập' : 'Add Exercise'}</Button>}
       </Space>
     </div>
-    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? "Tìm kiếm bài tập" : "Search exercises"} searchPlaceholder={isVi ? "Tìm tiêu đề, từ, âm, mô tả..." : "Search title, word, phoneme, description..."} extraFilters={<>
+    <DataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? "Tìm kiếm bài tập" : "Search exercises"} searchPlaceholder={isVi ? "Tìm tiêu đề, từ, âm, mô tả..." : "Search title, word, phoneme, description..."} extraFilters={<>
       <CustomSelect mode="multiple" aria-label={isVi ? "Lọc CEFR" : "Filter CEFR"} placeholder="CEFR" className="w-28" allowClear options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
       <CustomSelect mode="multiple" aria-label={isVi ? "Lọc độ khó" : "Filter difficulty"} placeholder={isVi ? "Độ khó" : "Difficulty"} className="w-32" allowClear options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
       <CustomSelect mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} className="w-40" allowClear options={exerciseStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
@@ -211,7 +215,7 @@ export function PracticeIpaPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Ngữ âm & IPA' : 'Phonetics & IPA'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Quản lý bảng âm cố định và bài tập nhận diện âm, cặp âm, phiên âm.' : 'Manage standard IPA chart, minimal pairs, phoneme recognition and transcription.'}</p>
       </div>
-      <Tabs activeKey={tab} onChange={state.switchTab} items={[{ key: 'symbols', label: isVi ? 'Bảng âm IPA' : 'IPA Symbols', children: <SymbolsTable /> }, { key: 'exercises', label: isVi ? 'Bài tập IPA' : 'IPA Exercises', children: <ExercisesTable /> }]} destroyOnHidden />
+      <Tabs activeKey={tab} onChange={state.switchTab} items={[{ key: 'symbols', label: isVi ? 'Bảng âm IPA' : 'IPA Symbols', children: tab === 'symbols' ? <SymbolsTable /> : null }, { key: 'exercises', label: isVi ? 'Bài tập IPA' : 'IPA Exercises', children: tab === 'exercises' ? <ExercisesTable /> : null }]} destroyOnHidden />
     </div>
   </ConfigProvider>
 }

@@ -178,6 +178,7 @@ export function CourseLearnersPage() {
         avgProgress={stats.avgProgress}
         totalSubmissions={stats.totalSubmissions}
         pendingReviews={stats.pendingReviews}
+        loading={isLoadingProgress || isLoadingSubmissions}
       />
 
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">

@@ -35,12 +35,15 @@ export function IpaRowActions({
   const defaultDesc = isVi ? 'Giữ lại lịch sử làm bài và media.' : 'Preserves attempt history and media.'
 
   return (
-    <Space size={4}>
+    <Space size={4} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
       <Tooltip title={popOpen ? '' : (isVi ? 'Xem' : 'View')} open={popOpen ? false : undefined}>
         <Button
           size="small"
           icon={<Eye size={14} />}
-          onClick={onView}
+          onClick={(e) => {
+            e.stopPropagation()
+            onView()
+          }}
           className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
         />
       </Tooltip>
@@ -51,7 +54,10 @@ export function IpaRowActions({
             type="primary"
             ghost
             icon={<Edit2 size={14} />}
-            onClick={onEdit}
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit()
+            }}
           />
         </Tooltip>
       )}

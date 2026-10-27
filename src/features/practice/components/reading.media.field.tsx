@@ -1,5 +1,6 @@
-import { usePracticeText } from '../hooks/use.practice.text'
-import { PracticeMediaLibrary } from './practice.media.library'
+// Component chọn và xem trước hình ảnh/video cho bài tập đọc Reading.
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import { PracticeMediaLibrary } from '@/features/practice/components/practice.media.library'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Space, Upload } from 'antd'
@@ -7,7 +8,7 @@ import { api } from '@/services/api.client'
 import { mediaService } from '@/features/media/services/media.service'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
-import { SpeakingMediaPreview } from './speaking.media.field'
+import { SpeakingMediaPreview } from '@/features/practice/components/speaking.media.field'
 export function ReadingMediaPreview({ value, kind }: { value: string; kind: 'IMAGE' | 'VIDEO' }) {
   const p = usePracticeText()
   const result = useQuery({ queryKey: ['reading-video', value], queryFn: () => api.get<{ storage_key: string }>(`/media/files/${value}`), enabled: kind === 'VIDEO' })

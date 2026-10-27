@@ -40,7 +40,11 @@ export function getVocabularyColumns({
           <div className="flex items-center gap-1">
             {w.audio_url_us && (
               <button
-                onClick={() => playAudio(w.audio_url_us)}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  playAudio(w.audio_url_us)
+                }}
                 className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title={isVi ? "Nghe phát âm US" : "Play US audio"}
               >
@@ -49,7 +53,11 @@ export function getVocabularyColumns({
             )}
             {w.audio_url_uk && (
               <button
-                onClick={() => playAudio(w.audio_url_uk)}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  playAudio(w.audio_url_uk)
+                }}
                 className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title={isVi ? "Nghe phát âm UK" : "Play UK audio"}
               >

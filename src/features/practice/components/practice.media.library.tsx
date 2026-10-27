@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Button, Image, Modal, Space, Table } from 'antd'
+import { Alert, Button, Image, Modal, Space } from 'antd'
 import { Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useDebounce } from '@/hooks/use.debounce'
-import { Pagination } from '@/components/pagination'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { mediaAdminService, type LibraryMedia, type LibraryMediaKind } from '@/features/media/services/media.service'
 import { resolveMediaUrl } from '@/lib/media.utils'
 
@@ -23,6 +23,58 @@ export function PracticeMediaLibrary({ kind, disabled, onSelect }: { kind: Libra
     queryFn: () => mediaAdminService.library({ kind, search: debounced || undefined, page, limit: 12 }),
     enabled: open,
   })
+
+  const columns: DataTableColumn<LibraryMedia>[] = [
+    {
+      key: 'preview',
+      title: vi ? 'Xem trước' : 'Preview',
+      width: 210,
+      align: 'center',
+      render: (file) =>
+        file.content_type === 'IMAGE' ? (
+          <Image
+            width={100}
+            height={70}
+            style={{ objectFit: 'contain' }}
+            src={resolveMediaUrl(file.storage_key)}
+          />
+        ) : file.content_type === 'VIDEO' ? (
+          <video controls preload="none" width={180} src={resolveMediaUrl(file.storage_key)} />
+        ) : (
+          <audio controls preload="none" style={{ width: 190 }} src={resolveMediaUrl(file.storage_key)} />
+        ),
+    },
+    {
+      key: 'filename',
+      title: vi ? 'Tên tệp' : 'Filename',
+      render: (file) => (
+        <Space direction="vertical" size={0}>
+          <span className="font-semibold text-slate-800 dark:text-slate-100">{file.filename}</span>
+          <small className="text-slate-500">
+            {Math.ceil(file.file_size_bytes / 1024)} KB
+            {file.duration_seconds ? ` · ${file.duration_seconds}s` : ''}
+          </small>
+        </Space>
+      ),
+    },
+    {
+      key: 'actions',
+      width: 90,
+      align: 'center',
+      render: (file) => (
+        <Button
+          type="primary"
+          disabled={disabled}
+          onClick={() => {
+            onSelect(file)
+            setOpen(false)
+          }}
+        >
+          {vi ? 'Chọn' : 'Select'}
+        </Button>
+      ),
+    },
+  ]
 
   return (
     <>
@@ -75,81 +127,25 @@ export function PracticeMediaLibrary({ kind, disabled, onSelect }: { kind: Libra
             }
           />
         ) : (
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!text-[13px]">
-              <Table<LibraryMedia>
-                rowKey="_id"
-                loading={result.isFetching}
-                dataSource={result.data?.items || []}
-                pagination={false}
-                scroll={{ x: 600 }}
-                size="small"
-                columns={[
-                  {
-                    key: 'preview',
-                    title: vi ? 'Xem trước' : 'Preview',
-                    width: 210,
-                    align: 'center',
-                    render: (_, file) =>
-                      file.content_type === 'IMAGE' ? (
-                        <Image
-                          width={100}
-                          height={70}
-                          style={{ objectFit: 'contain' }}
-                          src={resolveMediaUrl(file.storage_key)}
-                        />
-                      ) : file.content_type === 'VIDEO' ? (
-                        <video controls preload="none" width={180} src={resolveMediaUrl(file.storage_key)} />
-                      ) : (
-                        <audio controls preload="none" style={{ width: 190 }} src={resolveMediaUrl(file.storage_key)} />
-                      ),
-                  },
-                  {
-                    key: 'filename',
-                    dataIndex: 'filename',
-                    title: vi ? 'Tên tệp' : 'Filename',
-                    render: (name, file) => (
-                      <Space direction="vertical" size={0}>
-                        <span className="font-semibold text-slate-800 dark:text-slate-100">{name}</span>
-                        <small className="text-slate-500">
-                          {Math.ceil(file.file_size_bytes / 1024)} KB
-                          {file.duration_seconds ? ` · ${file.duration_seconds}s` : ''}
-                        </small>
-                      </Space>
-                    ),
-                  },
-                  {
-                    key: 'actions',
-                    width: 90,
-                    align: 'center',
-                    render: (_, file) => (
-                      <Button
-                        type="primary"
-                        disabled={disabled}
-                        onClick={() => {
-                          onSelect(file)
-                          setOpen(false)
-                        }}
-                      >
-                        {vi ? 'Chọn' : 'Select'}
-                      </Button>
-                    ),
-                  },
-                ]}
-              />
-            </div>
-            <Pagination
-              currentPage={page}
-              totalPages={Math.ceil((result.data?.pagination.total || 0) / 12) || 1}
-              pageSize={12}
-              totalItems={result.data?.pagination.total || 0}
-              showTotal={true}
-              onPageChange={(nextPage: number) => setPage(nextPage)}
-            />
-          </div>
+          <DataTable<LibraryMedia>
+            rowKey="_id"
+            isLoading={result.isFetching}
+            data={result.data?.items || []}
+            columns={columns}
+            hideTopBar
+            pagination={{
+              currentPage: page,
+              totalPages: Math.ceil((result.data?.pagination.total || 0) / 12) || 1,
+              pageSize: 12,
+              totalItems: result.data?.pagination.total || 0,
+              showTotal: true,
+              onPageChange: (nextPage: number) => setPage(nextPage),
+            }}
+          />
         )}
       </Modal>
     </>
   )
 }
+
 

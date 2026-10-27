@@ -21,7 +21,6 @@ import {
   PlusOutlined,
   DeleteOutlined,
   UploadOutlined,
-  CheckCircleOutlined,
   SaveOutlined,
 } from '@ant-design/icons'
 import { toast } from '@/store/toast.store'
@@ -30,7 +29,6 @@ import { CustomSelect } from '@/components/custom.select'
 import type {
   GrammarHandbookItem,
   GrammarHandbookPayload,
-  GrammarFormulaDetail,
 } from '@/features/practice/types/grammar-handbook-admin.types'
 
 interface Props {
@@ -158,7 +156,7 @@ export function GrammarHandbookDrawer({
     }
   }, [visible, item, form])
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: GrammarHandbookPayload) => {
     try {
       const payload: GrammarHandbookPayload = {
         ...values,
@@ -166,8 +164,9 @@ export function GrammarHandbookDrawer({
       }
       await onSave(payload)
       onClose()
-    } catch (err: any) {
-      toast.error(err.message || 'Không thể lưu chủ điểm ngữ pháp')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu chủ điểm ngữ pháp'
+      toast.error(msg)
     }
   }
 
@@ -182,8 +181,9 @@ export function GrammarHandbookDrawer({
       setCurrentImageUrl(res.image_url)
       form.setFieldValue('image_url', res.image_url)
       toast.success('Đã tải ảnh lên Cloudflare R2 thành công!')
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi tải ảnh lên R2')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi tải ảnh lên R2'
+      toast.error(msg)
     } finally {
       setUploadingImage(false)
     }

@@ -93,6 +93,7 @@ export function ActionPopconfirmButton({
           disabled={disabled}
           loading={loading}
           className={className}
+          onClick={(e) => e.stopPropagation()}
         />
       </Tooltip>
     </Popconfirm>
@@ -147,7 +148,11 @@ export function TableRowActions({
     : (isVi ? 'Hành động này có thể ảnh hưởng đến các dữ liệu liên quan.' : 'This action might affect related data.')
 
   return (
-    <Space size={4} className="justify-center">
+    <Space
+      size={4}
+      className="justify-center"
+      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+    >
       {extraActions && (
         <span className={isAnyPopOpen ? 'pointer-events-none' : undefined}>
           {extraActions}
@@ -162,7 +167,10 @@ export function TableRowActions({
           <Button
             size="small"
             icon={<Eye size={14} />}
-            onClick={onView}
+            onClick={(e) => {
+              e.stopPropagation()
+              onView()
+            }}
             className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           />
         </Tooltip>
@@ -178,7 +186,10 @@ export function TableRowActions({
             type="primary"
             ghost
             icon={<Edit2 size={14} />}
-            onClick={onEdit}
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit()
+            }}
           />
         </Tooltip>
       )}

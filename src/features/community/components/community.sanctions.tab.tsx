@@ -176,7 +176,7 @@ export function CommunitySanctionsTab({
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         return (
-          <Space size={4}>
+          <Space size={4} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             {member.is_banned && (
               <Popconfirm
                 title={t('community.unbanConfirmTitle')}
