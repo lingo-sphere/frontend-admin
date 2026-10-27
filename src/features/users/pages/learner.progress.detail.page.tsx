@@ -1,7 +1,7 @@
 // Trang quản trị hiển thị chi tiết tiến độ học tập, bài thi từng chương và bài nộp kỹ năng của học viên.
 
 import { useNavigate } from 'react-router-dom'
-import { CourseSubmissionReviewDialog } from '@/features/courses/components/course.submission.review.dialog'
+import { CourseSubmissionReviewDialog } from '@/features/submissions/components/course.submission.review.dialog'
 import { useLearnerProgressDetail } from '@/features/users/hooks/use.learner.progress.detail'
 import { LearnerProgressHeader } from '@/features/users/components/learner.progress.header'
 import { LearnerModulesProgressList } from '@/features/users/components/learner.modules.progress.list'
@@ -41,9 +41,9 @@ export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressD
   const progressPct = Math.min(100, Math.max(0, student?.progress_percentage || 0))
   const completedLessons = student?.completed_lessons || 0
   const totalLessons = student?.total_lessons || 1
-  const baselineScore = student?.baseline_score
+  const baselineScore = student?.measurement_summary?.baseline_internal ?? undefined
   const finalTestScore = student?.final_test_score
-  const growth = student?.total_score_growth ?? ((finalTestScore || 0) - (baselineScore || 0))
+  const growth = student?.measurement_summary?.internal_delta ?? null
   const modules = student?.modules_progress || []
 
   return (

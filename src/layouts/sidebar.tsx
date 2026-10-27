@@ -96,6 +96,11 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'course-learners':
         case 'course-exams':
           return hasPermission('GET', '/courses') || hasModulePermission('COURSES')
+        case 'practice-speaking-submissions':
+        case 'practice-writing-submissions':
+        case 'course-submissions':
+        case 'submissions':
+          return currentRole === 'INSTRUCTOR' || hasPermission('GET', '/progress/teacher/courses/:courseId/submissions')
         case 'vocabulary':
         case 'public-decks':
           return hasModulePermission('VOCABULARY')
@@ -121,6 +126,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return hasModulePermission('PROGRESS')
         case 'notifications':
           return hasModulePermission('NOTIFICATIONS')
+        case 'measurement-profiles':
         case 'settings':
         case 'settings-plans':
         case 'settings-ai':
@@ -130,7 +136,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return true
       }
     },
-    [isAdmin, hasPermission, hasModulePermission]
+    [isAdmin, currentRole, hasPermission, hasModulePermission]
   )
 
   const visibleNavGroups = useMemo(() => {

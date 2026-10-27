@@ -1,6 +1,8 @@
+import { MeasurementProfilesPage } from '@/features/courses/pages/measurement.profiles.page'
+import { PracticeSpeakingSubmissionsPage, PracticeWritingSubmissionsPage } from '@/features/submissions/pages/practice.submissions.page'
 // Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
 
-import { useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { pathToNavItem } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -25,7 +27,7 @@ import { SettingsSystemPage } from '@/features/settings/pages/settings.system.pa
 import { UserProfilePage } from '@/features/users/pages/learner.profile.page'
 import { CourseFormPage } from '@/features/courses/pages/course.form.page'
 import { CourseScoresPage } from '@/features/courses/pages/course.scores.page'
-import { CourseSubmissionsPage } from '@/features/courses/pages/course.submissions.page'
+import { SubmissionsPage } from '@/features/submissions/pages/submissions.page'
 import { LearnerProgressDetailPage } from '@/features/users/pages/learner.progress.detail.page'
 import { LearnerReminderHistoryPage } from '@/features/users/pages/learner.reminder.history.page'
 import { AdminUserFormPage } from '@/features/users/pages/admin.user.form.page'
@@ -70,6 +72,10 @@ const pageMap: Record<string, React.ComponentType> = {
   courses: CoursesPage,
   'courses-list': CoursesPage,
   'course-learners': CourseLearnersPage,
+  submissions: SubmissionsPage,
+  'course-submissions': SubmissionsPage,
+  'practice-speaking-submissions': PracticeSpeakingSubmissionsPage,
+  'practice-writing-submissions': PracticeWritingSubmissionsPage,
   'course-exams': CourseExamsPage,
   'course-create': CourseFormPage,
   vocabulary: VocabularyPage,
@@ -92,6 +98,7 @@ const pageMap: Record<string, React.ComponentType> = {
   community: CommunityPage,
   'public-decks': PublicDecksPage,
   progress: ProgressPage,
+  'measurement-profiles': MeasurementProfilesPage,
   'analytics-posthog': PostHogAnalyticsPage,
   posthog: PostHogAnalyticsPage,
   'monitoring-betterstack': BetterStackMonitoringPage,
@@ -129,6 +136,11 @@ export function PageRouter() {
     return <ForbiddenPage key={pathname} />
   }
 
+  if (!isAdmin && (['submissions', 'course-submissions', 'practice-speaking-submissions', 'practice-writing-submissions'].includes(activeNavItem) || activeNavItem.startsWith('course-submissions:')) &&
+    currentRole !== 'INSTRUCTOR' && !hasPermission('GET', '/progress/teacher/courses/:courseId/submissions')) {
+    return <ForbiddenPage key={pathname} />
+  }
+
   if (!isAdmin) {
     if (
       activeNavItem === 'courses' ||
@@ -138,7 +150,6 @@ export function PageRouter() {
       activeNavItem === 'course-exam-create' ||
       activeNavItem.startsWith('course-exam-questions:') ||
       activeNavItem.startsWith('course-scores:') ||
-      activeNavItem.startsWith('course-submissions:') ||
       activeNavItem.startsWith('learner-progress:') ||
       activeNavItem.startsWith('learner-reminders:') ||
       activeNavItem.startsWith('course-edit:') ||
@@ -180,7 +191,7 @@ export function PageRouter() {
       }
     }
 
-    if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
+    if (activeNavItem === 'measurement-profiles' || activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
       return <ForbiddenPage key={pathname} />
     }
   }
@@ -215,7 +226,7 @@ export function PageRouter() {
 
   if (activeNavItem.startsWith('course-submissions:')) {
     const courseId = activeNavItem.split(':')[1]
-    return <CourseSubmissionsPage key={pathname} courseId={courseId} />
+    return <Navigate replace to={`/submissions?courseId=${encodeURIComponent(courseId)}`} />
   }
 
   if (

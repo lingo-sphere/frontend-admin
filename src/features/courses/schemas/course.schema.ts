@@ -65,6 +65,7 @@ export const LessonSchema = z.object({
 }).passthrough()
 
 export const CourseModuleSchema = z.object({
+  assessment_config: z.object({}).passthrough().nullable().optional(),
   _id: z.string().default(''),
   id: z.string().optional(),
   course_id: z.string().default(''),
@@ -95,6 +96,7 @@ export const CourseModuleSchema = z.object({
 }).passthrough()
 
 export const CourseBaseSchema = z.object({
+  assessment_config: z.object({}).passthrough().nullable().optional(),
   _id: z.string().default(''),
   id: z.string().optional(),
   title: z.string().default(''),

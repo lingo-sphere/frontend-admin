@@ -25,18 +25,31 @@ interface ProgressQueryData {
   usersMap: Map<string, UserProfile>
 }
 
-export function useCourseLearnersData() {
+interface CourseLearnersDataOptions {
+  loadProgress?: boolean
+  loadSubmissions?: boolean
+  courseId?: string
+}
+
+export function useCourseLearnersData({
+  loadProgress = true,
+  loadSubmissions = false,
+  courseId,
+}: CourseLearnersDataOptions = {}) {
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isTeacher = currentRole === 'TEACHER' || currentRole === 'INSTRUCTOR' || currentRole === 'GIANG_VIEN'
   const currentUserId = user?.user_id || profile?.user_id || ''
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('ALL')
+  const [internalCourseId, setSelectedCourseId] = useState<string>('ALL')
+  const selectedCourseId = courseId ?? internalCourseId
 
   const {
     data: courses = [],
     isLoading: isLoadingCourses,
+    error: coursesError,
+    refetch: refetchCourses,
   } = useQuery<CourseSimple[]>({
     queryKey: ['course-learners', 'courses', isTeacher, currentUserId],
     queryFn: async () => {
@@ -161,13 +174,14 @@ export function useCourseLearnersData() {
         usersMap: map,
       }
     },
-    enabled: courses.length > 0,
+    enabled: courses.length > 0 && loadProgress,
     staleTime: 0,
   })
 
   const {
     data: submissions = [],
     isLoading: isLoadingSubmissions,
+    error: submissionsError,
     refetch: refetchSubmissionsQuery,
   } = useQuery<SkillSubmissionItem[]>({
     queryKey: ['course-learners', 'submissions', selectedCourseId, coursesKey],
@@ -181,22 +195,18 @@ export function useCourseLearnersData() {
 
       const submissionResults = await Promise.all(
         targetCourses.map(async (course) => {
-          try {
-            const data = await progressService.getCourseSubmissions(course.id)
-            return (data || []).map((sub) => ({
-              ...sub,
-              course_id: course.id,
-              course_title: course.title,
-            }))
-          } catch {
-            return []
-          }
+          const data = await progressService.getCourseSubmissions(course.id)
+          return (data || []).map((sub) => ({
+            ...sub,
+            course_id: course.id,
+            course_title: course.title,
+          }))
         })
       )
 
       return submissionResults.flat()
     },
-    enabled: courses.length > 0,
+    enabled: courses.length > 0 && loadSubmissions,
     staleTime: 0,
   })
 
@@ -208,8 +218,9 @@ export function useCourseLearnersData() {
   }, [refetchProgressQuery])
 
   const fetchSubmissions = useCallback(async () => {
+    await refetchCourses()
     await refetchSubmissionsQuery()
-  }, [refetchSubmissionsQuery])
+  }, [refetchCourses, refetchSubmissionsQuery])
 
   const stats = useMemo(() => {
     const totalStudents = allStudentsProgress.length
@@ -232,6 +243,8 @@ export function useCourseLearnersData() {
     selectedCourseId,
     setSelectedCourseId,
     isLoadingCourses,
+    coursesError,
+    submissionsError,
     allStudentsProgress,
     usersMap,
     isLoadingProgress,

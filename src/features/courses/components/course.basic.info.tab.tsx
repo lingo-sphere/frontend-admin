@@ -1,3 +1,4 @@
+import type { CourseAssessmentConfig } from './course.assessment.config.fields'
 // Tab thong tin co ban cua khoa hoc.
 
 import { useMemo, useEffect } from 'react'
@@ -12,6 +13,7 @@ import { CourseFinalTestCard } from '@/features/courses/components/course.final.
 import { generateSlug } from '@/features/courses/helpers/course.helper'
 
 export interface CourseFormData {
+  assessment_config?: CourseAssessmentConfig
   title: string
   slug: string
   description: string
@@ -61,6 +63,7 @@ export interface CourseLesson {
 }
 
 export interface CourseModule {
+  assessment_config?: CourseAssessmentConfig
   id: string
   title: string
   description: string

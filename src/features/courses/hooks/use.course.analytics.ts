@@ -23,6 +23,7 @@ export interface AnalyticsSummary {
   avgProgress: number
   avgBaseline: number
   avgFinalScore: number
+  growthSampleCount: number
   avgGrowth: number
   finalPassRate: number
   finalExamTakers: number
@@ -65,6 +66,7 @@ export function useCourseAnalytics(
         avgProgress: 0,
         avgBaseline: 0,
         avgFinalScore: 0,
+        growthSampleCount: 0,
         avgGrowth: 0,
         finalPassRate: 0,
         finalExamTakers: 0,
@@ -83,18 +85,10 @@ export function useCourseAnalytics(
       currentStudents.reduce((acc, s) => acc + (s.progress_percentage || 0), 0) / totalEnrolled
     )
 
-    const baselineStudents = currentStudents.filter(
-      (s) => s.baseline_score !== undefined && s.baseline_score > 0
-    )
-    const avgBaseline = baselineStudents.length
-      ? Math.round(
-          baselineStudents.reduce((acc, s) => acc + (s.baseline_score || 0), 0) /
-            baselineStudents.length
-        )
-      : 0
-
+    const paired = currentStudents.filter(s => s.measurement_summary?.comparable && typeof s.measurement_summary.internal_delta === 'number');
+    const avgBaseline = paired.length ? Math.round(paired.reduce((sum, s) => sum + (s.measurement_summary?.baseline_internal || 0), 0) / paired.length) : 0;
     const finalStudents = currentStudents.filter(
-      (s) => s.final_test_score !== undefined && s.final_test_score > 0
+      (s) => typeof s.final_test_score === 'number'
     )
     const avgFinalScore = finalStudents.length
       ? Math.round(
@@ -103,18 +97,12 @@ export function useCourseAnalytics(
         )
       : 0
 
-    const passedFinal = finalStudents.filter((s) => (s.final_test_score || 0) >= 70).length
+    const passedFinal = finalStudents.filter((s) => s.final_test_passed === true).length
     const finalPassRate = finalStudents.length
       ? Math.round((passedFinal / finalStudents.length) * 100)
       : 0
 
-    const growthList = currentStudents
-      .map(
-        (s) =>
-          s.total_score_growth ??
-          (s.final_test_score && s.baseline_score ? s.final_test_score - s.baseline_score : null)
-      )
-      .filter((g): g is number => g !== null)
+    const growthList = paired.map(s => s.measurement_summary!.internal_delta!);
     const avgGrowth = growthList.length
       ? Math.round(growthList.reduce((acc, g) => acc + g, 0) / growthList.length)
       : 0
@@ -128,6 +116,7 @@ export function useCourseAnalytics(
       avgProgress,
       avgBaseline,
       avgFinalScore,
+      growthSampleCount: paired.length,
       avgGrowth,
       finalPassRate,
       finalExamTakers: finalStudents.length,

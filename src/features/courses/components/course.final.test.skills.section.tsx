@@ -1,3 +1,4 @@
+import { CourseAssessmentConfigFields } from './course.assessment.config.fields'
 /**
  * @file course.final.test.skills.section.tsx
  * @description Speaking and Writing test prompts and file attachment management for TOEIC 4 Skills
@@ -108,6 +109,7 @@ export function CourseFinalTestSkillsSection({
         </span>
       </div>
 
+      <CourseAssessmentConfigFields value={formData.assessment_config} onChange={assessment_config => onChange({ ...formData, assessment_config })} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
           <div className="flex items-center justify-between">
