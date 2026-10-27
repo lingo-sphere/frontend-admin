@@ -1,6 +1,7 @@
+// Dịch vụ API quản trị bài tập viết Writing.
 import { api } from '@/services/api.client'
-import type { IpaAdminQuery, IpaPage } from '../types/ipa-admin.types'
-import type { WritingPayload, WritingRecord, WritingGrammarOption } from '../types/writing-admin.types'
+import type { IpaAdminQuery, IpaPage } from '@/features/practice/types/ipa-admin.types'
+import type { WritingPayload, WritingRecord, WritingGrammarOption } from '@/features/practice/types/writing-admin.types'
 const base = '/practice/admin/writing'
 export const writingAdminService = {
   grammarOptions: () => api.get<WritingGrammarOption[]>(`${base}/grammar-options`),

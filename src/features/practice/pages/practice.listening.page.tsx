@@ -11,7 +11,7 @@ import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
-import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
+import { DataTable, type IpaColumn } from '@/components/data.table'
 import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
 import { IpaRowActions } from '@/features/practice/components/ipa.row.actions'
 import { ListeningAdminEditor } from '@/features/practice/components/listening.admin.editor'
@@ -98,11 +98,15 @@ function ListeningTable({ type }: { type: ListeningType }) {
   const trash = state.query.trash === 'true'
   const subtype = listeningSubtypes[type]
 
+  const totalPages = result.data?.pagination?.totalPages
+  const currentPage = state.query.page
+  const { change } = state
+
   useEffect(() => {
-    if (!result.isPlaceholderData && result.data && state.query.page > Math.max(1, result.data.pagination.totalPages)) {
-      state.change({ page: String(Math.max(1, result.data.pagination.totalPages)) })
+    if (!result.isPlaceholderData && totalPages !== undefined && currentPage > Math.max(1, totalPages)) {
+      change({ page: String(Math.max(1, totalPages)) })
     }
-  }, [result.data, result.isPlaceholderData, state])
+  }, [result.isPlaceholderData, totalPages, currentPage, change])
 
   const changeStatus = async (row: ListeningRecord, published: boolean) => {
     setWorking(row._id)
@@ -135,7 +139,7 @@ function ListeningTable({ type }: { type: ListeningType }) {
     { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 110, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     ...(subtype.field ? [{ key: subtype.field, label: isVi ? subtype.label : (subtypeEnLabels[subtype.field] || subtype.label), width: 110, align: 'center' as const, filterKind: 'enum' as const, filterOptions: subtype.values.map(value => ({ value, label: value })) }] : []),
     { key: 'audio_url', label: 'Audio', width: 155, align: 'center', filterKind: 'media', render: (value, row) => value ? <IpaAudioPreview value={value} duration={row.duration_seconds ?? row.audio_duration_seconds} /> : (isVi ? 'Chưa có' : 'None') },
-    ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 70, align: 'center' as const, filterKind: 'media' as const, render: (value: string) => value ? <Image width={52} height={38} style={{ objectFit: 'cover', borderRadius: 6 }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
+    ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 70, align: 'center' as const, filterKind: 'media' as const, render: (value: string) => value ? <Image width={52} height={38} loading="lazy" style={{ objectFit: 'cover', borderRadius: 6 }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
     {
       key: type === 'part2' ? 'audio_duration_seconds' : 'duration_seconds',
       label: isVi ? 'Thời lượng' : 'Duration',
@@ -176,7 +180,7 @@ function ListeningTable({ type }: { type: ListeningType }) {
         {!trash && <Button type="primary" icon={<Plus size={15} />} onClick={() => setEditor({ id: null, readOnly: false })}>{isVi ? 'Thêm bài nghe' : 'Add Exercise'}</Button>}
       </Space>
     </div>
-    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài nghe' : 'Search listening exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, transcript, mô tả...' : 'Search title, transcript, description...'} extraFilters={<>
+    <DataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? 'Tìm kiếm bài nghe' : 'Search listening exercises'} searchPlaceholder={isVi ? 'Tìm tiêu đề, transcript, mô tả...' : 'Search title, transcript, description...'} extraFilters={<>
       <CustomSelect aria-label={isVi ? 'Lọc chủ đề' : 'Filter context'} mode="multiple" placeholder={isVi ? 'Chủ đề' : 'Context'} allowClear className="w-48" options={contextSelectOptions} loading={loadingContexts} value={state.filters.context_id || []} onChange={values => state.setFilter('context_id', values)} />
       <CustomSelect aria-label="Lọc CEFR" mode="multiple" placeholder="CEFR" allowClear className="w-28" options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
       <CustomSelect aria-label={isVi ? 'Lọc độ khó' : 'Filter difficulty'} mode="multiple" placeholder={isVi ? 'Độ khó' : 'Difficulty'} allowClear className="w-32" options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
@@ -205,7 +209,7 @@ export function PracticeListeningPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện nghe' : 'Listening Management'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Một kho bài cho mỗi Part. Lọc Chủ đề để tìm nội dung theo ngữ cảnh.' : 'Manage exercises per TOEIC Part. Filter by Context to find content.'}</p>
       </div>
-      <Tabs activeKey={type} onChange={switchTab} destroyOnHidden items={listeningTypes.map(value => ({ key: value, label: isVi ? listeningLabels[value] : listeningEnLabels[value], children: <ListeningTable key={value} type={value} /> }))} />
+      <Tabs activeKey={type} onChange={switchTab} destroyOnHidden items={listeningTypes.map(value => ({ key: value, label: isVi ? listeningLabels[value] : listeningEnLabels[value], children: value === type ? <ListeningTable key={value} type={value} /> : null }))} />
     </div>
   </ConfigProvider>
 }

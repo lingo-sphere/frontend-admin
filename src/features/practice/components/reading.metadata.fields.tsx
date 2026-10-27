@@ -1,6 +1,7 @@
-import { usePracticeText } from '../hooks/use.practice.text'
+// Component cấu hình thông tin bổ sung và thẻ dữ liệu cho bài tập đọc Reading.
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
 import { Button, Card, Form, Input, Select, Space } from 'antd'
-import type { ReadingPayload, ReadingType } from '../types/reading-admin.types'
+import type { ReadingPayload, ReadingType } from '@/features/practice/types/reading-admin.types'
 export function ReadingMetadataFields({ type, disabled }: { type: ReadingType; disabled: boolean }) {
   const p = usePracticeText()
   const form = Form.useFormInstance<ReadingPayload>()

@@ -28,7 +28,7 @@ export function ExamEditorGlobalAudio({
         <span className="font-semibold">
           {isVi ? 'Audio toàn bài thi:' : 'Global Exam Audio:'}
         </span>
-        <audio controls src={resolvedUrl} className="h-7 max-w-xs" />
+        <audio controls preload="none" src={resolvedUrl} className="h-7 max-w-xs" />
       </div>
       <button
         type="button"

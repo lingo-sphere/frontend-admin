@@ -1,6 +1,7 @@
+// Component xem trước nội dung đoạn văn bài tập đọc Reading.
 import { Button, Card, Form, Tag } from 'antd'
 import type { FormInstance } from 'antd'
-import type { ReadingMetadata, ReadingPayload, ReadingType } from '../types/reading-admin.types'
+import type { ReadingMetadata, ReadingPayload, ReadingType } from '@/features/practice/types/reading-admin.types'
 export function ReadingPreview({ form, type, select }: { form: FormInstance<ReadingPayload>; type: ReadingType; select: (index: number) => void }) {
   const content = (Form.useWatch('content', { form, preserve: true }) || '') as string
   const metadata = Form.useWatch('passage_metadata', { form, preserve: true }) as ReadingMetadata | undefined

@@ -1,5 +1,6 @@
+// Hàm tiện ích chuẩn hóa dữ liệu bài tập nghe Listening.
 import { normalizeToRelativePath } from '@/lib/media.utils'
-import { blankOptions, listeningSubtypes, type ListeningPayload, type ListeningQuestion, type ListeningRecord, type ListeningType } from '../types/listening-admin.types'
+import { blankOptions, listeningSubtypes, type ListeningPayload, type ListeningQuestion, type ListeningRecord, type ListeningType } from '@/features/practice/types/listening-admin.types'
 
 export function listeningPayload(type: ListeningType, record?: Partial<ListeningRecord>): ListeningPayload {
   const row = record || {}

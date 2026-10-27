@@ -1,4 +1,5 @@
-import { newGrammarData, type GrammarTopic, type GrammarTopicPayload, type GrammarQuestion, type GrammarQuestionPayload, type GrammarTreeNode } from '../types/grammar-admin.types'
+// Hàm tiện ích chuẩn hóa dữ liệu chuyên đề và câu hỏi ngữ pháp Grammar.
+import { newGrammarData, type GrammarTopic, type GrammarTopicPayload, type GrammarQuestion, type GrammarQuestionPayload, type GrammarTreeNode } from '@/features/practice/types/grammar-admin.types'
 export function grammarTopicPayload(row: Partial<GrammarTopic> = {}): GrammarTopicPayload {
   return { code: row.code || '', name_en: row.name_en || '', name_vi: row.name_vi || '', category: row.category || 'TENSES', parent_id: row.parent_id || '', cefr_level: row.cefr_level || 'B1', status: row.status || 'INACTIVE', description: row.description || '', description_vi: row.description_vi || '', structure_pattern: row.structure_pattern || '', example_sentences: (row.example_sentences || []).map(item => ({ en: item.en || '', vi: item.vi || '', is_correct: item.is_correct ?? true })), common_mistakes: (row.common_mistakes || []).map(item => ({ wrong: item.wrong || '', correct: item.correct || '', explanation: item.explanation || '' })), ...(row._id ? { expected_revision: row.revision ?? 0 } : {}) }
 }

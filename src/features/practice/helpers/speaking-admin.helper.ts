@@ -1,4 +1,5 @@
-import { newSpeakingTurn, rubricFields, speakingVoices, type SpeakingPayload, type SpeakingRecord, type SpeakingRubric, type SpeakingType } from '../types/speaking-admin.types'
+// Hàm tiện ích chuẩn hóa dữ liệu bài tập nói Speaking.
+import { newSpeakingTurn, rubricFields, speakingVoices, type SpeakingPayload, type SpeakingRecord, type SpeakingRubric, type SpeakingType } from '@/features/practice/types/speaking-admin.types'
 export function speakingPayload(type: SpeakingType, row: Partial<SpeakingRecord> = {}): SpeakingPayload {
   const text = (key: keyof SpeakingPayload) => typeof row[key] === 'string' ? row[key] as string : ''
   return {

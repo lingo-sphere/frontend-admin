@@ -70,7 +70,7 @@ export function createLearnerSubmissionsColumns({
               controls
               className="w-full h-7 mt-1"
               src={resolveMediaUrl(sub.audio_url)}
-              preload="metadata"
+              preload="none"
             />
           )}
 

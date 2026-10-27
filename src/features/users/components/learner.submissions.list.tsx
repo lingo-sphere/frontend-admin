@@ -75,7 +75,7 @@ export function LearnerSubmissionsList({
                     controls
                     className="w-full h-8"
                     src={resolveMediaUrl(sub.audio_url)}
-                    preload="metadata"
+                    preload="none"
                   />
                 )}
 

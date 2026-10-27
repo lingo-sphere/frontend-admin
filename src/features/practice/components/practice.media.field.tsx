@@ -5,9 +5,9 @@ import { Button, Image, Space, Upload } from 'antd'
 import { mediaService } from '@/features/media/services/media.service'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
-import { usePracticeText } from '../hooks/use.practice.text'
-import { PracticeMediaLibrary } from './practice.media.library'
-import { IpaAudioPreview } from './ipa.audio.field'
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import { PracticeMediaLibrary } from '@/features/practice/components/practice.media.library'
+import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
 
 export function PracticeMediaField({
   value = '',

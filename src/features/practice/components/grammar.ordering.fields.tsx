@@ -1,8 +1,9 @@
-import { usePracticeText } from '../hooks/use.practice.text'
+// Component cấu hình sắp xếp câu và từ cho bài tập ngữ pháp Grammar.
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
 import { useState } from 'react'
 import { Button, Form, Input, Space, Tag } from 'antd'
 import type { FormInstance } from 'antd'
-import type { GrammarQuestionPayload } from '../types/grammar-admin.types'
+import type { GrammarQuestionPayload } from '@/features/practice/types/grammar-admin.types'
 export function GrammarOrderingFields({ form, disabled, dirty }: { form: FormInstance<GrammarQuestionPayload>; disabled: boolean; dirty: () => void }) {
   const p = usePracticeText()
   const items = (Form.useWatch(['question_data', 'ordering_items'], { form, preserve: true }) || []) as string[]

@@ -1,5 +1,6 @@
+// Hàm tiện ích chuẩn hóa dữ liệu bảng âm và bài tập ngữ âm IPA.
 import { normalizeToRelativePath } from '@/lib/media.utils'
-import { ipaAudioFields, type IpaExerciseRecord, type IpaSymbolRecord, type SaveIpaExercise, type SaveIpaSymbol } from '../types/ipa-admin.types'
+import { ipaAudioFields, type IpaExerciseRecord, type IpaSymbolRecord, type SaveIpaExercise, type SaveIpaSymbol } from '@/features/practice/types/ipa-admin.types'
 
 export function symbolPayload(record: IpaSymbolRecord): SaveIpaSymbol {
   return {

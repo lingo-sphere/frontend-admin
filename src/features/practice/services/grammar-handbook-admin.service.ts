@@ -1,8 +1,4 @@
-/**
- * @file grammar-handbook-admin.service.ts
- * @description API Client Service gọi các tuyến quản trị Sổ tay Ngữ pháp & Mẹo TOEIC
- */
-
+// Dịch vụ API quản trị sổ tay ngữ pháp và mẹo làm bài thi TOEIC.
 import { api } from '@/services/api.client'
 import type {
   GrammarHandbookItem,
@@ -13,7 +9,7 @@ import type {
   ToeicTipPayload,
   ToeicTipQuery,
   ToeicTipPageResponse,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 const GRAMMAR_BASE = '/vocabulary/admin/grammar-points'
 const TIPS_BASE = '/vocabulary/admin/toeic-tips'

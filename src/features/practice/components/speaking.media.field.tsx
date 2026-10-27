@@ -1,5 +1,6 @@
-import { usePracticeText } from '../hooks/use.practice.text'
-import { PracticeMediaLibrary } from './practice.media.library'
+// Component chọn và xem trước tập tin đa phương tiện cho bài tập nói Speaking.
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import { PracticeMediaLibrary } from '@/features/practice/components/practice.media.library'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Image, Space, Upload } from 'antd'
@@ -23,7 +24,7 @@ export function SpeakingMediaPreview({ value, kind }: { value: string; kind: 'au
   const result = useQuery({ queryKey: ['speaking-media', value], queryFn: () => api.get<{ storage_key: string }>(`/media/files/${value}`), enabled: kind === 'image' && /^[a-f\d]{24}$/i.test(value) })
   if (kind === 'audio') return <SpeakingAudioPreview value={value} />
   const key = /^[a-f\d]{24}$/i.test(value) ? result.data?.storage_key : value
-  return key ? <Image width={160} style={{ maxHeight: 160, objectFit: 'contain' }} src={resolveMediaUrl(key)} /> : <span>{result.isError ? p("Không tải được ảnh") : p("Đang tải ảnh…")}</span>
+  return key ? <Image width={160} loading="lazy" style={{ maxHeight: 160, objectFit: 'contain' }} src={resolveMediaUrl(key)} /> : <span>{result.isError ? p("Không tải được ảnh") : p("Đang tải ảnh…")}</span>
 }
 export function SpeakingMediaField({ value = '', onChange, onBusy, disabled, kind, folder }: { folder?: string; value?: string; onChange?: (id: string) => void; onBusy: (delta: number) => void; disabled: boolean; kind: 'audio' | 'image' }) {
   const p = usePracticeText()

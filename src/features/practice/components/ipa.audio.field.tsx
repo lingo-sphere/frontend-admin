@@ -8,8 +8,8 @@ import { mediaService } from '@/features/media/services/media.service'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 import { api } from '@/services/api.client'
-import { usePracticeText } from '../hooks/use.practice.text'
-import { PracticeMediaLibrary } from './practice.media.library'
+import { usePracticeText } from '@/features/practice/hooks/use.practice.text'
+import { PracticeMediaLibrary } from '@/features/practice/components/practice.media.library'
 
 function formatSeconds(sec: number): string {
   if (!sec || isNaN(sec) || sec <= 0) return '0:00'
@@ -102,6 +102,9 @@ export function IpaAudioPreview({
     } else {
       window.dispatchEvent(new CustomEvent('lingo-audio-play', { detail: { audio } }))
       setIsLoading(true)
+      if (audio.preload === 'none') {
+        audio.preload = 'auto'
+      }
       audio.play().catch(() => {
         setHasError(true)
         setIsPlaying(false)
@@ -125,11 +128,19 @@ export function IpaAudioPreview({
   const progressPercent = totalDuration > 0 ? Math.min(100, (currentTime / totalDuration) * 100) : 0
 
   return (
-    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 max-w-[150px] w-full shadow-2xs hover:border-emerald-400/60 dark:hover:border-emerald-500/60 transition-colors">
+    <div
+      onMouseEnter={() => {
+        const audio = audioRef.current
+        if (audio && audio.preload === 'none') {
+          audio.preload = 'metadata'
+        }
+      }}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 max-w-[150px] w-full shadow-2xs hover:border-emerald-400/60 dark:hover:border-emerald-500/60 transition-colors"
+    >
       <audio
         ref={audioRef}
         src={audioUrl}
-        preload="metadata"
+        preload="none"
         onLoadedMetadata={e => {
           const dur = e.currentTarget.duration
           if (dur && !isNaN(dur) && isFinite(dur)) {

@@ -1,6 +1,7 @@
+// Dịch vụ API quản trị chuyên đề và câu hỏi ngữ pháp Grammar.
 import { api } from '@/services/api.client'
-import type { IpaAdminQuery, IpaPage } from '../types/ipa-admin.types'
-import type { GrammarKind, GrammarQuestion, GrammarQuestionPayload, GrammarTopic, GrammarTopicPayload, GrammarTreeNode } from '../types/grammar-admin.types'
+import type { IpaAdminQuery, IpaPage } from '@/features/practice/types/ipa-admin.types'
+import type { GrammarKind, GrammarQuestion, GrammarQuestionPayload, GrammarTopic, GrammarTopicPayload, GrammarTreeNode } from '@/features/practice/types/grammar-admin.types'
 const base = '/practice/admin/grammar'
 export const grammarAdminService = {
   tree: () => api.get<GrammarTreeNode[]>(`${base}/tree`),

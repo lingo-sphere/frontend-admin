@@ -88,7 +88,7 @@ export function CourseSubmissionReviewDialog({
                     controls
                     className="w-full h-9 rounded-lg"
                     src={resolveMediaUrl(submission.audio_url)}
-                    preload="metadata"
+                    preload="none"
                   />
                 </div>
               ) : (

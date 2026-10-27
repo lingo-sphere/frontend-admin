@@ -1,6 +1,7 @@
+// Dịch vụ API quản trị bài tập nghe Listening.
 import { api } from '@/services/api.client'
-import type { IpaAdminQuery, IpaPage } from '../types/ipa-admin.types'
-import type { ListeningPayload, ListeningRecord, ListeningType } from '../types/listening-admin.types'
+import type { IpaAdminQuery, IpaPage } from '@/features/practice/types/ipa-admin.types'
+import type { ListeningPayload, ListeningRecord, ListeningType } from '@/features/practice/types/listening-admin.types'
 const base = (type: ListeningType) => `/practice/admin/listening/${type}`
 export const listeningAdminService = {
   list: (type: ListeningType, query: IpaAdminQuery) => api.get<IpaPage<ListeningRecord>>(base(type), { ...query }),

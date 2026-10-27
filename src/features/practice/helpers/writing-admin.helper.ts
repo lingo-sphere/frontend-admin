@@ -1,4 +1,5 @@
-import { rubricFields, type WritingPayload, type WritingRecord, type WritingType } from '../types/writing-admin.types'
+// Hàm tiện ích chuẩn hóa dữ liệu bài tập viết Writing.
+import { rubricFields, type WritingPayload, type WritingRecord, type WritingType } from '@/features/practice/types/writing-admin.types'
 export function writingPayload(type: WritingType, row: Partial<WritingRecord> = {}): WritingPayload {
   return {
   grading_standard: row.grading_standard || 'PRACTICAL', task_requirements: row.task_requirements || [], image_description: row.image_description || '',

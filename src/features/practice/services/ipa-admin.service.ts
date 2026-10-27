@@ -1,5 +1,6 @@
+// Dịch vụ API quản trị bảng âm và bài tập ngữ âm IPA.
 import { api } from '@/services/api.client'
-import type { IpaAdminQuery, IpaExerciseRecord, IpaPage, IpaSymbolRecord, SaveIpaExercise, SaveIpaSymbol } from '../types/ipa-admin.types'
+import type { IpaAdminQuery, IpaExerciseRecord, IpaPage, IpaSymbolRecord, SaveIpaExercise, SaveIpaSymbol } from '@/features/practice/types/ipa-admin.types'
 
 const symbols = '/vocabulary/admin/ipa-symbols'
 const exercises = '/practice/admin/ipa-exercises'

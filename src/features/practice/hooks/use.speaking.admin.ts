@@ -1,7 +1,8 @@
+// Hook quản lý truy vấn và thao tác dữ liệu bài tập nói Speaking cho Quản trị viên.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { speakingAdminService } from '../services/speaking-admin.service'
-import type { IpaAdminQuery } from '../types/ipa-admin.types'
-import type { SpeakingPayload } from '../types/speaking-admin.types'
+import { speakingAdminService } from '@/features/practice/services/speaking-admin.service'
+import type { IpaAdminQuery } from '@/features/practice/types/ipa-admin.types'
+import type { SpeakingPayload } from '@/features/practice/types/speaking-admin.types'
 export const speakingAdminKeys = ['speaking-admin'] as const
 export function useSpeakingAdmin(query: IpaAdminQuery) { return useQuery({ queryKey: [...speakingAdminKeys, query], queryFn: () => speakingAdminService.list(query), placeholderData: keepPreviousData }) }
 export function useSpeakingMutations() {

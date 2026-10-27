@@ -5,19 +5,14 @@ import {
   Alert,
   Badge,
   Button,
-  Checkbox,
-  ConfigProvider,
-  Dropdown,
   Form,
   Input,
   InputNumber,
   Modal,
   Switch,
-  Table,
   Tag,
   Tooltip,
 } from 'antd'
-import type { ColumnsType } from 'antd/es/table'
 import {
   CheckCircle2,
   Edit3,
@@ -28,12 +23,10 @@ import {
   RotateCcw,
   Search,
   X,
-  SlidersHorizontal,
-  Columns3,
-  ChevronDown,
 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableRowActions } from '@/components/table.row.actions'
 import {
   usePracticeContextsAdmin,
@@ -53,27 +46,6 @@ const DOMAIN_OPTIONS = [
 ]
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-
-const DENSITY_LABELS: Record<'compact' | 'normal' | 'comfortable', string> = {
-  compact: 'Gọn',
-  normal: 'Vừa',
-  comfortable: 'Rộng',
-}
-
-const DENSITY_TOKENS = {
-  compact: { cellPaddingBlockMD: 6, cellPaddingInlineMD: 8, borderColor: 'rgba(226, 232, 240, 0.8)' },
-  normal: { cellPaddingBlockMD: 10, cellPaddingInlineMD: 12, borderColor: 'rgba(226, 232, 240, 0.8)' },
-  comfortable: { cellPaddingBlockMD: 16, cellPaddingInlineMD: 16, borderColor: 'rgba(226, 232, 240, 0.8)' },
-}
-
-const CONTEXT_COLUMN_OPTIONS = [
-  { label: 'Tên ngữ cảnh', value: 'name_en' },
-  { label: 'Mã Code', value: 'code' },
-  { label: 'Cấp bậc', value: 'level' },
-  { label: 'Kỹ năng (Domains)', value: 'domains' },
-  { label: 'Bài tập', value: 'total_exercises' },
-  { label: 'Trạng thái', value: 'status' },
-]
 
 interface ContextFormValues {
   name_en: string
@@ -95,15 +67,6 @@ export function PracticeContextsPage() {
   const [selectedLevel, setSelectedLevel] = useState<number | 'ALL'>('ALL')
   const [selectedDomain, setSelectedDomain] = useState<string | 'ALL'>('ALL')
   const [selectedStatus, setSelectedStatus] = useState<string | 'ALL'>('ALL')
-  const [density, setDensity] = useState<'compact' | 'normal' | 'comfortable'>('normal')
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([
-    'name_en',
-    'code',
-    'level',
-    'domains',
-    'total_exercises',
-    'status',
-  ])
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<PracticeContext | null>(null)
@@ -298,18 +261,17 @@ export function PracticeContextsPage() {
     }
   }
 
-  const columns: ColumnsType<PracticeContext> = [
+  const columns: DataTableColumn<PracticeContext>[] = [
     {
       title: 'Tên ngữ cảnh',
-      dataIndex: 'name_en',
       key: 'name_en',
       width: 300,
-      render: (_, record: PracticeContext) => {
+      render: (record: PracticeContext) => {
         const en = record.name_en || record.name
         const vi = record.name_vi
         return (
           <div className="flex flex-col">
-            <span className="font-semibold text-slate-800">{en}</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-100">{en}</span>
             {vi && <span className="text-xs text-slate-500">{vi}</span>}
             {record.path_string && (
               <span className="mt-0.5 text-[11px] text-slate-400 truncate max-w-xs" title={record.path_string}>
@@ -322,25 +284,23 @@ export function PracticeContextsPage() {
     },
     {
       title: 'Mã Code',
-      dataIndex: 'code',
       key: 'code',
       width: 180,
-      render: (code: string) => (
-        <code className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-          {code}
+      render: (record: PracticeContext) => (
+        <code className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+          {record.code}
         </code>
       ),
     },
     {
       title: 'Cấp bậc',
-      dataIndex: 'level',
       key: 'level',
       width: 140,
-      render: (level: number) => {
-        if (level === 0) {
+      render: (record: PracticeContext) => {
+        if (record.level === 0) {
           return <Tag color="purple" className="font-medium">Level 0: Chủ đề lớn</Tag>
         }
-        if (level === 1) {
+        if (record.level === 1) {
           return <Tag color="blue" className="font-medium">Level 1: Chủ điểm</Tag>
         }
         return <Tag color="green" className="font-medium">Level 2: Tình huống</Tag>
@@ -348,10 +308,10 @@ export function PracticeContextsPage() {
     },
     {
       title: 'Kỹ năng (Domains)',
-      dataIndex: 'domains',
       key: 'domains',
       width: 200,
-      render: (domains: string[]) => {
+      render: (record: PracticeContext) => {
+        const domains = record.domains
         if (!domains || domains.length === 0) {
           return <span className="text-xs text-slate-400">Tất cả</span>
         }
@@ -371,12 +331,11 @@ export function PracticeContextsPage() {
     },
     {
       title: 'Bài tập',
-      dataIndex: 'total_exercises',
       key: 'total_exercises',
       width: 100,
       align: 'center',
-      render: (count?: number) => {
-        const val = count || 0
+      render: (record: PracticeContext) => {
+        const val = record.total_exercises || 0
         return (
           <Badge
             count={val}
@@ -388,12 +347,12 @@ export function PracticeContextsPage() {
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string, record: PracticeContext) => (
+      align: 'center',
+      render: (record: PracticeContext) => (
         <Switch
-          checked={status === 'ACTIVE'}
+          checked={record.status === 'ACTIVE'}
           checkedChildren="Bật"
           unCheckedChildren="Ẩn"
           size="small"
@@ -407,7 +366,7 @@ export function PracticeContextsPage() {
       width: 150,
       fixed: 'right',
       align: 'center',
-      render: (_, record: PracticeContext) => {
+      render: (record: PracticeContext) => {
         const canAddChild = record.level < 2
 
         return (
@@ -434,10 +393,6 @@ export function PracticeContextsPage() {
       },
     },
   ]
-
-  const displayedColumns = columns.filter(
-    (col) => col.key === 'actions' || visibleColumns.includes(String(col.key))
-  )
 
   return (
     <div className="space-y-4 p-4">
@@ -491,133 +446,72 @@ export function PracticeContextsPage() {
         </div>
       </div>
 
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-          <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-            <input
-              type="text"
-              placeholder="Tìm theo tên tiếng Anh, tiếng Việt, mã code..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+      <DataTable<PracticeContext>
+        columns={columns}
+        data={treeData}
+        isLoading={isLoading}
+        rowKey="_id"
+        scroll={{ x: 1100 }}
+        onResetFilters={() => {
+          setSearchTerm('')
+          setSelectedLevel('ALL')
+          setSelectedDomain('ALL')
+          setSelectedStatus('ALL')
+        }}
+        filterSlot={
+          <>
+            <div className="flex items-center gap-2 w-full sm:w-72 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <input
+                type="text"
+                placeholder="Tìm theo tên tiếng Anh, tiếng Việt, mã code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <CustomSelect
+              value={selectedLevel}
+              onChange={(val) => setSelectedLevel(val)}
+              options={[
+                { value: 'ALL', label: 'Tất cả cấp bậc' },
+                { value: 0, label: 'Level 0: Chủ đề lớn (Theme)' },
+                { value: 1, label: 'Level 1: Nhóm chủ điểm (Topic)' },
+                { value: 2, label: 'Level 2: Tình huống cụ thể' },
+              ]}
             />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
 
-          <CustomSelect
-            value={selectedLevel}
-            onChange={(val) => setSelectedLevel(val)}
-            options={[
-              { value: 'ALL', label: 'Tất cả cấp bậc' },
-              { value: 0, label: 'Level 0: Chủ đề lớn (Theme)' },
-              { value: 1, label: 'Level 1: Nhóm chủ điểm (Topic)' },
-              { value: 2, label: 'Level 2: Tình huống cụ thể' },
-            ]}
-          />
+            <CustomSelect
+              value={selectedDomain}
+              onChange={(val) => setSelectedDomain(val)}
+              options={[
+                { value: 'ALL', label: 'Tất cả kỹ năng (Domains)' },
+                ...DOMAIN_OPTIONS,
+              ]}
+            />
 
-          <CustomSelect
-            value={selectedDomain}
-            onChange={(val) => setSelectedDomain(val)}
-            options={[
-              { value: 'ALL', label: 'Tất cả kỹ năng (Domains)' },
-              ...DOMAIN_OPTIONS,
-            ]}
-          />
-
-          <CustomSelect
-            value={selectedStatus}
-            onChange={(val) => setSelectedStatus(val)}
-            options={[
-              { value: 'ALL', label: 'Tất cả trạng thái' },
-              { value: 'ACTIVE', label: 'Đang hoạt động (ACTIVE)' },
-              { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },
-            ]}
-          />
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <Dropdown
-            trigger={['click']}
-            menu={{
-              items: [
-                { key: 'compact', label: 'Gọn' },
-                { key: 'normal', label: 'Vừa' },
-                { key: 'comfortable', label: 'Rộng' },
-              ],
-              selectedKeys: [density],
-              onClick: ({ key }) => setDensity(key as 'compact' | 'normal' | 'comfortable'),
-            }}
-          >
-            <button
-              type="button"
-              className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>{DENSITY_LABELS[density]}</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
-            </button>
-          </Dropdown>
-
-          <button
-            type="button"
-            onClick={() => {
-              setSearchTerm('')
-              setSelectedLevel('ALL')
-              setSelectedDomain('ALL')
-              setSelectedStatus('ALL')
-            }}
-            className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Đặt lại</span>
-          </button>
-
-          <Dropdown
-            trigger={['click']}
-            popupRender={() => (
-              <div className="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-3 shadow-xl backdrop-blur-xl">
-                <Checkbox.Group
-                  value={visibleColumns}
-                  options={CONTEXT_COLUMN_OPTIONS}
-                  onChange={(values) => setVisibleColumns(values.map(String))}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-                />
-              </div>
-            )}
-          >
-            <button
-              type="button"
-              className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-            >
-              <Columns3 className="w-3.5 h-3.5" />
-              <span>Cột</span>
-            </button>
-          </Dropdown>
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5">
-        <ConfigProvider theme={{ components: { Table: DENSITY_TOKENS[density] } }}>
-          <Table
-            columns={displayedColumns}
-            dataSource={treeData}
-            loading={isLoading}
-            pagination={false}
-            rowKey="_id"
-            scroll={{ x: 1100 }}
-            defaultExpandAllRows={false}
-          />
-        </ConfigProvider>
-      </div>
+            <CustomSelect
+              value={selectedStatus}
+              onChange={(val) => setSelectedStatus(val)}
+              options={[
+                { value: 'ALL', label: 'Tất cả trạng thái' },
+                { value: 'ACTIVE', label: 'Đang hoạt động (ACTIVE)' },
+                { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },
+              ]}
+            />
+          </>
+        }
+      />
 
       <Modal
         title={

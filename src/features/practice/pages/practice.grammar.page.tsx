@@ -6,12 +6,12 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Alert, Button, Card, ConfigProvider, Segmented, Space, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
 import { CustomSwitch } from '@/components/custom.switch'
+import { CustomSelect } from '@/components/custom.select'
+import { IpaDataTable, type IpaColumn } from '@/components/data.table'
 import { BookOutlined, BulbOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
-import { CustomSelect } from '@/components/custom.select'
-import { IpaDataTable, type IpaColumn } from '@/features/practice/components/ipa.data.table'
 import { GrammarTopicEditor } from '@/features/practice/components/grammar.topic.editor'
 import { GrammarQuestionEditor } from '@/features/practice/components/grammar.question.editor'
 import { GrammarHandbookTab } from '@/features/practice/components/grammar.handbook.tab'
@@ -44,23 +44,23 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  const safeTree = Array.isArray(tree) ? tree : []
-  const levels = ipaLevels.map(value => ({ value, label: value }))
-  const categories = grammarCategories.map(value => ({ value, label: isVi ? (grammarCategoryLabels[value] || value) : value }))
-  const difficulties = [
+  const safeTree = useMemo(() => Array.isArray(tree) ? tree : [], [tree])
+  const levels = useMemo(() => ipaLevels.map(value => ({ value, label: value })), [])
+  const categories = useMemo(() => grammarCategories.map(value => ({ value, label: isVi ? (grammarCategoryLabels[value] || value) : value })), [isVi])
+  const difficulties = useMemo(() => [
     { value: 'EASY', label: isVi ? 'Dễ' : 'Easy' },
     { value: 'MEDIUM', label: isVi ? 'Vừa' : 'Medium' },
     { value: 'HARD', label: isVi ? 'Khó' : 'Hard' }
-  ]
-  const questionStatuses = [
+  ], [isVi])
+  const questionStatuses = useMemo(() => [
     { value: 'DRAFT', label: isVi ? 'Nháp' : 'Draft' },
     { value: 'PUBLISHED', label: isVi ? 'Đã xuất bản' : 'Published' },
     { value: 'ARCHIVED', label: isVi ? 'Lưu trữ' : 'Archived' }
-  ]
-  const topicStatuses = [
+  ], [isVi])
+  const topicStatuses = useMemo(() => [
     { value: 'ACTIVE', label: isVi ? 'Đang sử dụng' : 'Active' },
     { value: 'INACTIVE', label: isVi ? 'Ngừng sử dụng' : 'Inactive' }
-  ]
+  ], [isVi])
 
   const state = useIpaTableState()
   const mutations = useGrammarMutations()
@@ -73,8 +73,8 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
   const [editor, setEditor] = useState<{ id: string | null; readOnly: boolean } | null>(null)
   const [working, setWorking] = useState<string | null>(null)
   const trash = state.query.trash === 'true'
-  const topicOptions = safeTree.map(row => ({ value: row._id, label: isVi ? (row.name_vi || row.name_en || row.code) : (row.name_en || row.name_vi || row.code), pId: row.parent_id }))
-  const contextOptions = contexts.map(row => ({ value: row._id, label: isVi ? (row.name_vi || row.name || row.code) : (row.name || row.name_vi || row.code), pId: row.parent_id }))
+  const topicOptions = useMemo(() => safeTree.map(row => ({ value: row._id, label: isVi ? (row.name_vi || row.name_en || row.code) : (row.name_en || row.name_vi || row.code), pId: row.parent_id })), [safeTree, isVi])
+  const contextOptions = useMemo(() => contexts.map(row => ({ value: row._id, label: isVi ? (row.name_vi || row.name || row.code) : (row.name || row.name_vi || row.code), pId: row.parent_id })), [contexts, isVi])
 
   const topicSelectOptions = useMemo(() => {
     const roots = safeTree.filter(row => !row.parent_id)
@@ -138,11 +138,15 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
 
   const statuses = kind === 'topics' ? topicStatuses : questionStatuses
 
+  const totalPages = result.data?.pagination?.totalPages
+  const currentPage = state.query.page
+  const { change } = state
+
   useEffect(() => {
-    if (!result.isPlaceholderData && result.data && state.query.page > Math.max(1, result.data.pagination.totalPages)) {
-      state.change({ page: String(Math.max(1, result.data.pagination.totalPages)) })
+    if (!result.isPlaceholderData && totalPages !== undefined && currentPage > Math.max(1, totalPages)) {
+      change({ page: String(Math.max(1, totalPages)) })
     }
-  }, [result.data, result.isPlaceholderData, state])
+  }, [result.isPlaceholderData, totalPages, currentPage, change])
 
   const toggle = async (row: GrammarRecord, value: boolean) => {
     setWorking(row._id)
@@ -483,12 +487,12 @@ export function PracticeGrammarPage() {
                         {
                           key: 'topics',
                           label: isVi ? 'Chủ điểm' : 'Topics',
-                          children: <GrammarBank key="topics" kind="topics" tree={tree} />,
+                          children: kind === 'topics' ? <GrammarBank key="topics" kind="topics" tree={tree} /> : null,
                         },
                         {
                           key: 'questions',
                           label: isVi ? 'Câu hỏi' : 'Questions',
-                          children: <GrammarBank key="questions" kind="questions" tree={tree} />,
+                          children: kind === 'questions' ? <GrammarBank key="questions" kind="questions" tree={tree} /> : null,
                         },
                       ]}
                     />
