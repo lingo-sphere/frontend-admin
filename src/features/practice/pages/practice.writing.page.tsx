@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Segmented, Space, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { AdminTabs } from '@/components/admin.tabs'
 import { CustomSwitch } from '@/components/custom.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
@@ -106,7 +107,11 @@ function WritingTable({ type }: { type: WritingType }) {
     setWorking(row._id)
     try {
       const detail = await writingAdminService.detail(row._id)
-      await mutations.save.mutateAsync({ id: row._id, payload: { ...writingPayload(type, detail), status: published ? 'PUBLISHED' : 'DRAFT' } })
+      const payload = writingPayload(type, detail)
+      if (published && payload.exercise_type === 'DESCRIBE_PICTURE' && !payload.image_description?.trim()) {
+        payload.image_description = (payload.reference_answer || payload.prompt_text || payload.description || payload.title || '').trim()
+      }
+      await mutations.save.mutateAsync({ id: row._id, payload: { ...payload, status: published ? 'PUBLISHED' : 'DRAFT' } })
       toast.success(isVi ? 'Đã cập nhật trạng thái Writing' : 'Writing exercise status updated')
     } catch (cause) {
       toast.error(ipaError(cause))
@@ -175,7 +180,15 @@ export function PracticeWritingPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện viết' : 'Writing Management'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Quản lý các dạng bài viết và tiêu chí chấm điểm.' : 'Manage writing exercise types, rubrics, and model answers.'}</p>
       </div>
-      <Tabs activeKey={type} destroyOnHidden onChange={tab => state.change({ tab, page: '1', sort: undefined, order: undefined, filters: JSON.stringify(Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))) })} items={writingTypes.map(value => ({ key: value, label: isVi ? writingLabels[value] : writingEnLabels[value], children: value === type ? <WritingTable key={value} type={value} /> : null }))} />
+      <AdminTabs
+        activeKey={type}
+        onChange={tab => state.change({ tab, page: '1', sort: undefined, order: undefined, filters: JSON.stringify(Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))) })}
+        items={writingTypes.map(value => ({
+          key: value,
+          label: isVi ? writingLabels[value] : writingEnLabels[value],
+          children: value === type ? <WritingTable key={value} type={value} /> : null,
+        }))}
+      />
     </div>
   </ConfigProvider>
 }

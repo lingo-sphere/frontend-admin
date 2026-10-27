@@ -12,6 +12,7 @@ import { LearnerSubmissionReviewModal } from '@/features/courses/components/lear
 import { CourseLearnersStatsBar } from '@/features/courses/components/course.learners.stats.bar'
 import { CourseProgressTableTab } from '@/features/courses/components/course.progress.table.tab'
 import { createCourseProgressColumns } from '@/features/courses/components/course.progress.columns'
+import { AdminTabs } from '@/components/admin.tabs'
 import { useNavigate } from 'react-router-dom'
 import {
   useCourseLearnersData,
@@ -181,51 +182,28 @@ export function CourseLearnersPage() {
         loading={isLoadingProgress || isLoadingSubmissions}
       />
 
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('PROGRESS')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'PROGRESS'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <GraduationCap className="w-4 h-4" />
-            <span>{isVi ? 'Bảng Điểm & Tiến Độ Học Tập' : 'Learner Progress Table'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('SUBMISSIONS')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-              activeTab === 'SUBMISSIONS'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <FileCheck2 className="w-4 h-4" />
-            <span>{isVi ? 'Chấm Điểm & Phúc Khảo Bài Nộp' : 'Speaking & Writing Submissions'}</span>
-            {stats.pendingReviews > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 absolute top-1.5 right-1.5 animate-pulse" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('ANALYTICS')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'ANALYTICS'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <TrendingUp className="w-4 h-4" />
-            <span>{isVi ? 'Phân Tích Tăng Trưởng & Insights' : 'Course Analytics & Insights'}</span>
-          </button>
-        </div>
-      </div>
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as 'PROGRESS' | 'SUBMISSIONS' | 'ANALYTICS')}
+        items={[
+          {
+            key: 'PROGRESS',
+            label: isVi ? 'Bảng Điểm & Tiến Độ Học Tập' : 'Learner Progress Table',
+            icon: GraduationCap,
+          },
+          {
+            key: 'SUBMISSIONS',
+            label: isVi ? 'Chấm Điểm & Phúc Khảo Bài Nộp' : 'Speaking & Writing Submissions',
+            icon: FileCheck2,
+            dot: stats.pendingReviews > 0,
+          },
+          {
+            key: 'ANALYTICS',
+            label: isVi ? 'Phân Tích Tăng Trưởng & Insights' : 'Course Analytics & Insights',
+            icon: TrendingUp,
+          },
+        ]}
+      />
 
       {activeTab === 'PROGRESS' && (
         <CourseProgressTableTab

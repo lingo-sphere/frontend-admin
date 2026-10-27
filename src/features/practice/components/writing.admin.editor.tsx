@@ -48,6 +48,9 @@ export function WritingAdminEditor({ type, id, readOnly, trash, onClose }: { typ
     try { await form.validateFields() } catch { return }
     const values = form.getFieldsValue(true) as WritingPayload
     const payload = writingPayload(type, { ...result.data, ...values, _id: id || '', revision: form.getFieldValue('expected_revision') ?? result.data?.revision ?? 0, status: status || values.status })
+    if (payload.status === 'PUBLISHED' && payload.exercise_type === 'DESCRIBE_PICTURE' && !payload.image_description?.trim()) {
+      payload.image_description = (payload.reference_answer || payload.prompt_text || payload.description || payload.title || '').trim()
+    }
     setSaving(true); setError('')
     try {
       const saved = await mutations.save.mutateAsync({ id, payload }); setDirty(false)

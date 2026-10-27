@@ -1,7 +1,4 @@
-/**
- * @file progress.page.tsx
- * @description Trang quản trị ProgressPage trong giao diện Admin
- */
+// Trang quản trị thống kê hệ thống (ProgressPage) trong giao diện Admin.
 
 import { useState, useEffect } from 'react'
 import {
@@ -11,6 +8,7 @@ import {
   Activity,
   RotateCcw,
 } from 'lucide-react'
+import { AdminTabs } from '@/components/admin.tabs'
 import { userService } from '@/features/users/services/user.service'
 import { courseService } from '@/features/courses/services/course.service'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
@@ -117,33 +115,18 @@ export function ProgressPage() {
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800">
-        {[
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as AnalyticsTab)}
+        items={[
           { key: 'overview', label: 'Tổng quan hệ sinh thái', icon: Users },
           { key: 'toeic', label: 'Phân tích TOEIC 7 Part', icon: Target },
           { key: 'ai', label: 'Hiệu năng Mô hình AI', icon: BrainCircuit },
           { key: 'logs', label: 'Nhật ký học viên', icon: Activity },
           { key: 'betterstack', label: 'BetterStack Uptime' },
           { key: 'posthog', label: 'PostHog Product Analytics' },
-        ].map((tab) => {
-          const Icon = tab.icon
-          const isActive = activeTab === tab.key
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as AnalyticsTab)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              {Icon && <Icon className="w-4 h-4" />}
-              <span>{tab.label}</span>
-            </button>
-          )
-        })}
-      </div>
+        ]}
+      />
 
       {activeTab === 'overview' && (
         <ProgressOverviewTab

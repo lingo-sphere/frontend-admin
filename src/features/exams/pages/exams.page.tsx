@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw, BookOpen, Trophy, Sparkles, GraduationCap } from 'lucide-react'
+import { Plus, RotateCcw, BookOpen, Sparkles, GraduationCap } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { type ToeicExamItem } from '@/features/exams/services/exam.service'
 import {
@@ -14,6 +14,7 @@ import {
 import { toast } from '@/store/toast.store'
 import { useNavigate } from 'react-router-dom'
 import { ExamStatsOverview } from '@/features/exams/components/exam.stats.overview'
+import { AdminTabs } from '@/components/admin.tabs'
 import { ExamListTable } from '@/features/exams/components/exam.list.table'
 import { CreateExamModal } from '@/features/exams/components/create.exam.modal'
 import { ToeicAiImportModal } from '@/features/exams/components/toeic.ai.import.modal'
@@ -27,7 +28,7 @@ export function ExamsPage() {
 
   const [activeTab, setActiveTab] = useState<'exams' | 'attempts'>('exams')
   const queryParams = useMemo(() => ({ isSystemPlacement: 'false' }), [])
-  const { data: rawExams = [], isLoading, refetch } = useAdminExamsQuery(queryParams)
+  const { data: rawExams = [], refetch } = useAdminExamsQuery(queryParams)
 
   const exams = useMemo(() => {
     return rawExams.filter((exam) => {
@@ -179,33 +180,22 @@ export function ExamsPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 w-fit">
-        <button
-          type="button"
-          onClick={() => setActiveTab('exams')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'exams'
-              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          <span>{isVi ? 'Ngân hàng đề thi TOEIC' : 'TOEIC Exam Bank'}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('attempts')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'attempts'
-              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <GraduationCap className="w-4 h-4" />
-          <span>{isVi ? 'Lịch sử làm đề thi TOEIC của học viên' : 'Student TOEIC Practice History'}</span>
-        </button>
-      </div>
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as 'exams' | 'attempts')}
+        items={[
+          {
+            key: 'exams',
+            label: isVi ? 'Ngân hàng đề thi TOEIC' : 'TOEIC Exam Bank',
+            icon: BookOpen,
+          },
+          {
+            key: 'attempts',
+            label: isVi ? 'Lịch sử làm đề thi TOEIC của học viên' : 'Student TOEIC Practice History',
+            icon: GraduationCap,
+          },
+        ]}
+      />
 
       {activeTab === 'exams' ? (
         <div className="space-y-6">

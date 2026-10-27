@@ -5,6 +5,7 @@ import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet, Volume2 }
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { useDebounce } from '@/hooks/use.debounce'
 import { DataTable } from '@/components/data.table'
+import { AdminTabs } from '@/components/admin.tabs'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/store/toast.store'
 import type { LexicalItem, IpaSymbol, Topic, FlashcardDeck } from '@/features/vocabulary/data/vocabulary.data'
@@ -53,13 +54,17 @@ export function VocabularyPage() {
 
   const [isCardsManagerOpen, setIsCardsManagerOpen] = useState(false)
   const [selectedDeckForCards, setSelectedDeckForCards] = useState<FlashcardDeck | null>(null)
+  const [sortKey, setSortKey] = useState<string | null>('word')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   const queryParams = useMemo(() => ({
     page: currentPage,
     limit: pageSize,
     q: debouncedSearch.trim() || undefined,
     cefr_level: filterLevel !== 'ALL' ? filterLevel : undefined,
-  }), [currentPage, pageSize, debouncedSearch, filterLevel])
+    sort_by: sortKey || undefined,
+    sort_order: sortOrder || undefined,
+  }), [currentPage, pageSize, debouncedSearch, filterLevel, sortKey, sortOrder])
 
   const { data: wordsResponse, isLoading: isWordsLoading, refetch: refetchWords } = useVocabularyWordsQuery(queryParams)
 
@@ -149,6 +154,8 @@ export function VocabularyPage() {
   const handleResetFilters = async () => {
     setSearchWord('')
     setFilterLevel('ALL')
+    setSortKey('word')
+    setSortOrder('asc')
     setCurrentPage(1)
     await refetchWords()
     toast.success(isVi ? 'Đã đặt lại bộ lọc và tải lại từ vựng' : 'Vocabulary filters reset')
@@ -241,63 +248,36 @@ export function VocabularyPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 w-fit">
-        <button
-          onClick={() => setActiveTab('words')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'words'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>
-            {isVi ? `Kho từ vựng (${totalWords.toLocaleString()})` : `Word Bank (${totalWords.toLocaleString()})`}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('topics')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'topics'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Bookmark className="w-3.5 h-3.5" />
-          <span>
-            {isVi ? `Chủ đề (${topics.length})` : `Topics (${topics.length})`}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('decks')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'decks'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" />
-          <span>
-            {isVi ? `Bộ thẻ (${decks.length})` : `Decks (${decks.length})`}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ipa')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'ipa'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Volume2 className="w-3.5 h-3.5" />
-          <span>
-            {isVi ? `Bảng IPA (${ipaSymbols.length})` : `IPA Chart (${ipaSymbols.length})`}
-          </span>
-        </button>
-      </div>
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as VocabularyTabType)}
+        items={[
+          {
+            key: 'words',
+            label: isVi ? 'Kho từ vựng' : 'Word Bank',
+            count: totalWords.toLocaleString(),
+            icon: BookOpen,
+          },
+          {
+            key: 'topics',
+            label: isVi ? 'Chủ đề' : 'Topics',
+            count: topics.length,
+            icon: Bookmark,
+          },
+          {
+            key: 'decks',
+            label: isVi ? 'Bộ thẻ' : 'Decks',
+            count: decks.length,
+            icon: Layers,
+          },
+          {
+            key: 'ipa',
+            label: isVi ? 'Bảng IPA' : 'IPA Chart',
+            count: ipaSymbols.length,
+            icon: Volume2,
+          },
+        ]}
+      />
 
       {activeTab === 'words' && (
         <DataTable<LexicalItem>
@@ -305,6 +285,13 @@ export function VocabularyPage() {
           data={words}
           rowKey={(w) => w.id}
           isLoading={isLoading}
+          sortKey={sortKey}
+          sortOrder={sortOrder}
+          onSortChange={(k, o) => {
+            setSortKey(k)
+            setSortOrder(o || 'asc')
+            setCurrentPage(1)
+          }}
           onRowClick={(word) => setDetailModalId(word.id)}
           onResetFilters={handleResetFilters}
           filterSlot={

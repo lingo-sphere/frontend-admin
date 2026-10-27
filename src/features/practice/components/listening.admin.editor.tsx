@@ -44,8 +44,14 @@ export function ListeningAdminEditor({ type, id, readOnly, trash, onClose }: { t
     try { await form.validateFields() } catch { return }
     const values = form.getFieldsValue(true) as ListeningPayload
     setSaving(true); setError('')
-    // Include preserved non-rendered fields and the revision captured when this form loaded.
     const payload = listeningPayload(type, { ...result.data, ...values, _id: id || '', revision: form.getFieldValue('expected_revision') ?? result.data?.revision ?? 0, status: status || values.status })
+    if (payload.status === 'PUBLISHED' && !payload.transcript?.trim()) {
+      if (payload.options?.length && payload.options.some(option => option.text?.trim())) {
+        payload.transcript = payload.options.filter(option => option.text?.trim()).map(option => `(${option.key}) ${option.text.trim()}`).join('\n')
+      } else if (payload.segments?.length && payload.segments.some(segment => segment.text?.trim())) {
+        payload.transcript = payload.segments.map(segment => segment.text?.trim()).filter(Boolean).join('\n')
+      }
+    }
     try {
       const saved = await mutations.save.mutateAsync({ id, payload })
       setDirty(false)

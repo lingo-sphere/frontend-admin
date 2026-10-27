@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MessageSquare, ShieldCheck, ShieldAlert, RefreshCw } from 'lucide-react'
+import { AdminTabs } from '@/components/admin.tabs'
 import { toast } from '@/store/toast.store'
 import { communityAdminService } from '@/features/community/services/community.admin.service'
 import {
@@ -203,43 +204,27 @@ export function CommunityPage() {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
-        <button
-          onClick={() => setActiveTab('MONITOR')}
-          className={`pb-3 px-3 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
-            activeTab === 'MONITOR'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>{t('community.tabMonitor')}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('MODERATORS')}
-          className={`pb-3 px-3 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
-            activeTab === 'MODERATORS'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span>{t('community.tabModerators', { count: moderators.length })}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('SANCTIONS')}
-          className={`pb-3 px-3 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
-            activeTab === 'SANCTIONS'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <ShieldAlert className="w-4 h-4" />
-          <span>{t('community.tabSanctions', { count: bannedMembers.length })}</span>
-        </button>
-      </div>
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as 'MONITOR' | 'MODERATORS' | 'SANCTIONS')}
+        items={[
+          {
+            key: 'MONITOR',
+            label: t('community.tabMonitor'),
+            icon: MessageSquare,
+          },
+          {
+            key: 'MODERATORS',
+            label: t('community.tabModerators', { count: moderators.length }),
+            icon: ShieldCheck,
+          },
+          {
+            key: 'SANCTIONS',
+            label: t('community.tabSanctions', { count: bannedMembers.length }),
+            icon: ShieldAlert,
+          },
+        ]}
+      />
 
       {activeTab === 'MONITOR' && (
         <div className="space-y-6">
