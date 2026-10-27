@@ -405,8 +405,15 @@ export function DataTable<T extends object>({
         const isStickyRight =
           col.sticky === 'right' || col.fixed === 'right' || (isActionsCol && col.fixed !== false)
 
+        const isIpa = isIpaColumn(col)
         const effectiveDataIndex = (
-          col.dataIndex ? String(col.dataIndex) : col.render ? undefined : col.key
+          col.dataIndex
+            ? String(col.dataIndex)
+            : isIpa
+            ? col.key
+            : col.render
+            ? undefined
+            : col.key
         ) as (keyof T & (string | number)) | undefined
 
         const antdCol: ColumnType<T> = {
@@ -427,8 +434,14 @@ export function DataTable<T extends object>({
             if (!col.render) {
               return (value !== undefined && value !== null ? String(value) : '') as ReactNode
             }
-            if (isIpaColumn(col)) {
-              return col.render(value, record, index)
+            if (isIpa) {
+              const cellValue =
+                value === record
+                  ? (record as Record<string, unknown>)[col.key]
+                  : value !== undefined
+                  ? value
+                  : (record as Record<string, unknown>)[col.key]
+              return col.render(cellValue, record, index)
             }
             return col.render(record, index)
           },
