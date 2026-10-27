@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, ConfigProvider, Segmented, Space, Tabs, Tag, Tree, theme as antdTheme } from 'antd'
+import { Alert, Button, Card, ConfigProvider, Segmented, Tag, Tree, theme as antdTheme } from 'antd'
 import { CustomSwitch } from '@/components/custom.switch'
 import { CustomSelect } from '@/components/custom.select'
 import { IpaDataTable, type IpaColumn } from '@/components/data.table'
-import { BookOutlined, BulbOutlined, UnorderedListOutlined } from '@ant-design/icons'
+import { BookOpen, Sparkles, Layers, ListTree, HelpCircle } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
@@ -206,13 +206,6 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
   ]
 
   return <>
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <Segmented value={String(trash)} options={[{ value: 'false', label: kind === 'topics' ? (isVi ? 'Chủ điểm' : 'Topics') : (isVi ? 'Câu hỏi' : 'Questions') }, { value: 'true', label: isVi ? 'Thùng rác' : 'Trash' }]} onChange={value => state.change({ trash: value, page: '1' })} />
-      <Space>
-        <Button loading={result.isFetching} onClick={() => result.refetch()}>{isVi ? 'Làm mới' : 'Refresh'}</Button>
-        {!trash && <Button type="primary" onClick={() => setEditor({ id: null, readOnly: false })}>{kind === 'topics' ? (isVi ? 'Thêm chủ điểm' : 'Add Topic') : (isVi ? 'Thêm câu hỏi' : 'Add Question')}</Button>}
-      </Space>
-    </div>
     <IpaDataTable
       columns={[...columns, ...sharedColumns]}
       items={result.data?.items || []}
@@ -223,6 +216,27 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
       state={state}
       searchLabel={isVi ? 'Tìm kiếm' : 'Search'}
       searchPlaceholder={kind === 'topics' ? (isVi ? 'Tìm tên, mã, giải thích...' : 'Search name, code, description...') : (isVi ? 'Tìm câu hỏi, giải thích...' : 'Search question, explanation...')}
+      extraActions={
+        <div className="flex items-center gap-2">
+          <Segmented
+            value={String(trash)}
+            options={[
+              { value: 'false', label: kind === 'topics' ? (isVi ? 'Bản ghi' : 'Active') : (isVi ? 'Bản ghi' : 'Active') },
+              { value: 'true', label: isVi ? 'Thùng rác' : 'Trash' }
+            ]}
+            onChange={value => state.change({ trash: value, page: '1' })}
+          />
+          {!trash && (
+            <button
+              type="button"
+              onClick={() => setEditor({ id: null, readOnly: false })}
+              className="h-10 px-4 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs shadow-indigo-500/20 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+            >
+              <span>{kind === 'topics' ? (isVi ? '+ Thêm chủ điểm' : '+ Add Topic') : (isVi ? '+ Thêm câu hỏi' : '+ Add Question')}</span>
+            </button>
+          )}
+        </div>
+      }
       extraFilters={<>
         {kind === 'topics' ? (
           <CustomSelect
@@ -353,77 +367,136 @@ export function PracticeGrammarPage() {
           </p>
         </div>
 
-        <Tabs
-          activeKey={mainTab}
-          onChange={(key) => {
-            if (key === 'handbook' || key === 'toeic_tips' || key === 'practice_bank') {
-              setMainTab(key)
-            }
-          }}
-          type="line"
-          size="large"
-          className="font-medium"
-          items={[
-            {
-              key: 'handbook',
-              label: (
-                <span className="flex items-center gap-1.5 font-bold">
-                  <BookOutlined />
-                  {isVi ? 'Sổ tay 44 Ngữ pháp' : '44 Grammar Points'}
+        <div className="flex flex-wrap items-center gap-2.5 p-1.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-2xs backdrop-blur-md w-fit">
+          <button
+            type="button"
+            onClick={() => setMainTab('handbook')}
+            className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              mainTab === 'handbook'
+                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                mainTab === 'handbook'
+                  ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-600/30'
+                  : 'bg-slate-200/80 dark:bg-slate-800 text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <div className="leading-tight flex items-center gap-1.5">
+                <span>{isVi ? 'Sổ tay 44 Ngữ pháp' : '44 Grammar Points'}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                    mainTab === 'handbook'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/50'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-500'
+                  }`}
+                >
+                  44
                 </span>
-              ),
-              children: <GrammarHandbookTab />,
-            },
-            {
-              key: 'toeic_tips',
-              label: (
-                <span className="flex items-center gap-1.5 font-bold">
-                  <BulbOutlined />
-                  {isVi ? 'Tips làm bài TOEIC' : 'TOEIC Exam Tips'}
+              </div>
+              <div className="text-[11px] font-normal text-slate-400 dark:text-slate-500 mt-0.5">
+                {isVi ? '44 chủ điểm & thể công thức' : '44 core topics & formulas'}
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMainTab('toeic_tips')}
+            className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              mainTab === 'toeic_tips'
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                mainTab === 'toeic_tips'
+                  ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/30'
+                  : 'bg-slate-200/80 dark:bg-slate-800 text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <div className="leading-tight flex items-center gap-1.5">
+                <span>{isVi ? 'Tips làm bài TOEIC' : 'TOEIC Exam Tips'}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                    mainTab === 'toeic_tips'
+                      ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-500'
+                  }`}
+                >
+                  {isVi ? 'Chiến thuật' : 'Tips'}
                 </span>
-              ),
-              children: <ToeicTipsTab />,
-            },
-            {
-              key: 'practice_bank',
-              label: (
-                <span className="flex items-center gap-1.5 font-bold">
-                  <UnorderedListOutlined />
-                  {isVi ? 'Ngân hàng bài tập thực hành' : 'Practice Question Bank'}
+              </div>
+              <div className="text-[11px] font-normal text-slate-400 dark:text-slate-500 mt-0.5">
+                {isVi ? 'Bẫy đề & mẹo thi 4 kỹ năng' : 'Traps & 4-skill exam tactics'}
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMainTab('practice_bank')}
+            className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              mainTab === 'practice_bank'
+                ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                mainTab === 'practice_bank'
+                  ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-600/30'
+                  : 'bg-slate-200/80 dark:bg-slate-800 text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <div className="leading-tight flex items-center gap-1.5">
+                <span>{isVi ? 'Ngân hàng bài tập thực hành' : 'Practice Question Bank'}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                    mainTab === 'practice_bank'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-500'
+                  }`}
+                >
+                  {isVi ? 'Thực hành' : 'Practice'}
                 </span>
-              ),
-              children: (
-                <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[260px_minmax(0,1fr)] pt-2">
-                  <Card
-                    size="small"
-                    title={isVi ? 'Cây chủ điểm' : 'Topics Tree'}
-                    loading={isFetching}
-                    extra={
-                      state.filters.grammar_knowledge_id?.length ? (
-                        <Button
-                          size="small"
-                          type="link"
-                          style={{ padding: 0 }}
-                          onClick={() =>
-                            state.change({
-                              tab: 'questions',
-                              filters: undefined,
-                              page: '1',
-                              search: undefined,
-                              sort: undefined,
-                              order: undefined,
-                            })
-                          }
-                        >
-                          {isVi ? 'Xóa lọc' : 'Clear'}
-                        </Button>
-                      ) : null
-                    }
-                  >
+              </div>
+              <div className="text-[11px] font-normal text-slate-400 dark:text-slate-500 mt-0.5">
+                {isVi ? 'Cây chủ điểm & ngân hàng câu hỏi' : 'Topics tree & question bank'}
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div key={mainTab} className="animate-in fade-in slide-in-from-bottom-2 duration-200 ease-out min-w-0">
+          {mainTab === 'handbook' && <GrammarHandbookTab />}
+
+          {mainTab === 'toeic_tips' && <ToeicTipsTab />}
+
+          {mainTab === 'practice_bank' && (
+            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[260px_minmax(0,1fr)] pt-1">
+              <Card
+                size="small"
+                title={isVi ? 'Cây chủ điểm' : 'Topics Tree'}
+                loading={isFetching}
+                extra={
+                  state.filters.grammar_knowledge_id?.length ? (
                     <Button
                       size="small"
-                      block
-                      style={{ marginBottom: 12 }}
+                      type="link"
+                      style={{ padding: 0 }}
                       onClick={() =>
                         state.change({
                           tab: 'questions',
@@ -435,73 +508,119 @@ export function PracticeGrammarPage() {
                         })
                       }
                     >
-                      {isVi ? 'Tất cả câu hỏi' : 'All questions'}
+                      {isVi ? 'Xóa lọc' : 'Clear'}
                     </Button>
-                    {error ? (
-                      <Alert
-                        type="error"
-                        message={isVi ? 'Không tải được cây' : 'Failed to load tree'}
-                        action={<Button onClick={() => refetch()}>{isVi ? 'Thử lại' : 'Retry'}</Button>}
-                      />
-                    ) : (
-                      <div className="max-h-[700px] overflow-auto">
-                        <Tree
-                          showLine
-                          blockNode
-                          selectedKeys={kind === 'questions' ? state.filters.grammar_knowledge_id || [] : []}
-                          treeData={build()}
-                          onSelect={(keys) => {
-                            if (keys[0]) {
-                              state.change({
-                                tab: 'questions',
-                                filters: JSON.stringify({ grammar_knowledge_id: [String(keys[0])] }),
-                                page: '1',
-                                search: undefined,
-                                sort: undefined,
-                                order: undefined,
-                                trash: undefined,
-                              })
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
-                  </Card>
-
-                  <div className="min-w-0">
-                    <Tabs
-                      activeKey={kind}
-                      destroyOnHidden
-                      onChange={(tab) =>
-                        state.change({
-                          tab,
-                          filters: undefined,
-                          search: undefined,
-                          page: '1',
-                          sort: undefined,
-                          order: undefined,
-                          trash: undefined,
-                        })
-                      }
-                      items={[
-                        {
-                          key: 'topics',
-                          label: isVi ? 'Chủ điểm' : 'Topics',
-                          children: kind === 'topics' ? <GrammarBank key="topics" kind="topics" tree={tree} /> : null,
-                        },
-                        {
-                          key: 'questions',
-                          label: isVi ? 'Câu hỏi' : 'Questions',
-                          children: kind === 'questions' ? <GrammarBank key="questions" kind="questions" tree={tree} /> : null,
-                        },
-                      ]}
+                  ) : null
+                }
+              >
+                <Button
+                  size="small"
+                  block
+                  style={{ marginBottom: 12 }}
+                  onClick={() =>
+                    state.change({
+                      tab: 'questions',
+                      filters: undefined,
+                      page: '1',
+                      search: undefined,
+                      sort: undefined,
+                      order: undefined,
+                    })
+                  }
+                >
+                  {isVi ? 'Tất cả câu hỏi' : 'All questions'}
+                </Button>
+                {error ? (
+                  <Alert
+                    type="error"
+                    message={isVi ? 'Không tải được cây' : 'Failed to load tree'}
+                    action={<Button onClick={() => refetch()}>{isVi ? 'Thử lại' : 'Retry'}</Button>}
+                  />
+                ) : (
+                  <div className="max-h-[700px] overflow-auto">
+                    <Tree
+                      showLine
+                      blockNode
+                      selectedKeys={kind === 'questions' ? state.filters.grammar_knowledge_id || [] : []}
+                      treeData={build()}
+                      onSelect={(keys) => {
+                        if (keys[0]) {
+                          state.change({
+                            tab: 'questions',
+                            filters: JSON.stringify({ grammar_knowledge_id: [String(keys[0])] }),
+                            page: '1',
+                            search: undefined,
+                            sort: undefined,
+                            order: undefined,
+                            trash: undefined,
+                          })
+                        }
+                      }}
                     />
                   </div>
+                )}
+              </Card>
+
+              <div className="min-w-0">
+                <div className="mb-3 flex items-center gap-2 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 w-fit">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      state.change({
+                        tab: 'topics',
+                        filters: undefined,
+                        search: undefined,
+                        page: '1',
+                        sort: undefined,
+                        order: undefined,
+                        trash: undefined,
+                      })
+                    }
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      kind === 'topics'
+                        ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <ListTree className="w-3.5 h-3.5" />
+                    <span>{isVi ? 'Chủ điểm' : 'Topics'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      state.change({
+                        tab: 'questions',
+                        filters: undefined,
+                        search: undefined,
+                        page: '1',
+                        sort: undefined,
+                        order: undefined,
+                        trash: undefined,
+                      })
+                    }
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      kind === 'questions'
+                        ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                    <span>{isVi ? 'Câu hỏi' : 'Questions'}</span>
+                  </button>
                 </div>
-              ),
-            },
-          ]}
-        />
+
+                <div key={kind} className="animate-in fade-in slide-in-from-bottom-1 duration-150 ease-out min-w-0">
+                  {kind === 'topics' ? (
+                    <GrammarBank key="topics" kind="topics" tree={tree} />
+                  ) : (
+                    <GrammarBank key="questions" kind="questions" tree={tree} />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </ConfigProvider>
   )

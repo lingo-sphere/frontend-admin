@@ -1,7 +1,7 @@
 // Quản lý và chấm điểm bài nộp kỹ năng Speaking và Writing của học viên.
 
 import { useState, useMemo } from 'react'
-import { RotateCcw } from 'lucide-react'
+
 import { DataTable } from '@/components/data.table'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 import type { SkillSubmissionItem } from '@/features/progress/services/progress.service'
@@ -197,30 +197,19 @@ export function LearnerSubmissionsTab({
       }}
       onResetFilters={handleResetFilters}
       extraActions={
-        <>
-          <div className="w-64 sm:w-72">
-            <CustomSelect
-              value={selectedCourseId}
-              onChange={(val) => {
-                onSelectCourseId(val)
-                setSubCurrentPage(1)
-              }}
-              options={courseOptions}
-              disabled={isLoading || courses.length === 0}
-              placeholder={isVi ? 'Chọn khóa học...' : 'Select course...'}
-              showSearch={courses.length > 5}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={onRefresh}
-            title="Làm mới dữ liệu"
-            className="flex items-center justify-center p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
-          >
-            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
-          </button>
-        </>
+        <div className="w-64 sm:w-72">
+          <CustomSelect
+            value={selectedCourseId}
+            onChange={(val) => {
+              onSelectCourseId(val)
+              setSubCurrentPage(1)
+            }}
+            options={courseOptions}
+            disabled={isLoading || courses.length === 0}
+            placeholder={isVi ? 'Chọn khóa học...' : 'Select course...'}
+            showSearch={courses.length > 5}
+          />
+        </div>
       }
       filterSlot={
         <LearnerSubmissionsFilterBar

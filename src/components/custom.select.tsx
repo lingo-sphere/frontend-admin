@@ -40,6 +40,7 @@ export interface CustomSelectProps {
   optionFilterProp?: string
   maxCount?: number
   labelRender?: (props: { value: any; label: React.ReactNode }) => React.ReactNode
+  maxTagCount?: number
 }
 
 export function CustomSelect({
@@ -67,6 +68,7 @@ export function CustomSelect({
   notFoundContent,
   maxCount,
   labelRender,
+  maxTagCount,
 }: CustomSelectProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -272,34 +274,74 @@ export function CustomSelect({
           </span>
         )
       }
-      const labels = selectedValues.map((val) => {
-        const match = flatOptions.find((opt) => opt.value !== undefined && String(opt.value) === String(val))
-        if (match?.label) return match.label
-        if (loading) return isVi ? 'Đang tải...' : 'Loading...'
-        const strVal = String(val)
-        if (/^[0-9a-fA-F]{24}$/.test(strVal)) {
-          return defaultPlaceholder || (isVi ? 'Chủ đề' : 'Context')
-        }
-        return strVal
-      })
 
-      if (labels.length === 1) {
-        return (
-          <span className="truncate text-slate-900 dark:text-slate-100 font-medium">
-            {labels[0]}
-          </span>
-        )
-      }
+      const visibleValues = maxTagCount !== undefined && maxTagCount > 0
+        ? selectedValues.slice(0, maxTagCount)
+        : selectedValues
+      const hiddenCount = selectedValues.length - visibleValues.length
 
       return (
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="truncate text-slate-900 dark:text-slate-100 font-medium max-w-[130px]">
-            {labels[0]}
-          </span>
-          <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 dark:bg-indigo-950/80 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-700/60 shadow-2xs">
-            +{labels.length - 1}
-          </span>
-        </div>
+        <>
+          {visibleValues.map((val) => {
+            const match = flatOptions.find((opt) => opt.value !== undefined && String(opt.value) === String(val))
+            let labelText: React.ReactNode = match?.label
+            if (!labelText) {
+              if (loading) {
+                labelText = isVi ? 'Đang tải...' : 'Loading...'
+              } else {
+                const strVal = String(val)
+                if (/^[0-9a-fA-F]{24}$/.test(strVal)) {
+                  labelText = defaultPlaceholder || (isVi ? 'Chủ đề' : 'Context')
+                } else {
+                  labelText = strVal
+                }
+              }
+            }
+
+            return (
+              <span
+                key={String(val)}
+                className={`inline-flex items-center max-w-full font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700/80 shadow-2xs group/chip transition-colors ${chipSizeClasses[size]}`}
+              >
+                {match?.icon && <span className="shrink-0 text-slate-500 dark:text-slate-400">{match.icon}</span>}
+                <span
+                  className="truncate min-w-0 max-w-[160px] leading-tight"
+                  title={typeof labelText === 'string' ? labelText : undefined}
+                >
+                  {labelText}
+                </span>
+                {!disabled && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Xóa ${typeof labelText === 'string' ? labelText : String(val)}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const nextValues = selectedValues.filter((v) => String(v) !== String(val))
+                      onChange?.(nextValues)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        const nextValues = selectedValues.filter((v) => String(v) !== String(val))
+                        onChange?.(nextValues)
+                      }
+                    }}
+                    className="p-0.5 -mr-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </span>
+                )}
+              </span>
+            )
+          })}
+          {hiddenCount > 0 && (
+            <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 dark:bg-indigo-950/80 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-700/60 shadow-2xs">
+              +{hiddenCount}
+            </span>
+          )}
+        </>
       )
     }
 
@@ -423,13 +465,22 @@ export function CustomSelect({
     )
   }
 
-  const sizeClasses = {
-    sm: 'h-8 px-2.5 py-1 text-[11px] rounded-lg gap-1.5',
-    md: 'h-10 px-3.5 py-2 text-xs rounded-xl gap-2',
-    lg: 'h-12 px-4 py-2.5 text-sm rounded-2xl gap-2.5',
+  const chipSizeClasses = {
+    sm: 'px-1.5 py-0.5 rounded-md text-[10px] gap-1',
+    md: 'px-2 py-0.5 rounded-lg text-[11px] gap-1',
+    lg: 'px-2.5 py-1 rounded-lg text-xs gap-1.5',
   }
 
-  const hasExplicitWidth = Boolean((className && /\bw-\S+/.test(className)) || (style && (style.width !== undefined || style.minWidth !== undefined)))
+  const sizeClasses = {
+    sm: 'min-h-[32px] h-auto px-2 py-1 text-[11px] rounded-lg gap-1.5',
+    md: 'min-h-[40px] h-auto px-2.5 py-1.5 text-xs rounded-xl gap-2',
+    lg: 'min-h-[48px] h-auto px-3.5 py-2 text-sm rounded-2xl gap-2.5',
+  }
+
+  const hasExplicitWidth = Boolean(
+    (className && /\b(w|min-w|max-w)-\S+/.test(className)) ||
+    (style && (style.width !== undefined || style.minWidth !== undefined))
+  )
 
   return (
     <div
@@ -450,11 +501,17 @@ export function CustomSelect({
             : 'border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div
+          className={`min-w-0 flex-1 ${
+            isMultiple && selectedValues.length > 0
+              ? 'flex flex-wrap items-center gap-1.5 py-0.5'
+              : 'flex items-center gap-1.5 truncate'
+          }`}
+        >
           {renderTriggerLabel()}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 ml-1">
+        <div className="flex items-center gap-1 shrink-0 ml-1.5 self-center">
           {allowClear && !disabled && hasSelectedValue && (
             <span
               role="button"
