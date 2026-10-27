@@ -9,11 +9,9 @@ import {
 import { CustomSwitch } from '@/components/custom.switch'
 import { BulbOutlined } from '@ant-design/icons'
 import {
-  Search,
-  X,
-  RotateCcw,
   Plus,
 } from 'lucide-react'
+import dayjs from 'dayjs'
 import { TableRowActions } from '@/components/table.row.actions'
 import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
@@ -242,10 +240,46 @@ export function ToeicTipsTab() {
       ),
     },
     {
+      title: 'Cập nhật',
+      key: 'updated_at',
+      width: 115,
+      align: 'center',
+      render: (row) =>
+        row.updated_at ? (
+          <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400">
+            <div className="whitespace-nowrap font-medium">{dayjs(row.updated_at).format('DD/MM/YYYY')}</div>
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+              {dayjs(row.updated_at).format('HH:mm')}
+            </div>
+          </div>
+        ) : (
+          <span className="text-slate-400">—</span>
+        ),
+    },
+    {
+      title: 'Ngày tạo',
+      key: 'created_at',
+      width: 115,
+      align: 'center',
+      initiallyHidden: true,
+      render: (row) =>
+        row.created_at ? (
+          <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400">
+            <div className="whitespace-nowrap font-medium">{dayjs(row.created_at).format('DD/MM/YYYY')}</div>
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+              {dayjs(row.created_at).format('HH:mm')}
+            </div>
+          </div>
+        ) : (
+          <span className="text-slate-400">—</span>
+        ),
+    },
+    {
       title: 'Thao tác',
       key: 'actions',
       width: 120,
       align: 'center',
+      fixed: 'right',
       render: (row) => (
         <TableRowActions
           onEdit={() => {
@@ -267,53 +301,27 @@ export function ToeicTipsTab() {
         data={data?.items || []}
         isLoading={isLoading}
         rowKey="_id"
+        scroll={{ x: 1200 }}
         onResetFilters={handleResetFilters}
         extraActions={
-          <>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="h-10 px-3.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs cursor-pointer"
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>Làm mới</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedTip(null)
-                setDrawerVisible(true)
-              }}
-              className="h-10 px-4 rounded-xl text-xs font-semibold bg-primary hover:bg-primary-hover text-white shadow-xs hover:shadow-primary/20 flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm mẹo TOEIC mới</span>
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTip(null)
+              setDrawerVisible(true)
+            }}
+            className="h-10 px-4 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs shadow-indigo-500/20 flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Thêm mẹo TOEIC mới</span>
+          </button>
         }
-        filterSlot={
+        search={query.search}
+        onSearchChange={handleSearchChange}
+        searchLabel="Tìm kiếm mẹo TOEIC"
+        searchPlaceholder="Tìm theo tiêu đề, tóm tắt..."
+        extraFilters={
           <>
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Tìm theo tiêu đề, tóm tắt..."
-                value={query.search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="h-10 pl-9 pr-8 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64"
-              />
-              {query.search && (
-                <button
-                  type="button"
-                  onClick={() => handleSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-md transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
             <CustomSelect
               value={query.skill}
               onChange={handleSkillChange}

@@ -1,6 +1,6 @@
 // Component bảng dữ liệu dùng chung (DataTable / AdminDataTable) chuẩn hóa giao diện cho toàn bộ Admin.
 
-import { useState, useMemo, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Alert,
@@ -11,6 +11,7 @@ import {
   InputNumber,
   Space,
   Table,
+  type TableProps,
 } from 'antd'
 import type {
   ColumnType,
@@ -18,7 +19,7 @@ import type {
   TableRowSelection,
   FilterValue,
 } from 'antd/es/table/interface'
-import { Filter, Search, X } from 'lucide-react'
+import { Filter, Search, X, Plus, Minus } from 'lucide-react'
 import dayjs from 'dayjs'
 import {
   TableControls,
@@ -101,10 +102,12 @@ export interface DataTableProps<T> {
 
   rowSelection?: TableRowSelection<T>
   onRowClick?: (record: T) => void
+  rowClassName?: string | ((record: T, index: number, indent: number) => string)
 
   scroll?: { x?: number | string | true; y?: number | string }
   className?: string
   hideTopBar?: boolean
+  expandable?: TableProps<T>['expandable']
 
   pagination?: {
     currentPage: number
@@ -274,9 +277,11 @@ export function DataTable<T extends object>({
   onSortChange,
   rowSelection,
   onRowClick,
+  rowClassName,
   scroll,
   className,
   hideTopBar = false,
+  expandable,
   pagination,
 }: DataTableProps<T>) {
   const { i18n } = useTranslation()
@@ -298,6 +303,48 @@ export function DataTable<T extends object>({
   const activeSortKey = sortKey !== undefined ? sortKey : internalSortKey
   const activeSortOrder = sortOrder !== undefined ? sortOrder : internalSortOrder
 
+  const mergedExpandable = useMemo(() => {
+    return {
+      ...expandable,
+      expandIcon: (props: {
+        prefixCls: string
+        expanded: boolean
+        record: T
+        expandable: boolean
+        onExpand: (record: T, e: React.MouseEvent<HTMLElement>) => void
+      }) => {
+        if (expandable?.expandIcon) {
+          return expandable.expandIcon(props)
+        }
+        if (!props.expandable) {
+          return (
+            <span
+              className="ant-table-row-expand-icon-spaced inline-block w-[18px] h-[18px] mr-2 shrink-0 align-middle"
+              aria-hidden="true"
+            />
+          )
+        }
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              props.onExpand(props.record, e)
+              e.stopPropagation()
+            }}
+            className="inline-flex items-center justify-center w-[18px] h-[18px] rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-400 dark:hover:border-indigo-500 shadow-2xs transition-colors cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none"
+            aria-label={props.expanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Mở rộng' : 'Expand')}
+          >
+            {props.expanded ? (
+              <Minus size={11} strokeWidth={2.5} className="shrink-0" />
+            ) : (
+              <Plus size={11} strokeWidth={2.5} className="shrink-0" />
+            )}
+          </button>
+        )
+      },
+    }
+  }, [expandable, isVi])
+
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
     columns.map((col) => ({
       key: col.key,
@@ -305,6 +352,19 @@ export function DataTable<T extends object>({
       visible: !(col.hidden || col.initiallyHidden),
     }))
   )
+
+  useEffect(() => {
+    setColumnOptions((prev) => {
+      const prevMap = new Map(prev.map((p) => [p.key, p.visible]))
+      return columns.map((col) => ({
+        key: col.key,
+        label: col.label || (typeof col.title === 'string' ? col.title : col.key),
+        visible: prevMap.has(col.key)
+          ? prevMap.get(col.key)!
+          : !(col.hidden || col.initiallyHidden),
+      }))
+    })
+  }, [columns])
 
   const visibleKeys = useMemo(
     () => new Set(columnOptions.filter((c) => c.visible).map((c) => c.key)),
@@ -476,7 +536,7 @@ export function DataTable<T extends object>({
 
   return (
     <div className={`space-y-4 ${className || ''}`}>
-      {(title || extraActions) && (
+      {(title || subtitle) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             {title && (
@@ -521,16 +581,23 @@ export function DataTable<T extends object>({
             {extraFilters}
           </div>
 
-          <TableControls
-            density={density}
-            onDensityChange={setDensity}
-            columns={columnOptions}
-            onColumnsChange={setColumnOptions}
-            viewMode={renderGridItem ? viewMode : undefined}
-            onViewModeChange={onViewModeChange}
-            onResetFilters={handleResetFiltersInternal}
-            totalCount={totalCount}
-          />
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <TableControls
+              density={density}
+              onDensityChange={setDensity}
+              columns={columnOptions}
+              onColumnsChange={setColumnOptions}
+              viewMode={renderGridItem ? viewMode : undefined}
+              onViewModeChange={onViewModeChange}
+              onResetFilters={handleResetFiltersInternal}
+              totalCount={totalCount}
+            />
+            {!title && !subtitle && extraActions && (
+              <div className="flex items-center gap-2 pl-2.5 border-l border-slate-200/80 dark:border-slate-800">
+                {extraActions}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -568,7 +635,7 @@ export function DataTable<T extends object>({
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex-initial [&_.ant-table-thead_.ant-table-column-title]:!flex-initial [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex-initial [&_.ant-table-thead_.ant-table-column-title]:!flex-initial [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
           <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
             <Table<T>
               rowKey={effectiveRowKey}
@@ -579,6 +646,8 @@ export function DataTable<T extends object>({
               scroll={{ x: scroll?.x ?? 'max-content', y: scroll?.y }}
               pagination={false}
               rowSelection={rowSelection}
+              rowClassName={rowClassName}
+              expandable={mergedExpandable}
               locale={{
                 emptyText: (
                   <div className="py-12 text-center text-xs text-slate-400">

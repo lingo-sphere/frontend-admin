@@ -1,14 +1,13 @@
 // Component giao diện PermissionsListTab phục vụ khu vực Quản trị Admin.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw, Search, KeyRound } from 'lucide-react'
+import { Plus, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { CustomSelect } from '@/components/custom.select'
 import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 import { usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
-import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
 
 const RBAC_MODULES = [
@@ -67,15 +66,7 @@ export function PermissionsListTab({
 
   const { data, isLoading: isQueryLoading, refetch } = usePermissionsQuery(queryParams)
 
-  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(async () => {
-    if (onRefresh) onRefresh()
-    await refetch()
-  })
 
-  const handleSearch = (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setCurrentPage(1)
-  }
 
   const handleResetFilters = async () => {
     setFilterName('')
@@ -227,76 +218,6 @@ export function PermissionsListTab({
     },
   ]
 
-  const filterSlot = (
-    <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3 w-full">
-      <div className="relative flex-1 min-w-[200px] sm:max-w-xs">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          value={filterName}
-          onChange={(e) => setFilterName(e.target.value)}
-          placeholder={isVi ? 'Tìm theo tên...' : 'Search by name...'}
-          className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-        />
-      </div>
-
-      <div className="relative flex-1 min-w-[180px] sm:max-w-xs">
-        <input
-          type="text"
-          value={filterApi}
-          onChange={(e) => setFilterApi(e.target.value)}
-          placeholder={isVi ? 'Lọc API (ví dụ /courses)...' : 'Filter API (e.g. /courses)...'}
-          className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all font-mono"
-        />
-      </div>
-
-      <CustomSelect
-        size="sm"
-        value={filterModule}
-        onChange={(val) => {
-          setFilterModule(val)
-          setCurrentPage(1)
-        }}
-        options={[
-          { value: 'ALL', label: isVi ? 'Tất cả phân hệ' : 'All Modules' },
-          ...modulesList.map((mod) => ({
-            value: mod,
-            label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
-          })),
-        ]}
-        className="w-56"
-      />
-
-      <button
-        type="submit"
-        className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer"
-      >
-        {isVi ? 'Tìm kiếm' : 'Search'}
-      </button>
-    </form>
-  )
-
-  const extraActions = (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={onOpenCreatePerm}
-        className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition-all cursor-pointer"
-      >
-        <Plus className="w-4 h-4" />
-        <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
-      </button>
-
-      <button
-        onClick={() => handleRefresh()}
-        disabled={isRefreshing || isLoading || isQueryLoading}
-        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-60"
-        title={isVi ? 'Làm mới' : 'Refresh'}
-      >
-        <RotateCcw className={`w-4 h-4 ${isRefreshing || isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
-      </button>
-    </div>
-  )
-
   return (
     <DataTable<Permission>
       columns={columns}
@@ -311,8 +232,55 @@ export function PermissionsListTab({
         setSortOrder(o)
         setCurrentPage(1)
       }}
-      filterSlot={filterSlot}
-      extraActions={extraActions}
+      search={filterName}
+      onSearchChange={(val) => {
+        setFilterName(val)
+        setCurrentPage(1)
+      }}
+      searchLabel={isVi ? 'Tìm theo tên...' : 'Search by name...'}
+      searchPlaceholder={isVi ? 'Tìm theo tên quyền hạn...' : 'Search permission name...'}
+      extraFilters={
+        <>
+          <div className="relative w-48 sm:w-56">
+            <input
+              type="text"
+              value={filterApi}
+              onChange={(e) => {
+                setFilterApi(e.target.value)
+                setCurrentPage(1)
+              }}
+              placeholder={isVi ? 'Lọc API (/courses)...' : 'Filter API (e.g. /courses)...'}
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-mono"
+            />
+          </div>
+
+          <CustomSelect
+            value={filterModule}
+            onChange={(val) => {
+              setFilterModule(val)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: 'ALL', label: isVi ? 'Tất cả phân hệ' : 'All Modules' },
+              ...modulesList.map((mod) => ({
+                value: mod,
+                label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
+              })),
+            ]}
+            className="w-48"
+          />
+        </>
+      }
+      extraActions={
+        <button
+          onClick={onOpenCreatePerm}
+          type="button"
+          className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-xs shadow-blue-600/30 transition-all cursor-pointer whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
+        </button>
+      }
       onResetFilters={handleResetFilters}
       pagination={{
         currentPage,

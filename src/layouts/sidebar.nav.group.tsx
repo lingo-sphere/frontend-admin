@@ -34,12 +34,12 @@ export function SidebarNavGroup({
         <div className="pt-1.5 my-1 border-t border-slate-200/70 dark:border-slate-800/70" />
       )}
       <div
-        className={`overflow-hidden transition-[max-height,opacity] duration-250 ease-[cubic-bezier(0.2,0,0,1)] ${
+        className={`overflow-hidden transition-[max-height,opacity,padding] duration-300 ease-in-out whitespace-nowrap truncate ${
           isCollapsedMode
-            ? 'max-h-0 opacity-0 pointer-events-none'
+            ? 'max-h-0 opacity-0 pointer-events-none py-0'
             : groupIdx > 0
-            ? 'max-h-6 opacity-100 pt-0.5 pb-1 px-3 text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500'
-            : 'max-h-0 opacity-0'
+            ? 'max-h-8 opacity-100 pt-1 pb-1 px-3 text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500'
+            : 'max-h-0 opacity-0 py-0'
         }`}
       >
         {group.label}
@@ -60,10 +60,10 @@ export function SidebarNavGroup({
           const navButtonContent = (
             <>
               {showActiveIndicator && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
               )}
 
-              <div className={`flex items-center min-w-0 ${isCollapsedMode ? 'justify-center' : 'gap-3 pl-1'}`}>
+              <div className="w-9 h-9 shrink-0 flex items-center justify-center">
                 <div
                   className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                     showSolidIcon
@@ -75,10 +75,15 @@ export function SidebarNavGroup({
                 >
                   <Icon className="w-4 h-4" />
                 </div>
+              </div>
+
+              <div
+                className={`flex-1 min-w-0 flex items-center justify-between overflow-hidden transition-[max-width,opacity,margin] duration-300 ease-in-out ${
+                  isCollapsedMode ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-[170px] opacity-100 ml-2.5'
+                }`}
+              >
                 <span
-                  className={`overflow-hidden transition-[max-width,opacity] duration-250 ease-[cubic-bezier(0.2,0,0,1)] whitespace-nowrap truncate ${
-                    isCollapsedMode ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[140px] opacity-100'
-                  } ${
+                  className={`overflow-hidden truncate whitespace-nowrap ${
                     showActiveText
                       ? 'text-blue-600 dark:text-blue-400 font-bold'
                       : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-slate-200'
@@ -86,34 +91,28 @@ export function SidebarNavGroup({
                 >
                   {item.label}
                 </span>
-              </div>
 
-              <div
-                className={`flex items-center gap-1.5 shrink-0 overflow-hidden transition-[max-width,opacity] duration-250 ease-[cubic-bezier(0.2,0,0,1)] ${
-                  isCollapsedMode ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[60px] opacity-100 pr-1'
-                }`}
-              >
-                {item.kicker && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
-                    {item.kicker}
-                  </span>
-                )}
-                {hasChildren && (
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      isExpanded
-                        ? 'rotate-0 text-blue-600 dark:text-blue-400 opacity-100'
-                        : `-rotate-90 ${isChildActive ? 'text-blue-500 dark:text-blue-400 opacity-90' : 'text-slate-400 opacity-60'}`
-                    }`}
-                  />
-                )}
+                <div className="flex items-center gap-1.5 shrink-0 pl-1.5">
+                  {item.kicker && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
+                      {item.kicker}
+                    </span>
+                  )}
+                  {hasChildren && (
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        isExpanded
+                          ? 'rotate-0 text-blue-600 dark:text-blue-400 opacity-100'
+                          : `-rotate-90 ${isChildActive ? 'text-blue-500 dark:text-blue-400 opacity-90' : 'text-slate-400 opacity-60'}`
+                      }`}
+                    />
+                  )}
+                </div>
               </div>
             </>
           )
 
-          const itemContainerClass = `group relative w-full flex items-center ${
-            isCollapsedMode ? 'justify-center p-1.5' : 'justify-between px-2.5 py-2'
-          } rounded-2xl text-xs sm:text-[13px] transition-[padding,background-color] duration-250 cursor-pointer ${
+          const itemContainerClass = `group relative w-full flex items-center h-10 px-1 rounded-xl text-xs sm:text-[13px] transition-colors duration-200 cursor-pointer overflow-hidden ${
             showActiveBg
               ? 'bg-blue-50/90 dark:bg-blue-950/40'
               : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
@@ -141,19 +140,19 @@ export function SidebarNavGroup({
                 </Link>
               )}
 
-              {hasChildren && !isCollapsedMode && (
+              {hasChildren && (
                 <div
-                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                    isExpanded
+                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                    isExpanded && !isCollapsedMode
                       ? 'grid-rows-[1fr] opacity-100'
                       : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                   }`}
                 >
-                  <div className="min-h-0 overflow-hidden">
+                  <div className="min-h-0 overflow-hidden w-[220px]">
                     <SidebarBranchedSubmenu
                       children={item.children!}
                       activeNavItem={activeNavItem}
-                      isExpanded={isExpanded}
+                      isExpanded={isExpanded && !isCollapsedMode}
                       onNavigate={onNavigate}
                     />
                   </div>

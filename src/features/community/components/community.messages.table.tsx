@@ -1,12 +1,11 @@
 // Bảng giám sát tin nhắn trực tiếp trong phòng chat cộng đồng với phân trang và bộ lọc dữ liệu.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Tooltip } from 'antd'
+import { Button, Tooltip, Image } from 'antd'
 import {
   Pin,
   PinOff,
   CornerDownRight,
-  Image as ImageIcon,
   Search,
   RotateCcw,
   AlertCircle,
@@ -18,6 +17,7 @@ import { CustomSelect } from '@/components/custom.select'
 import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 import { CommunityPinReplaceModal } from '@/features/community/components/community.pin.replace.modal'
 import type { SanctionTargetUser } from '@/features/community/components/community.sanction.modal'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 
 interface CommunityMessagesTableProps {
@@ -187,7 +187,7 @@ export function CommunityMessagesTable({
           <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200 overflow-hidden shrink-0">
             {msg.sender_avatar ? (
               <img
-                src={msg.sender_avatar}
+                src={resolveMediaUrl(msg.sender_avatar)}
                 alt={msg.sender_name}
                 className="w-full h-full object-cover"
               />
@@ -231,15 +231,25 @@ export function CommunityMessagesTable({
               </p>
             </div>
           ) : (
-            <p
-              className={`text-xs break-words whitespace-pre-wrap ${
-                msg.is_pinned && !msg.is_deleted
-                  ? 'text-amber-600 dark:text-amber-400 font-semibold'
-                  : 'text-slate-800 dark:text-slate-200'
-              }`}
-            >
-              {msg.content}
-            </p>
+            <div>
+              {msg.content ? (
+                <p
+                  className={`text-xs break-words whitespace-pre-wrap ${
+                    msg.is_pinned && !msg.is_deleted
+                      ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                      : 'text-slate-800 dark:text-slate-200'
+                  }`}
+                >
+                  {msg.content}
+                </p>
+              ) : (
+                <span className="text-xs italic text-slate-400 dark:text-slate-500">
+                  {msg.attachments && msg.attachments.length > 0
+                    ? `[${isVi ? 'Hình ảnh đính kèm' : 'Attached image'}]`
+                    : '-'}
+                </span>
+              )}
+            </div>
           )}
         </div>
       ),
@@ -247,10 +257,11 @@ export function CommunityMessagesTable({
     {
       key: 'attachments',
       title: t('community.colAttachments'),
+      width: '260px',
       render: (msg) => (
-        <div>
+        <div className="space-y-1.5">
           {msg.reply_to && (
-            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md mb-1 max-w-xs truncate">
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md max-w-xs truncate">
               <CornerDownRight className="w-3 h-3 text-indigo-500 shrink-0" />
               <span className="font-medium text-indigo-600 dark:text-indigo-400">
                 @{msg.reply_to.sender_name}:
@@ -259,19 +270,31 @@ export function CommunityMessagesTable({
             </div>
           )}
           {msg.attachments && msg.attachments.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {msg.attachments.map((url, idx) => (
-                <a
-                  key={idx}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600"
-                >
-                  <ImageIcon className="w-3 h-3" />
-                  {t('community.imageAttachment', { index: idx + 1 })}
-                </a>
-              ))}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Image.PreviewGroup>
+                {msg.attachments.map((url, idx) => (
+                  <div
+                    key={idx}
+                    className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex items-center justify-center shrink-0"
+                    style={{ width: 44, height: 44 }}
+                  >
+                    <Image
+                      src={resolveMediaUrl(url)}
+                      fallback={IMAGE_FALLBACK_PLACEHOLDER}
+                      alt={`attachment-${idx + 1}`}
+                      width={44}
+                      height={44}
+                      style={{
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%',
+                        display: 'block',
+                      }}
+                      className="cursor-pointer transition-transform duration-200 hover:scale-110"
+                    />
+                  </div>
+                ))}
+              </Image.PreviewGroup>
             </div>
           )}
           {!msg.reply_to && (!msg.attachments || msg.attachments.length === 0) && (

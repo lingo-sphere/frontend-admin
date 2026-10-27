@@ -1,8 +1,10 @@
 // Modal chọn thay thế tin nhắn khi phòng chat đã đạt tối đa 3 tin nhắn ghim.
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Image } from 'antd'
 import { Pin, X, CheckCircle2, Circle, Loader2, ArrowRight } from 'lucide-react'
 import type { AdminChatMessage } from '@/features/community/types/community.admin.types'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/lib/media.utils'
 
 interface CommunityPinReplaceModalProps {
   isOpen: boolean
@@ -105,7 +107,7 @@ export function CommunityPinReplaceModal({
             <div className="w-6 h-6 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center text-[10px] font-bold text-indigo-900 dark:text-indigo-100 flex-shrink-0 overflow-hidden">
               {targetMessage.sender_avatar ? (
                 <img
-                  src={targetMessage.sender_avatar}
+                  src={resolveMediaUrl(targetMessage.sender_avatar)}
                   alt={targetMessage.sender_name}
                   className="w-full h-full object-cover"
                 />
@@ -117,9 +119,28 @@ export function CommunityPinReplaceModal({
               {targetMessage.sender_name}
             </span>
           </div>
-          <p className="text-xs text-slate-700 dark:text-slate-300 pl-8 break-words line-clamp-2 italic">
-            "{targetMessage.content}"
-          </p>
+          {targetMessage.content && (
+            <p className="text-xs text-slate-700 dark:text-slate-300 pl-8 break-words line-clamp-2 italic">
+              "{targetMessage.content}"
+            </p>
+          )}
+          {targetMessage.attachments && targetMessage.attachments.length > 0 && (
+            <div className="flex items-center gap-1.5 pl-8 pt-0.5">
+              <Image.PreviewGroup>
+                {targetMessage.attachments.map((url, idx) => (
+                  <Image
+                    key={idx}
+                    src={resolveMediaUrl(url)}
+                    fallback={IMAGE_FALLBACK_PLACEHOLDER}
+                    alt={`target-att-${idx + 1}`}
+                    width={36}
+                    height={36}
+                    style={{ objectFit: 'cover', borderRadius: 6 }}
+                  />
+                ))}
+              </Image.PreviewGroup>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -160,9 +181,28 @@ export function CommunityPinReplaceModal({
                         {new Date(msg.created_at).toLocaleTimeString(isVi ? 'vi-VN' : 'en-US')}
                       </span>
                     </div>
-                    <p className="text-xs text-amber-700 dark:text-amber-300 font-medium break-words line-clamp-2">
-                      {msg.content}
-                    </p>
+                    {msg.content && (
+                      <p className="text-xs text-amber-700 dark:text-amber-300 font-medium break-words line-clamp-2">
+                        {msg.content}
+                      </p>
+                    )}
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div className="flex items-center gap-1 pt-0.5" onClick={(e) => e.stopPropagation()}>
+                        <Image.PreviewGroup>
+                          {msg.attachments.map((url, idx) => (
+                            <Image
+                              key={idx}
+                              src={resolveMediaUrl(url)}
+                              fallback={IMAGE_FALLBACK_PLACEHOLDER}
+                              alt={`pinned-att-${idx + 1}`}
+                              width={32}
+                              height={32}
+                              style={{ objectFit: 'cover', borderRadius: 4 }}
+                            />
+                          ))}
+                        </Image.PreviewGroup>
+                      </div>
+                    )}
                   </div>
                 </div>
               )

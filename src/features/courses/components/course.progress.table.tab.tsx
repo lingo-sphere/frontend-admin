@@ -1,7 +1,7 @@
 // Bảng dữ liệu tiến độ học tập của học viên, bộ lọc theo khóa học và trạng thái.
 
 import { useMemo } from 'react'
-import { Search, RotateCcw, X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 import type { StudentProgressItem } from '@/features/progress/services/progress.service'
@@ -89,16 +89,6 @@ export function CourseProgressTableTab({
       sortOrder={progressSortOrder}
       onSortChange={onSort}
       onResetFilters={onResetFilters}
-      extraActions={
-        <button
-          type="button"
-          onClick={onRefresh}
-          className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-        >
-          <RotateCcw className={`w-3.5 h-3.5 ${isLoadingProgress ? 'animate-spin text-indigo-500' : ''}`} />
-          <span>{isVi ? 'Làm mới' : 'Refresh'}</span>
-        </button>
-      }
       filterSlot={
         <>
           <div className="flex items-center gap-2 w-full sm:w-72 h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
