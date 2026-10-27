@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Segmented, Space, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { AdminTabs } from '@/components/admin.tabs'
 import { CustomSwitch } from '@/components/custom.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
@@ -174,7 +175,15 @@ export function PracticeReadingPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện đọc' : 'Reading Management'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Quản lý bốn nhóm bài đọc, nội dung và câu hỏi trong cùng một màn hình.' : 'Manage Part 6, Part 7, real-world tasks and information matching.'}</p>
       </div>
-      <Tabs activeKey={type} destroyOnHidden onChange={tab => state.change({ tab, page: '1', sort: undefined, order: undefined, filters: JSON.stringify(Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))) })} items={readingTypes.map(value => ({ key: value, label: isVi ? readingLabels[value] : readingEnLabels[value], children: value === type ? <ReadingTable key={value} type={value} /> : null }))} />
+      <AdminTabs
+        activeKey={type}
+        onChange={tab => state.change({ tab, page: '1', sort: undefined, order: undefined, filters: JSON.stringify(Object.fromEntries(Object.entries(state.filters).filter(([key]) => ['context_id', 'cefr_level', 'difficulty_level', 'status'].includes(key)))) })}
+        items={readingTypes.map(value => ({
+          key: value,
+          label: isVi ? readingLabels[value] : readingEnLabels[value],
+          children: value === type ? <ReadingTable key={value} type={value} /> : null,
+        }))}
+      />
     </div>
   </ConfigProvider>
 }

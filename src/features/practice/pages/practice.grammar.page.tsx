@@ -8,6 +8,7 @@ import { Alert, Button, Card, ConfigProvider, Segmented, Tag, Tree, theme as ant
 import { CustomSwitch } from '@/components/custom.switch'
 import { CustomSelect } from '@/components/custom.select'
 import { IpaDataTable, type IpaColumn } from '@/components/data.table'
+import { AdminTabs } from '@/components/admin.tabs'
 import { BookOpen, Sparkles, Layers, ListTree, HelpCircle } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
@@ -562,53 +563,33 @@ export function PracticeGrammarPage() {
               </Card>
 
               <div className="min-w-0">
-                <div className="mb-3 flex items-center gap-2 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 w-fit">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      state.change({
-                        tab: 'topics',
-                        filters: undefined,
-                        search: undefined,
-                        page: '1',
-                        sort: undefined,
-                        order: undefined,
-                        trash: undefined,
-                      })
-                    }
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      kind === 'topics'
-                        ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <ListTree className="w-3.5 h-3.5" />
-                    <span>{isVi ? 'Chủ điểm' : 'Topics'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      state.change({
-                        tab: 'questions',
-                        filters: undefined,
-                        search: undefined,
-                        page: '1',
-                        sort: undefined,
-                        order: undefined,
-                        trash: undefined,
-                      })
-                    }
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      kind === 'questions'
-                        ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <HelpCircle className="w-3.5 h-3.5" />
-                    <span>{isVi ? 'Câu hỏi' : 'Questions'}</span>
-                  </button>
-                </div>
+                <AdminTabs
+                  activeKey={kind}
+                  onChange={(tab) =>
+                    state.change({
+                      tab,
+                      filters: undefined,
+                      search: undefined,
+                      page: '1',
+                      sort: undefined,
+                      order: undefined,
+                      trash: undefined,
+                    })
+                  }
+                  items={[
+                    {
+                      key: 'topics',
+                      label: isVi ? 'Chủ điểm' : 'Topics',
+                      icon: ListTree,
+                    },
+                    {
+                      key: 'questions',
+                      label: isVi ? 'Câu hỏi' : 'Questions',
+                      icon: HelpCircle,
+                    },
+                  ]}
+                  className="mb-3"
+                />
 
                 <div key={kind} className="animate-in fade-in slide-in-from-bottom-1 duration-150 ease-out min-w-0">
                   {kind === 'topics' ? (

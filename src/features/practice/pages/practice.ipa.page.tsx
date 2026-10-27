@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Segmented, Space, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { AdminTabs } from '@/components/admin.tabs'
 import { CustomSwitch } from '@/components/custom.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
-import { DataTable, type DataTableColumn, type IpaColumn } from '@/components/data.table'
+import { DataTable, type IpaColumn } from '@/components/data.table'
 import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
 import { IpaRowActions } from '@/features/practice/components/ipa.row.actions'
 import { IpaSymbolEditor } from '@/features/practice/components/ipa.symbol.editor'
@@ -215,7 +216,14 @@ export function PracticeIpaPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Ngữ âm & IPA' : 'Phonetics & IPA'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Quản lý bảng âm cố định và bài tập nhận diện âm, cặp âm, phiên âm.' : 'Manage standard IPA chart, minimal pairs, phoneme recognition and transcription.'}</p>
       </div>
-      <Tabs activeKey={tab} onChange={state.switchTab} items={[{ key: 'symbols', label: isVi ? 'Bảng âm IPA' : 'IPA Symbols', children: tab === 'symbols' ? <SymbolsTable /> : null }, { key: 'exercises', label: isVi ? 'Bài tập IPA' : 'IPA Exercises', children: tab === 'exercises' ? <ExercisesTable /> : null }]} destroyOnHidden />
+      <AdminTabs
+        activeKey={tab}
+        onChange={state.switchTab}
+        items={[
+          { key: 'symbols', label: isVi ? 'Bảng âm IPA' : 'IPA Symbols', children: tab === 'symbols' ? <SymbolsTable /> : null },
+          { key: 'exercises', label: isVi ? 'Bài tập IPA' : 'IPA Exercises', children: tab === 'exercises' ? <ExercisesTable /> : null },
+        ]}
+      />
     </div>
   </ConfigProvider>
 }

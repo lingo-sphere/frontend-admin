@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Image, Segmented, Space, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Image, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { AdminTabs } from '@/components/admin.tabs'
 import { CustomSwitch } from '@/components/custom.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
@@ -112,7 +113,18 @@ function ListeningTable({ type }: { type: ListeningType }) {
     setWorking(row._id)
     try {
       const detail = await listeningAdminService.detail(type, row._id)
-      await mutations.save.mutateAsync({ id: row._id, payload: { ...listeningPayload(type, detail), status: published ? 'PUBLISHED' : 'DRAFT' } })
+      const payload = listeningPayload(type, detail)
+      if (published && !payload.transcript?.trim()) {
+        if (payload.options?.length && payload.options.some(option => option.text?.trim())) {
+          payload.transcript = payload.options.filter(option => option.text?.trim()).map(option => `(${option.key}) ${option.text.trim()}`).join('\n')
+        } else if (payload.segments?.length && payload.segments.some(segment => segment.text?.trim())) {
+          payload.transcript = payload.segments.map(segment => segment.text?.trim()).filter(Boolean).join('\n')
+        }
+      }
+      if (!payload.duration_seconds && row.audio_duration_seconds) {
+        payload.duration_seconds = row.audio_duration_seconds
+      }
+      await mutations.save.mutateAsync({ id: row._id, payload: { ...payload, status: published ? 'PUBLISHED' : 'DRAFT' } })
       toast.success(isVi ? 'Đã cập nhật trạng thái bài nghe' : 'Listening exercise status updated')
     } catch (error) {
       toast.error(ipaError(error))
@@ -209,7 +221,15 @@ export function PracticeListeningPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện nghe' : 'Listening Management'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Một kho bài cho mỗi Part. Lọc Chủ đề để tìm nội dung theo ngữ cảnh.' : 'Manage exercises per TOEIC Part. Filter by Context to find content.'}</p>
       </div>
-      <Tabs activeKey={type} onChange={switchTab} destroyOnHidden items={listeningTypes.map(value => ({ key: value, label: isVi ? listeningLabels[value] : listeningEnLabels[value], children: value === type ? <ListeningTable key={value} type={value} /> : null }))} />
+      <AdminTabs
+        activeKey={type}
+        onChange={switchTab}
+        items={listeningTypes.map(value => ({
+          key: value,
+          label: isVi ? listeningLabels[value] : listeningEnLabels[value],
+          children: value === type ? <ListeningTable key={value} type={value} /> : null,
+        }))}
+      />
     </div>
   </ConfigProvider>
 }

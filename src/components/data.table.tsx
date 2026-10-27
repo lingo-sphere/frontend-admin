@@ -448,14 +448,13 @@ export function DataTable<T extends object>({
             ? Boolean(col.sorter)
             : !isActionsCol
 
-        const currentSortOrderForCol = state
-          ? state.query.sort === col.key
-            ? state.query.order === 'asc'
-              ? ('ascend' as const)
-              : ('descend' as const)
-            : null
-          : activeSortKey === col.key
-          ? activeSortOrder === 'asc'
+        const isColActive = state
+          ? state.query.sort === col.key || (col.dataIndex && String(col.dataIndex) === state.query.sort)
+          : activeSortKey === col.key || (col.dataIndex && String(col.dataIndex) === activeSortKey)
+
+        const effectiveOrder = state ? state.query.order : activeSortOrder
+        const currentSortOrderForCol = isColActive
+          ? effectiveOrder === 'asc'
             ? ('ascend' as const)
             : ('descend' as const)
           : null
@@ -484,9 +483,13 @@ export function DataTable<T extends object>({
           align: col.align || (isActionsCol ? 'center' : 'left'),
           ellipsis: col.ellipsis,
           fixed: isStickyRight ? 'right' : isStickyLeft ? 'left' : undefined,
+          sortDirections: isSortable ? ['ascend', 'descend', 'ascend'] : undefined,
+          showSorterTooltip: false,
           sorter: isSortable
             ? onSortChange || state
               ? true
+              : typeof col.sorter === 'function'
+              ? col.sorter
               : (a: T, b: T) => defaultCompare(a, b, String(col.dataIndex || col.key))
             : false,
           sortOrder: currentSortOrderForCol,
@@ -635,7 +638,7 @@ export function DataTable<T extends object>({
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex-initial [&_.ant-table-thead_.ant-table-column-title]:!flex-initial [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
           <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
             <Table<T>
               rowKey={effectiveRowKey}
@@ -648,6 +651,8 @@ export function DataTable<T extends object>({
               rowSelection={rowSelection}
               rowClassName={rowClassName}
               expandable={mergedExpandable}
+              sortDirections={['ascend', 'descend', 'ascend']}
+              showSorterTooltip={false}
               locale={{
                 emptyText: (
                   <div className="py-12 text-center text-xs text-slate-400">
@@ -685,15 +690,33 @@ export function DataTable<T extends object>({
                 }
                 if (extra.action === 'sort') {
                   const sort = Array.isArray(sorter) ? sorter[0] : sorter
-                  const order = sort.order ? (sort.order === 'ascend' ? 'asc' : 'desc') : null
-                  const key = sort.order ? String(sort.columnKey || sort.field || '') : ''
+                  const colKey = String(sort?.columnKey || sort?.field || sort?.column?.key || '')
+                  if (!colKey) return
+
+                  const currentActiveKey = state ? state.query.sort : activeSortKey
+                  const currentActiveOrder = state ? state.query.order : activeSortOrder
+
+                  const isSameColumn = Boolean(
+                    currentActiveKey &&
+                      (currentActiveKey === colKey ||
+                        (sort?.column?.key && String(sort.column.key) === currentActiveKey) ||
+                        (sort?.field && String(sort.field) === currentActiveKey) ||
+                        (sort?.column?.dataIndex && String(sort.column.dataIndex) === currentActiveKey))
+                  )
+
+                  const nextOrder: 'asc' | 'desc' = isSameColumn
+                    ? currentActiveOrder === 'asc'
+                      ? 'desc'
+                      : 'asc'
+                    : 'asc'
+
                   if (state) {
-                    state.change({ sort: key || undefined, order: order || undefined, page: '1' })
+                    state.change({ sort: colKey, order: nextOrder, page: '1' })
                   } else if (onSortChange) {
-                    onSortChange(key, order)
+                    onSortChange(colKey, nextOrder)
                   } else {
-                    setInternalSortKey(order ? key : null)
-                    setInternalSortOrder(order)
+                    setInternalSortKey(colKey)
+                    setInternalSortOrder(nextOrder)
                   }
                 }
               }}

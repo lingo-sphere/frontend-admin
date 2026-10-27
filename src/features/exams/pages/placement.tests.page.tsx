@@ -8,10 +8,8 @@ import {
   Award,
   Users,
   Headphones,
-  BookOpen,
   Mic,
   Sparkles,
-  CheckCircle2,
   Clock,
   FileText,
   RotateCcw,
@@ -27,6 +25,7 @@ import { useAdminExamsQuery, useUpdateExamMutation, useAdminPlacementAttemptsQue
 import { PlacementAttemptsTable } from '@/features/exams/components/placement.attempts.table'
 import { PlacementExamsTable } from '@/features/exams/components/placement.exams.table'
 import { StatCard } from '@/components/stat.card'
+import { AdminTabs } from '@/components/admin.tabs'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
@@ -488,41 +487,24 @@ export function PlacementTestsPage() {
         />
       </div>
 
-      <div className="border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab('system-exams')}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'system-exams'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>{isVi ? 'Đề Thi Đầu Vào Hệ Thống' : 'System Placement Tests'}</span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
-            {systemExamsCount}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('student-attempts')}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'student-attempts'
-              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>{isVi ? 'Kết Quả Làm Bài Học Viên' : 'Learner Attempt Results'}</span>
-          {stats && stats.total_attempts > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              {stats.total_attempts}
-            </span>
-          )}
-        </button>
-      </div>
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as TabType)}
+        items={[
+          {
+            key: 'system-exams',
+            label: isVi ? 'Đề Thi Đầu Vào Hệ Thống' : 'System Placement Tests',
+            icon: Sparkles,
+            count: systemExamsCount,
+          },
+          {
+            key: 'student-attempts',
+            label: isVi ? 'Kết Quả Làm Bài Học Viên' : 'Learner Attempt Results',
+            icon: Users,
+            count: stats && stats.total_attempts > 0 ? stats.total_attempts : undefined,
+          },
+        ]}
+      />
 
       {activeTab === 'system-exams' && (
         <div className="space-y-6">

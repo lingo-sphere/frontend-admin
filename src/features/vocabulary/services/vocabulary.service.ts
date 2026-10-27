@@ -24,6 +24,8 @@ export interface SearchVocabParams {
   cefr_level?: string
   topic_id?: string
   lexical_type?: string
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
 }
 
 export interface IngestVocabularyParams {
