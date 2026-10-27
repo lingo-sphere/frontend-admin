@@ -1,14 +1,13 @@
 // Component giao diện PermissionsListTab phục vụ khu vực Quản trị Admin.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw, Edit2, Trash2, Search, KeyRound } from 'lucide-react'
+import { Plus, KeyRound } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
-import { Popconfirm } from '@/components/popconfirm'
 import { CustomSelect } from '@/components/custom.select'
-import { useRolesQuery, usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
+import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
+import { usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
-import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
 
 const RBAC_MODULES = [
@@ -67,15 +66,7 @@ export function PermissionsListTab({
 
   const { data, isLoading: isQueryLoading, refetch } = usePermissionsQuery(queryParams)
 
-  const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(async () => {
-    if (onRefresh) onRefresh()
-    await refetch()
-  })
 
-  const handleSearch = (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setCurrentPage(1)
-  }
 
   const handleResetFilters = async () => {
     setFilterName('')
@@ -87,6 +78,40 @@ export function PermissionsListTab({
     await refetch()
     toast.success(isVi ? 'Đã đặt lại bộ lọc quyền hạn' : 'Permission filters reset')
   }
+
+  const sortedPermissions = useMemo(() => {
+    const list = data?.items || []
+    if (!sortKey || !sortOrder) return list
+    return [...list].sort((a, b) => {
+      if (sortKey === 'name') {
+        const comp = (a.name || '').localeCompare(b.name || '')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'api_path') {
+        const comp = (a.api_path || '').localeCompare(b.api_path || '')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'method') {
+        const comp = (a.method || '').localeCompare(b.method || '')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'module') {
+        const comp = (a.module || '').localeCompare(b.module || '')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'created_at') {
+        const timeA = new Date(a.created_at || '').getTime()
+        const timeB = new Date(b.created_at || '').getTime()
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      if (sortKey === 'updated_at') {
+        const timeA = new Date(a.updated_at || '').getTime()
+        const timeB = new Date(b.updated_at || '').getTime()
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      return 0
+    })
+  }, [data?.items, sortKey, sortOrder])
 
   const modulesList = RBAC_MODULES
 
@@ -103,19 +128,6 @@ export function PermissionsListTab({
       default:
         return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20'
     }
-  }
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '-'
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return dateStr
-    const day = String(d.getDate()).padStart(2, '0')
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const year = d.getFullYear()
-    const hours = String(d.getHours()).padStart(2, '0')
-    const mins = String(d.getMinutes()).padStart(2, '0')
-    const secs = String(d.getSeconds()).padStart(2, '0')
-    return `${day}-${month}-${year} ${hours}:${mins}:${secs}`
   }
 
   const columns: DataTableColumn<Permission>[] = [
@@ -173,137 +185,43 @@ export function PermissionsListTab({
     {
       key: 'created_at',
       title: isVi ? 'Ngày Tạo' : 'Created At',
+      align: 'center',
+      width: '130px',
       sortable: true,
-      render: (perm) => (
-        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-          {formatDate(perm.created_at)}
-        </span>
-      ),
+      render: (perm) => renderTableDate(perm.created_at),
     },
     {
       key: 'updated_at',
       title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
+      align: 'center',
+      width: '130px',
       sortable: true,
-      render: (perm) => (
-        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-          {formatDate(perm.updated_at)}
-        </span>
-      ),
+      render: (perm) => renderTableDate(perm.updated_at),
     },
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
-      align: 'right',
+      width: '100px',
+      align: 'center',
       render: (perm) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => onOpenEditPerm(perm)}
-            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title={isVi ? 'Chỉnh sửa quyền hạn' : 'Edit permission'}
-            type="button"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <Popconfirm
-            title={isVi ? 'Xóa quyền hạn này?' : 'Delete this permission?'}
-            description={
-              isVi
-                ? 'Hành động này không thể hoàn tác.'
-                : 'This action cannot be undone.'
-            }
-            okText={isVi ? 'Xóa' : 'Delete'}
-            cancelText={isVi ? 'Hủy' : 'Cancel'}
-            okType="danger"
-            placement="topRight"
-            onConfirm={() => onDeletePerm(perm._id)}
-          >
-            <button
-              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-              title={isVi ? 'Xóa quyền hạn' : 'Delete permission'}
-              type="button"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </Popconfirm>
-        </div>
+        <TableRowActions
+          onEdit={() => onOpenEditPerm(perm)}
+          onDelete={() => onDeletePerm(perm._id)}
+          deleteTitle={isVi ? 'Xóa quyền hạn này?' : 'Delete this permission?'}
+          deleteDescription={
+            isVi
+              ? 'Hành động này không thể hoàn tác.'
+              : 'This action cannot be undone.'
+          }
+        />
       ),
     },
   ]
 
-  const filterSlot = (
-    <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3 w-full">
-      <div className="relative flex-1 min-w-[200px] sm:max-w-xs">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          value={filterName}
-          onChange={(e) => setFilterName(e.target.value)}
-          placeholder={isVi ? 'Tìm theo tên...' : 'Search by name...'}
-          className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-        />
-      </div>
-
-      <div className="relative flex-1 min-w-[180px] sm:max-w-xs">
-        <input
-          type="text"
-          value={filterApi}
-          onChange={(e) => setFilterApi(e.target.value)}
-          placeholder={isVi ? 'Lọc API (ví dụ /courses)...' : 'Filter API (e.g. /courses)...'}
-          className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all font-mono"
-        />
-      </div>
-
-      <CustomSelect
-        size="sm"
-        value={filterModule}
-        onChange={(val) => {
-          setFilterModule(val)
-          setCurrentPage(1)
-        }}
-        options={[
-          { value: 'ALL', label: isVi ? 'Tất cả phân hệ' : 'All Modules' },
-          ...modulesList.map((mod) => ({
-            value: mod,
-            label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
-          })),
-        ]}
-        className="w-56"
-      />
-
-      <button
-        type="submit"
-        className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer"
-      >
-        {isVi ? 'Tìm kiếm' : 'Search'}
-      </button>
-    </form>
-  )
-
-  const extraActions = (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={onOpenCreatePerm}
-        className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition-all cursor-pointer"
-      >
-        <Plus className="w-4 h-4" />
-        <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
-      </button>
-
-      <button
-        onClick={() => handleRefresh()}
-        disabled={isRefreshing || isLoading || isQueryLoading}
-        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-60"
-        title={isVi ? 'Làm mới' : 'Refresh'}
-      >
-        <RotateCcw className={`w-4 h-4 ${isRefreshing || isLoading || isQueryLoading ? 'animate-spin text-blue-600' : ''}`} />
-      </button>
-    </div>
-  )
-
   return (
     <DataTable<Permission>
       columns={columns}
-      data={data?.items || []}
+      data={sortedPermissions}
       rowKey={(p) => p._id}
       isLoading={isLoading || isQueryLoading}
       emptyText={isVi ? 'Không tìm thấy quyền hạn nào phù hợp' : 'No matching permissions found'}
@@ -314,8 +232,55 @@ export function PermissionsListTab({
         setSortOrder(o)
         setCurrentPage(1)
       }}
-      filterSlot={filterSlot}
-      extraActions={extraActions}
+      search={filterName}
+      onSearchChange={(val) => {
+        setFilterName(val)
+        setCurrentPage(1)
+      }}
+      searchLabel={isVi ? 'Tìm theo tên...' : 'Search by name...'}
+      searchPlaceholder={isVi ? 'Tìm theo tên quyền hạn...' : 'Search permission name...'}
+      extraFilters={
+        <>
+          <div className="relative w-48 sm:w-56">
+            <input
+              type="text"
+              value={filterApi}
+              onChange={(e) => {
+                setFilterApi(e.target.value)
+                setCurrentPage(1)
+              }}
+              placeholder={isVi ? 'Lọc API (/courses)...' : 'Filter API (e.g. /courses)...'}
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-mono"
+            />
+          </div>
+
+          <CustomSelect
+            value={filterModule}
+            onChange={(val) => {
+              setFilterModule(val)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: 'ALL', label: isVi ? 'Tất cả phân hệ' : 'All Modules' },
+              ...modulesList.map((mod) => ({
+                value: mod,
+                label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
+              })),
+            ]}
+            className="w-48"
+          />
+        </>
+      }
+      extraActions={
+        <button
+          onClick={onOpenCreatePerm}
+          type="button"
+          className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-xs shadow-blue-600/30 transition-all cursor-pointer whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{isVi ? 'Thêm mới' : 'Add New'}</span>
+        </button>
+      }
       onResetFilters={handleResetFilters}
       pagination={{
         currentPage,

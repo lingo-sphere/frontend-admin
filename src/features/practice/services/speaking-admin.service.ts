@@ -1,6 +1,7 @@
+// Dịch vụ API quản trị bài tập nói Speaking.
 import { api } from '@/services/api.client'
-import type { IpaAdminQuery, IpaPage } from '../types/ipa-admin.types'
-import type { SpeakingPayload, SpeakingRecord, SpeakingTtsResult } from '../types/speaking-admin.types'
+import type { IpaAdminQuery, IpaPage } from '@/features/practice/types/ipa-admin.types'
+import type { SpeakingPayload, SpeakingRecord, SpeakingTtsResult } from '@/features/practice/types/speaking-admin.types'
 const base = '/practice/admin/speaking'
 export type SpeakingTargetKind = 'lexical' | 'phonetics' | 'grammar'
 export interface SpeakingTargetOption { value: string; label_en?: string; label_vi?: string; unavailable: boolean }

@@ -197,7 +197,7 @@ export function ExamQuestionCard({
                 </button>
                 {hasAudio && audioSrc && (
                   <div className="flex items-center gap-1">
-                    <audio controls src={audioSrc} className="h-6 max-w-[180px]" />
+                    <audio controls preload="none" src={audioSrc} className="h-6 max-w-[180px]" />
                     <button
                       type="button"
                       onClick={() => onUpdate({ media_url: undefined, audio_url: undefined })}

@@ -1,43 +1,37 @@
+// Trang quản lý ngữ cảnh luyện tập (Practice Contexts) dành cho quản trị viên.
+
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
   Badge,
   Button,
-  Card,
   Form,
   Input,
   InputNumber,
   Modal,
-  Popconfirm,
-  Select,
-  Space,
   Switch,
-  Table,
   Tag,
   Tooltip,
 } from 'antd'
-import type { ColumnsType } from 'antd/es/table'
 import {
-  AlertCircle,
   CheckCircle2,
   Edit3,
   FolderTree,
   GitBranch,
   Layers,
   Plus,
-  RotateCcw,
-  Search,
-  Trash2,
 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
+import { CustomSelect } from '@/components/custom.select'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { TableRowActions } from '@/components/table.row.actions'
 import {
   usePracticeContextsAdmin,
-} from '../hooks/use.practice.contexts'
+} from '@/features/practice/hooks/use.practice.contexts'
 import type {
   CreatePracticeContextPayload,
   PracticeContext,
-  UpdatePracticeContextPayload,
-} from '../services/practice.service'
+} from '@/features/practice/services/practice.service'
 
 const DOMAIN_OPTIONS = [
   { value: 'SPEAKING', label: 'Luyện nói (Speaking)', color: 'blue' },
@@ -73,7 +67,6 @@ export function PracticeContextsPage() {
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<PracticeContext | null>(null)
-  const [presetParentId, setPresetParentId] = useState<string | undefined>(undefined)
 
   const [form] = Form.useForm<ContextFormValues>()
   const selectedParentId = Form.useWatch('parent_id', form)
@@ -88,19 +81,15 @@ export function PracticeContextsPage() {
     deleteContext,
   } = usePracticeContextsAdmin({ include_disabled: true })
 
-  // Phân loại contexts
   const level0Contexts = useMemo(() => contexts.filter((c) => c.level === 0), [contexts])
   const level1Contexts = useMemo(() => contexts.filter((c) => c.level === 1), [contexts])
-  const level2Contexts = useMemo(() => contexts.filter((c) => c.level === 2), [contexts])
 
-  // Context map để tra cứu nhanh
   const contextMap = useMemo(() => {
     const map = new Map<string, PracticeContext>()
     contexts.forEach((c) => map.set(c._id, c))
     return map
   }, [contexts])
 
-  // Tính level dự kiến dựa trên parent_id được chọn trong Form
   const calculatedLevel = useMemo(() => {
     if (!selectedParentId) return 0
     const parent = contextMap.get(selectedParentId)
@@ -108,10 +97,8 @@ export function PracticeContextsPage() {
     return Math.min(parent.level + 1, 2)
   }, [selectedParentId, contextMap])
 
-  // Lọc contexts hiển thị
   const filteredContexts = useMemo(() => {
     return contexts.filter((ctx) => {
-      // Search
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase()
         const matchNameEn = (ctx.name_en || ctx.name || '').toLowerCase().includes(query)
@@ -120,17 +107,14 @@ export function PracticeContextsPage() {
         if (!matchNameEn && !matchNameVi && !matchCode) return false
       }
 
-      // Level
       if (selectedLevel !== 'ALL' && ctx.level !== selectedLevel) {
         return false
       }
 
-      // Domain
       if (selectedDomain !== 'ALL') {
         if (!ctx.domains || !ctx.domains.includes(selectedDomain)) return false
       }
 
-      // Status
       if (selectedStatus !== 'ALL' && ctx.status !== selectedStatus) {
         return false
       }
@@ -139,14 +123,11 @@ export function PracticeContextsPage() {
     })
   }, [contexts, searchTerm, selectedLevel, selectedDomain, selectedStatus])
 
-  // Xây dựng cây phân cấp (Tree Table Data)
   const treeData = useMemo(() => {
-    // Nếu đang search hoặc lọc level cụ thể thì hiển thị dạng phẳng (Flat List) để dễ quan sát kết quả
     if (searchTerm.trim() || selectedLevel !== 'ALL' || selectedDomain !== 'ALL' || selectedStatus !== 'ALL') {
       return filteredContexts.map((c) => ({ ...c, key: c._id }))
     }
 
-    // Nếu không search/lọc: Hiển thị đúng cấu trúc Cây 3 Cấp Độ (Level 0 -> Level 1 -> Level 2)
     interface TreeNode extends PracticeContext {
       key: string
       children?: TreeNode[]
@@ -170,7 +151,6 @@ export function PracticeContextsPage() {
       }
     })
 
-    // Dọn dẹp mảng children rỗng
     const pruneEmptyChildren = (nodes: TreeNode[]) => {
       nodes.forEach((n) => {
         if (n.children && n.children.length > 0) {
@@ -185,10 +165,8 @@ export function PracticeContextsPage() {
     return roots
   }, [contexts, filteredContexts, searchTerm, selectedLevel, selectedDomain, selectedStatus])
 
-  // Mở modal tạo mới
   const handleOpenCreateModal = (parentId?: string) => {
     setEditingItem(null)
-    setPresetParentId(parentId)
     form.resetFields()
     form.setFieldsValue({
       parent_id: parentId,
@@ -200,10 +178,8 @@ export function PracticeContextsPage() {
     setModalOpen(true)
   }
 
-  // Mở modal chỉnh sửa
   const handleOpenEditModal = (record: PracticeContext) => {
     setEditingItem(record)
-    setPresetParentId(record.parent_id)
     form.resetFields()
     form.setFieldsValue({
       name_en: record.name_en || record.name,
@@ -222,7 +198,6 @@ export function PracticeContextsPage() {
     setModalOpen(true)
   }
 
-  // Submit Form
   const handleSubmitForm = async () => {
     try {
       const values = await form.validateFields()
@@ -253,14 +228,13 @@ export function PracticeContextsPage() {
       }
 
       setModalOpen(false)
-    } catch (err: any) {
-      if (err?.errorFields) return // Lỗi validate Form
-      const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra'
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errorFields' in err) return
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra'
       toast.error(msg)
     }
   }
 
-  // Chuyển đổi trạng thái Active/Inactive nhanh
   const handleToggleStatus = async (record: PracticeContext, checked: boolean) => {
     try {
       await updateContext.mutateAsync({
@@ -268,77 +242,181 @@ export function PracticeContextsPage() {
         payload: { status: checked ? 'ACTIVE' : 'INACTIVE' },
       })
       toast.success(checked ? 'Đã kích hoạt ngữ cảnh' : 'Đã tạm ẩn ngữ cảnh')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Không thể đổi trạng thái')
-    }
-  }
-
-  // Xóa context
-  const handleDeleteContext = async (id: string) => {
-    try {
-      await deleteContext.mutateAsync(id)
-      toast.success('Đã xóa ngữ cảnh thành công')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Không thể xóa ngữ cảnh này'
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể đổi trạng thái'
       toast.error(msg)
     }
   }
 
-  // Bảng phân cấp
-  const columns: ColumnsType<any> = [
+  const handleDeleteContext = async (id: string) => {
+    try {
+      await deleteContext.mutateAsync(id)
+      toast.success('Đã xóa ngữ cảnh thành công')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa ngữ cảnh này'
+      toast.error(msg)
+    }
+  }
+
+  const columns: DataTableColumn<PracticeContext>[] = [
     {
       title: 'Tên ngữ cảnh',
-      dataIndex: 'name_en',
       key: 'name_en',
-      width: 300,
-      render: (_, record: PracticeContext) => {
+      width: 320,
+      render: (record: PracticeContext) => {
         const en = record.name_en || record.name
         const vi = record.name_vi
+        if (record.level === 0) {
+          return (
+            <div className="inline-flex items-center gap-2.5 py-1 align-middle">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 shrink-0 border border-purple-200/80 dark:border-purple-800 shadow-xs">
+                <Layers size={16} />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight">
+                    {en}
+                  </span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
+                    Theme
+                  </span>
+                </div>
+                {vi && (
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                    {vi}
+                  </span>
+                )}
+                {record.path_string && (
+                  <span className="text-[11px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                    {record.path_string}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        }
+        if (record.level === 1) {
+          return (
+            <div className="inline-flex items-center gap-2 py-0.5 align-middle">
+              <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-400">
+                <span className="text-slate-400 dark:text-slate-500 font-mono text-xs select-none">└─</span>
+                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0 border border-blue-200/70 dark:border-blue-800">
+                  <GitBranch size={13} />
+                </div>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                    {en}
+                  </span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300">
+                    Topic
+                  </span>
+                </div>
+                {vi && (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {vi}
+                  </span>
+                )}
+                {record.path_string && (
+                  <span className="text-[10px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                    {record.path_string}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        }
         return (
-          <div className="flex flex-col">
-            <span className="font-semibold text-slate-800">{en}</span>
-            {vi && <span className="text-xs text-slate-500">{vi}</span>}
-            {record.path_string && (
-              <span className="mt-0.5 text-[11px] text-slate-400 truncate max-w-xs" title={record.path_string}>
-                {record.path_string}
-              </span>
-            )}
+          <div className="inline-flex items-center gap-2 py-0.5 align-middle">
+            <div className="flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400">
+              <span className="text-slate-400 dark:text-slate-500 font-mono text-xs select-none">└──</span>
+              <div className="flex items-center justify-center w-5 h-5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shrink-0 border border-emerald-200/70 dark:border-emerald-800">
+                <CheckCircle2 size={12} />
+              </div>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-normal text-xs text-slate-700 dark:text-slate-300">
+                  {en}
+                </span>
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-normal bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  Situation
+                </span>
+              </div>
+              {vi && (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  {vi}
+                </span>
+              )}
+              {record.path_string && (
+                <span className="text-[10px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                  {record.path_string}
+                </span>
+              )}
+            </div>
           </div>
         )
       },
     },
     {
       title: 'Mã Code',
-      dataIndex: 'code',
       key: 'code',
       width: 180,
-      render: (code: string) => (
-        <code className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-          {code}
-        </code>
-      ),
+      render: (record: PracticeContext) => {
+        if (record.level === 0) {
+          return (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-purple-100/80 text-purple-800 dark:bg-purple-950/80 dark:text-purple-200 border border-purple-200/90 dark:border-purple-800 shadow-xs">
+              {record.code}
+            </span>
+          )
+        }
+        if (record.level === 1) {
+          return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60">
+              {record.code}
+            </span>
+          )
+        }
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+            {record.code}
+          </span>
+        )
+      },
     },
     {
       title: 'Cấp bậc',
-      dataIndex: 'level',
       key: 'level',
-      width: 140,
-      render: (level: number) => {
-        if (level === 0) {
-          return <Tag color="purple" className="font-medium">Level 0: Chủ đề lớn</Tag>
+      width: 160,
+      render: (record: PracticeContext) => {
+        if (record.level === 0) {
+          return (
+            <Tag color="purple" className="font-semibold px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border-purple-300 dark:border-purple-800 shadow-xs">
+              <Layers size={13} /> Level 0: Chủ đề lớn
+            </Tag>
+          )
         }
-        if (level === 1) {
-          return <Tag color="blue" className="font-medium">Level 1: Chủ điểm</Tag>
+        if (record.level === 1) {
+          return (
+            <Tag color="blue" className="font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 border-blue-300 dark:border-blue-800">
+              <GitBranch size={12} /> Level 1: Chủ điểm
+            </Tag>
+          )
         }
-        return <Tag color="green" className="font-medium">Level 2: Tình huống</Tag>
+        return (
+          <Tag color="green" className="font-normal px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 border-emerald-300 dark:border-emerald-800">
+            <CheckCircle2 size={12} /> Level 2: Tình huống
+          </Tag>
+        )
       },
     },
     {
       title: 'Kỹ năng (Domains)',
-      dataIndex: 'domains',
       key: 'domains',
       width: 200,
-      render: (domains: string[]) => {
+      render: (record: PracticeContext) => {
+        const domains = record.domains
         if (!domains || domains.length === 0) {
           return <span className="text-xs text-slate-400">Tất cả</span>
         }
@@ -358,12 +436,11 @@ export function PracticeContextsPage() {
     },
     {
       title: 'Bài tập',
-      dataIndex: 'total_exercises',
       key: 'total_exercises',
       width: 100,
       align: 'center',
-      render: (count?: number) => {
-        const val = count || 0
+      render: (record: PracticeContext) => {
+        const val = record.total_exercises || 0
         return (
           <Badge
             count={val}
@@ -375,12 +452,12 @@ export function PracticeContextsPage() {
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string, record: PracticeContext) => (
+      align: 'center',
+      render: (record: PracticeContext) => (
         <Switch
-          checked={status === 'ACTIVE'}
+          checked={record.status === 'ACTIVE'}
           checkedChildren="Bật"
           unCheckedChildren="Ẩn"
           size="small"
@@ -391,58 +468,32 @@ export function PracticeContextsPage() {
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 180,
+      width: 150,
       fixed: 'right',
-      render: (_, record: PracticeContext) => {
+      align: 'center',
+      render: (record: PracticeContext) => {
         const canAddChild = record.level < 2
 
         return (
-          <Space orientation="horizontal" size="small">
-            {canAddChild ? (
-              <Tooltip title={`Thêm cấp con (Level ${record.level + 1})`}>
-                <Button
-                  size="small"
-                  type="text"
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  icon={<Plus size={14} />}
-                  onClick={() => handleOpenCreateModal(record._id)}
-                >
-                  Con
-                </Button>
-              </Tooltip>
-            ) : (
-              <Tooltip title="Đã đạt trần tối đa 3 cấp độ (Level 2). Không thể tạo cấp sâu hơn.">
-                <Button size="small" type="text" disabled className="text-slate-300">
-                  Đầy
-                </Button>
-              </Tooltip>
-            )}
-
-            <Button
-              size="small"
-              type="text"
-              icon={<Edit3 size={14} />}
-              onClick={() => handleOpenEditModal(record)}
-            >
-              Sửa
-            </Button>
-
-            <Popconfirm
-              title="Xóa ngữ cảnh"
-              description="Bạn có chắc chắn muốn xóa ngữ cảnh này? Không thể hoàn tác nếu không có ràng buộc."
-              okText="Xóa"
-              cancelText="Hủy"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => handleDeleteContext(record._id)}
-            >
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<Trash2 size={14} />}
-              />
-            </Popconfirm>
-          </Space>
+          <TableRowActions
+            onEdit={() => handleOpenEditModal(record)}
+            onDelete={() => handleDeleteContext(record._id)}
+            deleteTitle="Xóa ngữ cảnh"
+            deleteDescription="Bạn có chắc chắn muốn xóa ngữ cảnh này? Không thể hoàn tác nếu không có ràng buộc."
+            extraActions={
+              canAddChild ? (
+                <Tooltip title={`Thêm cấp con (Level ${record.level + 1})`}>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCreateModal(record._id)}
+                    className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/60 dark:border-blue-800/60 transition-colors cursor-pointer"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </Tooltip>
+              ) : null
+            }
+          />
         )
       },
     },
@@ -450,7 +501,6 @@ export function PracticeContextsPage() {
 
   return (
     <div className="space-y-4 p-4">
-      {/* Header & Badges quy tắc 3 cấp */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
@@ -483,14 +533,6 @@ export function PracticeContextsPage() {
 
         <div className="flex items-center gap-2">
           <Button
-            icon={<RotateCcw size={15} />}
-            loading={isFetching}
-            onClick={() => refetch()}
-          >
-            Làm mới
-          </Button>
-
-          <Button
             type="primary"
             icon={<Plus size={16} />}
             className="bg-indigo-600 hover:bg-indigo-700"
@@ -501,63 +543,69 @@ export function PracticeContextsPage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <Card bodyStyle={{ padding: '16px' }} className="shadow-sm border-slate-200">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Input
-            placeholder="Tìm theo tên tiếng Anh, tiếng Việt, mã code..."
-            prefix={<Search size={15} className="text-slate-400" />}
-            value={searchTerm}
-            allowClear
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <DataTable<PracticeContext>
+        columns={columns}
+        data={treeData}
+        isLoading={isLoading}
+        rowKey="_id"
+        scroll={{ x: 1150 }}
+        rowClassName={(record) => {
+          if (record.level === 0) {
+            return '[&>td]:!bg-slate-100/90 dark:[&>td]:!bg-slate-800/85 hover:[&>td]:!bg-slate-200/80 dark:hover:[&>td]:!bg-slate-700/80 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-purple-600 border-t-2 border-slate-300/80 dark:border-slate-700/80 font-medium'
+          }
+          if (record.level === 1) {
+            return '[&>td]:!bg-white dark:[&>td]:!bg-slate-900/95 hover:[&>td]:!bg-blue-50/40 dark:hover:[&>td]:!bg-blue-950/20 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-blue-400 border-t border-slate-200/60 dark:border-slate-800/60'
+          }
+          return '[&>td]:!bg-slate-50/70 dark:[&>td]:!bg-slate-950/50 hover:[&>td]:!bg-emerald-50/30 dark:hover:[&>td]:!bg-emerald-950/20 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-emerald-400 border-t border-dashed border-slate-200/60 dark:border-slate-800/60'
+        }}
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchLabel="Tìm kiếm ngữ cảnh"
+        searchPlaceholder="Tìm theo tên tiếng Anh, tiếng Việt, mã code..."
+        onResetFilters={() => {
+          setSearchTerm('')
+          setSelectedLevel('ALL')
+          setSelectedDomain('ALL')
+          setSelectedStatus('ALL')
+        }}
+        extraFilters={
+          <>
+            <CustomSelect
+              value={selectedLevel}
+              onChange={(val) => setSelectedLevel(val)}
+              className="w-44"
+              options={[
+                { value: 'ALL', label: 'Tất cả cấp bậc' },
+                { value: 0, label: 'Level 0: Chủ đề lớn (Theme)' },
+                { value: 1, label: 'Level 1: Nhóm chủ điểm (Topic)' },
+                { value: 2, label: 'Level 2: Tình huống cụ thể' },
+              ]}
+            />
 
-          <Select
-            value={selectedLevel}
-            onChange={(val) => setSelectedLevel(val)}
-            options={[
-              { value: 'ALL', label: 'Tất cả cấp bậc' },
-              { value: 0, label: 'Level 0: Chủ đề lớn (Theme)' },
-              { value: 1, label: 'Level 1: Nhóm chủ điểm (Topic)' },
-              { value: 2, label: 'Level 2: Tình huống cụ thể' },
-            ]}
-          />
+            <CustomSelect
+              value={selectedDomain}
+              onChange={(val) => setSelectedDomain(val)}
+              className="w-52"
+              options={[
+                { value: 'ALL', label: 'Tất cả kỹ năng (Domains)' },
+                ...DOMAIN_OPTIONS,
+              ]}
+            />
 
-          <Select
-            value={selectedDomain}
-            onChange={(val) => setSelectedDomain(val)}
-            options={[
-              { value: 'ALL', label: 'Tất cả kỹ năng (Domains)' },
-              ...DOMAIN_OPTIONS,
-            ]}
-          />
+            <CustomSelect
+              value={selectedStatus}
+              onChange={(val) => setSelectedStatus(val)}
+              className="w-40"
+              options={[
+                { value: 'ALL', label: 'Tất cả trạng thái' },
+                { value: 'ACTIVE', label: 'Đang hoạt động (ACTIVE)' },
+                { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },
+              ]}
+            />
+          </>
+        }
+      />
 
-          <Select
-            value={selectedStatus}
-            onChange={(val) => setSelectedStatus(val)}
-            options={[
-              { value: 'ALL', label: 'Tất cả trạng thái' },
-              { value: 'ACTIVE', label: 'Đang hoạt động (ACTIVE)' },
-              { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },
-            ]}
-          />
-        </div>
-      </Card>
-
-      {/* Main Table */}
-      <Card bodyStyle={{ padding: '0px' }} className="shadow-sm border-slate-200 overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={treeData}
-          loading={isLoading}
-          pagination={false}
-          rowKey="_id"
-          scroll={{ x: 1100 }}
-          defaultExpandAllRows={false}
-        />
-      </Card>
-
-      {/* Modal Create / Edit */}
       <Modal
         title={
           <div className="flex items-center gap-2 text-base font-semibold">
@@ -621,7 +669,7 @@ export function PracticeContextsPage() {
               }
               tooltip="Chọn ngữ cảnh cha. Nếu để trống, ngữ cảnh này sẽ là Chủ đề lớn (Level 0). Chỉ có thể chọn ngữ cảnh Level 0 hoặc Level 1 làm cha."
             >
-              <Select
+              <CustomSelect
                 placeholder="-- Là ngữ cảnh gốc (Level 0) --"
                 allowClear
                 options={[
@@ -654,7 +702,7 @@ export function PracticeContextsPage() {
               label="Kỹ năng áp dụng"
               tooltip="Các kỹ năng có thể gắn bài tập vào ngữ cảnh này"
             >
-              <Select
+              <CustomSelect
                 mode="multiple"
                 placeholder="Chọn kỹ năng áp dụng"
                 options={DOMAIN_OPTIONS}
@@ -662,7 +710,7 @@ export function PracticeContextsPage() {
             </Form.Item>
 
             <Form.Item name="cefr_level" label="Trình độ CEFR khuyến nghị">
-              <Select
+              <CustomSelect
                 placeholder="-- Chọn trình độ --"
                 allowClear
                 options={CEFR_LEVELS.map((lvl) => ({ value: lvl, label: lvl }))}
@@ -672,7 +720,7 @@ export function PracticeContextsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
             <Form.Item name="status" label="Trạng thái">
-              <Select
+              <CustomSelect
                 options={[
                   { value: 'ACTIVE', label: 'Hoạt động (ACTIVE)' },
                   { value: 'INACTIVE', label: 'Tạm ẩn (INACTIVE)' },

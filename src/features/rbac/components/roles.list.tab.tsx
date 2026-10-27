@@ -1,10 +1,10 @@
 // Component giao diện danh sách vai trò phục vụ quản trị phân quyền.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Edit2, Trash2, Shield, Search } from 'lucide-react'
+import { Shield, Search } from 'lucide-react'
 import type { Role } from '@/types/api.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
-import { Popconfirm } from '@/components/popconfirm'
+import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 import { useRolesQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
 import { toast } from '@/store/toast.store'
@@ -54,22 +54,32 @@ export function RolesListTab({
     toast.success(isVi ? 'Đã đặt lại bộ lọc vai trò' : 'Role filters reset')
   }
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '-'
-    try {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString(isVi ? 'vi-VN' : 'en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
-    } catch {
-      return dateStr
-    }
-  }
+  const sortedRoles = useMemo(() => {
+    const list = data?.items || []
+    if (!sortKey || !sortOrder) return list
+    return [...list].sort((a, b) => {
+      if (sortKey === 'name') {
+        const comp = (a.name || '').localeCompare(b.name || '')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'permissions_count') {
+        const countA = Array.isArray(a.permissions) ? a.permissions.length : 0
+        const countB = Array.isArray(b.permissions) ? b.permissions.length : 0
+        return sortOrder === 'asc' ? countA - countB : countB - countA
+      }
+      if (sortKey === 'created_at') {
+        const timeA = new Date(a.created_at || '').getTime()
+        const timeB = new Date(b.created_at || '').getTime()
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      if (sortKey === 'updated_at') {
+        const timeA = new Date(a.updated_at || '').getTime()
+        const timeB = new Date(b.updated_at || '').getTime()
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+      }
+      return 0
+    })
+  }, [data?.items, sortKey, sortOrder])
 
   const columns: DataTableColumn<Role>[] = [
     {
@@ -118,59 +128,35 @@ export function RolesListTab({
     {
       key: 'created_at',
       title: isVi ? 'Ngày Tạo' : 'Created At',
+      align: 'center',
+      width: '130px',
       sortable: true,
-      render: (role) => (
-        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-          {formatDate(role.created_at)}
-        </span>
-      ),
+      render: (role) => renderTableDate(role.created_at),
     },
     {
       key: 'updated_at',
       title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
+      align: 'center',
+      width: '130px',
       sortable: true,
-      render: (role) => (
-        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-          {formatDate(role.updated_at)}
-        </span>
-      ),
+      render: (role) => renderTableDate(role.updated_at),
     },
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
-      align: 'right',
+      width: '100px',
+      align: 'center',
       render: (role) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => onOpenEditRole(role)}
-            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title={isVi ? 'Chỉnh sửa vai trò' : 'Edit role'}
-            type="button"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <Popconfirm
-            title={isVi ? 'Xóa vai trò này?' : 'Delete this role?'}
-            description={
-              isVi
-                ? 'Hành động này không thể hoàn tác.'
-                : 'This action cannot be undone.'
-            }
-            okText={isVi ? 'Xóa' : 'Delete'}
-            cancelText={isVi ? 'Hủy' : 'Cancel'}
-            okType="danger"
-            placement="topRight"
-            onConfirm={() => onDeleteRole(role._id)}
-          >
-            <button
-              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-              title={isVi ? 'Xóa vai trò' : 'Delete role'}
-              type="button"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </Popconfirm>
-        </div>
+        <TableRowActions
+          onEdit={() => onOpenEditRole(role)}
+          onDelete={() => onDeleteRole(role._id)}
+          deleteTitle={isVi ? 'Xóa vai trò này?' : 'Delete this role?'}
+          deleteDescription={
+            isVi
+              ? 'Hành động này không thể hoàn tác.'
+              : 'This action cannot be undone.'
+          }
+        />
       ),
     },
   ]
@@ -199,7 +185,7 @@ export function RolesListTab({
   return (
     <DataTable<Role>
       columns={columns}
-      data={data?.items || []}
+      data={sortedRoles}
       rowKey={(r) => r._id}
       isLoading={isLoading || isQueryLoading}
       emptyText={isVi ? 'Không tìm thấy vai trò nào phù hợp' : 'No matching roles found'}

@@ -1,19 +1,22 @@
-import { usePracticeText, localizedPracticeName } from '../hooks/use.practice.text'
-import { applyPracticeFormError } from '../helpers/practice-form-error.helper'
+// Drawer chỉnh sửa chi tiết câu hỏi ngữ pháp (Grammar Question).
+
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Drawer, Form, Input, Modal, Select, Space, Spin, TreeSelect } from 'antd'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { grammarAdminKeys, useGrammarMutations, useGrammarTree } from '../hooks/use.grammar.admin'
-import { grammarAdminService } from '../services/grammar-admin.service'
-import { grammarQuestionPayload } from '../helpers/grammar-admin.helper'
-import { ipaError } from '../helpers/ipa-admin.helper'
-import { ipaLevels } from '../types/ipa-admin.types'
-import { newGrammarData, grammarLabels, grammarTypes, grammarCategories, grammarCategoryLabels, type GrammarQuestionPayload, type GrammarType } from '../types/grammar-admin.types'
-import { GrammarMediaField } from './grammar.media.field'
-import { GrammarOrderingFields } from './grammar.ordering.fields'
+import { CustomSelect } from '@/components/custom.select'
+import { usePracticeText, localizedPracticeName } from '@/features/practice/hooks/use.practice.text'
+import { applyPracticeFormError } from '@/features/practice/helpers/practice-form-error.helper'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { grammarAdminKeys, useGrammarMutations, useGrammarTree } from '@/features/practice/hooks/use.grammar.admin'
+import { grammarAdminService } from '@/features/practice/services/grammar-admin.service'
+import { grammarQuestionPayload } from '@/features/practice/helpers/grammar-admin.helper'
+import { ipaError } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaLevels } from '@/features/practice/types/ipa-admin.types'
+import { newGrammarData, grammarLabels, grammarTypes, grammarCategories, grammarCategoryLabels, type GrammarQuestionPayload, type GrammarType } from '@/features/practice/types/grammar-admin.types'
+import { GrammarMediaField } from '@/features/practice/components/grammar.media.field'
+import { GrammarOrderingFields } from '@/features/practice/components/grammar.ordering.fields'
 
 export function GrammarQuestionEditor({ id, readOnly, trash, initialTopic, onClose }: { initialTopic?: string; id: string | null; readOnly: boolean; trash: boolean; onClose: () => void }) {
   const p = usePracticeText()
@@ -68,19 +71,19 @@ export function GrammarQuestionEditor({ id, readOnly, trash, initialTopic, onClo
       {result.data?.domain === 'VOCABULARY' && <Alert type="info" title={p("Câu này dùng chung với ngân hàng từ vựng. Thay đổi được lưu trên cùng bản dữ liệu.")} style={{ marginBottom: 16 }} />}
       {id && <Alert type="info" title={p("Bài đã có lịch sử làm chỉ được sửa thông tin quản lý. Hãy tạo bài mới nếu cần đổi nội dung, đáp án hoặc tiêu chí chấm.")} style={{ marginBottom: 16 }} />}
       <Form form={form} layout="vertical" disabled={disabled} onValuesChange={() => setDirty(true)}>
-        <Form.Item name="question_type" label={p("Dạng câu hỏi")}><Select disabled={disabled || Boolean(id)} options={grammarTypes.map(value => ({ value, label: p(grammarLabels[value]) }))} onChange={value => form.setFieldValue('question_data', newGrammarData(value))} /></Form.Item>
+        <Form.Item name="question_type" label={p("Dạng câu hỏi")}><CustomSelect disabled={disabled || Boolean(id)} options={grammarTypes.map(value => ({ value, label: p(grammarLabels[value]) }))} onChange={value => form.setFieldValue('question_data', newGrammarData(value))} /></Form.Item>
         <Form.Item name="grammar_knowledge_id" label={p("Chủ điểm ngữ pháp")}><TreeSelect allowClear showSearch treeDataSimpleMode treeNodeFilterProp="title" treeData={(tree.data || []).map(row => ({ id: row._id, value: row._id, pId: row.parent_id, title: `${localizedPracticeName(row)}${row.status === 'INACTIVE' ? p(" (ngừng sử dụng)") : ''}` }))} /></Form.Item>
-        <Form.Item name="exercise_type" label={p("Nhãn kỹ năng (tùy chọn)")}><Select allowClear showSearch options={grammarCategories.map(value => ({ value, label: p(grammarCategoryLabels[value] || value) }))} /></Form.Item>
+        <Form.Item name="exercise_type" label={p("Nhãn kỹ năng (tùy chọn)")}><CustomSelect allowClear showSearch options={grammarCategories.map(value => ({ value, label: p(grammarCategoryLabels[value] || value) }))} /></Form.Item>
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
           <Form.Item name="question_text_en" label={p("Câu hỏi (Anh)")} rules={[{ required: true, whitespace: true, max: 10000 }]}><Input.TextArea rows={3} /></Form.Item>
           <Form.Item name="question_text_vi" label={p("Câu hỏi (Việt)")}><Input.TextArea rows={2} /></Form.Item>
           <Form.Item name="context_id" label={p("Chủ đề")}><TreeSelect allowClear showSearch treeDataSimpleMode treeNodeFilterProp="title" treeData={contexts.map(context => ({ id: context._id, value: context._id, pId: context.parent_id, title: localizedPracticeName(context) }))} /></Form.Item>
-          <Form.Item name="status" label={p("Trạng thái")}><Select options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p("Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
-          <Form.Item name="cefr_level" label="CEFR"><Select options={ipaLevels.map(value => ({ value }))} /></Form.Item>
-          <Form.Item name="difficulty_level" label={p("Độ khó")}><Select options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
+          <Form.Item name="status" label={p("Trạng thái")}><CustomSelect options={[{ value: 'DRAFT', label: p("Nháp") }, { value: 'PUBLISHED', label: p( "Đã xuất bản") }, { value: 'ARCHIVED', label: p("Lưu trữ") }]} /></Form.Item>
+          <Form.Item name="cefr_level" label="CEFR"><CustomSelect options={ipaLevels.map(value => ({ value }))} /></Form.Item>
+          <Form.Item name="difficulty_level" label={p("Độ khó")}><CustomSelect options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
         </div>
         <Form.Item name="instruction_en" label={p("Hướng dẫn (Anh)")}><Input.TextArea rows={2} /></Form.Item><Form.Item name="instruction_vi" label={p("Hướng dẫn (Việt)")}><Input.TextArea rows={2} /></Form.Item>
-        {type === 'MULTIPLE_CHOICE' && <><Form.List name={['question_data', 'options']}>{(fields, { add, remove }) => <div className="space-y-2">{fields.map(field => <div key={field.key} className="grid grid-cols-[64px_1fr_auto] gap-2"><Form.Item name={[field.name, 'key']} label={p("Mã")}><Input /></Form.Item><Form.Item name={[field.name, 'text']} label={p("Lựa chọn {{p0}}", { p0: options[field.name]?.key || field.name + 1 })}><Input.TextArea rows={2} /></Form.Item><Button danger disabled={disabled} onClick={() => { if (options[field.name]?.key === form.getFieldValue(['question_data', 'correct_answer'])) form.setFieldValue(['question_data', 'correct_answer'], ''); remove(field.name) }}>{p("Xóa lựa chọn")}</Button></div>)}<Button disabled={disabled || fields.length >= 26} onClick={() => add({ key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').find(key => !options.some(option => option.key === key)) || '', text: '' })}>{p("Thêm lựa chọn")}</Button></div>}</Form.List><Form.Item name={['question_data', 'correct_answer']} label={p("Đáp án đúng")}><Select allowClear options={options.filter(option => option.key).map(option => ({ value: option.key, label: `${option.key} · ${option.text || p("(chưa có nội dung)")}` }))} /></Form.Item></>}
+        {type === 'MULTIPLE_CHOICE' && <><Form.List name={['question_data', 'options']}>{(fields, { add, remove }) => <div className="space-y-2">{fields.map(field => <div key={field.key} className="grid grid-cols-[64px_1fr_auto] gap-2"><Form.Item name={[field.name, 'key']} label={p("Mã")}><Input /></Form.Item><Form.Item name={[field.name, 'text']} label={p("Lựa chọn {{p0}}", { p0: options[field.name]?.key || field.name + 1 })}><Input.TextArea rows={2} /></Form.Item><Button danger disabled={disabled} onClick={() => { if (options[field.name]?.key === form.getFieldValue(['question_data', 'correct_answer'])) form.setFieldValue(['question_data', 'correct_answer'], ''); remove(field.name) }}>{p("Xóa lựa chọn")}</Button></div>)}<Button disabled={disabled || fields.length >= 26} onClick={() => add({ key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').find(key => !options.some(option => option.key === key)) || '', text: '' })}>{p("Thêm lựa chọn")}</Button></div>}</Form.List><Form.Item name={['question_data', 'correct_answer']} label={p("Đáp án đúng")}><CustomSelect allowClear options={options.filter(option => option.key).map(option => ({ value: option.key, label: `${option.key} · ${option.text || p("(chưa có nội dung)")}` }))} /></Form.Item></>}
         {type === 'FILL_BLANK' && <><Form.Item name={['question_data', 'correct_answer']} label={p("Đáp án đúng")}><Input /></Form.Item><Form.Item name={['question_data', 'alternative_answers']} label={p("Đáp án thay thế")}><Select mode="tags" /></Form.Item></>}
         {type === 'ORDERING' && <GrammarOrderingFields key={id || 'new'} form={form} disabled={disabled} dirty={() => setDirty(true)} />}
         <Form.Item name={['question_data', 'explanation']} label={p("Giải thích (Anh)")}><Input.TextArea rows={3} /></Form.Item><Form.Item name={['question_data', 'explanation_vi']} label={p("Giải thích (Việt)")}><Input.TextArea rows={3} /></Form.Item>

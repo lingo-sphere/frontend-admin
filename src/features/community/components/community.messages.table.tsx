@@ -1,24 +1,23 @@
 // Bảng giám sát tin nhắn trực tiếp trong phòng chat cộng đồng với phân trang và bộ lọc dữ liệu.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button, Tooltip, Image } from 'antd'
 import {
-  Trash2,
   Pin,
   PinOff,
   CornerDownRight,
-  Image as ImageIcon,
   Search,
   RotateCcw,
   AlertCircle,
-  Loader2,
   ShieldAlert,
 } from 'lucide-react'
 import type { AdminChatMessage } from '@/features/community/types/community.admin.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { CustomSelect } from '@/components/custom.select'
-import { ConfirmModal } from '@/components/confirm.modal'
+import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 import { CommunityPinReplaceModal } from '@/features/community/components/community.pin.replace.modal'
 import type { SanctionTargetUser } from '@/features/community/components/community.sanction.modal'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 
 interface CommunityMessagesTableProps {
@@ -49,8 +48,6 @@ export function CommunityMessagesTable({
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
-  const [targetMessageId, setTargetMessageId] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [pinningId, setPinningId] = useState<string | null>(null)
   const [replaceTargetMessage, setReplaceTargetMessage] = useState<AdminChatMessage | null>(null)
 
@@ -104,6 +101,14 @@ export function CommunityMessagesTable({
 
     if (sortKey) {
       return [...list].sort((a, b) => {
+        if (sortKey === 'sender') {
+          const comp = (a.sender_name || '').localeCompare(b.sender_name || '')
+          return sortOrder === 'asc' ? comp : -comp
+        }
+        if (sortKey === 'content') {
+          const comp = (a.content || '').localeCompare(b.content || '')
+          return sortOrder === 'asc' ? comp : -comp
+        }
         if (sortKey === 'created_at') {
           const timeA = new Date(a.created_at).getTime()
           const timeB = new Date(b.created_at).getTime()
@@ -127,17 +132,6 @@ export function CommunityMessagesTable({
     const start = (currentPage - 1) * pageSize
     return filteredMessages.slice(start, start + pageSize)
   }, [filteredMessages, currentPage, pageSize])
-
-  const handleDeleteConfirm = async () => {
-    if (!targetMessageId) return
-    setIsDeleting(true)
-    try {
-      await onDeleteMessage(targetMessageId)
-      setTargetMessageId(null)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   const handleTogglePin = async (messageId: string, isPinned: boolean) => {
     if (!onTogglePin || pinningId) return
@@ -193,7 +187,7 @@ export function CommunityMessagesTable({
           <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200 overflow-hidden shrink-0">
             {msg.sender_avatar ? (
               <img
-                src={msg.sender_avatar}
+                src={resolveMediaUrl(msg.sender_avatar)}
                 alt={msg.sender_name}
                 className="w-full h-full object-cover"
               />
@@ -237,15 +231,25 @@ export function CommunityMessagesTable({
               </p>
             </div>
           ) : (
-            <p
-              className={`text-xs break-words whitespace-pre-wrap ${
-                msg.is_pinned && !msg.is_deleted
-                  ? 'text-amber-600 dark:text-amber-400 font-semibold'
-                  : 'text-slate-800 dark:text-slate-200'
-              }`}
-            >
-              {msg.content}
-            </p>
+            <div>
+              {msg.content ? (
+                <p
+                  className={`text-xs break-words whitespace-pre-wrap ${
+                    msg.is_pinned && !msg.is_deleted
+                      ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                      : 'text-slate-800 dark:text-slate-200'
+                  }`}
+                >
+                  {msg.content}
+                </p>
+              ) : (
+                <span className="text-xs italic text-slate-400 dark:text-slate-500">
+                  {msg.attachments && msg.attachments.length > 0
+                    ? `[${isVi ? 'Hình ảnh đính kèm' : 'Attached image'}]`
+                    : '-'}
+                </span>
+              )}
+            </div>
           )}
         </div>
       ),
@@ -253,10 +257,11 @@ export function CommunityMessagesTable({
     {
       key: 'attachments',
       title: t('community.colAttachments'),
+      width: '260px',
       render: (msg) => (
-        <div>
+        <div className="space-y-1.5">
           {msg.reply_to && (
-            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md mb-1 max-w-xs truncate">
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md max-w-xs truncate">
               <CornerDownRight className="w-3 h-3 text-indigo-500 shrink-0" />
               <span className="font-medium text-indigo-600 dark:text-indigo-400">
                 @{msg.reply_to.sender_name}:
@@ -265,19 +270,31 @@ export function CommunityMessagesTable({
             </div>
           )}
           {msg.attachments && msg.attachments.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {msg.attachments.map((url, idx) => (
-                <a
-                  key={idx}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600"
-                >
-                  <ImageIcon className="w-3 h-3" />
-                  {t('community.imageAttachment', { index: idx + 1 })}
-                </a>
-              ))}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Image.PreviewGroup>
+                {msg.attachments.map((url, idx) => (
+                  <div
+                    key={idx}
+                    className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex items-center justify-center shrink-0"
+                    style={{ width: 44, height: 44 }}
+                  >
+                    <Image
+                      src={resolveMediaUrl(url)}
+                      fallback={IMAGE_FALLBACK_PLACEHOLDER}
+                      alt={`attachment-${idx + 1}`}
+                      width={44}
+                      height={44}
+                      style={{
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%',
+                        display: 'block',
+                      }}
+                      className="cursor-pointer transition-transform duration-200 hover:scale-110"
+                    />
+                  </div>
+                ))}
+              </Image.PreviewGroup>
             </div>
           )}
           {!msg.reply_to && (!msg.attachments || msg.attachments.length === 0) && (
@@ -289,78 +306,70 @@ export function CommunityMessagesTable({
     {
       key: 'created_at',
       title: t('community.colTime'),
+      align: 'center',
+      width: '130px',
       sortable: true,
-      render: (msg) => (
-        <span className="text-xs text-slate-500 font-mono whitespace-nowrap">
-          {new Date(msg.created_at).toLocaleString(isVi ? 'vi-VN' : 'en-US')}
-        </span>
-      ),
+      render: (msg) => renderTableDate(msg.created_at),
     },
     {
       key: 'actions',
       title: t('community.colActions'),
-      align: 'right',
-      render: (msg) => (
-        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-          {!msg.is_deleted ? (
-            <>
-              {onTogglePin && (
-                <button
-                  type="button"
-                  disabled={pinningId === msg._id}
-                  onClick={() => handleTogglePinClick(msg)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    msg.is_pinned
-                      ? 'text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
-                  }`}
-                  title={msg.is_pinned ? t('community.unpinTitle') : t('community.pinTitle')}
-                >
-                  {pinningId === msg._id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
-                  ) : msg.is_pinned ? (
-                    <PinOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  ) : (
-                    <Pin className="w-3.5 h-3.5" />
-                  )}
-                  <span>{msg.is_pinned ? t('community.unpin') : t('community.pin')}</span>
-                </button>
-              )}
-
-              {onOpenSanctionModal && msg.sender_badge !== 'ADMIN' && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    onOpenSanctionModal({
-                      user_id: msg.sender_id,
-                      user_name: msg.sender_name,
-                      user_avatar: msg.sender_avatar,
-                      sender_badge: msg.sender_badge,
-                    })
-                  }
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/40 transition-colors cursor-pointer"
-                  title={t('community.disciplineTitle')}
-                >
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>{t('community.discipline')}</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setTargetMessageId(msg._id)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                title={t('community.deleteTitle')}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>{t('community.delete')}</span>
-              </button>
-            </>
-          ) : (
+      width: '120px',
+      align: 'center',
+      render: (msg) => {
+        if (msg.is_deleted) {
+          return (
             <span className="text-xs text-slate-400 italic">{t('community.removed')}</span>
-          )}
-        </div>
-      ),
+          )
+        }
+        return (
+          <TableRowActions
+            onDelete={() => onDeleteMessage(msg._id)}
+            deleteTitle={t('community.confirmDeleteTitle')}
+            deleteDescription={t('community.confirmDeleteMessage')}
+            extraActions={
+              <>
+                {onTogglePin && (
+                  <Tooltip
+                    title={msg.is_pinned ? t('community.unpinTitle') : t('community.pinTitle')}
+                  >
+                    <Button
+                      size="small"
+                      loading={pinningId === msg._id}
+                      icon={
+                        msg.is_pinned ? (
+                          <PinOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                        ) : (
+                          <Pin className="w-3.5 h-3.5" />
+                        )
+                      }
+                      onClick={() => handleTogglePinClick(msg)}
+                    />
+                  </Tooltip>
+                )}
+
+                {onOpenSanctionModal && msg.sender_badge !== 'ADMIN' && (
+                  <Tooltip title={t('community.disciplineTitle')}>
+                    <Button
+                      size="small"
+                      danger
+                      icon={<ShieldAlert className="w-3.5 h-3.5" />}
+                      onClick={() =>
+                        onOpenSanctionModal({
+                          user_id: msg.sender_id,
+                          user_name: msg.sender_name,
+                          user_avatar: msg.sender_avatar,
+                          sender_badge: msg.sender_badge,
+                        })
+                      }
+                    />
+                  </Tooltip>
+                )}
+              </>
+            }
+          />
+        )
+      },
     },
   ]
 
@@ -452,18 +461,6 @@ export function CommunityMessagesTable({
             setCurrentPage(1)
           },
         }}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(targetMessageId)}
-        onClose={() => setTargetMessageId(null)}
-        onConfirm={handleDeleteConfirm}
-        title={t('community.confirmDeleteTitle')}
-        message={t('community.confirmDeleteMessage')}
-        type="danger"
-        confirmText={t('community.deleteNow')}
-        cancelText={t('common.cancel')}
-        isLoading={isDeleting}
       />
 
       <CommunityPinReplaceModal

@@ -1,10 +1,10 @@
-// Component giao diện TableControls phục vụ khu vực Quản trị Admin.
+// Component điều khiển bảng dữ liệu (mật độ dòng, đặt lại bộ lọc, ẩn hiện cột) chuẩn hóa theo thiết kế tham chiếu.
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   SlidersHorizontal,
-  Columns,
+  Columns3,
   Check,
   RotateCcw,
   LayoutGrid,
@@ -40,7 +40,6 @@ export function TableControls({
   viewMode,
   onViewModeChange,
   onResetFilters,
-  totalCount,
 }: TableControlsProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
@@ -82,24 +81,27 @@ export function TableControls({
 
   const visibleColumnCount = columns ? columns.filter((c) => c.visible).length : 0
 
-  const densityOptions = useMemo(() => [
-    { key: 'compact', label: isVi ? 'Nhỏ gọn' : 'Compact' },
-    { key: 'middle', label: isVi ? 'Vừa' : 'Default' },
-    { key: 'comfortable', label: isVi ? 'Thoải mái' : 'Spacious' },
-  ] as const, [isVi])
+  const densityOptions = useMemo(
+    () =>
+      [
+        { key: 'compact', label: isVi ? 'Nhỏ gọn' : 'Compact' },
+        { key: 'middle', label: isVi ? 'Vừa' : 'Default' },
+        { key: 'comfortable', label: isVi ? 'Thoải mái' : 'Spacious' },
+      ] as const,
+    [isVi]
+  )
 
   return (
-    <div className="flex items-center gap-2">
-
+    <div className="flex items-center gap-2 shrink-0">
       {viewMode && onViewModeChange && (
-        <div className="flex items-center p-0.5 rounded-xl bg-slate-950/70 border border-slate-800">
+        <div className="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
           <button
             type="button"
             onClick={() => onViewModeChange('grid')}
             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
               viewMode === 'grid'
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
             title={isVi ? 'Dạng lưới thẻ' : 'Grid View'}
           >
@@ -111,7 +113,7 @@ export function TableControls({
             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
               viewMode === 'table'
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
             title={isVi ? 'Dạng danh sách bảng' : 'Table View'}
           >
@@ -124,20 +126,16 @@ export function TableControls({
         <button
           type="button"
           onClick={() => setShowDensityDropdown(!showDensityDropdown)}
-          className={`h-9 px-3 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+          className={`flex items-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer shadow-2xs ${
             showDensityDropdown
-              ? 'bg-indigo-600/15 text-indigo-400 border-indigo-500/30'
-              : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+              ? 'bg-indigo-50 dark:bg-indigo-600/15 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30'
+              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
           }`}
           title={isVi ? 'Kích thước dòng bảng' : 'Row Density'}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           <span>
-            {density === 'compact'
-              ? (isVi ? 'Nhỏ gọn' : 'Compact')
-              : density === 'comfortable'
-              ? (isVi ? 'Thoải mái' : 'Spacious')
-              : (isVi ? 'Vừa' : 'Default')}
+            {densityOptions.find((opt) => opt.key === density)?.label}
           </span>
           <ChevronDown className="w-3 h-3 opacity-60" />
         </button>
@@ -162,29 +160,48 @@ export function TableControls({
                 }`}
               >
                 <span>{opt.label}</span>
-                {density === opt.key && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
+                {density === opt.key && (
+                  <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                )}
               </button>
             ))}
           </div>
         )}
       </div>
 
+      {onResetFilters && (
+        <button
+          type="button"
+          onClick={() => handleReset()}
+          disabled={isResetting}
+          className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
+          title={isVi ? 'Đặt lại bộ lọc về mặc định' : 'Reset filters to default'}
+        >
+          <RotateCcw
+            className={`w-3.5 h-3.5 ${
+              isResetting ? 'animate-spin text-indigo-600 dark:text-indigo-400' : ''
+            }`}
+          />
+          <span>{isVi ? 'Đặt lại' : 'Reset'}</span>
+        </button>
+      )}
+
       {columns && onColumnsChange && (
         <div className="relative" ref={columnRef}>
           <button
             type="button"
             onClick={() => setShowColumnDropdown(!showColumnDropdown)}
-            className={`h-9 px-3 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer shadow-2xs ${
               showColumnDropdown
-                ? 'bg-indigo-600/15 text-indigo-400 border-indigo-500/30'
-                : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                ? 'bg-indigo-50 dark:bg-indigo-600/15 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
             }`}
             title={isVi ? 'Cài đặt hiển thị cột bảng' : 'Configure column visibility'}
           >
-            <Columns className="w-3.5 h-3.5" />
+            <Columns3 className="w-3.5 h-3.5" />
             <span>{isVi ? 'Cột' : 'Columns'}</span>
             {visibleColumnCount < columns.length && (
-              <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-[10px]">
+              <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
                 {visibleColumnCount}/{columns.length}
               </span>
             )}
@@ -195,7 +212,9 @@ export function TableControls({
             <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="flex items-center justify-between px-2 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {isVi ? `Hiển thị cột (${visibleColumnCount}/${columns.length})` : `Columns (${visibleColumnCount}/${columns.length})`}
+                  {isVi
+                    ? `Hiển thị cột (${visibleColumnCount}/${columns.length})`
+                    : `Columns (${visibleColumnCount}/${columns.length})`}
                 </span>
                 <button
                   type="button"
@@ -217,7 +236,7 @@ export function TableControls({
                         type="checkbox"
                         checked={col.visible}
                         onChange={() => toggleColumnVisibility(col.key)}
-                        className="w-3.5 h-3.5 accent-indigo-600 rounded cursor-pointer"
+                        className="w-3.5 h-3.5 accent-indigo-600 rounded cursor-pointer transition-transform active:scale-90"
                       />
                       <span className="text-slate-700 dark:text-slate-300 font-medium">
                         {col.label}
@@ -229,19 +248,6 @@ export function TableControls({
             </div>
           )}
         </div>
-      )}
-
-      {onResetFilters && (
-        <button
-          type="button"
-          onClick={() => handleReset()}
-          disabled={isResetting}
-          className="h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60"
-          title={isVi ? 'Đặt lại bộ lọc về mặc định' : 'Reset filters to default'}
-        >
-          <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`} />
-          <span>{isVi ? 'Đặt lại' : 'Reset'}</span>
-        </button>
       )}
     </div>
   )

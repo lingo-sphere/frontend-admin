@@ -10,6 +10,7 @@ import {
 } from '@/features/community/components/community.sanction.duration.picker'
 import type { UserProfile } from '@/features/users/schemas/user.schema'
 import type { SanctionActionType } from '@/features/community/types/community.admin.types'
+import { resolveMediaUrl } from '@/lib/media.utils'
 
 export interface SanctionTargetUser {
   user_id: string
@@ -167,7 +168,7 @@ export function CommunitySanctionModal({
                   <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200 overflow-hidden flex-shrink-0">
                     {initialTargetUser.user_avatar ? (
                       <img
-                        src={initialTargetUser.user_avatar}
+                        src={resolveMediaUrl(initialTargetUser.user_avatar)}
                         alt={initialTargetUser.user_name}
                         className="w-full h-full object-cover"
                       />

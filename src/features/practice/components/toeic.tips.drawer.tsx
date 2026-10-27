@@ -1,7 +1,4 @@
-/**
- * @file toeic.tips.drawer.tsx
- * @description Drawer chỉnh sửa chi tiết Mẹo & Chiến thuật làm bài TOEIC 4 Kỹ năng & 7 Part
- */
+// Drawer chỉnh sửa chi tiết mẹo & chiến thuật làm bài TOEIC 4 kỹ năng & 7 Part.
 
 import React, { useEffect, useState } from 'react'
 import {
@@ -18,8 +15,6 @@ import {
   Popconfirm,
   Upload,
   Image,
-  Tag,
-  Divider,
 } from 'antd'
 import {
   PlusOutlined,
@@ -29,10 +24,11 @@ import {
 } from '@ant-design/icons'
 import { toast } from '@/store/toast.store'
 import { API_CONFIG } from '@/config/api.config'
+import { CustomSelect } from '@/components/custom.select'
 import type {
   ToeicTipItem,
   ToeicTipPayload,
-} from '../types/grammar-handbook-admin.types'
+} from '@/features/practice/types/grammar-handbook-admin.types'
 
 interface Props {
   visible: boolean
@@ -116,7 +112,7 @@ export function ToeicTipsDrawer({
     }
   }, [visible, tip, form])
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: ToeicTipPayload) => {
     try {
       const payload: ToeicTipPayload = {
         ...values,
@@ -125,8 +121,9 @@ export function ToeicTipsDrawer({
       }
       await onSave(payload)
       onClose()
-    } catch (err: any) {
-      toast.error(err.message || 'Không thể lưu mẹo TOEIC')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu mẹo TOEIC'
+      toast.error(msg)
     }
   }
 
@@ -141,8 +138,9 @@ export function ToeicTipsDrawer({
       setCurrentImageUrl(res.image_url)
       form.setFieldValue('image_url', res.image_url)
       toast.success('Đã tải ảnh lên Cloudflare R2 thành công!')
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi tải ảnh lên R2')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi tải ảnh lên R2'
+      toast.error(msg)
     } finally {
       setUploadingImage(false)
     }
@@ -193,11 +191,11 @@ export function ToeicTipsDrawer({
                       label="Kỹ năng"
                       rules={[{ required: true, message: 'Chọn kỹ năng' }]}
                     >
-                      <Select options={SKILL_OPTIONS} />
+                      <CustomSelect options={SKILL_OPTIONS} />
                     </Form.Item>
 
                     <Form.Item name="part" label="Phần thi (Part)">
-                      <Select options={PART_OPTIONS} />
+                      <CustomSelect options={PART_OPTIONS} />
                     </Form.Item>
 
                     <Form.Item name="order" label="Thứ tự hiển thị">

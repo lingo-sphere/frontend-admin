@@ -1,21 +1,27 @@
+// Trang quản lý phát âm ngữ âm (IPA) dành cho quản trị viên.
+
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Popconfirm, Segmented, Select, Space, Switch, Tabs, Tag, theme as antdTheme } from 'antd'
+import { Button, ConfigProvider, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { AdminTabs } from '@/components/admin.tabs'
+import { CustomSwitch } from '@/components/custom.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
-import { IpaDataTable, type IpaColumn } from '../components/ipa.data.table'
-import { IpaAudioPreview } from '../components/ipa.audio.field'
-import { IpaSymbolEditor } from '../components/ipa.symbol.editor'
-import { IpaExerciseEditor } from '../components/ipa.exercise.editor'
-import { useIpaTableState } from '../hooks/use.ipa.table-state'
-import { useIpaExercises, useIpaMutations, useIpaSymbols } from '../hooks/use.ipa.admin'
-import { usePracticeContexts } from '../hooks/use.practice.contexts'
-import { ipaAdminService } from '../services/ipa-admin.service'
-import { exercisePayload, ipaError, symbolPayload } from '../helpers/ipa-admin.helper'
-import { ipaAudioFields, ipaLevels, ipaTypes, ipaTypeLabels, type IpaExerciseRecord, type IpaSymbolRecord } from '../types/ipa-admin.types'
+import { CustomSelect } from '@/components/custom.select'
+import { DataTable, type IpaColumn } from '@/components/data.table'
+import { IpaAudioPreview } from '@/features/practice/components/ipa.audio.field'
+import { IpaRowActions } from '@/features/practice/components/ipa.row.actions'
+import { IpaSymbolEditor } from '@/features/practice/components/ipa.symbol.editor'
+import { IpaExerciseEditor } from '@/features/practice/components/ipa.exercise.editor'
+import { useIpaTableState } from '@/features/practice/hooks/use.ipa.table-state'
+import { useIpaExercises, useIpaMutations, useIpaSymbols } from '@/features/practice/hooks/use.ipa.admin'
+import { usePracticeContexts } from '@/features/practice/hooks/use.practice.contexts'
+import { ipaAdminService } from '@/features/practice/services/ipa-admin.service'
+import { exercisePayload, ipaError, symbolPayload } from '@/features/practice/helpers/ipa-admin.helper'
+import { ipaAudioFields, ipaLevels, ipaTypes, ipaTypeLabels, type IpaExerciseRecord, type IpaSymbolRecord } from '@/features/practice/types/ipa-admin.types'
 
 const ipaEnTypes: Record<string, string> = {
   MINIMAL_PAIR_LISTEN: 'Minimal Pairs (Listen)',
@@ -24,7 +30,7 @@ const ipaEnTypes: Record<string, string> = {
 }
 
 const levels = ipaLevels.map(value => ({ value, label: value }))
-const date = (value?: string) => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—'
+const date = (value?: string) => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—'
 
 function SymbolsTable() {
   const { i18n } = useTranslation()
@@ -70,19 +76,19 @@ function SymbolsTable() {
   const audioLabelsEn = ['Phoneme Audio', 'Phoneme US Audio', 'Phoneme UK Audio', 'Example Audio', 'Example US Audio', 'Example UK Audio']
 
   const columns: IpaColumn<IpaSymbolRecord>[] = [
-    { key: 'symbol', label: isVi ? 'Ký hiệu IPA' : 'IPA Symbol', fixed: 'left', width: 125, filterKind: 'text', render: value => <strong className="font-mono text-lg">/{value}/</strong> },
-    { key: 'symbol_type', label: isVi ? 'Loại âm' : 'Type', width: 150, filterKind: 'enum', filterOptions: types, render: value => types.find(type => type.value === value)?.label || value },
-    { key: 'description_vi', label: isVi ? 'Mô tả tiếng Việt' : 'Vietnamese Description', width: 250, ellipsis: true, filterKind: 'text', initiallyHidden: true },
-    { key: 'description_en', label: isVi ? 'Mô tả tiếng Anh' : 'English Description', width: 250, ellipsis: true, filterKind: 'text', initiallyHidden: true },
-    { key: 'example_word', label: isVi ? 'Từ ví dụ' : 'Example Word', width: 160, filterKind: 'text' },
-    { key: 'example_word_ipa', label: isVi ? 'Phiên âm ví dụ' : 'Example IPA', width: 160, filterKind: 'text' },
-    { key: 'related_symbols', label: isVi ? 'Âm liên quan' : 'Related Symbols', width: 160, filterKind: 'text', initiallyHidden: true, render: values => ((values || []) as string[]).map(value => `/${value}/`).join(', ') },
-    { key: 'cefr_min_level', label: 'CEFR', width: 100, filterKind: 'enum', filterOptions: levels },
-    ...ipaAudioFields.map((field, index): IpaColumn<IpaSymbolRecord> => ({ key: field, label: isVi ? audioLabelsVi[index] : audioLabelsEn[index], width: 210, filterKind: 'media', render: value => audio(value), initiallyHidden: index !== 0 })),
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 140, filterKind: 'enum', filterOptions: symbolStatuses, render: (_, record) => <Switch checked={record.status === 'ACTIVE'} checkedChildren={isVi ? "Hoạt động" : "Active"} unCheckedChildren={isVi ? "Tạm ẩn" : "Inactive"} loading={working === record.id} disabled={Boolean(working)} onChange={active => { void toggle(record, active) }} /> },
-    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 170, filterKind: 'date', render: date, initiallyHidden: true },
-    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 170, filterKind: 'date', render: date, initiallyHidden: true },
-    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', fixed: 'right', width: 160, render: (_, record) => <Space><Button size="small" onClick={() => setEditor({ id: record.id, readOnly: true })}>{isVi ? 'Xem' : 'View'}</Button><Button size="small" type="primary" onClick={() => setEditor({ id: record.id, readOnly: false })}>{isVi ? 'Sửa' : 'Edit'}</Button></Space> },
+    { key: 'symbol', label: isVi ? 'Ký hiệu IPA' : 'IPA Symbol', width: 95, filterKind: 'text', render: value => <strong className="font-mono text-base text-indigo-600 dark:text-indigo-400">/{value}/</strong> },
+    { key: 'symbol_type', label: isVi ? 'Loại âm' : 'Type', width: 110, filterKind: 'enum', filterOptions: types, render: value => types.find(type => type.value === value)?.label || value },
+    { key: 'description_vi', label: isVi ? 'Mô tả tiếng Việt' : 'Vietnamese Description', width: 200, ellipsis: true, filterKind: 'text', initiallyHidden: true },
+    { key: 'description_en', label: isVi ? 'Mô tả tiếng Anh' : 'English Description', width: 200, ellipsis: true, filterKind: 'text', initiallyHidden: true },
+    { key: 'example_word', label: isVi ? 'Từ ví dụ' : 'Example Word', width: 110, filterKind: 'text' },
+    { key: 'example_word_ipa', label: isVi ? 'Phiên âm ví dụ' : 'Example IPA', width: 110, filterKind: 'text' },
+    { key: 'related_symbols', label: isVi ? 'Âm liên quan' : 'Related Symbols', width: 120, filterKind: 'text', initiallyHidden: true, render: values => ((values || []) as string[]).map(value => `/${value}/`).join(', ') },
+    { key: 'cefr_min_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },
+    ...ipaAudioFields.map((field, index): IpaColumn<IpaSymbolRecord> => ({ key: field, label: isVi ? audioLabelsVi[index] : audioLabelsEn[index], width: 155, filterKind: 'media', render: value => audio(value), initiallyHidden: index !== 0 })),
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: symbolStatuses, render: (_, record) => <CustomSwitch size="sm" color="emerald" checked={record.status === 'ACTIVE'} loading={working === record.id} disabled={Boolean(working)} onChange={active => { void toggle(record, active) }} /> },
+    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
+    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
+    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, record) => <IpaRowActions onView={() => setEditor({ id: record.id, readOnly: true })} onEdit={() => setEditor({ id: record.id, readOnly: false })} isVi={isVi} /> },
   ]
 
   return <>
@@ -90,10 +96,10 @@ function SymbolsTable() {
       <p className="text-sm text-slate-500">{isVi ? 'Danh mục âm cố định · chỉ xem và chỉnh sửa' : 'Fixed phoneme inventory · view and edit only'}</p>
       <Button icon={<RotateCcw size={14} />} loading={result.isFetching} onClick={() => result.refetch()}>{isVi ? 'Làm mới' : 'Refresh'}</Button>
     </div>
-    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} extraFilters={<>
-      <Select mode="multiple" aria-label={isVi ? "Lọc loại âm" : "Filter type"} placeholder={isVi ? "Loại âm" : "Type"} style={{ minWidth: 170 }} allowClear options={types} value={state.filters.symbol_type || []} onChange={values => state.setFilter('symbol_type', values)} />
-      <Select mode="multiple" aria-label="Lọc CEFR" placeholder="CEFR" style={{ minWidth: 110 }} allowClear options={levels} value={state.filters.cefr_min_level || []} onChange={values => state.setFilter('cefr_min_level', values)} />
-      <Select mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} style={{ minWidth: 170 }} allowClear options={symbolStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+    <DataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} extraFilters={<>
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc loại âm" : "Filter type"} placeholder={isVi ? "Loại âm" : "Type"} className="w-40" allowClear options={types} value={state.filters.symbol_type || []} onChange={values => state.setFilter('symbol_type', values)} />
+      <CustomSelect mode="multiple" aria-label="Lọc CEFR" placeholder="CEFR" className="w-28" allowClear options={levels} value={state.filters.cefr_min_level || []} onChange={values => state.setFilter('cefr_min_level', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} className="w-36" allowClear options={symbolStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
     </>} />
     {editor && <IpaSymbolEditor key={editor.id} {...editor} onClose={() => setEditor(null)} />}
   </>
@@ -126,11 +132,15 @@ function ExercisesTable() {
   const [working, setWorking] = useState<string | null>(null)
   const trash = state.query.trash === 'true'
 
+  const totalPages = result.data?.pagination?.totalPages
+  const currentPage = state.query.page
+  const { change } = state
+
   useEffect(() => {
-    if (!result.isPlaceholderData && result.data && state.query.page > Math.max(1, result.data.pagination.totalPages)) {
-      state.change({ page: String(Math.max(1, result.data.pagination.totalPages)) })
+    if (!result.isPlaceholderData && totalPages !== undefined && currentPage > Math.max(1, totalPages)) {
+      change({ page: String(Math.max(1, totalPages)) })
     }
-  }, [result.data, result.isPlaceholderData, state])
+  }, [result.isPlaceholderData, totalPages, currentPage, change])
 
   const toggle = async (record: IpaExerciseRecord, published: boolean) => {
     setWorking(record._id)
@@ -163,16 +173,16 @@ function ExercisesTable() {
   }
 
   const columns: IpaColumn<IpaExerciseRecord>[] = [
-    { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', fixed: 'left', width: 220, filterKind: 'text', render: (_, record) => <Button type="link" style={{ padding: 0 }} onClick={() => setEditor({ id: record._id, readOnly: true })}>{record.title}</Button> },
-    { key: 'exercise_type', label: isVi ? 'Dạng bài' : 'Exercise Type', width: 220, filterKind: 'enum', filterOptions: ipaTypes.map(type => ({ value: type, label: isVi ? ipaTypeLabels[type] : (ipaEnTypes[type] || type) })), render: value => (isVi ? ipaTypeLabels[value as typeof ipaTypes[number]] || value : (ipaEnTypes[value as string] || value)) },
-    { key: 'target_phoneme', label: isVi ? 'Âm mục tiêu' : 'Target Phoneme', width: 140, filterKind: 'text', render: value => <Tag color="indigo">/{value}/</Tag> },
-    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 180, filterOptions: contextOptions, filterKind: 'enum', render: value => contextOptions.find(item => item.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
-    { key: 'cefr_level', label: 'CEFR', width: 100, filterKind: 'enum', filterOptions: levels },
-    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 110, filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(item => item.value === value)?.label || value },
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 150, filterKind: 'enum', filterOptions: exerciseStatuses, render: (_, record) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <Space orientation="vertical" size={0}><Switch checked={record.status === 'PUBLISHED'} loading={working === record._id} disabled={Boolean(working)} onChange={checked => { void toggle(record, checked) }} /><span>{exerciseStatuses.find(item => item.value === record.status)?.label}</span></Space> },
-    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 170, filterKind: 'date', render: date, initiallyHidden: true },
-    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 170, filterKind: 'date', render: date, initiallyHidden: true },
-    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', fixed: 'right', width: 210, render: (_, record) => <Space><Button size="small" onClick={() => setEditor({ id: record._id, readOnly: true })}>{isVi ? 'Xem' : 'View'}</Button>{!trash && <Button size="small" type="primary" onClick={() => setEditor({ id: record._id, readOnly: false })}>{isVi ? 'Sửa' : 'Edit'}</Button>}<Popconfirm title={trash ? (isVi ? 'Khôi phục bài tập về nháp?' : 'Restore exercise to draft?') : (isVi ? 'Chuyển bài tập vào thùng rác?' : 'Move exercise to trash?')} description={isVi ? 'Giữ lại lịch sử làm bài và media.' : 'Preserves attempt history and media.'} okText={trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')} cancelText={isVi ? 'Hủy' : 'Cancel'} onConfirm={() => removeOrRestore(record)}><Button size="small" danger={!trash} loading={working === record._id} disabled={Boolean(working)}>{trash ? (isVi ? 'Khôi phục' : 'Restore') : (isVi ? 'Xóa' : 'Delete')}</Button></Popconfirm></Space> },
+    { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', width: 160, filterKind: 'text', render: (_, record) => <Button type="link" style={{ padding: 0, textAlign: 'left', whiteSpace: 'normal', height: 'auto', lineHeight: '1.3' }} onClick={() => setEditor({ id: record._id, readOnly: true })}><span className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline">{record.title}</span></Button> },
+    { key: 'exercise_type', label: isVi ? 'Dạng bài' : 'Exercise Type', width: 140, filterKind: 'enum', filterOptions: ipaTypes.map(type => ({ value: type, label: isVi ? ipaTypeLabels[type] : (ipaEnTypes[type] || type) })), render: value => (isVi ? ipaTypeLabels[value as typeof ipaTypes[number]] || value : (ipaEnTypes[value as string] || value)) },
+    { key: 'target_phoneme', label: isVi ? 'Âm mục tiêu' : 'Target Phoneme', width: 90, filterKind: 'text', render: value => <Tag color="indigo">/{value}/</Tag> },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 120, filterOptions: contextOptions, filterKind: 'enum', render: value => contextOptions.find(item => item.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'cefr_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },
+    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 65, filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(item => item.value === value)?.label || value },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: exerciseStatuses, render: (_, record) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><CustomSwitch size="sm" color="emerald" checked={record.status === 'PUBLISHED'} loading={working === record._id} disabled={Boolean(working)} onChange={checked => { void toggle(record, checked) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{exerciseStatuses.find(item => item.value === record.status)?.label}</span></div> },
+    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
+    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
+    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, record) => <IpaRowActions onView={() => setEditor({ id: record._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: record._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(record)} trash={trash} loading={working === record._id} disabled={Boolean(working)} isVi={isVi} deleteTitle={trash ? (isVi ? 'Khôi phục bài tập về nháp?' : 'Restore exercise to draft?') : (isVi ? 'Chuyển bài tập vào thùng rác?' : 'Move exercise to trash?')} /> },
   ]
 
   return <>
@@ -183,10 +193,10 @@ function ExercisesTable() {
         {!trash && <Button type="primary" icon={<Plus size={15} />} onClick={() => setEditor({ id: null, readOnly: false })}>{isVi ? 'Thêm bài tập' : 'Add Exercise'}</Button>}
       </Space>
     </div>
-    <IpaDataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? "Tìm kiếm bài tập" : "Search exercises"} searchPlaceholder={isVi ? "Tìm tiêu đề, từ, âm, mô tả..." : "Search title, word, phoneme, description..."} extraFilters={<>
-      <Select mode="multiple" aria-label={isVi ? "Lọc CEFR" : "Filter CEFR"} placeholder="CEFR" style={{ minWidth: 110 }} allowClear options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
-      <Select mode="multiple" aria-label={isVi ? "Lọc độ khó" : "Filter difficulty"} placeholder={isVi ? "Độ khó" : "Difficulty"} style={{ minWidth: 130 }} allowClear options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
-      <Select mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} style={{ minWidth: 165 }} allowClear options={exerciseStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
+    <DataTable columns={columns} items={result.data?.items || []} total={result.data?.pagination.total || 0} loading={result.isFetching} error={result.error} retry={result.refetch} state={state} searchLabel={isVi ? "Tìm kiếm bài tập" : "Search exercises"} searchPlaceholder={isVi ? "Tìm tiêu đề, từ, âm, mô tả..." : "Search title, word, phoneme, description..."} extraFilters={<>
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc CEFR" : "Filter CEFR"} placeholder="CEFR" className="w-28" allowClear options={levels} value={state.filters.cefr_level || []} onChange={values => state.setFilter('cefr_level', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc độ khó" : "Filter difficulty"} placeholder={isVi ? "Độ khó" : "Difficulty"} className="w-32" allowClear options={difficulties} value={state.filters.difficulty_level || []} onChange={values => state.setFilter('difficulty_level', values)} />
+      <CustomSelect mode="multiple" aria-label={isVi ? "Lọc trạng thái" : "Filter status"} placeholder={isVi ? "Trạng thái" : "Status"} className="w-40" allowClear options={exerciseStatuses} value={state.filters.status || []} onChange={values => state.setFilter('status', values)} />
     </>} />
     {editor && <IpaExerciseEditor key={editor.id || 'new'} {...editor} type={state.filters.exercise_type?.length === 1 ? state.filters.exercise_type[0] as typeof ipaTypes[number] : 'MINIMAL_PAIR_LISTEN'} trash={trash} onClose={() => setEditor(null)} />}
   </>
@@ -206,7 +216,14 @@ export function PracticeIpaPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Ngữ âm & IPA' : 'Phonetics & IPA'}</h1>
         <p className="mt-1 text-sm text-slate-500">{isVi ? 'Quản lý bảng âm cố định và bài tập nhận diện âm, cặp âm, phiên âm.' : 'Manage standard IPA chart, minimal pairs, phoneme recognition and transcription.'}</p>
       </div>
-      <Tabs activeKey={tab} onChange={state.switchTab} items={[{ key: 'symbols', label: isVi ? 'Bảng âm IPA' : 'IPA Symbols', children: <SymbolsTable /> }, { key: 'exercises', label: isVi ? 'Bài tập IPA' : 'IPA Exercises', children: <ExercisesTable /> }]} destroyOnHidden />
+      <AdminTabs
+        activeKey={tab}
+        onChange={state.switchTab}
+        items={[
+          { key: 'symbols', label: isVi ? 'Bảng âm IPA' : 'IPA Symbols', children: tab === 'symbols' ? <SymbolsTable /> : null },
+          { key: 'exercises', label: isVi ? 'Bài tập IPA' : 'IPA Exercises', children: tab === 'exercises' ? <ExercisesTable /> : null },
+        ]}
+      />
     </div>
   </ConfigProvider>
 }

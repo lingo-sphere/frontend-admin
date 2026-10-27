@@ -1,6 +1,7 @@
+// Dịch vụ API quản trị bài tập đọc Reading.
 import { api } from '@/services/api.client'
-import type { IpaAdminQuery, IpaPage } from '../types/ipa-admin.types'
-import type { ReadingPayload, ReadingRecord, ReadingGrammarOption } from '../types/reading-admin.types'
+import type { IpaAdminQuery, IpaPage } from '@/features/practice/types/ipa-admin.types'
+import type { ReadingPayload, ReadingRecord, ReadingGrammarOption } from '@/features/practice/types/reading-admin.types'
 const base = '/practice/admin/reading'
 export const readingAdminService = {
   grammarOptions: () => api.get<ReadingGrammarOption[]>(`${base}/grammar-options`),

@@ -92,10 +92,17 @@ export const notificationService = {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.NOTIFICATIONS.CAMPAIGNS, payload)
   },
 
-  async triggerDailyReminders(userIds?: string[]): Promise<{ message: string; sent_count?: number; email_sent_count?: number }> {
+  async triggerDailyReminders(
+    userIds?: string[],
+    customMessage?: { title?: string; content?: string }
+  ): Promise<{ message: string; sent_count?: number; email_sent_count?: number }> {
+    const payload: Record<string, unknown> = {}
+    if (userIds && userIds.length > 0) payload.user_ids = userIds
+    if (customMessage?.title) payload.title = customMessage.title
+    if (customMessage?.content) payload.content = customMessage.content
     return api.post<{ message: string; sent_count?: number; email_sent_count?: number }>(
       API_CONFIG.ENDPOINTS.NOTIFICATIONS.CRON_DAILY_REMINDERS,
-      userIds && userIds.length > 0 ? { user_ids: userIds } : {},
+      payload,
     )
   },
 

@@ -1,8 +1,9 @@
 // Định nghĩa các cột hiển thị bảng danh sách học viên trong trang quản trị
-import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw, Trophy } from 'lucide-react'
+import { Target, Sparkles, Flame, Crown, Ban, CheckCircle, RotateCcw, Trophy, Bell } from 'lucide-react'
+import { Button, Tooltip } from 'antd'
 import type { User } from '@/features/users/types/learner.types'
 import type { DataTableColumn } from '@/components/data.table'
-import { Popconfirm } from '@/components/popconfirm'
+import { TableRowActions, ActionPopconfirmButton } from '@/components/table.row.actions'
 
 interface GetLearnerColumnsOptions {
   isVi?: boolean
@@ -11,6 +12,7 @@ interface GetLearnerColumnsOptions {
   onOpenStatusModal: (user: User, action: 'ban' | 'unban') => Promise<void> | void
   onOpenAiQuotaModal?: (user: User) => void
   onResetData?: (user: User) => Promise<void> | void
+  onRemindLearner?: (user: User) => void
 }
 
 export function getLearnerColumns({
@@ -20,6 +22,7 @@ export function getLearnerColumns({
   onOpenStatusModal,
   onOpenAiQuotaModal,
   onResetData,
+  onRemindLearner,
 }: GetLearnerColumnsOptions): DataTableColumn<User>[] {
   const handleView = onViewProfile || onViewDetails || (() => {})
   return [
@@ -96,6 +99,7 @@ export function getLearnerColumns({
     {
       key: 'plan',
       title: isVi ? 'Gói học' : 'Plan',
+      align: 'center',
       render: (u) => {
         return (
           <span
@@ -114,6 +118,7 @@ export function getLearnerColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      align: 'center',
       render: (u) => (
         <span
           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
@@ -129,90 +134,71 @@ export function getLearnerColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
-      align: 'right',
+      align: 'center',
       render: (u) => {
         const isActive = u.status === 'ACTIVE'
         return (
-          <div className="flex items-center justify-end gap-1.5">
-            {onOpenAiQuotaModal && (
-              <button
-                className="p-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition-colors cursor-pointer"
-                title={isVi ? 'Hạn mức & Reset AI' : 'AI Quota & Reset'}
-                type="button"
-                onClick={() => onOpenAiQuotaModal(u)}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {isActive ? (
-              <Popconfirm
-                title={isVi ? 'Khóa tài khoản học viên này?' : 'Block this learner account?'}
-                description={
-                  isVi
-                    ? 'Học viên này sẽ bị tạm dừng truy cập vào hệ thống.'
-                    : 'This learner will be suspended from accessing the system.'
-                }
-                okText={isVi ? 'Khóa tài khoản' : 'Block'}
-                cancelText={isVi ? 'Hủy' : 'Cancel'}
-                okType="danger"
-                placement="topRight"
-                onConfirm={() => onOpenStatusModal(u, 'ban')}
-              >
-                <button
-                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                  title={isVi ? 'Khóa tài khoản học viên' : 'Block learner account'}
-                  type="button"
-                >
-                  <Ban className="w-3.5 h-3.5" />
-                </button>
-              </Popconfirm>
-            ) : (
-              <Popconfirm
-                title={isVi ? 'Mở khóa tài khoản học viên?' : 'Unblock this learner account?'}
-                description={
-                  isVi
-                    ? 'Học viên này sẽ có thể đăng nhập lại vào hệ thống.'
-                    : 'This learner will be able to log into the platform again.'
-                }
-                okText={isVi ? 'Mở khóa' : 'Unblock'}
-                cancelText={isVi ? 'Hủy' : 'Cancel'}
-                okType="primary"
-                placement="topRight"
-                onConfirm={() => onOpenStatusModal(u, 'unban')}
-              >
-                <button
-                  className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer"
-                  title={isVi ? 'Mở khóa tài khoản' : 'Unblock learner account'}
-                  type="button"
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                </button>
-              </Popconfirm>
-            )}
-            {onResetData && (
-              <Popconfirm
-                title={isVi ? 'Khởi tạo lại dữ liệu học tập?' : 'Reset learner learning data?'}
-                description={
-                  isVi
-                    ? 'Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp và điểm thi của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên.'
-                    : 'Clear course enrollments, lesson progress, submissions, and test scores. Login credentials remain intact.'
-                }
-                okText={isVi ? 'Khởi tạo lại' : 'Reset'}
-                cancelText={isVi ? 'Hủy' : 'Cancel'}
-                okType="danger"
-                placement="topRight"
-                onConfirm={() => onResetData(u)}
-              >
-                <button
-                  className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-                  title={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập' : 'Reset learner data'}
-                  type="button"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              </Popconfirm>
-            )}
-          </div>
+          <TableRowActions
+            isVi={isVi}
+            onView={() => handleView(u.user_id)}
+            extraActions={
+              <>
+                {onRemindLearner && (
+                  <Tooltip title={isVi ? 'Nhắc nhở học tập' : 'Send study reminder'}>
+                    <Button
+                      size="small"
+                      icon={<Bell size={14} />}
+                      onClick={() => onRemindLearner(u)}
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    />
+                  </Tooltip>
+                )}
+                {onOpenAiQuotaModal && (
+                  <Tooltip title={isVi ? 'Hạn mức & Reset AI' : 'AI Quota & Reset'}>
+                    <Button
+                      size="small"
+                      icon={<Sparkles size={14} />}
+                      onClick={() => onOpenAiQuotaModal(u)}
+                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                    />
+                  </Tooltip>
+                )}
+                <ActionPopconfirmButton
+                  title={isActive ? (isVi ? 'Khóa tài khoản học viên này?' : 'Block this learner account?') : (isVi ? 'Mở khóa tài khoản học viên?' : 'Unblock this learner account?')}
+                  description={
+                    isActive
+                      ? (isVi ? 'Học viên này sẽ bị tạm dừng truy cập vào hệ thống.' : 'This learner will be suspended from accessing the system.')
+                      : (isVi ? 'Học viên này sẽ có thể đăng nhập lại vào hệ thống.' : 'This learner will be able to log into the platform again.')
+                  }
+                  okText={isActive ? (isVi ? 'Khóa tài khoản' : 'Block') : (isVi ? 'Mở khóa' : 'Unblock')}
+                  cancelText={isVi ? 'Hủy' : 'Cancel'}
+                  okType={isActive ? 'danger' : 'primary'}
+                  tooltipTitle={isActive ? (isVi ? 'Khóa tài khoản' : 'Block') : (isVi ? 'Mở khóa' : 'Unblock')}
+                  danger={isActive}
+                  icon={isActive ? <Ban size={14} /> : <CheckCircle size={14} />}
+                  className={!isActive ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400' : undefined}
+                  onConfirm={() => onOpenStatusModal(u, isActive ? 'ban' : 'unban')}
+                />
+                {onResetData && (
+                  <ActionPopconfirmButton
+                    title={isVi ? 'Khởi tạo lại dữ liệu học tập?' : 'Reset learner learning data?'}
+                    description={
+                      isVi
+                        ? 'Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp và điểm thi của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên.'
+                        : 'Clear course enrollments, lesson progress, submissions, and test scores. Login credentials remain intact.'
+                    }
+                    okText={isVi ? 'Khởi tạo lại' : 'Reset'}
+                    cancelText={isVi ? 'Hủy' : 'Cancel'}
+                    okType="danger"
+                    tooltipTitle={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập' : 'Reset learner data'}
+                    icon={<RotateCcw size={14} />}
+                    className="text-amber-600 hover:text-amber-700 dark:text-amber-400"
+                    onConfirm={() => onResetData(u)}
+                  />
+                )}
+              </>
+            }
+          />
         )
       },
     },

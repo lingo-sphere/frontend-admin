@@ -1,19 +1,32 @@
 // Dialog chấm điểm và viết nhận xét phúc khảo bài nộp của học viên.
 
-import { X, Volume2, FileText, Sparkles, CheckCircle2, Edit3, Bot, Save, Headphones, PenLine, MessageSquare, Lightbulb } from 'lucide-react'
-import { NumberInput } from '@/components/number.input'
-import type { SkillSubmissionItem } from '@/features/progress/services/progress.service'
-import { resolveMediaUrl } from '@/features/media/utils/media.utils'
+import {
+  X,
+  Volume2,
+  FileText,
+  Sparkles,
+  CheckCircle2,
+  Edit3,
+  Bot,
+  Save,
+  Headphones,
+  PenLine,
+  MessageSquare,
+  Lightbulb,
+} from "lucide-react";
+import { NumberInput } from "@/components/number.input";
+import type { SkillSubmissionItem } from "@/features/progress/services/progress.service";
+import { resolveMediaUrl } from "@/features/media/utils/media.utils";
 
 interface CourseSubmissionReviewDialogProps {
-  submission: SkillSubmissionItem
-  editScore: number
-  editFeedback: string
-  isSubmitting: boolean
-  onScoreChange: (score: number) => void
-  onFeedbackChange: (feedback: string) => void
-  onClose: () => void
-  onSaveReview: (overrideScore?: number) => void
+  submission: SkillSubmissionItem;
+  editScore: number;
+  editFeedback: string;
+  isSubmitting: boolean;
+  onScoreChange: (score: number) => void;
+  onFeedbackChange: (feedback: string) => void;
+  onClose: () => void;
+  onSaveReview: (overrideScore?: number) => void;
 }
 
 export function CourseSubmissionReviewDialog({
@@ -26,7 +39,7 @@ export function CourseSubmissionReviewDialog({
   onClose,
   onSaveReview,
 }: CourseSubmissionReviewDialogProps) {
-  const isSpeaking = submission.skill === 'SPEAKING'
+  const isSpeaking = submission.skill === "SPEAKING";
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 dark:bg-black/45 backdrop-blur-[2px] p-4 animate-in fade-in duration-150">
@@ -39,11 +52,11 @@ export function CourseSubmissionReviewDialog({
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {isSpeaking
-                  ? 'Chấm Điểm & Đánh Giá Bài Nói (Speaking)'
-                  : 'Chấm Điểm & Đánh Giá Bài Luận (Writing)'}
+                  ? "Chấm Điểm & Đánh Giá Bài Nói (Speaking)"
+                  : "Chấm Điểm & Đánh Giá Bài Luận (Writing)"}
               </h3>
               <div className="text-xs text-slate-400">
-                Học viên:{' '}
+                Học viên:{" "}
                 <strong className="text-slate-700 dark:text-slate-200">
                   {submission.user_name}
                 </strong>
@@ -92,7 +105,9 @@ export function CourseSubmissionReviewDialog({
                   />
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 italic">Không tìm thấy tệp ghi âm.</p>
+                <p className="text-xs text-slate-400 italic">
+                  Không tìm thấy tệp ghi âm.
+                </p>
               )}
 
               {submission.whisper_transcript ? (
@@ -106,7 +121,9 @@ export function CourseSubmissionReviewDialog({
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 italic">Chưa có bản bóc tách Whisper.</p>
+                <p className="text-xs text-slate-400 italic">
+                  Chưa có bản bóc tách Whisper.
+                </p>
               )}
             </div>
           )}
@@ -119,11 +136,13 @@ export function CourseSubmissionReviewDialog({
                   <span>Toàn văn bài luận:</span>
                 </span>
                 <span className="text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  {submission.essay_text?.trim().split(/\s+/).filter(Boolean).length || 0} từ
+                  {submission.essay_text?.trim().split(/\s+/).filter(Boolean)
+                    .length || 0}{" "}
+                  từ
                 </span>
               </div>
               <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                {submission.essay_text || 'Chưa có nội dung bài viết.'}
+                {submission.essay_text || "Chưa có nội dung bài viết."}
               </div>
             </div>
           )}
@@ -175,9 +194,11 @@ export function CourseSubmissionReviewDialog({
                     <span>Gợi ý cải thiện:</span>
                   </span>
                   <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300">
-                    {submission.ai_feedback.improvement_tips.map((tip, tIdx) => (
-                      <li key={tIdx}>{tip}</li>
-                    ))}
+                    {submission.ai_feedback.improvement_tips.map(
+                      (tip, tIdx) => (
+                        <li key={tIdx}>{tip}</li>
+                      )
+                    )}
                   </ul>
                 </div>
               )}
@@ -209,7 +230,11 @@ export function CourseSubmissionReviewDialog({
                     <button
                       key={delta}
                       type="button"
-                      onClick={() => onScoreChange(Math.min(100, Math.max(0, editScore + delta)))}
+                      onClick={() =>
+                        onScoreChange(
+                          Math.min(100, Math.max(0, editScore + delta))
+                        )
+                      }
                       className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs transition-colors"
                     >
                       {delta > 0 ? `+${delta}` : delta}
@@ -266,5 +291,5 @@ export function CourseSubmissionReviewDialog({
         </div>
       </div>
     </div>
-  )
+  );
 }

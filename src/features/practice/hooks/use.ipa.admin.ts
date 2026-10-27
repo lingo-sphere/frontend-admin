@@ -1,6 +1,7 @@
+// Hook quản lý truy vấn và thao tác dữ liệu ngữ âm IPA cho Quản trị viên.
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { ipaAdminService } from '../services/ipa-admin.service'
-import type { IpaAdminQuery, SaveIpaExercise, SaveIpaSymbol } from '../types/ipa-admin.types'
+import { ipaAdminService } from '@/features/practice/services/ipa-admin.service'
+import type { IpaAdminQuery, SaveIpaExercise, SaveIpaSymbol } from '@/features/practice/types/ipa-admin.types'
 
 export const ipaAdminKeys = { all: ['ipa-admin'] as const }
 export function useIpaSymbols(query: IpaAdminQuery) {

@@ -1,12 +1,9 @@
-/**
- * @file admin.user.table.columns.tsx
- * @description Component giao diện admin-user-table-columns phục vụ khu vực Quản trị Admin
- */
+// Định nghĩa cấu hình các cột hiển thị cho bảng quản trị viên và giảng viên.
 
-import { Shield, GraduationCap, Edit2, Ban, CheckCircle } from 'lucide-react'
+import { Shield, GraduationCap, Ban, CheckCircle } from 'lucide-react'
 import type { AdminUser } from '@/features/users/helpers/admin.user.helper'
 import type { DataTableColumn } from '@/components/data.table'
-import { Popconfirm } from '@/components/popconfirm'
+import { TableRowActions, ActionPopconfirmButton, renderTableDate } from '@/components/table.row.actions'
 
 interface GetAdminUserColumnsOptions {
   isVi?: boolean
@@ -79,18 +76,14 @@ export function getAdminUserColumns({
     {
       key: 'created_at',
       title: isVi ? 'Ngày tạo' : 'Created At',
+      align: 'center',
       sortable: true,
-      render: (user) => (
-        <span className="text-xs text-slate-500 dark:text-slate-400">
-          {user.created_at
-            ? new Date(user.created_at).toLocaleDateString(isVi ? 'vi-VN' : 'en-US')
-            : '—'}
-        </span>
-      ),
+      render: (user) => renderTableDate(user.created_at),
     },
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      align: 'center',
       render: (user) => (
         <span
           className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
@@ -106,63 +99,30 @@ export function getAdminUserColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
-      align: 'right',
+      align: 'center',
       render: (user) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => onEditUser(user.id)}
-            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
-            title={isVi ? 'Chỉnh sửa tài khoản' : 'Edit account'}
-            type="button"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          {user.is_active ? (
-            <Popconfirm
-              title={isVi ? 'Khóa tài khoản này?' : 'Block this account?'}
+        <TableRowActions
+          isVi={isVi}
+          onEdit={() => onEditUser(user.id)}
+          extraActions={
+            <ActionPopconfirmButton
+              title={user.is_active ? (isVi ? 'Khóa tài khoản này?' : 'Block this account?') : (isVi ? 'Mở khóa tài khoản này?' : 'Unblock this account?')}
               description={
-                isVi
-                  ? 'Tài khoản này sẽ bị tạm dừng truy cập vào hệ thống quản trị.'
-                  : 'This account will be suspended from accessing the admin console.'
+                user.is_active
+                  ? (isVi ? 'Tài khoản này sẽ bị tạm dừng truy cập vào hệ thống quản trị.' : 'This account will be suspended from accessing the admin console.')
+                  : (isVi ? 'Tài khoản này sẽ có thể đăng nhập lại vào hệ thống quản trị.' : 'This account will be able to log into the admin console again.')
               }
-              okText={isVi ? 'Khóa tài khoản' : 'Block'}
+              okText={user.is_active ? (isVi ? 'Khóa tài khoản' : 'Block') : (isVi ? 'Mở khóa' : 'Unblock')}
               cancelText={isVi ? 'Hủy' : 'Cancel'}
-              okType="danger"
-              placement="topRight"
-              onConfirm={() => onOpenStatusModal(user, 'ban')}
-            >
-              <button
-                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                title={isVi ? 'Khóa tài khoản' : 'Block account'}
-                type="button"
-              >
-                <Ban className="w-3.5 h-3.5" />
-              </button>
-            </Popconfirm>
-          ) : (
-            <Popconfirm
-              title={isVi ? 'Mở khóa tài khoản này?' : 'Unblock this account?'}
-              description={
-                isVi
-                  ? 'Tài khoản này sẽ có thể đăng nhập lại vào hệ thống quản trị.'
-                  : 'This account will be able to log into the admin console again.'
-              }
-              okText={isVi ? 'Mở khóa' : 'Unblock'}
-              cancelText={isVi ? 'Hủy' : 'Cancel'}
-              okType="primary"
-              placement="topRight"
-              onConfirm={() => onOpenStatusModal(user, 'unban')}
-            >
-              <button
-                className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer"
-                title={isVi ? 'Mở khóa tài khoản' : 'Unblock account'}
-                type="button"
-              >
-                <CheckCircle className="w-3.5 h-3.5" />
-              </button>
-            </Popconfirm>
-          )}
-        </div>
+              okType={user.is_active ? 'danger' : 'primary'}
+              tooltipTitle={user.is_active ? (isVi ? 'Khóa tài khoản' : 'Block account') : (isVi ? 'Mở khóa tài khoản' : 'Unblock account')}
+              danger={user.is_active}
+              icon={user.is_active ? <Ban size={14} /> : <CheckCircle size={14} />}
+              className={!user.is_active ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400' : undefined}
+              onConfirm={() => onOpenStatusModal(user, user.is_active ? 'ban' : 'unban')}
+            />
+          }
+        />
       ),
     },
   ]

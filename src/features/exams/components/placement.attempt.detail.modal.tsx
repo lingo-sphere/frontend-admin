@@ -687,7 +687,7 @@ export function PlacementAttemptDetailModal({
                               <Volume2 className="w-3.5 h-3.5 text-blue-500" />
                               <span>Audio câu hỏi (Listening / Speaking Prompt):</span>
                             </div>
-                            <audio controls className="w-full h-8" src={resolveMediaUrl(qObj.audio_url || qObj.media_url)} />
+                            <audio controls preload="none" className="w-full h-8" src={resolveMediaUrl(qObj.audio_url || qObj.media_url)} />
                           </div>
                         )}
 
@@ -739,7 +739,7 @@ export function PlacementAttemptDetailModal({
                                 controls
                                 className="w-full h-10 rounded-lg"
                                 src={getAudioSrc(rawSelectedOption)}
-                                preload="auto"
+                                preload="none"
                               />
                             </div>
                           </div>

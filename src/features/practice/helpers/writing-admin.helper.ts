@@ -1,4 +1,5 @@
-import { rubricFields, type WritingPayload, type WritingRecord, type WritingType } from '../types/writing-admin.types'
+// Hàm tiện ích chuẩn hóa dữ liệu bài tập viết Writing.
+import { rubricFields, type WritingPayload, type WritingRecord, type WritingType } from '@/features/practice/types/writing-admin.types'
 export function writingPayload(type: WritingType, row: Partial<WritingRecord> = {}): WritingPayload {
   return {
   grading_standard: row.grading_standard || 'PRACTICAL', task_requirements: row.task_requirements || [], image_description: row.image_description || '',
@@ -21,7 +22,17 @@ export function writingPayload(type: WritingType, row: Partial<WritingRecord> = 
   alternative_answers: row.alternative_answers ?? [],
   keywords: row.keywords ?? [],
   target_grammar_structures: row.target_grammar_structures ?? [],
-    exercise_type: type, status: row.status || 'DRAFT', cefr_level: row.cefr_level || 'B1', difficulty_level: row.difficulty_level || 'MEDIUM', min_words: row.min_words ?? 0, max_words: row.max_words ?? 0,
-    rubric: Object.fromEntries(rubricFields.map(field => [field, row.rubric?.[field] ?? 0])) as WritingPayload['rubric'], ...(row._id ? { expected_revision: row.revision ?? 0 } : {}),
-  }
+  exercise_type: type,
+  status: row.status || 'DRAFT',
+  cefr_level: row.cefr_level || 'B1',
+  difficulty_level: row.difficulty_level || 'MEDIUM',
+  min_words: row.min_words ?? 0,
+  max_words: row.max_words ?? 0,
+  rubric: Object.fromEntries(rubricFields.map(field => {
+    if (field === 'vocabulary') return [field, row.rubric?.vocabulary ?? (row.rubric as any)?.lexical_resource ?? 0]
+    if (field === 'grammar') return [field, row.rubric?.grammar ?? (row.rubric as any)?.grammatical_accuracy ?? 0]
+    return [field, row.rubric?.[field] ?? 0]
+  })) as WritingPayload['rubric'],
+  ...(row._id ? { expected_revision: row.revision ?? 0 } : {}),
+}
 }

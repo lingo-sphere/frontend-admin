@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next'
 import {
   ShieldCheck,
   UserPlus,
-  Trash2,
-  Edit3,
   Check,
   X,
   Search,
@@ -16,7 +14,7 @@ import type {
   SetModeratorPayload,
 } from '@/features/community/types/community.admin.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
-import { ConfirmModal } from '@/components/confirm.modal'
+import { TableRowActions } from '@/components/table.row.actions'
 import {
   CommunityModeratorModal,
   DEFAULT_MODERATOR_PERMISSIONS,
@@ -50,8 +48,6 @@ export function CommunityModeratorsTab({
   const [selectedPermissions, setSelectedPermissions] = useState<AdminModeratorPermissions>(
     DEFAULT_MODERATOR_PERMISSIONS
   )
-  const [removeTargetUserId, setRemoveTargetUserId] = useState<string | null>(null)
-  const [isRemoving, setIsRemoving] = useState(false)
 
   const safeModerators = Array.isArray(moderators) ? moderators : []
 
@@ -97,20 +93,10 @@ export function CommunityModeratorsTab({
     setIsModalOpen(true)
   }
 
-  const handleConfirmRemove = async () => {
-    if (!removeTargetUserId) return
-    setIsRemoving(true)
-    try {
-      await onRemoveModerator(removeTargetUserId)
-      setRemoveTargetUserId(null)
-    } finally {
-      setIsRemoving(false)
-    }
-  }
-
   const columns: DataTableColumn<AdminCommunityMember>[] = [
     {
       key: 'moderator',
+      dataIndex: 'user_name',
       title: t('community.colModerator'),
       width: '260px',
       render: (mod) => (
@@ -182,26 +168,16 @@ export function CommunityModeratorsTab({
     {
       key: 'actions',
       title: t('community.colActions'),
-      align: 'right',
+      width: '100px',
+      align: 'center',
       render: (mod) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            type="button"
-            onClick={() => handleOpenEdit(mod)}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title={t('community.editPermsTitle')}
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setRemoveTargetUserId(mod.user_id)}
-            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title={t('community.removeModTitle')}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        <TableRowActions
+          onEdit={() => handleOpenEdit(mod)}
+          editTitle={t('community.editPermsTitle')}
+          onDelete={() => onRemoveModerator(mod.user_id)}
+          deleteTitle={t('community.removeModConfirmTitle')}
+          deleteDescription={t('community.removeModConfirmMessage')}
+        />
       ),
     },
   ]
@@ -279,18 +255,6 @@ export function CommunityModeratorsTab({
         initialUserId={selectedUserId}
         initialPermissions={selectedPermissions}
         onSave={onSetModerator}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(removeTargetUserId)}
-        onClose={() => setRemoveTargetUserId(null)}
-        onConfirm={handleConfirmRemove}
-        title={t('community.removeModConfirmTitle')}
-        message={t('community.removeModConfirmMessage')}
-        type="warning"
-        confirmText={t('community.confirmRemoveMod')}
-        cancelText={t('common.cancel')}
-        isLoading={isRemoving}
       />
     </div>
   )

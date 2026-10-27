@@ -3,12 +3,12 @@
  * @description Thanh hiển thị chỉ số tổng quan học viên và tiến độ trung bình.
  */
 
-import { Users, Trophy } from 'lucide-react'
+import { Users, Trophy } from "lucide-react";
 
 interface CourseLearnersStatsBarProps {
-  isVi: boolean
-  totalStudents: number
-  avgProgress: number
+  isVi: boolean;
+  totalStudents: number;
+  avgProgress: number;
 }
 
 export function CourseLearnersStatsBar({
@@ -24,7 +24,7 @@ export function CourseLearnersStatsBar({
         </div>
         <div className="min-w-0">
           <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-            {isVi ? 'Tổng Học Viên' : 'Total Students'}
+            {isVi ? "Tổng Học Viên" : "Total Students"}
           </span>
           <span className="text-xl font-black text-slate-900 dark:text-slate-100">
             {totalStudents}
@@ -38,14 +38,13 @@ export function CourseLearnersStatsBar({
         </div>
         <div className="min-w-0">
           <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-            {isVi ? 'Tiến Độ TB' : 'Avg Progress'}
+            {isVi ? "Tiến Độ TB" : "Avg Progress"}
           </span>
           <span className="text-xl font-black text-slate-900 dark:text-slate-100">
             {avgProgress}%
           </span>
         </div>
       </div>
-
     </div>
-  )
+  );
 }

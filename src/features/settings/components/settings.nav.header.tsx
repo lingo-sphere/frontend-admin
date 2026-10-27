@@ -1,8 +1,6 @@
-// Thanh điều hướng đầu trang cho khu vực Cấu hình Hệ thống & Dịch vụ.
-import { Crown, Bot, Settings as SettingsIcon, RefreshCw } from 'lucide-react'
+// Thanh tiêu đề chuẩn hóa cho các trang Cấu hình Hệ thống & Dịch vụ.
+import { RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
-import { navItemToPath } from '@/routes/navigation'
 
 export type SettingsPageType = 'plans' | 'ai' | 'system'
 
@@ -16,59 +14,51 @@ export function SettingsNavHeader({ activePage, onRefresh, isRefreshing }: Setti
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const navTabs = [
-    { id: 'plans' as SettingsPageType, navItem: 'settings-plans', label: isVietnamese ? 'Gói dịch vụ' : 'Plans', icon: Crown },
-    { id: 'ai' as SettingsPageType, navItem: 'settings-ai', label: isVietnamese ? 'AI & Mô hình' : 'AI Models', icon: Bot },
-    { id: 'system' as SettingsPageType, navItem: 'settings-system', label: isVietnamese ? 'Hệ thống' : 'System', icon: SettingsIcon },
-  ]
+  const pageMeta: Record<SettingsPageType, { title: string; desc: string }> = {
+    plans: {
+      title: isVietnamese ? 'Cấu hình Gói dịch vụ' : 'Subscription Plans',
+      desc: isVietnamese
+        ? 'Quản lý gói cước subscription, phân quyền VIP và cấu hình mức giá dịch vụ'
+        : 'Manage subscription plans, VIP access, and service pricing',
+    },
+    ai: {
+      title: isVietnamese ? 'Cấu hình AI & Mô hình' : 'AI Models & Architecture',
+      desc: isVietnamese
+        ? 'Quản lý kết nối nhà cung cấp AI, hạn mức token và điều phối mô hình thông minh'
+        : 'Manage AI provider connections, token quotas, and intelligent model routing',
+    },
+    system: {
+      title: isVietnamese ? 'Cài đặt hệ thống' : 'System Settings',
+      desc: isVietnamese
+        ? 'Cấu hình thông số vận hành nền tảng, lưu trữ đám mây và bảo trì hệ thống'
+        : 'Configure operational parameters, cloud storage, and platform maintenance',
+    },
+  }
+
+  const currentMeta = pageMeta[activePage]
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            {isVietnamese ? 'Cấu hình hệ thống & Dịch vụ' : 'System Settings & Services'}
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {isVietnamese
-              ? 'Quản lý gói cước subscription, cấu hình kết nối AI và các thông số vận hành hệ thống'
-              : 'Manage subscription plans, AI connections, and system operation settings'}
-          </p>
-        </div>
-
-        {onRefresh && (
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs transition-all cursor-pointer w-fit"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isVietnamese ? 'Làm mới' : 'Refresh'}</span>
-          </button>
-        )}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          {currentMeta.title}
+        </h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          {currentMeta.desc}
+        </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs w-fit">
-        {navTabs.map((tab) => {
-          const Icon = tab.icon
-          const isActive = activePage === tab.id
-          return (
-            <Link
-              key={tab.id}
-              to={navItemToPath(tab.navItem)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-            </Link>
-          )
-        })}
-      </div>
+      {onRefresh && (
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs transition-all cursor-pointer w-fit"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{isVietnamese ? 'Làm mới' : 'Refresh'}</span>
+        </button>
+      )}
     </div>
   )
 }

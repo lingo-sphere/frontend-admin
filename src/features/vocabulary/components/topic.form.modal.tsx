@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Folder, Sparkles } from 'lucide-react'
 import type { Topic } from '@/features/vocabulary/data/vocabulary.data'
 import { useCreateTopicMutation, useUpdateTopicMutation } from '@/features/vocabulary/hooks/use.vocabulary.admin.query'
+import { CustomSelect } from '@/components/custom.select'
 import { toast } from '@/store/toast.store'
 
 interface TopicFormModalProps {
@@ -187,19 +188,21 @@ export function TopicFormModal({
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Khung CEFR
               </label>
-              <select
+              <CustomSelect
+                size="sm"
                 value={cefrLevel}
-                onChange={(e) => setCefrLevel(e.target.value)}
-                className="w-full h-9 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-              >
-                <option value="A1">A1 - Sơ cấp</option>
-                <option value="A2">A2 - Tiền trung cấp</option>
-                <option value="B1">B1 - Trung cấp</option>
-                <option value="B1-B2">B1-B2 - Trung & Trên trung cấp</option>
-                <option value="B2">B2 - Trên trung cấp</option>
-                <option value="C1">C1 - Cao cấp</option>
-                <option value="C2">C2 - Thành thạo</option>
-              </select>
+                onChange={setCefrLevel}
+                options={[
+                  { value: 'A1', label: 'A1 - Sơ cấp' },
+                  { value: 'A2', label: 'A2 - Tiền trung cấp' },
+                  { value: 'B1', label: 'B1 - Trung cấp' },
+                  { value: 'B1-B2', label: 'B1-B2 - Trung & Trên trung cấp' },
+                  { value: 'B2', label: 'B2 - Trên trung cấp' },
+                  { value: 'C1', label: 'C1 - Cao cấp' },
+                  { value: 'C2', label: 'C2 - Thành thạo' },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1">

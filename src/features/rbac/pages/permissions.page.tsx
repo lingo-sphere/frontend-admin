@@ -1,6 +1,7 @@
 // Trang quản trị danh sách quyền hạn và gán quyền người dùng trong giao diện Admin.
 import { useState } from 'react'
 import { KeyRound, UserCheck } from 'lucide-react'
+import { AdminTabs } from '@/components/admin.tabs'
 import { toast } from '@/store/toast.store'
 import type { Permission, UserProfile } from '@/types/api.types'
 import { PermissionsListTab } from '@/features/rbac/components/permissions.list.tab'
@@ -145,31 +146,22 @@ export function PermissionsPage() {
         </div>
       </div>
 
-      <div className="flex border-b border-slate-200 dark:border-slate-800">
-        <button
-          onClick={() => setActiveTab('permissions')}
-          className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'permissions'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <KeyRound className="w-3.5 h-3.5" />
-          <span>Danh Sách Quyền Hạn</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('assign')}
-          className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'assign'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <UserCheck className="w-3.5 h-3.5" />
-          <span>Gán quyền cho Thành viên</span>
-        </button>
-      </div>
+      <AdminTabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as PermTabType)}
+        items={[
+          {
+            key: 'permissions',
+            label: 'Danh Sách Quyền Hạn',
+            icon: KeyRound,
+          },
+          {
+            key: 'assign',
+            label: 'Gán quyền cho Thành viên',
+            icon: UserCheck,
+          },
+        ]}
+      />
 
       {activeTab === 'permissions' && (
         <PermissionsListTab

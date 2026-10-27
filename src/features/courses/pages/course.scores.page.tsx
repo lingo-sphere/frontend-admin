@@ -10,19 +10,19 @@ import {
   Users,
   CheckCircle2,
   FileCheck2,
-} from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useAdminCourseDetailQuery } from '@/features/courses/hooks/use.courses.admin.query'
-import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
-import { StudentScoresTableRow } from '@/features/courses/components/student.scores.table.row'
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAdminCourseDetailQuery } from "@/features/courses/hooks/use.courses.admin.query";
+import { useCourseStudentScores } from "@/features/courses/hooks/use.course.student.scores";
+import { StudentScoresTableRow } from "@/features/courses/components/student.scores.table.row";
 
 interface CourseScoresPageProps {
-  courseId: string
+  courseId: string;
 }
 
 export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
-  const navigate = useNavigate()
-  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId)
+  const navigate = useNavigate();
+  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId);
 
   const {
     data,
@@ -32,14 +32,14 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
     setSearchTerm,
     filteredStudents,
     fetchData,
-  } = useCourseStudentScores(courseId, true)
+  } = useCourseStudentScores(courseId, true);
 
-  const totalStudents = data?.total_students || 0
-  const avgProgress = data?.average_progress_percentage || 0
-  const completedStudents = data?.completed_students || 0
-  const studentsList = filteredStudents || []
+  const totalStudents = data?.total_students || 0;
+  const avgProgress = data?.average_progress_percentage || 0;
+  const completedStudents = data?.completed_students || 0;
+  const studentsList = filteredStudents || [];
 
-  const courseTitle = courseInfo?.title || 'Khóa học'
+  const courseTitle = courseInfo?.title || "Khóa học";
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -47,7 +47,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/courses')}
+            onClick={() => navigate("/courses")}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -68,7 +68,10 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                Khóa học: <span className="font-semibold text-slate-700 dark:text-slate-300">{courseTitle}</span>
+                Khóa học:{" "}
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {courseTitle}
+                </span>
               </p>
             </div>
           </div>
@@ -77,7 +80,9 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
-            onClick={() => navigate(`/submissions?courseId=${encodeURIComponent(courseId)}`)}
+            onClick={() =>
+              navigate(`/submissions?courseId=${encodeURIComponent(courseId)}`)
+            }
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
           >
             <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -91,7 +96,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Làm mới dữ liệu"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${
+                isLoading ? "animate-spin text-indigo-500" : ""
+              }`}
+            />
           </button>
         </div>
       </div>
@@ -102,8 +111,12 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Tổng ghi danh</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{totalStudents}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              Tổng ghi danh
+            </div>
+            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {totalStudents}
+            </div>
           </div>
         </div>
 
@@ -112,8 +125,12 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Đã hoàn thành</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{completedStudents}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              Đã hoàn thành
+            </div>
+            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {completedStudents}
+            </div>
           </div>
         </div>
 
@@ -122,8 +139,12 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Tiến độ trung bình</div>
-            <div className="text-lg font-black text-slate-900 dark:text-slate-100">{avgProgress}%</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              Tiến độ trung bình
+            </div>
+            <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {avgProgress}%
+            </div>
           </div>
         </div>
 
@@ -132,9 +153,13 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Mục tiêu đầu ra</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              Mục tiêu đầu ra
+            </div>
             <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-              {courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
+              {courseInfo?.target_score
+                ? `${courseInfo.target_score}+ TOEIC`
+                : "-"}
             </div>
           </div>
         </div>
@@ -182,7 +207,9 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
                     <Users className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                    <p className="font-semibold">Chưa có học viên nào phù hợp với bộ lọc tìm kiếm.</p>
+                    <p className="font-semibold">
+                      Chưa có học viên nào phù hợp với bộ lọc tìm kiếm.
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -199,5 +226,5 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

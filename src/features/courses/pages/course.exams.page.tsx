@@ -1,6 +1,6 @@
 // Trang quản lý bài thi và đánh giá năng lực khóa học.
 
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { UserCheck, ShieldCheck } from 'lucide-react'
 import { DataTable } from '@/components/data.table'
 import { CourseExamStatsOverview } from '@/features/courses/components/course.exam.stats.overview'
@@ -47,22 +47,27 @@ export function CourseExamsPage() {
     handleResetFilters,
     handleDeleteExam,
     handleTogglePublish,
+    publishingExamId,
   } = useCourseExams()
 
-  const handleManageQuestions = (exam: ToeicExamItem) => {
-    storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
-    navigate(`/course-exams/${exam._id}/questions`)
-  }
+  const handleManageQuestions = useCallback(
+    (exam: ToeicExamItem) => {
+      storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
+      navigate(`/course-exams/${exam._id}/questions`)
+    },
+    [navigate]
+  )
 
   const columns = useMemo(
     () =>
       getCourseExamColumns({
         isVi,
         onTogglePublish: handleTogglePublish,
+        publishingExamId,
         onOpenEdit: handleManageQuestions,
         onDelete: handleDeleteExam,
       }),
-    [isVi, handleTogglePublish, handleDeleteExam, navigate]
+    [isVi, handleTogglePublish, publishingExamId, handleManageQuestions, handleDeleteExam]
   )
 
   return (

@@ -25,6 +25,7 @@ export function useCourseExams() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [publishingExamId, setPublishingExamId] = useState<string | null>(null)
   const [viewMode, setViewModeState] = useState<'table' | 'grid'>(() => {
     const saved = storage.get<'table' | 'grid'>(STORAGE_KEYS.COURSE_EXAMS_VIEW_MODE)
     return saved === 'grid' || saved === 'table' ? saved : 'table'
@@ -184,6 +185,11 @@ export function useCourseExams() {
         const diff = (a.avg_score || 0) - (b.avg_score || 0)
         return sortOrder === 'asc' ? diff : -diff
       }
+      if (sortKey === 'status') {
+        const statA = a.is_published ? 1 : 0
+        const statB = b.is_published ? 1 : 0
+        return sortOrder === 'asc' ? statA - statB : statB - statA
+      }
       return 0
     })
   }, [exams, selectedCourseId, typeFilter, statusFilter, searchQuery, sortKey, sortOrder])
@@ -232,6 +238,7 @@ export function useCourseExams() {
   const handleTogglePublish = useCallback(
     async (exam: ToeicExamItem) => {
       const examId = exam._id
+      if (!examId || publishingExamId) return
       const nextStatus = !exam.is_published
 
       if (nextStatus && (exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || !exam.course_id)) {
@@ -256,9 +263,14 @@ export function useCourseExams() {
         }
       }
 
-      await togglePublishMutation.mutateAsync({ exam, nextStatus })
+      try {
+        setPublishingExamId(examId)
+        await togglePublishMutation.mutateAsync({ exam, nextStatus })
+      } finally {
+        setPublishingExamId(null)
+      }
     },
-    [exams, isVi, togglePublishMutation]
+    [exams, isVi, togglePublishMutation, publishingExamId]
   )
 
   return {
@@ -293,5 +305,6 @@ export function useCourseExams() {
     handleResetFilters,
     handleDeleteExam,
     handleTogglePublish,
+    publishingExamId,
   }
 }

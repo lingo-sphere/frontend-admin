@@ -1,4 +1,5 @@
-import type { ReadingPayload, ReadingQuestion, ReadingRecord, ReadingType } from '../types/reading-admin.types'
+// Hàm tiện ích chuẩn hóa dữ liệu bài tập đọc Reading.
+import type { ReadingPayload, ReadingQuestion, ReadingRecord, ReadingType } from '@/features/practice/types/reading-admin.types'
 export function readingPayload(type: ReadingType, row: Partial<ReadingRecord> = {}): ReadingPayload {
   const metadata = row.passage_metadata
   return {
@@ -35,7 +36,6 @@ export function readingFormValues(type: ReadingType, row?: Partial<ReadingRecord
   data.passage_metadata.data_cards = data.passage_metadata.data_cards.map(card => ({ ...card, detail_entries: Object.entries(card.details).map(([name, value]) => ({ name, value })) }))
   return data
 }
-// order[newIndex] = oldIndex. Remap in one pass so swaps never rewrite a marker twice.
 export function remapReadingMarkers(content: string, order: number[]) {
   return content.replace(/\[(\d+)\]/g, (_marker, number) => { const index = order.indexOf(Number(number) - 1); return index < 0 ? '' : `[${index + 1}]` })
 }

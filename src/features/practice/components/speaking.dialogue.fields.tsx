@@ -1,17 +1,20 @@
-import { usePracticeText } from '../hooks/use.practice.text'
+// Component quản lý các lượt thoại trong bài Speaking hội thoại.
+
 import { useState } from "react";
 import { Alert, Button, Card, Form, Input, Select, Space, Tag } from "antd";
 import type { FormInstance } from "antd";
+import { CustomSelect } from "@/components/custom.select";
 import { toast } from "@/store/toast.store";
-import { speakingAdminService } from "../services/speaking-admin.service";
+import { usePracticeText } from "@/features/practice/hooks/use.practice.text";
+import { speakingAdminService } from "@/features/practice/services/speaking-admin.service";
 import {
   newSpeakingTurn,
   speakingVoices,
   type SpeakingPayload,
   type SpeakingTurn,
-} from "../types/speaking-admin.types";
-import { SpeakingAudioPreview } from "./speaking.media.field";
-import { ipaError } from "../helpers/ipa-admin.helper";
+} from "@/features/practice/types/speaking-admin.types";
+import { SpeakingAudioPreview } from "@/features/practice/components/speaking.media.field";
+import { ipaError } from "@/features/practice/helpers/ipa-admin.helper";
 
 export function SpeakingDialogueFields({
   form,
@@ -210,7 +213,7 @@ export function SpeakingDialogueFields({
               >
                 <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2 mb-2">
                   <Form.Item name={[field.name, "speaker"]} label={p("Người nói")}>
-                    <Select
+                    <CustomSelect
                       options={[
                         { value: "AI", label: "AI bot" },
                         { value: "USER", label: p("Học viên") },
@@ -273,7 +276,7 @@ export function SpeakingDialogueFields({
                       name={[field.name, "tts_voice"]}
                       label={p("Giọng TTS")}
                     >
-                      <Select
+                      <CustomSelect
                         options={speakingVoices.map(voice => ({ ...voice, label: p(voice.label) }))}
                         onChange={() => clearAudio(index)}
                       />

@@ -1,11 +1,11 @@
-// Bảng danh sách đề thi TOEIC với tính năng tìm kiếm, phân trang và bộ lọc hệ kỹ năng.
+// Bảng danh sách đề thi TOEIC chuẩn hóa theo thiết kế DataTable dùng chung.
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
-import { Pagination } from '@/components/pagination'
+import { DataTable } from '@/components/data.table'
 import { ExamTableFilters } from '@/features/exams/components/exam.table.filters'
-import { ExamTableRow } from '@/features/exams/components/exam.table.row'
+import { getExamColumns } from '@/features/exams/components/exam.table.columns'
 
 interface ExamListTableProps {
   exams: ToeicExamItem[]
@@ -36,17 +36,16 @@ export function ExamListTable({
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null)
 
-  const handleSort = (key: string) => {
-    let nextOrder: 'asc' | 'desc' = 'asc'
-    if (sortKey === key && sortOrder) {
-      nextOrder = sortOrder === 'asc' ? 'desc' : 'asc'
-    } else {
-      nextOrder = 'desc'
-    }
-    setSortKey(key)
-    setSortOrder(nextOrder)
-    setCurrentPage(1)
-  }
+  const columns = useMemo(
+    () =>
+      getExamColumns({
+        isVi,
+        onTogglePublish,
+        onDeleteExam,
+        onManageQuestions,
+      }),
+    [isVi, onTogglePublish, onDeleteExam, onManageQuestions]
+  )
 
   const filteredExams = useMemo(() => {
     const list = exams.filter((exam) => {
@@ -85,115 +84,70 @@ export function ExamListTable({
         const diff = (a.avg_score || 0) - (b.avg_score || 0)
         return sortOrder === 'asc' ? diff : -diff
       }
+      if (sortKey === 'type') {
+        const comp = (a.type || '').localeCompare(b.type || '')
+        return sortOrder === 'asc' ? comp : -comp
+      }
+      if (sortKey === 'status') {
+        const statA = a.is_published ? 1 : 0
+        const statB = b.is_published ? 1 : 0
+        return sortOrder === 'asc' ? statA - statB : statB - statA
+      }
       return 0
     })
   }, [exams, searchQuery, selectedSkill, sortKey, sortOrder])
-
-  const totalPages = Math.ceil(filteredExams.length / pageSize) || 1
 
   const paginatedExams = useMemo(() => {
     const start = (currentPage - 1) * pageSize
     return filteredExams.slice(start, start + pageSize)
   }, [filteredExams, currentPage, pageSize])
 
+  const handleResetFilters = () => {
+    onSearchChange('')
+    if (onSkillChange) onSkillChange('ALL')
+    setSortKey(null)
+    setSortOrder(null)
+    setCurrentPage(1)
+  }
+
   return (
-    <div className="space-y-4">
-      <ExamTableFilters
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        selectedSkill={selectedSkill}
-        onSkillChange={onSkillChange}
-        isVi={isVi}
-      />
-
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 text-[13.5px] sm:text-sm font-bold text-slate-800 dark:text-slate-100">
-                <th
-                  onClick={() => handleSort('title')}
-                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>{isVi ? 'Tên đề thi' : 'Exam Title'}</span>
-                  </div>
-                </th>
-                <th className="py-3.5 px-4">{isVi ? 'Loại đề' : 'Type'}</th>
-                <th
-                  onClick={() => handleSort('duration')}
-                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>{isVi ? 'Thời lượng' : 'Duration'}</span>
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('questions')}
-                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>{isVi ? 'Số câu' : 'Questions'}</span>
-                  </div>
-                </th>
-                <th className="py-3.5 px-4">{isVi ? 'Tài nguyên' : 'Media'}</th>
-                <th
-                  onClick={() => handleSort('attempts')}
-                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>{isVi ? 'Lượt thi' : 'Attempts'}</span>
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('score')}
-                  className="py-3.5 px-4 cursor-pointer select-none group hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>{isVi ? 'Điểm TB' : 'Avg Score'}</span>
-                  </div>
-                </th>
-                <th className="py-3.5 px-4">{isVi ? 'Trạng thái' : 'Status'}</th>
-                <th className="py-3.5 px-4 text-right">{isVi ? 'Thao tác' : 'Actions'}</th>
-              </tr>
-            </thead>
-            <tbody className="text-slate-700 dark:text-slate-200 text-xs">
-              {paginatedExams.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
-                    {isVi ? 'Không tìm thấy đề thi nào phù hợp' : 'No matching exams found'}
-                  </td>
-                </tr>
-              ) : (
-                paginatedExams.map((exam) => (
-                  <ExamTableRow
-                    key={exam._id}
-                    exam={exam}
-                    isVi={isVi}
-                    onTogglePublish={onTogglePublish}
-                    onDeleteExam={onDeleteExam}
-                    onManageQuestions={onManageQuestions}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {filteredExams.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={filteredExams.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
+    <DataTable<ToeicExamItem>
+      columns={columns}
+      data={paginatedExams}
+      rowKey={(exam) => exam._id || exam.title}
+      sortKey={sortKey}
+      sortOrder={sortOrder}
+      onSortChange={(k, o) => {
+        setSortKey(k)
+        setSortOrder(o)
+        setCurrentPage(1)
+      }}
+      onResetFilters={handleResetFilters}
+      filterSlot={
+        <ExamTableFilters
+          searchQuery={searchQuery}
+          onSearchChange={(q) => {
+            onSearchChange(q)
             setCurrentPage(1)
           }}
+          selectedSkill={selectedSkill}
+          onSkillChange={(s) => {
+            if (onSkillChange) onSkillChange(s)
+            setCurrentPage(1)
+          }}
+          isVi={isVi}
         />
-      )}
-    </div>
+      }
+      pagination={{
+        currentPage,
+        pageSize,
+        totalItems: filteredExams.length,
+        onPageChange: setCurrentPage,
+        onPageSizeChange: (limit) => {
+          setPageSize(limit)
+          setCurrentPage(1)
+        },
+      }}
+    />
   )
 }

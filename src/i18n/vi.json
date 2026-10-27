@@ -82,7 +82,6 @@
     "toeicTests": "Đề thi TOEIC",
     "placementTests": "Đề thi đầu vào",
     "aiManagement": "Quản trị AI",
-    "mediaStorage": "Kho tài nguyên",
     "communityNav": "Cộng đồng",
     "publicDecks": "Bộ thẻ công khai",
     "measurementProfiles": "Hiệu chuẩn đánh giá",
@@ -102,7 +101,7 @@
     "practiceIpa": "Ngữ âm & IPA"
   },
   "header": {
-    "search": "Tìm kiếm người học, khóa học...",
+    "search": "Tìm kiếm người học, khóa học....",
     "learnersCount": "học viên",
     "systemStable": "Hệ thống ổn định",
     "notifications": "Thông báo",

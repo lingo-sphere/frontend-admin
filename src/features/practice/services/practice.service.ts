@@ -1,13 +1,12 @@
-/**
- * @file practice.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ practice
- */
-
+// Dịch vụ API xử lý nghiệp vụ luyện tập và cấu hình ngữ cảnh trong hệ thống Quản trị.
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { PracticeSet, PracticeQuestion, ListeningExercise, SpeakingExercise, WritingExercise } from '@/types/api.types'
 
-// Practice Context types
+export interface PracticeContextTreeNode extends PracticeContext {
+  children?: PracticeContextTreeNode[]
+}
+
 export interface PracticeContext {
   _id: string
   name: string
@@ -115,7 +114,6 @@ export const practiceService = {
     return api.get<{ prompt: string; topic: string; tips: string[] }>(API_CONFIG.ENDPOINTS.PRACTICE.JOURNAL_PROMPT)
   },
 
-  // Practice Context taxonomy
   async getContexts(params?: { status?: string; include_disabled?: boolean; level?: number; parent_id?: string }): Promise<PracticeContext[]> {
     const query = new URLSearchParams()
     if (params?.status) query.append('status', params.status)
@@ -130,8 +128,8 @@ export const practiceService = {
     return api.get<PracticeContext[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_BY_LEVEL(level))
   },
 
-  async getContextTree(): Promise<any[]> {
-    return api.get<any[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_TREE)
+  async getContextTree(): Promise<PracticeContextTreeNode[]> {
+    return api.get<PracticeContextTreeNode[]>(API_CONFIG.ENDPOINTS.PRACTICE.CONTEXTS_TREE)
   },
 
   async createContext(payload: CreatePracticeContextPayload): Promise<PracticeContext> {

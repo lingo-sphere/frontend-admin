@@ -1,7 +1,8 @@
+// Hook quản lý truy vấn và thao tác dữ liệu ngữ pháp Grammar cho Quản trị viên.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { grammarAdminService } from '../services/grammar-admin.service'
-import type { IpaAdminQuery } from '../types/ipa-admin.types'
-import type { GrammarKind, GrammarQuestionPayload, GrammarTopicPayload } from '../types/grammar-admin.types'
+import { grammarAdminService } from '@/features/practice/services/grammar-admin.service'
+import type { IpaAdminQuery } from '@/features/practice/types/ipa-admin.types'
+import type { GrammarKind, GrammarQuestionPayload, GrammarTopicPayload } from '@/features/practice/types/grammar-admin.types'
 export const grammarAdminKeys = ['grammar-admin'] as const
 export function useGrammarTree() { return useQuery({ queryKey: [...grammarAdminKeys, 'tree'], queryFn: grammarAdminService.tree }) }
 export function useGrammarTopics(query: IpaAdminQuery) { return useQuery({ queryKey: [...grammarAdminKeys, 'topics', query], queryFn: () => grammarAdminService.topics(query), placeholderData: keepPreviousData }) }

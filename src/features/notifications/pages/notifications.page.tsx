@@ -8,7 +8,11 @@ import {
   RotateCcw,
   Send,
   CalendarCheck,
+  Bookmark,
+  Flame,
+  AlertCircle,
 } from 'lucide-react'
+import { StatCard } from '@/components/stat.card'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
 import { Pagination } from '@/components/pagination'
@@ -130,7 +134,13 @@ export function NotificationsPage() {
     return filteredNotifications.slice(start, start + pageSize)
   }, [filteredNotifications, currentPage, pageSize])
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length
+  const stats = useMemo(() => {
+    const total = notifications.length
+    const unread = notifications.filter((n) => !n.is_read).length
+    const pinned = notifications.filter((n) => n.is_pinned).length
+    const highPriority = notifications.filter((n) => n.priority === 'HIGH' || n.priority === 'URGENT').length
+    return { total, unread, pinned, highPriority }
+  }, [notifications])
 
   return (
     <div className="space-y-6">
@@ -139,9 +149,9 @@ export function NotificationsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Bell className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
             <span>Trung Tâm Thông Báo Hệ Thống</span>
-            {unreadCount > 0 && (
+            {stats.unread > 0 && (
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500 text-white">
-                {unreadCount} mới
+                {stats.unread} mới
               </span>
             )}
           </h1>
@@ -207,6 +217,48 @@ export function NotificationsPage() {
             </button>
           </Popconfirm>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title={isVietnamese ? 'Tổng Thông Báo' : 'Total Notifications'}
+          value={stats.total.toLocaleString()}
+          subtitle={isVietnamese ? 'Thông báo đã phát trong hệ thống' : 'Total notifications sent'}
+          icon={Bell}
+          color="indigo"
+          trend={stats.total > 0 ? `${stats.total}` : undefined}
+          trendType="neutral"
+        />
+
+        <StatCard
+          title={isVietnamese ? 'Chưa Đọc' : 'Unread'}
+          value={stats.unread.toLocaleString()}
+          subtitle={isVietnamese ? 'Chờ học viên mở xem' : 'Pending learner view'}
+          icon={AlertCircle}
+          color="rose"
+          trend={stats.unread > 0 ? `${stats.unread}` : undefined}
+          trendType={stats.unread > 0 ? 'down' : 'neutral'}
+        />
+
+        <StatCard
+          title={isVietnamese ? 'Được Ghim' : 'Pinned'}
+          value={stats.pinned.toLocaleString()}
+          subtitle={isVietnamese ? 'Thông báo ưu tiên cao nhất' : 'High priority pinned'}
+          icon={Bookmark}
+          color="amber"
+          trend={stats.pinned > 0 ? `${stats.pinned}` : undefined}
+          trendType="neutral"
+        />
+
+        <StatCard
+          title={isVietnamese ? 'Khẩn Cấp / Quan Trọng' : 'High Priority'}
+          value={stats.highPriority.toLocaleString()}
+          subtitle={isVietnamese ? 'Cảnh báo và sự kiện quan trọng' : 'Urgent alerts and updates'}
+          icon={Flame}
+          color="teal"
+          trend={stats.highPriority > 0 ? `${stats.highPriority}` : undefined}
+          trendType="neutral"
+        />
       </div>
 
       <NotificationFilterBar

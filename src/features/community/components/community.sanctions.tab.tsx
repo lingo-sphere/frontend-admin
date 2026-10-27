@@ -1,10 +1,10 @@
 // Quản lý danh sách đen, học viên bị cấm hoặc phạt tắt tiếng trong cộng đồng với phân trang DataTable.
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button, Popconfirm, Space, Tooltip } from 'antd'
 import { Ban, VolumeX, ShieldAlert, CheckCircle, Clock, UserX, Search } from 'lucide-react'
 import type { AdminCommunityMember } from '@/features/community/types/community.admin.types'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
-import { ConfirmModal } from '@/components/confirm.modal'
 import { toast } from '@/store/toast.store'
 
 interface CommunitySanctionsTabProps {
@@ -31,10 +31,6 @@ export function CommunitySanctionsTab({
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-
-  const [unbanTargetUserId, setUnbanTargetUserId] = useState<string | null>(null)
-  const [unmuteTargetUserId, setUnmuteTargetUserId] = useState<string | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
 
   const safeMembers = Array.isArray(bannedMembers) ? bannedMembers : []
 
@@ -69,28 +65,6 @@ export function CommunitySanctionsTab({
     return filteredMembers.slice(start, start + pageSize)
   }, [filteredMembers, currentPage, pageSize])
 
-  const handleConfirmUnban = async () => {
-    if (!unbanTargetUserId) return
-    setIsProcessing(true)
-    try {
-      await onUnbanMember(unbanTargetUserId)
-      setUnbanTargetUserId(null)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleConfirmUnmute = async () => {
-    if (!unmuteTargetUserId) return
-    setIsProcessing(true)
-    try {
-      await onUnmuteMember(unmuteTargetUserId)
-      setUnmuteTargetUserId(null)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
   const isMutedActive = (mutedUntil?: string) => {
     if (!mutedUntil) return false
     return new Date(mutedUntil).getTime() > Date.now()
@@ -104,6 +78,7 @@ export function CommunitySanctionsTab({
   const columns: DataTableColumn<AdminCommunityMember>[] = [
     {
       key: 'member',
+      dataIndex: 'user_name',
       title: t('community.colViolator'),
       width: '240px',
       render: (member) => (
@@ -196,32 +171,51 @@ export function CommunitySanctionsTab({
     {
       key: 'actions',
       title: t('community.colActions'),
-      align: 'right',
+      width: '100px',
+      align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         return (
-          <div className="inline-flex items-center gap-2 justify-end whitespace-nowrap">
+          <Space size={4} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             {member.is_banned && (
-              <button
-                type="button"
-                onClick={() => setUnbanTargetUserId(member.user_id)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
+              <Popconfirm
+                title={t('community.unbanConfirmTitle')}
+                description={t('community.unbanConfirmMessage')}
+                onConfirm={() => onUnbanMember(member.user_id)}
+                okText={t('community.confirmUnban')}
+                cancelText={t('common.cancel')}
+                okButtonProps={{ size: 'small' }}
+                cancelButtonProps={{ size: 'small' }}
               >
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>{t('community.unban')}</span>
-              </button>
+                <Tooltip title={t('community.unban')}>
+                  <Button
+                    size="small"
+                    className="!text-emerald-600 !border-emerald-200 hover:!border-emerald-500 hover:!text-emerald-500"
+                    icon={<CheckCircle className="w-3.5 h-3.5" />}
+                  />
+                </Tooltip>
+              </Popconfirm>
             )}
             {muted && (
-              <button
-                type="button"
-                onClick={() => setUnmuteTargetUserId(member.user_id)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
+              <Popconfirm
+                title={t('community.unmuteConfirmTitle')}
+                description={t('community.unmuteConfirmMessage')}
+                onConfirm={() => onUnmuteMember(member.user_id)}
+                okText={t('community.confirmUnmute')}
+                cancelText={t('common.cancel')}
+                okButtonProps={{ size: 'small' }}
+                cancelButtonProps={{ size: 'small' }}
               >
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>{t('community.unmute')}</span>
-              </button>
+                <Tooltip title={t('community.unmute')}>
+                  <Button
+                    size="small"
+                    className="!text-amber-600 !border-amber-200 hover:!border-amber-500 hover:!text-amber-500"
+                    icon={<CheckCircle className="w-3.5 h-3.5" />}
+                  />
+                </Tooltip>
+              </Popconfirm>
             )}
-          </div>
+          </Space>
         )
       },
     },
@@ -292,30 +286,6 @@ export function CommunitySanctionsTab({
             setCurrentPage(1)
           },
         }}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(unbanTargetUserId)}
-        onClose={() => setUnbanTargetUserId(null)}
-        onConfirm={handleConfirmUnban}
-        title={t('community.unbanConfirmTitle')}
-        message={t('community.unbanConfirmMessage')}
-        type="success"
-        confirmText={t('community.confirmUnban')}
-        cancelText={t('common.cancel')}
-        isLoading={isProcessing}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(unmuteTargetUserId)}
-        onClose={() => setUnmuteTargetUserId(null)}
-        onConfirm={handleConfirmUnmute}
-        title={t('community.unmuteConfirmTitle')}
-        message={t('community.unmuteConfirmMessage')}
-        type="success"
-        confirmText={t('community.confirmUnmute')}
-        cancelText={t('common.cancel')}
-        isLoading={isProcessing}
       />
     </div>
   )

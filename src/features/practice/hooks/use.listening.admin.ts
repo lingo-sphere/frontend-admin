@@ -1,7 +1,8 @@
+// Hook quản lý truy vấn và thao tác dữ liệu bài tập nghe Listening cho Quản trị viên.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { listeningAdminService } from '../services/listening-admin.service'
-import type { IpaAdminQuery } from '../types/ipa-admin.types'
-import type { ListeningPayload, ListeningType } from '../types/listening-admin.types'
+import { listeningAdminService } from '@/features/practice/services/listening-admin.service'
+import type { IpaAdminQuery } from '@/features/practice/types/ipa-admin.types'
+import type { ListeningPayload, ListeningType } from '@/features/practice/types/listening-admin.types'
 export const listeningAdminKeys = ['listening-admin'] as const
 export function useListeningAdmin(type: ListeningType, query: IpaAdminQuery) {
   return useQuery({ queryKey: [...listeningAdminKeys, type, query], queryFn: () => listeningAdminService.list(type, query), placeholderData: keepPreviousData })
