@@ -1,6 +1,6 @@
 // Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học chuẩn hóa DataTable.
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo } from "react";
 import {
   GraduationCap,
   ArrowLeft,
@@ -14,21 +14,21 @@ import {
   Target,
   Clock,
   X,
-} from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useAdminCourseDetailQuery } from '@/features/courses/hooks/use.courses.admin.query'
-import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
-import { DataTable, type DataTableColumn } from '@/components/data.table'
-import { StatCard } from '@/components/stat.card'
-import type { StudentProgressItem } from '@/features/progress/services/progress.service'
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAdminCourseDetailQuery } from "@/features/courses/hooks/use.courses.admin.query";
+import { useCourseStudentScores } from "@/features/courses/hooks/use.course.student.scores";
+import { DataTable, type DataTableColumn } from "@/components/data.table";
+import { StatCard } from "@/components/stat.card";
+import type { StudentProgressItem } from "@/features/progress/services/progress.service";
 
 interface CourseScoresPageProps {
-  courseId: string
+  courseId: string;
 }
 
 export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
-  const navigate = useNavigate()
-  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId)
+  const navigate = useNavigate();
+  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId);
 
   const {
     data,
@@ -38,47 +38,56 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
     setSearchTerm,
     filteredStudents,
     fetchData,
-  } = useCourseStudentScores(courseId, true)
+  } = useCourseStudentScores(courseId, true);
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const totalStudents = data?.total_students || 0
-  const avgProgress = data?.average_progress_percentage || 0
-  const completedStudents = data?.completed_students || 0
-  const studentsList = filteredStudents || []
+  const totalStudents = data?.total_students || 0;
+  const avgProgress = data?.average_progress_percentage || 0;
+  const completedStudents = data?.completed_students || 0;
+  const studentsList = filteredStudents || [];
 
-  const courseTitle = courseInfo?.title || 'Khóa học'
+  const courseTitle = courseInfo?.title || "Khóa học";
 
   const paginatedStudents = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return studentsList.slice(start, start + pageSize)
-  }, [studentsList, currentPage, pageSize])
+    const start = (currentPage - 1) * pageSize;
+    return studentsList.slice(start, start + pageSize);
+  }, [studentsList, currentPage, pageSize]);
 
   const columns: DataTableColumn<StudentProgressItem>[] = useMemo(
     () => [
       {
-        key: 'learner',
-        dataIndex: 'full_name',
-        title: 'Học viên',
-        align: 'left',
+        key: "learner",
+        dataIndex: "full_name",
+        title: "Học viên",
+        align: "left",
         render: (student) => {
-          const userProfile = usersMap.get(student.user_id)
-          const displayName: string = String(userProfile?.full_name || student.full_name || '')
-          const displayEmail: string = String(userProfile?.email || student.email || '')
-          const avatarUrl: string | undefined = userProfile?.avatar_url || student.avatar_url
+          const userProfile = usersMap.get(student.user_id);
+          const displayName: string = String(
+            userProfile?.full_name || student.full_name || ""
+          );
+          const displayEmail: string = String(
+            userProfile?.email || student.email || ""
+          );
+          const avatarUrl: string | undefined =
+            userProfile?.avatar_url || student.avatar_url;
           const initials = displayName
-            .split(' ')
+            .split(" ")
             .map((n: string) => n[0])
             .slice(-2)
-            .join('')
-            .toUpperCase()
+            .join("")
+            .toUpperCase();
 
           return (
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span>{initials}</span>
                 )}
@@ -92,14 +101,14 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                 </div>
               </div>
             </div>
-          )
+          );
         },
       },
       {
-        key: 'progress',
-        dataIndex: 'progress_percentage',
-        title: 'Tiến độ bài học',
-        align: 'left',
+        key: "progress",
+        dataIndex: "progress_percentage",
+        title: "Tiến độ bài học",
+        align: "left",
         render: (student) => (
           <div className="space-y-1.5 min-w-[140px]">
             <div className="flex items-center justify-between text-[11px] font-bold">
@@ -114,7 +123,10 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
               <div
                 className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
                 style={{
-                  width: `${Math.min(100, Math.max(0, student.progress_percentage))}%`,
+                  width: `${Math.min(
+                    100,
+                    Math.max(0, student.progress_percentage)
+                  )}%`,
                 }}
               />
             </div>
@@ -122,21 +134,26 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         ),
       },
       {
-        key: 'modules',
-        title: 'Bài kiểm tra các chương',
-        align: 'left',
+        key: "modules",
+        title: "Bài kiểm tra các chương",
+        align: "left",
         render: (student) => {
-          const modules = student.modules_progress || []
+          const modules = student.modules_progress || [];
           if (modules.length === 0) {
-            return <span className="text-[11px] text-slate-400 italic">Chưa thực hiện kiểm tra</span>
+            return (
+              <span className="text-[11px] text-slate-400 italic">
+                Chưa thực hiện kiểm tra
+              </span>
+            );
           }
 
           return (
             <div className="flex flex-wrap gap-1.5 max-w-[320px]">
               {modules.map((m, mIdx) => {
-                const chNum = m.order_index || mIdx + 1
-                const hasChallenge = (m.challenge_score || 0) > 0 || m.is_passed_by_challenge
-                const hasPostMini = (m.post_mini_score || 0) > 0
+                const chNum = m.order_index || mIdx + 1;
+                const hasChallenge =
+                  (m.challenge_score || 0) > 0 || m.is_passed_by_challenge;
+                const hasPostMini = (m.post_mini_score || 0) > 0;
 
                 return (
                   <div
@@ -151,10 +168,12 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                       <span
                         className={`inline-flex items-center gap-0.5 font-bold px-1 rounded ${
                           m.is_passed_by_challenge
-                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
-                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                            ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300"
+                            : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                         }`}
-                        title={`Thử thách đầu chương: ${m.challenge_score || 0}%`}
+                        title={`Thử thách đầu chương: ${
+                          m.challenge_score || 0
+                        }%`}
                       >
                         <Target className="w-2.5 h-2.5" />
                         <span>{m.challenge_score || 0}%</span>
@@ -165,8 +184,8 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                       <span
                         className={`inline-flex items-center gap-0.5 font-bold px-1 rounded ${
                           (m.post_mini_score || 0) >= 70
-                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
+                            ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
+                            : "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
                         }`}
                         title={`Kiểm tra cuối chương: ${m.post_mini_score}%`}
                       >
@@ -174,22 +193,25 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                         <span>{m.post_mini_score}%</span>
                       </span>
                     ) : !hasChallenge ? (
-                      <span className="text-slate-400 text-[10px]">Chưa thi</span>
+                      <span className="text-slate-400 text-[10px]">
+                        Chưa thi
+                      </span>
                     ) : null}
                   </div>
-                )
+                );
               })}
             </div>
-          )
+          );
         },
       },
       {
-        key: 'final_score',
-        dataIndex: 'final_test_score',
-        title: 'Điểm tốt nghiệp',
-        align: 'center',
+        key: "final_score",
+        dataIndex: "final_test_score",
+        title: "Điểm tốt nghiệp",
+        align: "center",
         render: (student) =>
-          typeof student.final_test_score === 'number' && student.final_test_score > 0 ? (
+          typeof student.final_test_score === "number" &&
+          student.final_test_score > 0 ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px] border border-emerald-200 dark:border-emerald-800 shadow-2xs font-mono">
               <Award className="w-3.5 h-3.5 text-emerald-500" />
               <span>{student.final_test_score}%</span>
@@ -199,11 +221,12 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           ),
       },
       {
-        key: 'status',
-        title: 'Trạng thái',
-        align: 'center',
+        key: "status",
+        title: "Trạng thái",
+        align: "center",
         render: (student) =>
-          student.progress_percentage >= 100 || student.status === 'COMPLETED' ? (
+          student.progress_percentage >= 100 ||
+          student.status === "COMPLETED" ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
               <span>Hoàn thành</span>
@@ -217,7 +240,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
       },
     ],
     [usersMap]
-  )
+  );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -225,7 +248,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/courses')}
+            onClick={() => navigate("/courses")}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -246,7 +269,10 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                Khóa học: <span className="font-semibold text-slate-700 dark:text-slate-300">{courseTitle}</span>
+                Khóa học:{" "}
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {courseTitle}
+                </span>
               </p>
             </div>
           </div>
@@ -269,7 +295,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Làm mới dữ liệu"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${
+                isLoading ? "animate-spin text-indigo-500" : ""
+              }`}
+            />
           </button>
         </div>
       </div>
@@ -277,7 +307,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Tổng Học Viên"
-          value={totalStudents.toLocaleString('vi-VN')}
+          value={totalStudents.toLocaleString("vi-VN")}
           subtitle="Học viên ghi danh khóa học"
           icon={Users}
           color="indigo"
@@ -293,28 +323,36 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           icon={TrendingUp}
           color="emerald"
           trend={`${avgProgress}%`}
-          trendType={avgProgress >= 50 ? 'up' : 'neutral'}
+          trendType={avgProgress >= 50 ? "up" : "neutral"}
           loading={isLoading}
         />
 
         <StatCard
           title="Đã Tốt Nghiệp"
-          value={completedStudents.toLocaleString('vi-VN')}
+          value={completedStudents.toLocaleString("vi-VN")}
           subtitle="Đã hoàn thành toàn bộ khóa"
           icon={CheckCircle2}
           color="teal"
-          trend={totalStudents > 0 ? `${Math.round((completedStudents / totalStudents) * 100)}%` : undefined}
+          trend={
+            totalStudents > 0
+              ? `${Math.round((completedStudents / totalStudents) * 100)}%`
+              : undefined
+          }
           trendType="up"
           loading={isLoading}
         />
 
         <StatCard
           title="Mục Tiêu Đầu Ra"
-          value={courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'}
+          value={
+            courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : "-"
+          }
           subtitle="Dải điểm cam kết khóa học"
           icon={Award}
           color="purple"
-          trend={courseInfo?.target_score ? `${courseInfo.target_score}+` : undefined}
+          trend={
+            courseInfo?.target_score ? `${courseInfo.target_score}+` : undefined
+          }
           trendType="neutral"
           loading={isLoading}
         />
@@ -326,8 +364,8 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         rowKey={(s) => s.user_id}
         isLoading={isLoading}
         onResetFilters={() => {
-          setSearchTerm('')
-          setCurrentPage(1)
+          setSearchTerm("");
+          setCurrentPage(1);
         }}
         filterSlot={
           <div className="flex items-center gap-2 w-full sm:w-80 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
@@ -336,8 +374,8 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
               type="text"
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value)
-                setCurrentPage(1)
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
               }}
               placeholder="Tìm theo tên học viên, email hoặc ID..."
               className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
@@ -346,8 +384,8 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
               <button
                 type="button"
                 onClick={() => {
-                  setSearchTerm('')
-                  setCurrentPage(1)
+                  setSearchTerm("");
+                  setCurrentPage(1);
                 }}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
@@ -362,11 +400,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           totalItems: studentsList.length,
           onPageChange: setCurrentPage,
           onPageSizeChange: (limit) => {
-            setPageSize(limit)
-            setCurrentPage(1)
+            setPageSize(limit);
+            setCurrentPage(1);
           },
         }}
       />
     </div>
-  )
+  );
 }

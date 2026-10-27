@@ -82,14 +82,13 @@ export function AnalyticsKpiCards({ analyticsSummary }: AnalyticsKpiCardsProps) 
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-black text-violet-600 dark:text-violet-400">
-            +{analyticsSummary.avgGrowth}
+            {analyticsSummary.growthSampleCount ? `${analyticsSummary.avgGrowth >= 0 ? '+' : ''}${analyticsSummary.avgGrowth}` : '—'}
           </span>
-          <span className="text-xs text-slate-400">điểm sau khóa</span>
+          <span className="text-xs text-slate-400">điểm nội bộ /100</span>
         </div>
         <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-          <span>Đầu vào: <strong>{analyticsSummary.avgBaseline}</strong></span>
-          <span>➔</span>
-          <span>Kết khóa: <strong>{analyticsSummary.avgFinalScore}</strong></span>
+          <span>{analyticsSummary.growthSampleCount} học viên có hai mốc tương đương</span>
+
         </div>
       </div>
     </div>

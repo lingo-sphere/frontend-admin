@@ -14,6 +14,10 @@ export function navItemToPath(navItem: string): string {
     return `/admins/${id}/edit`
   }
   if (navItem === 'courses' || navItem === 'courses-list') return '/courses'
+  if (navItem === 'course-submissions') return '/submissions/courses'
+  if (navItem === 'practice-speaking-submissions') return '/submissions/practice/speaking'
+  if (navItem === 'practice-writing-submissions') return '/submissions/practice/writing'
+  if (navItem === 'submissions') return '/submissions'
   if (navItem === 'course-learners') return '/course-learners'
   if (navItem.startsWith('learner-progress:')) {
     const parts = navItem.split(':')
@@ -40,7 +44,7 @@ export function navItemToPath(navItem: string): string {
   }
   if (navItem.startsWith('course-submissions:')) {
     const id = navItem.split(':')[1]
-    return `/courses/${id}/submissions`
+    return `/submissions?courseId=${encodeURIComponent(id)}`
   }
   if (navItem.startsWith('course-edit:') || navItem.startsWith('course-form:')) {
     const id = navItem.split(':')[1]
@@ -107,6 +111,10 @@ export function pathToNavItem(pathname: string): string {
     const id = cleanPath.replace('/admins/', '').replace('/edit', '')
     return `admin-user-edit:${id}`
   }
+  if (cleanPath === '/submissions/courses') return 'course-submissions'
+  if (cleanPath === '/submissions/practice/speaking') return 'practice-speaking-submissions'
+  if (cleanPath === '/submissions/practice/writing') return 'practice-writing-submissions'
+  if (cleanPath === '/submissions') return 'submissions'
   if (cleanPath === '/courses') return 'courses-list'
   if (cleanPath === '/courses/list') return 'courses-list'
   if (cleanPath === '/courses/learners' || cleanPath === '/course-learners') return 'course-learners'
@@ -176,6 +184,7 @@ export function pathToNavItem(pathname: string): string {
   if (cleanPath === '/practice/placement-tests' || cleanPath === '/placement-tests') return 'placement-tests'
   if (cleanPath === '/community') return 'community'
   if (cleanPath === '/public-decks') return 'public-decks'
+  if (cleanPath === '/measurement-profiles') return 'measurement-profiles'
   if (cleanPath === '/progress') return 'progress'
   if (cleanPath === '/analytics/posthog' || cleanPath === '/posthog') return 'analytics-posthog'
   if (cleanPath === '/monitoring/betterstack' || cleanPath === '/monitoring-betterstack' || cleanPath === '/betterstack') return 'monitoring-betterstack'
@@ -195,14 +204,14 @@ export function pathToNavItem(pathname: string): string {
 }
 
 export function getEffectiveNavId(navItem: string): string {
+  if (navItem === 'submissions' || navItem.startsWith('course-submissions:')) return 'course-submissions'
   if (
     navItem === 'courses' ||
     navItem === 'courses-list' ||
     navItem === 'course-create' ||
     navItem.startsWith('course-edit:') ||
     navItem.startsWith('course-form:') ||
-    navItem.startsWith('course-scores:') ||
-    navItem.startsWith('course-submissions:')
+    navItem.startsWith('course-scores:')
   ) {
     return 'courses-list'
   }

@@ -183,6 +183,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
               m.audio_url ||
               '') as string,
             audio_url: (m.audio_url || m.test_audio_url || m.challenge_audio_url || '') as string,
+            assessment_config: m.assessment_config || undefined,
             speaking_prompt: (m.speaking_prompt || '') as string,
             speaking_file_url: (m.speaking_file_url || '') as string,
             writing_prompt: (m.writing_prompt || '') as string,
@@ -254,6 +255,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
           final_test_questions: (course.final_test_questions ||
             []) as CourseFormData['final_test_questions'],
           final_test_audio_url: (course.final_test_audio_url || '') as string,
+          assessment_config: course.assessment_config || undefined,
           final_test_speaking_prompt: (course.final_test_speaking_prompt || '') as string,
           final_test_speaking_file_url: (course.final_test_speaking_file_url || '') as string,
           final_test_writing_prompt: (course.final_test_writing_prompt || '') as string,
@@ -360,6 +362,9 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         final_test_passing_score: Number(finalCourseInfo.final_test_passing_score ?? formData.final_test_passing_score) || 70,
         final_test_questions: finalCourseInfo.final_test_questions || formData.final_test_questions || [],
         final_test_audio_url: finalCourseInfo.final_test_audio_url || formData.final_test_audio_url || '',
+        assessment_config: finalCourseInfo.assessment_config || formData.assessment_config
+          ? { ...(finalCourseInfo.assessment_config || formData.assessment_config) }
+          : undefined,
         final_test_speaking_prompt: finalCourseInfo.final_test_speaking_prompt || formData.final_test_speaking_prompt || '',
         final_test_speaking_file_url: finalCourseInfo.final_test_speaking_file_url || formData.final_test_speaking_file_url || '',
         final_test_writing_prompt: finalCourseInfo.final_test_writing_prompt || formData.final_test_writing_prompt || '',
@@ -401,6 +406,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
             Number(m.passing_score) || Number(m.post_mini_passing_score) || 70,
           post_mini_questions: m.test_questions || m.post_mini_questions || [],
           audio_url: m.audio_url || m.test_audio_url || m.challenge_audio_url || '',
+          assessment_config: m.assessment_config ? { ...m.assessment_config } : undefined,
           speaking_prompt: m.speaking_prompt || '',
           speaking_file_url: m.speaking_file_url || '',
           writing_prompt: m.writing_prompt || '',

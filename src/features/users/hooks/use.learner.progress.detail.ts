@@ -74,7 +74,8 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
           baseline_score: cp.baseline_score ?? initialCachedStudent?.baseline_score,
           baseline_source: cp.baseline_source ?? initialCachedStudent?.baseline_source,
           final_test_score: cp.final_test_score ?? initialCachedStudent?.final_test_score,
-          total_score_growth: cp.total_score_growth ?? initialCachedStudent?.total_score_growth,
+          total_score_growth: cp.measurement_summary?.internal_delta ?? null,
+          measurement_summary: cp.measurement_summary,
           modules_progress: detailRes.modules_progress || initialCachedStudent?.modules_progress || [],
           status: cp.status ?? initialCachedStudent?.status,
         }
