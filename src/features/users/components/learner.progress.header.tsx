@@ -19,7 +19,7 @@ interface LearnerProgressHeaderProps {
   totalLessons: number
   baselineScore?: number
   finalTestScore?: number
-  growth: number
+  growth: number | null
   isLoading: boolean
   onBack: () => void
   onRefresh: () => void
@@ -108,11 +108,11 @@ export function LearnerProgressHeader({
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Đầu vào (Pre-test)</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Mốc theo dõi đầu tiên</div>
             <div className="text-lg font-black text-slate-900 dark:text-slate-100">
               {baselineScore !== undefined ? `${baselineScore}đ` : 'Chưa test'}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Thang điểm TOEIC</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Điểm nội bộ 0–100</div>
           </div>
         </div>
 
@@ -135,8 +135,8 @@ export function LearnerProgressHeader({
           </div>
           <div>
             <div className="text-xs text-slate-500 dark:text-slate-400">Tăng trưởng điểm số</div>
-            <div className={`text-lg font-black ${growth > 0 ? 'text-emerald-600' : growth < 0 ? 'text-rose-500' : 'text-slate-500'}`}>
-              {growth > 0 ? `+${growth}` : growth} điểm
+            <div className={`text-lg font-black ${(growth ?? 0) > 0 ? 'text-emerald-600' : (growth ?? 0) < 0 ? 'text-rose-500' : 'text-slate-500'}`}>
+              {growth === null ? 'Chưa đủ căn cứ' : `${growth > 0 ? '+' : ''}${growth} điểm nội bộ`}
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">So với điểm xuất phát</div>
           </div>

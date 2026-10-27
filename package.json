@@ -10,6 +10,7 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
+        "test:practice-appeals": "node --test tests/practice-appeals.test.cjs",
         "preview": "vite preview"
     },
     "dependencies": {

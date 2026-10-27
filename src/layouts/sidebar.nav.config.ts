@@ -13,6 +13,7 @@ import {
   Settings2,
   Shield,
   KeyRound,
+  FileCheck2,
 } from 'lucide-react'
 
 export interface NavSubItem {
@@ -77,6 +78,14 @@ export const navGroups: NavGroup[] = [
           { id: 'course-exams', label: 'Quản lý bài thi' },
         ],
       },
+      {
+        id: 'submissions', icon: FileCheck2, label: 'Chấm điểm & Phúc khảo',
+        children: [
+          { id: 'practice-speaking-submissions', label: 'Bài luyện Speaking' },
+          { id: 'practice-writing-submissions', label: 'Bài luyện Writing' },
+          { id: 'course-submissions', label: 'Bài kiểm tra khóa học' },
+        ],
+      },
       { id: 'vocabulary', icon: BookOpen, label: 'Từ vựng' },
       {
         id: 'practice',
@@ -113,6 +122,7 @@ export const navGroups: NavGroup[] = [
         label: 'Thống kê dữ liệu',
         children: [
           { id: 'progress', label: 'Phân tích học tập' },
+          { id: 'measurement-profiles', label: 'Hiệu chuẩn đánh giá' },
           { id: 'analytics-posthog', label: 'Phân tích Web' },
           { id: 'monitoring-betterstack', label: 'Giám sát hệ thống' },
         ],

@@ -61,7 +61,8 @@ export const progressService = {
       baseline_score?: number
       baseline_source?: string
       final_test_score?: number
-      total_score_growth?: number
+      measurement_summary?: { internal_delta: number | null; comparable: boolean; baseline_internal: number | null; latest_internal: number | null }
+      total_score_growth?: number | null
       status?: string
     } | null
     modules_progress: StudentModuleProgress[]

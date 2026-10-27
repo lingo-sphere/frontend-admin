@@ -1,3 +1,4 @@
+import { CourseAssessmentConfigFields } from './course.assessment.config.fields'
 /**
  * @file chapter.speaking.writing.card.tsx
  * @description Component quản lý đề thi và tài liệu đính kèm cho kỹ năng Nói & Viết trong bài test chương
@@ -61,6 +62,7 @@ export function ChapterSpeakingWritingCard({
         </span>
       </div>
 
+      <CourseAssessmentConfigFields value={module.assessment_config} onChange={assessment_config => onUpdateModule({ assessment_config })} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="rounded-xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-3 space-y-2.5 shadow-2xs">
           <div className="flex items-center justify-between">

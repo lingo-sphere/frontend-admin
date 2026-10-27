@@ -1,14 +1,11 @@
-// Trang quản trị tiến độ học tập, bài nộp kỹ năng và thống kê học viên theo khóa học
+// Trang quản trị tiến độ học tập và thống kê học viên theo khóa học.
 import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   GraduationCap,
-  FileCheck2,
   TrendingUp,
 } from 'lucide-react'
 import { CourseAnalyticsTab } from '@/features/courses/components/course.analytics.tab'
-import { LearnerSubmissionsTab } from '@/features/courses/components/learner.submissions.tab'
-import { LearnerSubmissionReviewModal } from '@/features/courses/components/learner.submission.review.modal'
 import { CourseLearnersStatsBar } from '@/features/courses/components/course.learners.stats.bar'
 import { CourseProgressTableTab } from '@/features/courses/components/course.progress.table.tab'
 import { createCourseProgressColumns } from '@/features/courses/components/course.progress.columns'
@@ -16,7 +13,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   useCourseLearnersData,
 } from '@/features/courses/hooks/use.course.learners.data'
-import type { StudentProgressItem, SkillSubmissionItem } from '@/features/progress/services/progress.service'
+import type { StudentProgressItem } from '@/features/progress/services/progress.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 
@@ -33,21 +30,17 @@ export function CourseLearnersPage() {
     allStudentsProgress,
     usersMap,
     isLoadingProgress,
-    submissions,
-    isLoadingSubmissions,
     fetchProgress,
-    fetchSubmissions,
     stats,
   } = useCourseLearnersData()
 
-  const [activeTab, setActiveTab] = useState<'PROGRESS' | 'SUBMISSIONS' | 'ANALYTICS'>('PROGRESS')
+  const [activeTab, setActiveTab] = useState<'PROGRESS' | 'ANALYTICS'>('PROGRESS')
   const [progressSearch, setProgressSearch] = useState<string>('')
   const [progressStatusFilter, setProgressStatusFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'STARTED'>('ALL')
   const [progressCurrentPage, setProgressCurrentPage] = useState<number>(1)
   const [progressPageSize, setProgressPageSize] = useState<number>(10)
   const [progressSortKey, setProgressSortKey] = useState<string | null>(null)
   const [progressSortOrder, setProgressSortOrder] = useState<'asc' | 'desc' | null>(null)
-  const [selectedReviewSub, setSelectedReviewSub] = useState<SkillSubmissionItem | null>(null)
 
 
   const filteredStudents = useMemo(() => {
@@ -105,8 +98,8 @@ export function CourseLearnersPage() {
         return progressSortOrder === 'asc' ? diff : -diff
       }
       if (progressSortKey === 'growth') {
-        const growthA = a.total_score_growth ?? ((a.final_test_score || 0) - (a.baseline_score || 0))
-        const growthB = b.total_score_growth ?? ((b.final_test_score || 0) - (b.baseline_score || 0))
+        const growthA = a.measurement_summary?.internal_delta ?? -Infinity
+        const growthB = b.measurement_summary?.internal_delta ?? -Infinity
         const diff = growthA - growthB
         return progressSortOrder === 'asc' ? diff : -diff
       }
@@ -170,8 +163,6 @@ export function CourseLearnersPage() {
         isVi={isVi}
         totalStudents={stats.totalStudents}
         avgProgress={stats.avgProgress}
-        totalSubmissions={stats.totalSubmissions}
-        pendingReviews={stats.pendingReviews}
       />
 
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
@@ -187,22 +178,6 @@ export function CourseLearnersPage() {
           >
             <GraduationCap className="w-4 h-4" />
             <span>{isVi ? 'Bảng Điểm & Tiến Độ Học Tập' : 'Learner Progress Table'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('SUBMISSIONS')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-              activeTab === 'SUBMISSIONS'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <FileCheck2 className="w-4 h-4" />
-            <span>{isVi ? 'Chấm Điểm & Phúc Khảo Bài Nộp' : 'Speaking & Writing Submissions'}</span>
-            {stats.pendingReviews > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 absolute top-1.5 right-1.5 animate-pulse" />
-            )}
           </button>
 
           <button
@@ -246,21 +221,6 @@ export function CourseLearnersPage() {
         />
       )}
 
-      {activeTab === 'SUBMISSIONS' && (
-        <LearnerSubmissionsTab
-          submissions={submissions}
-          isLoading={isLoadingSubmissions}
-          courses={courses}
-          selectedCourseId={selectedCourseId}
-          onSelectCourseId={setSelectedCourseId}
-          onRefresh={fetchSubmissions}
-          onOpenReview={(sub: SkillSubmissionItem) => setSelectedReviewSub(sub)}
-          pendingReviewsCount={stats.pendingReviews}
-          isVi={isVi}
-          isTeacher={isTeacher}
-        />
-      )}
-
       {activeTab === 'ANALYTICS' && (
         <CourseAnalyticsTab
           allStudentsProgress={allStudentsProgress}
@@ -272,13 +232,6 @@ export function CourseLearnersPage() {
         />
       )}
 
-      {selectedReviewSub && (
-        <LearnerSubmissionReviewModal
-          submission={selectedReviewSub}
-          onClose={() => setSelectedReviewSub(null)}
-          onSuccess={fetchSubmissions}
-        />
-      )}
     </div>
   )
 }

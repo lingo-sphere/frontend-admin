@@ -1,9 +1,9 @@
 // Thanh điều hướng thanh bên Admin hỗ trợ thu gọn và phân quyền truy cập.
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useLocation, useNavigate, Link } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import { PanelLeftClose, Shield } from 'lucide-react'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
-import { pathToNavItem, navItemToPath, getEffectiveNavId } from '@/routes/navigation'
+import { pathToNavItem, getEffectiveNavId } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { navGroups, type NavGroup, type NavItem } from '@/layouts/sidebar.nav.config'
@@ -17,7 +17,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const location = useLocation()
-  const navigate = useNavigate()
   const activeNavItem = getEffectiveNavId(pathToNavItem(location.pathname))
   const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useAdminLayout()
   const user = useAuthStore((state) => state.user)
@@ -98,6 +97,11 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         case 'course-learners':
         case 'course-exams':
           return hasPermission('GET', '/courses') || hasModulePermission('COURSES')
+        case 'practice-speaking-submissions':
+        case 'practice-writing-submissions':
+        case 'course-submissions':
+        case 'submissions':
+          return currentRole === 'INSTRUCTOR' || hasPermission('GET', '/progress/teacher/courses/:courseId/submissions')
         case 'vocabulary':
         case 'public-decks':
           return hasModulePermission('VOCABULARY')
@@ -125,6 +129,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return hasModulePermission('PROGRESS')
         case 'notifications':
           return hasModulePermission('NOTIFICATIONS')
+        case 'measurement-profiles':
         case 'settings':
         case 'settings-plans':
         case 'settings-ai':
@@ -134,7 +139,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return true
       }
     },
-    [isAdmin, hasPermission, hasModulePermission]
+    [isAdmin, currentRole, hasPermission, hasModulePermission]
   )
 
   const visibleNavGroups = useMemo(() => {

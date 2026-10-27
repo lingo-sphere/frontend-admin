@@ -149,7 +149,7 @@ export function CoursesPage() {
       canDelete: can('DELETE', '/courses/:id'),
       onEdit: handleEditCourse,
       onDelete: handleDeleteCourse,
-      onViewSubmissions: (course) => navigate(`/courses/${course.id}/submissions`),
+      onViewSubmissions: (course) => navigate(`/submissions?courseId=${encodeURIComponent(course.id)}`),
       onViewStudentScores: (course) => navigate(`/courses/${course.id}/scores`),
     })
   }, [isVi, can, navigate])
@@ -179,7 +179,7 @@ export function CoursesPage() {
             canDelete={can('DELETE', '/courses/:id')}
             onEdit={handleEditCourse}
             onDelete={handleDeleteCourse}
-            onViewSubmissions={(c) => navigate(`/courses/${c.id}/submissions`)}
+            onViewSubmissions={(c) => navigate(`/submissions?courseId=${encodeURIComponent(c.id)}`)}
             onViewScores={(c) => navigate(`/courses/${c.id}/scores`)}
           />
         )}

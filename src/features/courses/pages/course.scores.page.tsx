@@ -77,7 +77,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
-            onClick={() => navigate(`/courses/${courseId}/submissions`)}
+            onClick={() => navigate(`/submissions?courseId=${encodeURIComponent(courseId)}`)}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
           >
             <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />

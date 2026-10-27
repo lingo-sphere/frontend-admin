@@ -125,9 +125,9 @@ export function createCourseProgressColumns({
       sortable: true,
       width: '75px',
       render: (st) =>
-        st.baseline_score !== undefined ? (
+        typeof st.measurement_summary?.baseline_internal === 'number' ? (
           <span className="inline-block px-2 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 whitespace-nowrap">
-            {st.baseline_score}
+            {st.measurement_summary?.baseline_internal}/100
           </span>
         ) : (
           <span className="text-slate-400 text-xs">-</span>
@@ -191,7 +191,8 @@ export function createCourseProgressColumns({
       sortable: true,
       width: '80px',
       render: (st) => {
-        const growth = st.total_score_growth ?? ((st.final_test_score || 0) - (st.baseline_score || 0))
+        const growth = st.measurement_summary?.internal_delta
+        if (typeof growth !== 'number') return <span className="text-xs text-slate-400">Chưa đủ căn cứ</span>
         return growth > 0 ? (
           <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
             <TrendingUp className="w-3 h-3" />+{growth}
