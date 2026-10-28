@@ -19,9 +19,13 @@ import {
   SkillSubmissionItemSchema,
   BetterStackMonitoringDataSchema,
   PostHogAnalyticsDataSchema,
+  CourseTestSessionSchema,
+  CourseTestSessionListSchema,
+  type CourseTestSession,
 } from '@/features/progress/schemas/progress.schema'
 
 export type {
+  CourseTestSession,
   StudentModuleProgress,
   StudentProgressItem,
   CourseStudentsProgressResponse,
@@ -33,6 +37,13 @@ export type {
 }
 
 export const progressService = {
+  getCourseTestSessions(courseId: string): Promise<CourseTestSession[]> {
+    return api.get(`/progress/teacher/courses/${courseId}/test-sessions`, undefined, CourseTestSessionListSchema)
+  },
+
+  getCourseTestSession(courseId: string, sessionId: string): Promise<CourseTestSession> {
+    return api.get(`/progress/teacher/courses/${courseId}/test-sessions/${sessionId}`, undefined, CourseTestSessionSchema)
+  },
   async getCourseStudentsProgress(courseId: string): Promise<CourseStudentsProgressResponse> {
     return api.get<CourseStudentsProgressResponse>(
       API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId),

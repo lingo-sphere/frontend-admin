@@ -48,7 +48,7 @@ export function LearnerSubmissionCard({
             </div>
             <div>
               <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {sub.user_name}
+                {sub.user_name || sub.user_email || sub.user_id}
               </h4>
               <p className="text-xs text-slate-400">{sub.user_email}</p>
             </div>
@@ -139,7 +139,7 @@ export function LearnerSubmissionCard({
                 {isVi ? "Điểm AI:" : "AI Score:"}
               </span>
               <span className="text-sm font-black text-indigo-700 dark:text-indigo-300">
-                {sub.ai_score}/100
+                {sub.ai_score == null ? (isVi ? "Chưa có điểm" : "Not graded") : `${sub.ai_score}/100`}
               </span>
             </div>
           </div>

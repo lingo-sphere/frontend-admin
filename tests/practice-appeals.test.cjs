@@ -3,7 +3,7 @@ const adminUrl = process.env.PRACTICE_REVIEW_ADMIN_URL;
 const assert = require('node:assert/strict');
 const { test, before, after } = require('node:test');
 let browser;
-before(async () => { if (!webUrl || !adminUrl) return; const { chromium } = require(process.env.PRACTICE_REVIEW_PLAYWRIGHT_MODULE || 'playwright'); browser = await chromium.launch({ headless: true, executablePath: process.env.PRACTICE_REVIEW_BROWSER_EXECUTABLE }); });
+before(async () => { if (!adminUrl) return; const { chromium } = require(process.env.PRACTICE_REVIEW_PLAYWRIGHT_MODULE || 'playwright'); browser = await chromium.launch({ headless: true, executablePath: process.env.PRACTICE_REVIEW_BROWSER_EXECUTABLE }); });
 after(async () => { await browser?.close(); });
 const exerciseId = '111111111111111111111111';
 const ids = { SPEAKING: '222222222222222222222222', WRITING: '333333333333333333333333' };
@@ -13,7 +13,7 @@ async function fixture(skill) {
   const id = ids[skill];
   const exercise = { _id: exerciseId, id: exerciseId, title: 'Practice feedback fixture', title_vi: 'Bài luyện thử', exercise_type: skill === 'WRITING' ? 'EXPRESS_OPINION' : 'OPINION_RESPONSE', prompt_text: 'Explain your opinion about teamwork.', prompt_text_en: 'Explain your opinion about teamwork.', grading_standard: 'PRACTICAL', status: 'PUBLISHED', min_words: 0, max_words: 500, cefr_level: 'B1' };
   const state = { review: null, revision: 0, score: 80, requests: 0, decisions: 0 };
-  const row = () => ({ _id: id, id, user_id: 'learner', user_name: 'Practice Learner', exercise_id: exerciseId, exercise_type: exercise.exercise_type,
+  const row = () => ({ _id: id, id, user_id: 'learner', user_name: 'Practice Learner', user_email: 'learner@example.test', exercise_id: exerciseId, exercise_type: exercise.exercise_type,
     title: exercise.title, exercise, task_snapshot: { ...exercise, task_prompt: exercise.prompt_text }, content: 'Teamwork helps people share ideas.',
     transcription: 'Teamwork helps people share ideas.', audio_url: 'data:audio/webm;base64,' + Buffer.alloc(500).toString('base64'),
     overall_score: state.score, ai_score: 80, raw_score: state.score, max_score: 100, original_ai_raw_score: 80,
@@ -109,5 +109,29 @@ for (const skill of ['SPEAKING', 'WRITING']) test(`${skill}: learner appeal surv
     if (skill === 'WRITING') assert.equal((await page.getByLabel('Điểm bài viết', { exact: true }).textContent()).trim(), '0/100');
     else assert.match(await page.getByRole('main').textContent(), /0\s*\/100/);
     assert.equal(f.state.requests, 1); assert.equal(f.state.decisions, 1); assert.deepEqual(errors, []);
+  } finally { await f.close(); }
+});
+
+for (const skill of ['SPEAKING', 'WRITING']) test(`${skill}: shared admin table preserves reviewing and saving an actual zero score`, { timeout: 90000, skip: !adminUrl }, async () => {
+  const f = await fixture(skill);
+  try {
+    const context = await f.context(true), page = await context.newPage();
+    const errors = []; page.on('pageerror', error => errors.push(error.message));
+    await page.goto(`${adminUrl}/submissions/practice/${skill.toLowerCase()}`);
+    await page.getByRole('button', { name: 'Xem & chấm bài', exact: true }).waitFor();
+    await page.getByRole('cell', { name: 'learner@example.test', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Xem & chấm bài', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('combobox', { name: 'Quyết định phúc khảo' }).selectOption('ADJUST');
+    await dialog.getByRole('spinbutton', { name: 'Điểm sau phúc khảo' }).fill('0');
+    await dialog.getByRole('textbox', { name: 'Nhận xét phúc khảo' }).fill('Bài trả lời chưa đúng trọng tâm yêu cầu của đề.');
+    await dialog.getByRole('button', { name: 'Lưu quyết định', exact: true }).click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByRole('cell', { name: '0/100', exact: true }).waitFor();
+    await page.reload();
+    await page.getByRole('cell', { name: '0/100', exact: true }).waitFor();
+    assert.equal(f.state.decisions, 1);
+    assert.equal(f.state.score, 0);
+    assert.deepEqual(errors, []);
   } finally { await f.close(); }
 });
