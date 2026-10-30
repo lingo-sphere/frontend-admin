@@ -137,7 +137,7 @@ function WritingTable({ type }: { type: WritingType }) {
     { key: 'grading_standard', label: isVi ? 'Chuẩn chấm' : 'Grading standard', width: 95, filterKind: 'enum', filterOptions: [{ value: 'PRACTICAL', label: isVi ? 'Giao tiếp thực tế' : 'Practical' }, { value: 'TOEIC', label: 'TOEIC' }], render: value => value === 'TOEIC' ? <Tag color="blue">TOEIC</Tag> : <Tag>{isVi ? 'Thực tế' : 'Practical'}</Tag> },
     { key: 'title_vi', label: isVi ? 'Tiêu đề tiếng Việt' : 'Vietnamese Title', width: 160, filterKind: 'text', initiallyHidden: true },
     { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 120, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
-    { key: 'prompt_image_id', label: isVi ? 'Ảnh đề' : 'Prompt Image', width: 85, filterKind: 'media', initiallyHidden: type !== 'DESCRIBE_PICTURE', render: value => value ? <SpeakingMediaPreview value={value} kind="image" /> : (isVi ? 'Chưa có' : 'None') },
+    { key: 'prompt_image_id', label: isVi ? 'Ảnh đề' : 'Prompt Image', width: 75, align: 'center', filterKind: 'media', initiallyHidden: type !== 'DESCRIBE_PICTURE', render: value => value ? <SpeakingMediaPreview value={value} kind="image" width={52} height={38} /> : (isVi ? 'Chưa có' : 'None') },
     { key: 'min_words', label: isVi ? 'Từ tối thiểu' : 'Min Words', width: 75, filterKind: 'number' },
     { key: 'max_words', label: isVi ? 'Từ tối đa (0: không giới hạn)' : 'Max Words (0: unlimited)', width: 80, filterKind: 'number' },
     { key: 'cefr_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },

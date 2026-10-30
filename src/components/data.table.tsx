@@ -1,6 +1,6 @@
 // Component bảng dữ liệu dùng chung (DataTable / AdminDataTable) chuẩn hóa giao diện cho toàn bộ Admin.
 
-import { useState, useEffect, useMemo, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Alert,
@@ -385,9 +385,136 @@ export function DataTable<T extends object>({
   const resolvedSearchLabel = searchLabel || (isVi ? 'Tìm kiếm' : 'Search')
   const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? 'Tìm kiếm nội dung...' : 'Search content...')
 
+  const effectiveRowKey = useCallback(
+    (record: T): string => {
+      if (typeof rowKey === 'function') return rowKey(record)
+      if (typeof rowKey === 'string') return String((record as Record<string, unknown>)[rowKey] ?? '')
+      const rec = record as { _id?: string; id?: string; key?: string }
+      return String(rec._id || rec.id || rec.key || '')
+    },
+    [rowKey]
+  )
+
+  const [internalExpandedRowKeys, setInternalExpandedRowKeys] = useState<React.Key[]>(() => {
+    if (expandable?.expandedRowKeys) return [...expandable.expandedRowKeys]
+    if (expandable?.defaultExpandedRowKeys) return [...expandable.defaultExpandedRowKeys]
+    return []
+  })
+  const [collapsingKeys, setCollapsingKeys] = useState<Set<React.Key>>(new Set())
+  const collapseTimeoutsRef = useRef<Map<React.Key, ReturnType<typeof setTimeout>>>(new Map())
+
+  useEffect(() => {
+    if (expandable?.expandedRowKeys) {
+      setInternalExpandedRowKeys([...expandable.expandedRowKeys])
+    }
+  }, [expandable?.expandedRowKeys])
+
+  useEffect(() => {
+    return () => {
+      collapseTimeoutsRef.current.forEach((t) => clearTimeout(t))
+      collapseTimeoutsRef.current.clear()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (expandable?.defaultExpandAllRows && effectiveData.length > 0) {
+      const allParentKeys: React.Key[] = []
+      const collectParentKeys = (items: T[]) => {
+        for (const item of items) {
+          const obj = item as Record<string, unknown>
+          if (Array.isArray(obj.children) && obj.children.length > 0) {
+            allParentKeys.push(effectiveRowKey(item))
+            collectParentKeys(obj.children as T[])
+          }
+        }
+      }
+      collectParentKeys(effectiveData)
+      setInternalExpandedRowKeys(allParentKeys)
+    }
+  }, [effectiveData, expandable?.defaultExpandAllRows, effectiveRowKey])
+
+  const getDescendantKeys = useCallback(
+    (rec: unknown): React.Key[] => {
+      const keys: React.Key[] = []
+      if (!rec || typeof rec !== 'object') return keys
+      const obj = rec as Record<string, unknown>
+      if (Array.isArray(obj.children) && obj.children.length > 0) {
+        for (const child of obj.children) {
+          const childKey = effectiveRowKey(child as T)
+          if (childKey) {
+            keys.push(childKey)
+            keys.push(...getDescendantKeys(child))
+          }
+        }
+      }
+      return keys
+    },
+    [effectiveRowKey]
+  )
+
+  const handleToggleExpand = useCallback(
+    (record: T, isCurrentlyExpanded: boolean, e: React.MouseEvent) => {
+      e.stopPropagation()
+      const key = effectiveRowKey(record)
+
+      if (isCurrentlyExpanded) {
+        const descendantKeys = getDescendantKeys(record)
+        setCollapsingKeys((prev) => new Set([...prev, ...descendantKeys]))
+
+        if (collapseTimeoutsRef.current.has(key)) {
+          clearTimeout(collapseTimeoutsRef.current.get(key)!)
+        }
+
+        const timeoutId = setTimeout(() => {
+          setInternalExpandedRowKeys((prev) => prev.filter((k) => k !== key))
+          setCollapsingKeys((prev) => {
+            const next = new Set(prev)
+            descendantKeys.forEach((k) => next.delete(k))
+            return next
+          })
+          collapseTimeoutsRef.current.delete(key)
+          if (expandable?.onExpand) {
+            expandable.onExpand(false, record)
+          }
+        }, 200)
+
+        collapseTimeoutsRef.current.set(key, timeoutId)
+      } else {
+        if (collapseTimeoutsRef.current.has(key)) {
+          clearTimeout(collapseTimeoutsRef.current.get(key)!)
+          collapseTimeoutsRef.current.delete(key)
+        }
+        const descendantKeys = getDescendantKeys(record)
+        setCollapsingKeys((prev) => {
+          const next = new Set(prev)
+          descendantKeys.forEach((k) => next.delete(k))
+          return next
+        })
+
+        setInternalExpandedRowKeys((prev) => (prev.includes(key) ? prev : [...prev, key]))
+        if (expandable?.onExpand) {
+          expandable.onExpand(true, record)
+        }
+      }
+    },
+    [effectiveRowKey, getDescendantKeys, expandable]
+  )
+
   const mergedExpandable = useMemo(() => {
+    const hasControlledKeys = Boolean(expandable?.expandedRowKeys)
+    const activeKeys = hasControlledKeys ? expandable!.expandedRowKeys : internalExpandedRowKeys
+
     return {
       ...expandable,
+      expandedRowKeys: activeKeys,
+      onExpandedRowsChange: (keys: readonly React.Key[]) => {
+        if (expandable?.onExpandedRowsChange) {
+          expandable.onExpandedRowsChange(keys)
+        }
+        if (!hasControlledKeys) {
+          setInternalExpandedRowKeys([...keys])
+        }
+      },
       expandIcon: (props: {
         prefixCls: string
         expanded: boolean
@@ -406,26 +533,37 @@ export function DataTable<T extends object>({
             />
           )
         }
+        const rowKeyVal = effectiveRowKey(props.record)
+        const isRowCollapsing = collapsingKeys.has(rowKeyVal)
+        const isVisualExpanded = props.expanded && !isRowCollapsing
+
         return (
           <button
             type="button"
-            onClick={(e) => {
-              props.onExpand(props.record, e)
-              e.stopPropagation()
-            }}
-            className="inline-flex items-center justify-center w-[18px] h-[18px] rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-400 dark:hover:border-indigo-500 shadow-2xs transition-colors cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none"
-            aria-label={props.expanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Mở rộng' : 'Expand')}
+            onClick={(e) => handleToggleExpand(props.record, props.expanded, e)}
+            className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded border transition-all duration-200 cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none shadow-2xs ${
+              isVisualExpanded
+                ? 'bg-indigo-50 border-indigo-300 text-indigo-600 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300'
+                : 'bg-white border-slate-300 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'
+            }`}
+            aria-label={isVisualExpanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Mở rộng' : 'Expand')}
           >
-            {props.expanded ? (
-              <Minus size={11} strokeWidth={2.5} className="shrink-0" />
-            ) : (
-              <Plus size={11} strokeWidth={2.5} className="shrink-0" />
-            )}
+            <span
+              className={`inline-flex items-center justify-center transition-transform duration-200 ease-out ${
+                isVisualExpanded ? 'rotate-90 scale-95' : 'rotate-0 scale-100'
+              }`}
+            >
+              {isVisualExpanded ? (
+                <Minus size={11} strokeWidth={2.5} className="shrink-0" />
+              ) : (
+                <Plus size={11} strokeWidth={2.5} className="shrink-0" />
+              )}
+            </span>
           </button>
         )
       },
     }
-  }, [expandable, isVi])
+  }, [expandable, internalExpandedRowKeys, effectiveRowKey, collapsingKeys, handleToggleExpand, isVi])
 
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
     columns.map((col) => ({
@@ -484,13 +622,6 @@ export function DataTable<T extends object>({
   }
 
   const antdSize = density === 'compact' ? 'small' : density === 'comfortable' ? 'large' : 'middle'
-
-  const effectiveRowKey = (record: T): string => {
-    if (typeof rowKey === 'function') return rowKey(record)
-    if (typeof rowKey === 'string') return String((record as Record<string, unknown>)[rowKey] ?? '')
-    const rec = record as { _id?: string; id?: string }
-    return String(rec._id || rec.id || '')
-  }
 
   const handleResetFiltersInternal = async () => {
     setColumnOptions(
@@ -771,7 +902,17 @@ export function DataTable<T extends object>({
               scroll={effectiveScroll}
               pagination={false}
               rowSelection={rowSelection}
-              rowClassName={rowClassName}
+              rowClassName={(record, index, indent) => {
+                const userClass =
+                  typeof rowClassName === 'function'
+                    ? rowClassName(record, index, indent)
+                    : typeof rowClassName === 'string'
+                    ? rowClassName
+                    : ''
+                const rowKeyVal = effectiveRowKey(record)
+                const isCollapsing = collapsingKeys.has(rowKeyVal)
+                return `${userClass} ${isCollapsing ? 'ant-table-row-collapsing' : ''}`.trim()
+              }}
               expandable={mergedExpandable}
               sortDirections={['ascend', 'descend', 'ascend']}
               showSorterTooltip={false}

@@ -1,6 +1,6 @@
 // Trang xem chi tiết bài làm kiểm tra khóa học, sửa điểm và nhận xét học viên.
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Image, Spin } from 'antd'
@@ -259,23 +259,49 @@ export function CourseTestSessionDetailPage({
   }
 
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null)
+  const isScrollingRef = useRef(false)
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleScrollToQuestion = (index: number) => {
     setActiveQuestionIndex(index)
+    isScrollingRef.current = true
+
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+
     const el = document.getElementById(`question-card-${index}`)
     if (el) {
-      el.scrollIntoView({
+      const stickyHeaderOffset = 185
+      const elementPosition = el.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.scrollY - stickyHeaderOffset
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
         behavior: 'smooth',
-        block: 'start',
       })
     }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false
+    }, 650)
   }
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!session?.raw_questions || session.raw_questions.length === 0) return
 
     const observer = new IntersectionObserver(
       (entries) => {
+        if (isScrollingRef.current) return
+
         const visible = entries.find((e) => e.isIntersecting)
         if (visible && visible.target.id) {
           const idx = Number(visible.target.id.replace('question-card-', ''))
@@ -583,7 +609,7 @@ export function CourseTestSessionDetailPage({
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+              <div className="flex flex-wrap items-center gap-2 max-h-40 overflow-y-auto p-1.5">
                 {questionStats.statuses.map((item) => {
                   const isActive = activeQuestionIndex === item.index
                   return (
@@ -591,10 +617,10 @@ export function CourseTestSessionDetailPage({
                       key={item.index}
                       type="button"
                       onClick={() => handleScrollToQuestion(item.index)}
-                      className={`w-8 h-8 rounded-xl font-mono text-xs font-bold flex items-center justify-center border transition-all cursor-pointer ${
+                      className={`w-8 h-8 rounded-xl font-mono text-xs font-bold flex items-center justify-center transition-all duration-200 cursor-pointer ${
                         isActive
-                          ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900 scale-105 shadow-xs z-10'
-                          : ''
+                          ? '!border-2 !border-indigo-600 dark:!border-indigo-400 ring-2 ring-indigo-500/40 shadow-sm scale-110 z-10'
+                          : 'border'
                       } ${
                         item.isCorrect
                           ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-400'
@@ -641,9 +667,9 @@ export function CourseTestSessionDetailPage({
                 <div
                   key={index}
                   id={`question-card-${index}`}
-                  className={`scroll-mt-56 p-5 rounded-2xl border bg-white dark:bg-slate-900 space-y-4 shadow-2xs transition-all ${
+                  className={`scroll-mt-52 p-5 rounded-2xl border bg-white dark:bg-slate-900 space-y-4 shadow-2xs transition-all duration-300 ${
                     activeQuestionIndex === index
-                      ? 'ring-2 ring-indigo-500/40 dark:ring-indigo-400/40 border-indigo-300 dark:border-indigo-700'
+                      ? 'ring-2 ring-indigo-500/50 dark:ring-indigo-400/50 border-indigo-400 dark:border-indigo-600'
                       : isCorrect
                         ? 'border-emerald-200 dark:border-emerald-900/60'
                         : isAnswered

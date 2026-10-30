@@ -429,3 +429,47 @@ html[data-theme="light"] .bg-indigo-950\/30 {
   height: 0 !important;
 }
 
+@keyframes treeRowFadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ant-table-tbody > tr.ant-table-row-level-1,
+.ant-table-tbody > tr.ant-table-row-level-2,
+.ant-table-tbody > tr.ant-table-row-level-3 {
+  animation: treeRowFadeSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+.ant-table-tbody > tr.ant-table-row-level-1 > td,
+.ant-table-tbody > tr.ant-table-row-level-2 > td,
+.ant-table-tbody > tr.ant-table-row-level-3 > td {
+  transition: background-color 0.15s ease, opacity 0.2s ease, transform 0.2s ease, padding 0.2s ease;
+}
+
+.ant-table-tbody > tr.ant-table-row-collapsing {
+  pointer-events: none !important;
+}
+
+.ant-table-tbody > tr.ant-table-row-collapsing > td {
+  opacity: 0 !important;
+  transform: translateY(-8px) scaleY(0.9) !important;
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 0 !important;
+  border-top-width: 0 !important;
+  border-bottom-width: 0 !important;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              line-height 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
