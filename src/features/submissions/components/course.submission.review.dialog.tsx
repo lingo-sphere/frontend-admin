@@ -40,6 +40,8 @@ export function CourseSubmissionReviewDialog({
   onSaveReview,
 }: CourseSubmissionReviewDialogProps) {
   const isSpeaking = submission.skill === "SPEAKING";
+  const canReview = submission.ai_score != null &&
+    ['AI_GRADED', 'TEACHER_REVIEWED'].includes(submission.status);
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 dark:bg-black/45 backdrop-blur-[2px] p-4 animate-in fade-in duration-150">
@@ -161,13 +163,14 @@ export function CourseSubmissionReviewDialog({
                   Điểm AI đề xuất:
                 </span>
                 <span className="text-base font-black text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-3 py-1 rounded-xl">
-                  {submission.ai_score}/100
+                  {submission.ai_score == null ? "Chưa có điểm" : `${submission.ai_score}/100`}
                 </span>
               </div>
 
               <button
                 type="button"
-                onClick={() => onScoreChange(submission.ai_score)}
+                disabled={!canReview}
+                onClick={() => { if (submission.ai_score != null) onScoreChange(submission.ai_score); }}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 cursor-pointer shadow-2xs"
               >
                 Áp dụng điểm AI ({submission.ai_score})
@@ -262,8 +265,8 @@ export function CourseSubmissionReviewDialog({
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
-            onClick={() => onSaveReview(submission.ai_score)}
-            disabled={isSubmitting}
+            onClick={() => { if (canReview && submission.ai_score != null) onSaveReview(submission.ai_score); }}
+            disabled={isSubmitting || !canReview}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold transition-colors cursor-pointer"
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -281,7 +284,7 @@ export function CourseSubmissionReviewDialog({
             <button
               type="button"
               onClick={() => onSaveReview()}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canReview}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />

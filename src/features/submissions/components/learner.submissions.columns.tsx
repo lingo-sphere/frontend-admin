@@ -30,7 +30,7 @@ export function createLearnerSubmissionsColumns({
       render: (sub) => (
         <div className="space-y-0.5 min-w-[140px]">
           <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-            {sub.user_name}
+            {sub.user_name || sub.user_email || sub.user_id}
           </div>
           <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
             {sub.user_email}
@@ -97,7 +97,7 @@ export function createLearnerSubmissionsColumns({
         <div className="space-y-0.5 text-center whitespace-nowrap">
           <span className="inline-flex items-center gap-1 font-black text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm">
             <Sparkles className="w-3 h-3" />
-            {sub.ai_score}/100
+            {sub.ai_score == null ? (isVi ? 'Chưa có điểm' : 'Not graded') : `${sub.ai_score}/100`}
           </span>
         </div>
       ),

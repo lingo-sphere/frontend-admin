@@ -66,8 +66,8 @@ export const CourseStudentsProgressResponseSchema = z.object({
 }).passthrough()
 
 export const AiSubmissionFeedbackSchema = z.object({
-  pronunciation_score: z.number().optional(),
-  fluency_score: z.number().optional(),
+  pronunciation_score: z.number().nullable().optional(),
+  fluency_score: z.number().nullable().optional(),
   grammar_score: z.number().optional(),
   vocabulary_score: z.number().optional(),
   overall_score: z.number().optional(),
@@ -78,7 +78,7 @@ export const AiSubmissionFeedbackSchema = z.object({
 export const SkillSubmissionItemSchema = z.object({
   _id: z.string(),
   user_id: z.string(),
-  user_name: z.string(),
+  user_name: z.string().default(''),
   user_email: z.string().optional(),
   course_id: z.string(),
   course_title: z.string().optional(),
@@ -88,19 +88,44 @@ export const SkillSubmissionItemSchema = z.object({
   audio_url: z.string().optional(),
   essay_text: z.string().optional(),
   whisper_transcript: z.string().optional(),
-  ai_score: z.number().default(0),
+  ai_score: z.number().nullable().default(null),
   ai_feedback: AiSubmissionFeedbackSchema.optional(),
-  teacher_score: z.number().default(0),
+  teacher_score: z.number().optional(),
   teacher_feedback: z.string().optional(),
   teacher_id: z.string().optional(),
   teacher_name: z.string().optional(),
   is_teacher_reviewed: z.boolean().default(false),
-  final_score: z.number().default(0),
+  final_score: z.number().nullable().default(null),
   status: z.string().default('SUBMITTED'),
   created_at: z.string().optional(),
 }).passthrough()
 
 export const SkillSubmissionListSchema = z.array(SkillSubmissionItemSchema)
+
+export const CourseTestSessionSchema = z.object({
+  _id: z.string(),
+  user_id: z.string(),
+  course_id: z.string(),
+  module_id: z.string().nullish(),
+  test_type: z.string(),
+  status: z.string(),
+  order_index: z.number().optional(),
+  score: z.number().nullable().optional(),
+  is_passed: z.boolean().nullable().optional(),
+  passing_score: z.number().optional(),
+  started_at: z.string(),
+  submitted_at: z.string().nullish(),
+  raw_questions: z.array(z.record(z.string(), z.unknown())).default([]),
+  interim_answers: z.array(z.object({
+    question_index: z.number(),
+    selected_index: z.number().nullish(),
+    selected_option: z.string().nullish(),
+  }).passthrough()).default([]),
+  result: z.record(z.string(), z.unknown()).nullish(),
+}).passthrough()
+
+export const CourseTestSessionListSchema = z.array(CourseTestSessionSchema)
+export type CourseTestSession = z.infer<typeof CourseTestSessionSchema>
 
 export const ServiceHealthItemSchema = z.object({
   id: z.string(),
