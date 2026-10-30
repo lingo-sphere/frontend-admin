@@ -60,6 +60,7 @@ export function getLearnerColumns({
     },
     {
       key: 'target',
+      sortable: true,
       title: isVi ? 'Mục tiêu & Trình độ' : 'Target & Level',
       width: 180,
       align: 'center',
@@ -84,6 +85,7 @@ export function getLearnerColumns({
     },
     {
       key: 'gamification',
+      sortable: true,
       title: 'Gamification (XP & Streak)',
       width: 180,
       align: 'center',
@@ -102,6 +104,7 @@ export function getLearnerColumns({
     },
     {
       key: 'plan',
+      sortable: true,
       title: isVi ? 'Gói học' : 'Plan',
       width: 130,
       align: 'center',
@@ -122,6 +125,7 @@ export function getLearnerColumns({
     },
     {
       key: 'status',
+      sortable: true,
       title: isVi ? 'Trạng thái' : 'Status',
       width: 120,
       align: 'center',

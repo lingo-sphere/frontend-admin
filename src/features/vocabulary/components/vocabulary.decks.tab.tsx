@@ -98,6 +98,7 @@ export function VocabularyDecksTab({
     () => [
       {
         key: 'deck_info',
+        sortable: true,
         dataIndex: 'name_vi',
         title: 'Bộ thẻ',
         render: (deck) => {
@@ -141,6 +142,8 @@ export function VocabularyDecksTab({
       },
       {
         key: 'topic_name',
+      sortable: true,
+      dataIndex: 'topic_name',
         title: 'Chủ đề',
         width: '160px',
         align: 'center',
@@ -158,6 +161,8 @@ export function VocabularyDecksTab({
       },
       {
         key: 'cefr_level',
+      sortable: true,
+      dataIndex: 'cefr_level',
         title: 'Khung CEFR',
         width: '120px',
         align: 'center',
@@ -169,6 +174,8 @@ export function VocabularyDecksTab({
       },
       {
         key: 'card_count',
+      sortable: true,
+      dataIndex: 'card_count',
         title: 'Số thẻ ghi nhớ',
         width: '140px',
         align: 'center',

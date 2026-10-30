@@ -101,7 +101,9 @@ export function CourseTestSessionsTab({
   const columns: DataTableColumn<SessionRow>[] = [
     {
       key: 'student',
+      dataIndex: 'user_email',
       title: 'Học viên',
+      sortable: true,
       width: 220,
       render: (row) => {
         const email = row.user_email || row.user_id || 'HV'
@@ -127,13 +129,17 @@ export function CourseTestSessionsTab({
     },
     {
       key: 'course',
+      dataIndex: 'course_title',
       title: 'Khóa học',
+      sortable: true,
       minWidth: 180,
       render: (row) => <TableTextCell text={row.course_title} />,
     },
     {
       key: 'type',
+      dataIndex: 'test_type',
       title: 'Loại bài kiểm tra',
+      sortable: true,
       width: 170,
       align: 'center',
       render: (row) => (
@@ -149,7 +155,9 @@ export function CourseTestSessionsTab({
     },
     {
       key: 'score',
+      dataIndex: 'score',
       title: 'Điểm',
+      sortable: true,
       width: 100,
       align: 'center',
       render: (row) => (
@@ -160,7 +168,9 @@ export function CourseTestSessionsTab({
     },
     {
       key: 'result',
+      dataIndex: 'is_passed',
       title: 'Kết quả',
+      sortable: true,
       width: 110,
       align: 'center',
       render: (row) =>
@@ -180,7 +190,9 @@ export function CourseTestSessionsTab({
     },
     {
       key: 'status',
+      dataIndex: 'status',
       title: 'Trạng thái',
+      sortable: true,
       width: 130,
       align: 'center',
       render: (row) => {
@@ -204,7 +216,9 @@ export function CourseTestSessionsTab({
     },
     {
       key: 'started_at',
+      dataIndex: 'started_at',
       title: 'Bắt đầu',
+      sortable: true,
       width: 150,
       align: 'center',
       render: (row) => (
@@ -215,7 +229,9 @@ export function CourseTestSessionsTab({
     },
     {
       key: 'submitted_at',
+      dataIndex: 'submitted_at',
       title: 'Nộp bài',
+      sortable: true,
       width: 150,
       align: 'center',
       render: (row) => (
@@ -351,7 +367,6 @@ export function CourseTestSessionsTab({
             </div>
           </div>
         }
-        scroll={{ x: 1200 }}
         pagination={{
           currentPage: page,
           pageSize,

@@ -126,11 +126,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return hasModulePermission('PROGRESS')
         case 'notifications':
           return hasModulePermission('NOTIFICATIONS')
-        case 'measurement-profiles':
         case 'settings':
         case 'settings-plans':
         case 'settings-ai':
-        case 'settings-system':
           return false
         default:
           return true

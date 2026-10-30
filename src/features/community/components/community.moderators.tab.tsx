@@ -96,6 +96,8 @@ export function CommunityModeratorsTab({
   const columns: DataTableColumn<AdminCommunityMember>[] = [
     {
       key: 'moderator',
+      sortable: true,
+      sorter: (a, b) => (a.user_name || '').localeCompare(b.user_name || '', 'vi'),
       dataIndex: 'user_name',
       title: t('community.colModerator'),
       width: '260px',

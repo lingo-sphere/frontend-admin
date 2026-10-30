@@ -1,6 +1,6 @@
-import { MeasurementProfilesPage } from '@/features/courses/pages/measurement.profiles.page'
-import { PracticeSpeakingSubmissionsPage, PracticeWritingSubmissionsPage } from '@/features/submissions/pages/practice.submissions.page'
 // Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
+
+import { PracticeSpeakingSubmissionsPage, PracticeWritingSubmissionsPage } from '@/features/submissions/pages/practice.submissions.page'
 
 import { Navigate, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
@@ -23,7 +23,6 @@ import { BetterStackMonitoringPage } from '@/features/progress/pages/better.stac
 import { NotificationsPage } from '@/features/notifications/pages/notifications.page'
 import { SettingsPlansPage } from '@/features/settings/pages/settings.plans.page'
 import { SettingsAiPage } from '@/features/settings/pages/settings.ai.page'
-import { SettingsSystemPage } from '@/features/settings/pages/settings.system.page'
 import { UserProfilePage } from '@/features/users/pages/learner.profile.page'
 import { CourseFormPage } from '@/features/courses/pages/course.form.page'
 import { CourseScoresPage } from '@/features/courses/pages/course.scores.page'
@@ -98,7 +97,6 @@ const pageMap: Record<string, React.ComponentType> = {
   community: CommunityPage,
   'public-decks': PublicDecksPage,
   progress: ProgressPage,
-  'measurement-profiles': MeasurementProfilesPage,
   'analytics-posthog': PostHogAnalyticsPage,
   posthog: PostHogAnalyticsPage,
   'monitoring-betterstack': BetterStackMonitoringPage,
@@ -107,7 +105,6 @@ const pageMap: Record<string, React.ComponentType> = {
   settings: SettingsPlansPage,
   'settings-plans': SettingsPlansPage,
   'settings-ai': SettingsAiPage,
-  'settings-system': SettingsSystemPage,
   'admin-profile': AdminProfilePage,
   'not-found': NotFoundPage,
   'forbidden': ForbiddenPage,
@@ -191,7 +188,7 @@ export function PageRouter() {
       }
     }
 
-    if (activeNavItem === 'measurement-profiles' || activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
+    if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
       return <ForbiddenPage key={pathname} />
     }
   }

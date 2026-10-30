@@ -107,7 +107,9 @@ export function PlacementExamsTable({
     () => [
       {
         key: 'title',
+        dataIndex: 'title',
         title: isVi ? 'Tên đề thi' : 'Exam Title',
+        sortable: true,
         minWidth: 300,
         align: 'left',
         render: (exam) => {
@@ -139,7 +141,9 @@ export function PlacementExamsTable({
       },
       {
         key: 'skills',
+        dataIndex: 'skills_enabled',
         title: isVi ? 'Kỹ năng' : 'Skills',
+        sortable: true,
         width: 150,
         align: 'center',
         render: (exam) => {
@@ -189,7 +193,9 @@ export function PlacementExamsTable({
       },
       {
         key: 'passing_score',
+        dataIndex: 'passing_score',
         title: isVi ? 'Điểm chuẩn' : 'Passing Score',
+        sortable: true,
         width: 130,
         align: 'center',
         render: (exam) => (
@@ -202,7 +208,9 @@ export function PlacementExamsTable({
       },
       {
         key: 'attempts',
+        dataIndex: 'total_attempts',
         title: isVi ? 'Lượt thi & TB' : 'Attempts & Avg',
+        sortable: true,
         width: 130,
         align: 'center',
         render: (exam) => (
@@ -218,7 +226,9 @@ export function PlacementExamsTable({
       },
       {
         key: 'status',
+        dataIndex: 'is_published',
         title: isVi ? 'Trạng thái' : 'Status',
+        sortable: true,
         width: 110,
         align: 'center',
         render: (exam) => (
@@ -241,7 +251,6 @@ export function PlacementExamsTable({
         title: isVi ? 'Thao tác' : 'Actions',
         width: 110,
         align: 'center',
-        fixed: 'right',
         render: (exam) => {
           const examId = exam._id || exam.id || ''
           return (
@@ -278,7 +287,6 @@ export function PlacementExamsTable({
       columns={columns}
       data={paginatedExams}
       rowKey={(exam) => exam._id || exam.id || exam.title}
-      scroll={{ x: 1150 }}
       onResetFilters={handleResetFilters}
       filterSlot={
         <>

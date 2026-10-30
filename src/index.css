@@ -330,4 +330,102 @@ html[data-theme="light"] .bg-indigo-950\/30 {
   }
 }
 
+.ant-table-wrapper .ant-table-thead > tr > th,
+.ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-align-left,
+.ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-align-right,
+.ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-align-center,
+.ant-table-wrapper .ant-table-thead th,
+.ant-table-thead th,
+.ant-table th {
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th::before,
+.ant-table-thead th::before {
+  display: none !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th .ant-table-column-sorters,
+.ant-table-wrapper .ant-table-thead th.ant-table-column-has-sorters .ant-table-column-sorters,
+.ant-table-wrapper .ant-table-column-sorters,
+.ant-table-thead .ant-table-column-sorters {
+  display: flex !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  padding: 0 !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th .ant-table-column-title,
+.ant-table-wrapper .ant-table-thead th .ant-table-column-title,
+.ant-table-wrapper .ant-table-column-title,
+.ant-table-thead .ant-table-column-title {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th .ant-table-column-sorter,
+.ant-table-wrapper .ant-table-thead th .ant-table-column-sorter,
+.ant-table-wrapper .ant-table-column-sorter,
+.ant-table-thead .ant-table-column-sorter {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-left: 0 !important;
+  align-self: center !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th .ant-table-filter-column,
+.ant-table-wrapper .ant-table-thead th .ant-table-filter-column,
+.ant-table-wrapper .ant-table-filter-column,
+.ant-table-thead .ant-table-filter-column {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th .ant-table-filter-trigger,
+.ant-table-wrapper .ant-table-thead th .ant-table-filter-trigger,
+.ant-table-wrapper .ant-table-filter-trigger,
+.ant-table-thead .ant-table-filter-trigger {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+}
+
+.ant-table-wrapper .ant-table-thead th.ant-table-column-has-sorters,
+.ant-table-thead th.ant-table-column-has-sorters {
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+.ant-table-wrapper .ant-table-content,
+.ant-table-wrapper .ant-table-body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.ant-table-wrapper .ant-table-content::-webkit-scrollbar,
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 

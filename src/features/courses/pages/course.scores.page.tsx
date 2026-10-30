@@ -61,6 +61,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         key: "learner",
         dataIndex: "full_name",
         title: "Học viên",
+        sortable: true,
         align: "left",
         render: (student) => {
           const userProfile = usersMap.get(student.user_id);
@@ -114,6 +115,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         key: "progress",
         dataIndex: "progress_percentage",
         title: "Tiến độ bài học",
+        sortable: true,
         width: 180,
         align: "center",
         render: (student) => (
@@ -215,6 +217,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         key: "final_score",
         dataIndex: "final_test_score",
         title: "Điểm tốt nghiệp",
+        sortable: true,
         width: 150,
         align: "center",
         render: (student) =>

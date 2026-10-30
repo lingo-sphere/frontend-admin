@@ -33,11 +33,12 @@ export function getCourseColumns({
     {
       key: 'info',
       title: isVi ? 'Thông tin khóa học' : 'Course Info',
-      minWidth: 280,
+      width: 280,
+      minWidth: 240,
       sortable: true,
       render: (course) => (
-        <div className="flex items-center gap-3.5 py-1">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
+        <div className="flex items-center gap-3 py-1 max-w-[270px]">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
             {course.thumbnail_url ? (
               <img
                 src={resolveMediaUrl(course.thumbnail_url)}
@@ -46,22 +47,20 @@ export function getCourseColumns({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-indigo-500/80 bg-indigo-50/50 dark:bg-indigo-950/30">
-                <BookOpen className="w-6 h-6" />
+                <BookOpen className="w-5 h-5" />
               </div>
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p
-                className="font-bold text-sm text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer line-clamp-1"
-                title={course.title}
-                onClick={() => onEdit(course.id)}
-              >
-                {course.title}
-              </p>
-            </div>
+          <div className="min-w-0 flex-1 max-w-[205px]">
             <p
-              className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5"
+              className="font-bold text-xs text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer truncate"
+              title={course.title}
+              onClick={() => onEdit(course.id)}
+            >
+              {course.title}
+            </p>
+            <p
+              className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5"
               title={course.description || undefined}
             >
               {course.description}
@@ -73,7 +72,7 @@ export function getCourseColumns({
     {
       key: 'category',
       title: isVi ? 'Danh mục' : 'Category',
-      width: 140,
+      width: 125,
       align: 'center',
       sortable: true,
       render: (course) => (
@@ -87,7 +86,7 @@ export function getCourseColumns({
     {
       key: 'target_score',
       title: isVi ? 'Mục tiêu điểm' : 'Target Score',
-      width: 140,
+      width: 125,
       align: 'center',
       sortable: true,
       render: (course) => (
@@ -99,15 +98,16 @@ export function getCourseColumns({
     },
     {
       key: 'stats',
+      sortable: true,
       title: isVi ? 'Số bài & Học viên' : 'Lessons & Learners',
-      width: 170,
+      width: 155,
       render: (course) => (
         <div className="space-y-1 py-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-750 dark:text-slate-200 whitespace-nowrap">
             <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span>
               {isVi
-                ? `${course.total_modules} chương · ${course.total_lessons} bài học`
+                ? `${course.total_modules} chương · ${course.total_lessons} bài`
                 : `${course.total_modules} modules · ${course.total_lessons} lessons`}
             </span>
           </div>
@@ -124,7 +124,7 @@ export function getCourseColumns({
     {
       key: 'price',
       title: isVi ? 'Học phí' : 'Price',
-      width: 130,
+      width: 120,
       align: 'center',
       sortable: true,
       render: (course) => {
@@ -181,7 +181,7 @@ export function getCourseColumns({
     {
       key: 'enrollments',
       title: isVi ? 'Học viên' : 'Students',
-      width: 140,
+      width: 125,
       align: 'center',
       sortable: true,
       render: (course) => (
@@ -200,8 +200,9 @@ export function getCourseColumns({
     },
     {
       key: 'status',
+      sortable: true,
       title: isVi ? 'Trạng thái' : 'Status',
-      width: 130,
+      width: 115,
       align: 'center',
       render: (course) => (
         <div className="whitespace-nowrap py-1">
@@ -225,9 +226,9 @@ export function getCourseColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
-      width: 130,
+      width: 110,
       align: 'center',
-      fixed: 'right',
+      fixed: false,
       render: (course) => (
         <TableRowActions
           isVi={isVi}

@@ -19,6 +19,7 @@ export function getAdminUserColumns({
   return [
     {
       key: 'user',
+      sortable: true,
       title: isVi ? 'Quản trị viên / Giảng viên' : 'Admin / Teacher',
       render: (user) => (
         <div
@@ -47,6 +48,7 @@ export function getAdminUserColumns({
     },
     {
       key: 'role',
+      sortable: true,
       title: isVi ? 'Vai trò phân quyền' : 'Assigned Role',
       width: 170,
       align: 'center',
@@ -68,6 +70,7 @@ export function getAdminUserColumns({
     },
     {
       key: 'phone',
+      sortable: true,
       title: isVi ? 'Số điện thoại' : 'Phone Number',
       align: 'center',
       render: (user) => (
@@ -86,6 +89,7 @@ export function getAdminUserColumns({
     },
     {
       key: 'status',
+      sortable: true,
       title: isVi ? 'Trạng thái' : 'Status',
       width: 120,
       align: 'center',

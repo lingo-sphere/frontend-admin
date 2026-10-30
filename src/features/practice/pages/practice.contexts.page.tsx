@@ -263,6 +263,8 @@ export function PracticeContextsPage() {
       title: 'Tên ngữ cảnh',
       key: 'name_en',
       width: 320,
+      sortable: true,
+      sorter: (a, b) => (a.name_en || a.name || '').localeCompare(b.name_en || b.name || '', 'vi'),
       render: (record: PracticeContext) => {
         const en = record.name_en || record.name
         const vi = record.name_vi
@@ -363,6 +365,8 @@ export function PracticeContextsPage() {
       title: 'Mã Code',
       key: 'code',
       width: 180,
+      sortable: true,
+      dataIndex: 'code',
       align: 'center',
       render: (record: PracticeContext) => {
         if (record.level === 0) {
@@ -390,6 +394,8 @@ export function PracticeContextsPage() {
       title: 'Cấp bậc',
       key: 'level',
       width: 160,
+      sortable: true,
+      dataIndex: 'level',
       align: 'center',
       render: (record: PracticeContext) => {
         if (record.level === 0) {
@@ -441,6 +447,8 @@ export function PracticeContextsPage() {
       title: 'Bài tập',
       key: 'total_exercises',
       width: 100,
+      sortable: true,
+      dataIndex: 'total_exercises',
       align: 'center',
       render: (record: PracticeContext) => {
         const val = record.total_exercises || 0
@@ -551,7 +559,6 @@ export function PracticeContextsPage() {
         data={treeData}
         isLoading={isLoading}
         rowKey="_id"
-        scroll={{ x: 1150 }}
         rowClassName={(record) => {
           if (record.level === 0) {
             return '[&>td]:!bg-slate-100/90 dark:[&>td]:!bg-slate-800/85 hover:[&>td]:!bg-slate-200/80 dark:hover:[&>td]:!bg-slate-700/80 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-purple-600 border-t-2 border-slate-300/80 dark:border-slate-700/80 font-medium'

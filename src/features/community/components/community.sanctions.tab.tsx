@@ -103,7 +103,9 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'sanction_type',
+      dataIndex: 'sanction_type',
       title: t('community.colSanctionType'),
+      sortable: true,
       align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
@@ -150,7 +152,9 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'duration',
+      dataIndex: 'expires_at',
       title: t('community.colDuration'),
+      sortable: true,
       align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)

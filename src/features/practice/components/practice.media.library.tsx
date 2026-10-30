@@ -46,7 +46,9 @@ export function PracticeMediaLibrary({ kind, disabled, onSelect }: { kind: Libra
     },
     {
       key: 'filename',
+      dataIndex: 'filename',
       title: vi ? 'Tên tệp' : 'Filename',
+      sortable: true,
       render: (file) => (
         <Space direction="vertical" size={0}>
           <span className="font-semibold text-slate-800 dark:text-slate-100">{file.filename}</span>

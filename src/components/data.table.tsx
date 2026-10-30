@@ -134,14 +134,56 @@ function normalizeWidth(width?: string | number): number | string | undefined {
   return width
 }
 
+function resolveCellValue(record: unknown, key: string): unknown {
+  if (!record || typeof record !== 'object') return undefined
+  const rec = record as Record<string, unknown>
+  if (rec[key] !== undefined) return rec[key]
+  if (key === 'name_en' && rec['name'] !== undefined) return rec['name']
+  if (key === 'title_vi' && rec['title'] !== undefined) return rec['title']
+  if (key.includes('.')) {
+    const parts = key.split('.')
+    let current: unknown = rec
+    for (const part of parts) {
+      if (current && typeof current === 'object' && part in (current as Record<string, unknown>)) {
+        current = (current as Record<string, unknown>)[part]
+      } else {
+        return undefined
+      }
+    }
+    return current
+  }
+  return undefined
+}
+
 function defaultCompare<T>(a: T, b: T, key: keyof T | string): number {
-  const valA = (a as Record<string, unknown>)[String(key)]
-  const valB = (b as Record<string, unknown>)[String(key)]
-  if (valA === valB) return 0
-  if (valA === null || valA === undefined) return -1
-  if (valB === null || valB === undefined) return 1
-  if (typeof valA === 'number' && typeof valB === 'number') return valA - valB
-  return String(valA).localeCompare(String(valB))
+  const rawA = resolveCellValue(a, String(key))
+  const rawB = resolveCellValue(b, String(key))
+
+  if (rawA === rawB) return 0
+  if (rawA === null || rawA === undefined || rawA === '') return 1
+  if (rawB === null || rawB === undefined || rawB === '') return -1
+
+  if (typeof rawA === 'string' && typeof rawB === 'string') {
+    const isDateA = !isNaN(Date.parse(rawA)) && (rawA.includes('-') || rawA.includes('/')) && rawA.length >= 8
+    const isDateB = !isNaN(Date.parse(rawB)) && (rawB.includes('-') || rawB.includes('/')) && rawB.length >= 8
+    if (isDateA && isDateB) {
+      const timeA = new Date(rawA).getTime()
+      const timeB = new Date(rawB).getTime()
+      if (timeA !== timeB) return timeA - timeB
+    }
+  }
+
+  const numA = typeof rawA === 'number' ? rawA : !isNaN(Number(rawA)) && rawA !== '' ? Number(rawA) : NaN
+  const numB = typeof rawB === 'number' ? rawB : !isNaN(Number(rawB)) && rawB !== '' ? Number(rawB) : NaN
+  if (!isNaN(numA) && !isNaN(numB)) {
+    return numA - numB
+  }
+
+  if (typeof rawA === 'boolean' && typeof rawB === 'boolean') {
+    return rawA === rawB ? 0 : rawA ? 1 : -1
+  }
+
+  return String(rawA).localeCompare(String(rawB), 'vi', { sensitivity: 'base', numeric: true })
 }
 
 function ColumnFilter({
@@ -292,17 +334,56 @@ export function DataTable<T extends object>({
     return data ?? items ?? dataSource ?? []
   }, [data, items, dataSource])
 
-  const effectiveLoading = Boolean(loading ?? isLoading)
-  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
-  const resolvedSearchLabel = searchLabel || (isVi ? 'Tìm kiếm' : 'Search')
-  const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? 'Tìm kiếm nội dung...' : 'Search content...')
-
   const [density, setDensity] = useState<TableDensity>('middle')
   const [internalSortKey, setInternalSortKey] = useState<string | null>(null)
   const [internalSortOrder, setInternalSortOrder] = useState<'asc' | 'desc' | null>(null)
 
   const activeSortKey = sortKey !== undefined ? sortKey : internalSortKey
   const activeSortOrder = sortOrder !== undefined ? sortOrder : internalSortOrder
+
+  const sortedData = useMemo(() => {
+    if (state || onSortChange || !activeSortKey || !activeSortOrder) {
+      return effectiveData
+    }
+
+    const targetCol = columns.find(
+      (c) => c.key === activeSortKey || (c.dataIndex && String(c.dataIndex) === activeSortKey)
+    )
+    const customSorter =
+      targetCol && typeof targetCol.sorter === 'function' ? targetCol.sorter : null
+    const compareKey = String(targetCol?.dataIndex || activeSortKey)
+
+    const sortList = (itemsList: T[]): T[] => {
+      const cloned = [...itemsList]
+      cloned.sort((a, b) => {
+        let res = 0
+        if (customSorter) {
+          res = customSorter(a, b)
+        } else {
+          res = defaultCompare(a, b, compareKey)
+        }
+        return activeSortOrder === 'asc' ? res : -res
+      })
+
+      return cloned.map((item) => {
+        const obj = item as Record<string, unknown>
+        if (Array.isArray(obj.children) && obj.children.length > 0) {
+          return {
+            ...item,
+            children: sortList(obj.children as T[]),
+          }
+        }
+        return item
+      })
+    }
+
+    return sortList(effectiveData)
+  }, [effectiveData, state, onSortChange, activeSortKey, activeSortOrder, columns])
+
+  const effectiveLoading = Boolean(loading ?? isLoading)
+  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
+  const resolvedSearchLabel = searchLabel || (isVi ? 'Tìm kiếm' : 'Search')
+  const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? 'Tìm kiếm nội dung...' : 'Search content...')
 
   const mergedExpandable = useMemo(() => {
     return {
@@ -442,12 +523,15 @@ export function DataTable<T extends object>({
       .filter((col) => visibleKeys.has(col.key) || col.key === 'actions' || col.key === 'action')
       .map((col) => {
         const isActionsCol = col.key === 'actions' || col.key === 'action'
+        const isIpa = isIpaColumn(col)
         const isSortable =
           col.sortable !== undefined
             ? Boolean(col.sortable)
             : col.sorter !== undefined
             ? Boolean(col.sorter)
-            : !isActionsCol
+            : isIpa
+            ? !isActionsCol && col.filterKind !== 'media'
+            : false
 
         const isColActive = state
           ? state.query.sort === col.key || (col.dataIndex && String(col.dataIndex) === state.query.sort)
@@ -465,7 +549,6 @@ export function DataTable<T extends object>({
         const isStickyRight =
           col.sticky === 'right' || col.fixed === 'right' || (isActionsCol && col.fixed !== false)
 
-        const isIpa = isIpaColumn(col)
         const effectiveDataIndex = (
           col.dataIndex
             ? String(col.dataIndex)
@@ -490,9 +573,10 @@ export function DataTable<T extends object>({
           onHeaderCell: () => ({
             style: {
               textAlign: 'center',
-              ...(minW ? { minWidth: minW } : {}),
+              whiteSpace: 'nowrap',
+              ...(minW ? { minWidth: minW } : normalizedW ? { minWidth: normalizedW } : {}),
             },
-            className: '!text-center',
+            className: '!text-center !whitespace-nowrap',
           }),
           onCell: (record: T, rowIndex?: number) => {
             const userCell = 'onCell' in col && typeof col.onCell === 'function' ? col.onCell(record, rowIndex) : {}
@@ -501,13 +585,7 @@ export function DataTable<T extends object>({
               style: minW ? { minWidth: minW, ...(userCell?.style as React.CSSProperties | undefined) } : userCell?.style,
             }
           },
-          sorter: isSortable
-            ? onSortChange || state
-              ? true
-              : typeof col.sorter === 'function'
-              ? col.sorter
-              : (a: T, b: T) => defaultCompare(a, b, String(col.dataIndex || col.key))
-            : false,
+          sorter: isSortable ? true : false,
           sortOrder: currentSortOrderForCol,
           render: (value: unknown, record: T, index: number) => {
             if (!col.render) {
@@ -654,15 +732,15 @@ export function DataTable<T extends object>({
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-column-title]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!flex-nowrap [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-column-sorter]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-column-title]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-column-title]:!inline-flex [&_.ant-table-thead_.ant-table-column-title]:!flex-none [&_.ant-table-thead_.ant-table-column-title]:!w-auto [&_.ant-table-thead_.ant-table-column-title]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!flex [&_.ant-table-thead_.ant-table-filter-column]:!w-full [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!items-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-column-sorter]:!inline-flex [&_.ant-table-thead_.ant-table-column-sorter]:!flex-none [&_.ant-table-thead_.ant-table-column-sorter]:!m-0 [&_.ant-table-thead_.ant-table-column-sorter]:!self-center [&_.ant-table-thead_.ant-table-filter-trigger]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
           <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
             <Table<T>
               rowKey={effectiveRowKey}
               columns={antdColumns}
-              dataSource={effectiveData}
+              dataSource={sortedData}
               loading={effectiveLoading}
               size={antdSize}
-              scroll={{ x: scroll?.x ?? 'max-content', y: scroll?.y }}
+              scroll={scroll?.x || scroll?.y ? { x: scroll.x, y: scroll.y } : undefined}
               pagination={false}
               rowSelection={rowSelection}
               rowClassName={rowClassName}
@@ -706,11 +784,11 @@ export function DataTable<T extends object>({
                 }
                 if (extra.action === 'sort') {
                   const sort = Array.isArray(sorter) ? sorter[0] : sorter
-                  const colKey = String(sort?.columnKey || sort?.field || sort?.column?.key || '')
-                  if (!colKey) return
-
                   const currentActiveKey = state ? state.query.sort : activeSortKey
                   const currentActiveOrder = state ? state.query.order : activeSortOrder
+
+                  const colKey = String(sort?.columnKey || sort?.field || sort?.column?.key || currentActiveKey || '')
+                  if (!colKey) return
 
                   const isSameColumn = Boolean(
                     currentActiveKey &&

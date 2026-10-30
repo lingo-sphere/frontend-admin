@@ -19,7 +19,6 @@ import {
   Activity01Icon,
   Rocket01Icon,
   AiBrain01Icon,
-  Settings02Icon,
 } from '@hugeicons/core-free-icons'
 import {
   LayoutDashboard,
@@ -144,7 +143,6 @@ export const navGroups: NavGroup[] = [
         label: 'Thống kê dữ liệu',
         children: [
           { id: 'progress', label: 'Phân tích học tập' },
-          { id: 'measurement-profiles', label: 'Hiệu chuẩn đánh giá' },
           { id: 'analytics-posthog', label: 'Phân tích Web' },
           { id: 'monitoring-betterstack', label: 'Giám sát hệ thống' },
         ],
@@ -163,7 +161,6 @@ export const navGroups: NavGroup[] = [
         children: [
           { id: 'settings-plans', label: 'Gói dịch vụ', icon: Rocket01Icon },
           { id: 'settings-ai', label: 'AI & Mô hình', icon: AiBrain01Icon },
-          { id: 'settings-system', label: 'Hệ thống', icon: Settings02Icon },
         ],
       },
     ],

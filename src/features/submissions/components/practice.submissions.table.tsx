@@ -44,8 +44,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
   const columns: DataTableColumn<PracticeSubmission>[] = [
     {
       key: 'student',
+      dataIndex: 'user_email',
       title: 'Học viên',
-      width: 220,
+      sortable: true,
+      width: 210,
       render: (item) => {
         const email = item.user_email || item.user_id || 'HV'
         const initials = email.slice(0, 2).toUpperCase()
@@ -72,8 +74,11 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'title',
+      dataIndex: 'title',
       title: 'Bài luyện tập',
-      minWidth: 200,
+      sortable: true,
+      width: 240,
+      minWidth: 180,
       render: (item) => (
         <TableTextCell
           text={item.title || 'Bài luyện tập'}
@@ -82,8 +87,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'type',
+      dataIndex: 'exercise_type',
       title: 'Loại bài',
-      width: 140,
+      sortable: true,
+      width: 120,
       align: 'center',
       render: (item) => {
         const label = practiceExerciseLabels[item.exercise_type || ''] || item.exercise_type || '—'
@@ -96,8 +103,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'ai_score',
+      dataIndex: 'ai_score',
       title: 'Điểm AI',
-      width: 100,
+      sortable: true,
+      width: 90,
       align: 'center',
       render: (item) => (
         <span className="font-bold font-mono text-xs text-indigo-600 dark:text-indigo-400">
@@ -107,8 +116,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'score',
+      dataIndex: 'final_score',
       title: 'Điểm hiện tại',
-      width: 110,
+      sortable: true,
+      width: 100,
       align: 'center',
       render: (item) => (
         <span className="font-bold font-mono text-xs text-slate-900 dark:text-slate-100">
@@ -118,8 +129,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'status',
+      dataIndex: 'status',
       title: 'Trạng thái',
-      width: 150,
+      sortable: true,
+      width: 135,
       align: 'center',
       render: (item) => {
         if (item.record_type === 'GRADING_REQUEST') {
@@ -162,8 +175,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'submitted_at',
+      dataIndex: 'created_at',
       title: 'Nộp bài',
-      width: 160,
+      sortable: true,
+      width: 140,
       align: 'center',
       render: (item) => (
         <span className="text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap font-mono">
@@ -173,8 +188,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     },
     {
       key: 'reviewed_at',
+      dataIndex: 'reviewed_at',
       title: 'Đã kiểm tra lúc',
-      width: 160,
+      sortable: true,
+      width: 140,
       align: 'center',
       render: (item) => (
         <span className="text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap font-mono">
@@ -185,9 +202,9 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     {
       key: 'actions',
       title: 'Thao tác',
-      width: 130,
+      width: 150,
       align: 'center',
-      fixed: 'right',
+      fixed: false,
       render: (item) => item.record_type === 'GRADING_REQUEST' ? (
         <Button
           size="small"
@@ -196,7 +213,7 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
           loading={retry.isPending && retry.variables === item.id}
           disabled={retry.isPending}
           onClick={() => retry.mutate(item.id)}
-          className="rounded-lg text-xs font-semibold"
+          className="rounded-xl text-xs font-semibold whitespace-nowrap"
         >
           Thử chấm lại
         </Button>
@@ -206,9 +223,9 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
           type="primary"
           ghost
           onClick={() => onOpenReview(item.id)}
-          className="rounded-lg text-xs font-semibold"
+          className="rounded-xl text-xs font-semibold whitespace-nowrap px-3"
         >
-          Xem & chấm bài
+          Xem và chấm bài
         </Button>
       ),
     },
@@ -332,7 +349,6 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
           </div>
         }
         onResetFilters={reset}
-        scroll={{ x: 1200 }}
         pagination={{
           currentPage: page,
           pageSize,

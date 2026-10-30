@@ -175,6 +175,7 @@ export function getExamColumns({
     {
       key: 'type',
       title: isVi ? 'Loại đề' : 'Type',
+      sortable: true,
       width: 140,
       align: 'center',
       render: (exam) => (
@@ -259,6 +260,7 @@ export function getExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      sortable: true,
       width: 120,
       align: 'center',
       render: (exam) => (

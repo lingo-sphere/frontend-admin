@@ -185,6 +185,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Tên chủ điểm (Việt / Anh)',
       key: 'title',
+      sortable: true,
+      dataIndex: 'title_vi',
       width: 280,
       minWidth: 260,
       render: (row) => (
@@ -211,6 +213,8 @@ export function GrammarHandbookTab() {
     {
       title: 'CEFR',
       key: 'cefr_level',
+      sortable: true,
+      dataIndex: 'cefr_level',
       width: 90,
       align: 'center',
       render: (row) => (
@@ -222,6 +226,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Nhóm ngữ pháp',
       key: 'category',
+      sortable: true,
+      dataIndex: 'category',
       width: 180,
       render: (row) => {
         const found = CATEGORY_OPTIONS.find((c) => c.value === row.category)
@@ -231,6 +237,8 @@ export function GrammarHandbookTab() {
     {
       title: 'TOEIC Target',
       key: 'toeic_relevance',
+      sortable: true,
+      dataIndex: 'toeic_relevance',
       width: 120,
       align: 'center',
       render: (row) =>
@@ -250,6 +258,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Nổi bật',
       key: 'is_featured',
+      sortable: true,
+      dataIndex: 'is_featured',
       width: 90,
       align: 'center',
       render: (row) =>
@@ -264,6 +274,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Xuất bản',
       key: 'publish',
+      sortable: true,
+      dataIndex: 'is_published',
       width: 110,
       align: 'center',
       render: (row) => (
@@ -279,6 +291,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Cập nhật',
       key: 'updated_at',
+      sortable: true,
+      dataIndex: 'updated_at',
       width: 115,
       align: 'center',
       render: (row) =>
@@ -296,6 +310,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Ngày tạo',
       key: 'created_at',
+      sortable: true,
+      dataIndex: 'created_at',
       width: 115,
       align: 'center',
       initiallyHidden: true,
@@ -350,7 +366,6 @@ export function GrammarHandbookTab() {
         data={data?.items || []}
         isLoading={isLoading}
         rowKey="_id"
-        scroll={{ x: 1250 }}
         onResetFilters={handleResetFilters}
         extraActions={
           <button

@@ -148,7 +148,6 @@ export function CourseExamsPage() {
           setCurrentPage(1)
         }}
         onResetFilters={handleResetFilters}
-        scroll={{ x: 1200 }}
         extraActions={
           <CourseExamHeaderActions
             isVi={isVi}

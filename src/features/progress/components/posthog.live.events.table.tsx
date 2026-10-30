@@ -243,7 +243,7 @@ export function PostHogLiveEventsTable({
                         </td>
                       )}
                       {visibleColumns.includes('user') && (
-                        <td className={`${paddingClass} font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center`}>
+                        <td className={`${paddingClass} font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap text-left`}>
                           {item.user_email}
                         </td>
                       )}

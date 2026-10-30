@@ -97,11 +97,11 @@ export function createCourseProgressColumns({
       render: (st) => {
         const progressPct = Math.min(100, Math.max(0, st.progress_percentage || 0))
         return (
-          <div className="min-w-0 max-w-[120px]">
+          <div className="min-w-0 max-w-[120px] mx-auto flex flex-col items-center justify-center text-center">
             <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
               {progressPct}%
             </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center justify-center gap-1.5 mt-0.5 w-full">
               <div className="w-12 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${

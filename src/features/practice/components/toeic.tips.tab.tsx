@@ -165,6 +165,8 @@ export function ToeicTipsTab() {
     {
       title: 'Thứ tự',
       key: 'order',
+      sortable: true,
+      dataIndex: 'order',
       width: 80,
       align: 'center',
       render: (row) => <span className="font-bold text-slate-600 dark:text-slate-400">#{row.order || 0}</span>,
@@ -172,6 +174,8 @@ export function ToeicTipsTab() {
     {
       title: 'Tiêu đề & Tóm tắt chiến thuật',
       key: 'title',
+      sortable: true,
+      dataIndex: 'title',
       render: (row) => (
         <div>
           <button
@@ -193,6 +197,8 @@ export function ToeicTipsTab() {
     {
       title: 'Kỹ năng & Part',
       key: 'skill_part',
+      sortable: true,
+      dataIndex: 'skill',
       width: 170,
       align: 'center',
       render: (row) => (
@@ -227,6 +233,8 @@ export function ToeicTipsTab() {
     {
       title: 'Xuất bản',
       key: 'publish',
+      sortable: true,
+      dataIndex: 'is_published',
       width: 110,
       align: 'center',
       render: (row) => (
@@ -242,6 +250,8 @@ export function ToeicTipsTab() {
     {
       title: 'Cập nhật',
       key: 'updated_at',
+      sortable: true,
+      dataIndex: 'updated_at',
       width: 115,
       align: 'center',
       render: (row) =>
@@ -259,6 +269,8 @@ export function ToeicTipsTab() {
     {
       title: 'Ngày tạo',
       key: 'created_at',
+      sortable: true,
+      dataIndex: 'created_at',
       width: 115,
       align: 'center',
       initiallyHidden: true,
@@ -301,7 +313,6 @@ export function ToeicTipsTab() {
         data={data?.items || []}
         isLoading={isLoading}
         rowKey="_id"
-        scroll={{ x: 1200 }}
         onResetFilters={handleResetFilters}
         extraActions={
           <button

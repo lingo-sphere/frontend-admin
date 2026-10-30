@@ -263,7 +263,6 @@ export function LearnerSubmissionsTab({
           isVi={isVi}
         />
       }
-      scroll={{ x: 1200 }}
       pagination={{
         currentPage: subCurrentPage,
         pageSize: subPageSize,
