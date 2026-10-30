@@ -332,7 +332,6 @@ export function GrammarHandbookTab() {
       key: 'actions',
       width: 140,
       align: 'center',
-      fixed: 'right',
       render: (row) => (
         <Space size="small" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
           <Button
@@ -342,6 +341,7 @@ export function GrammarHandbookTab() {
               setSelectedItem(row)
               setDrawerVisible(true)
             }}
+            className="!text-sky-600 !border-sky-200/80 !bg-sky-50/80 hover:!bg-sky-100 hover:!border-sky-300 dark:!bg-sky-950/60 dark:!border-sky-800 dark:!text-sky-400 dark:hover:!bg-sky-900/60 shadow-2xs"
           >
             Sửa
           </Button>
@@ -352,7 +352,13 @@ export function GrammarHandbookTab() {
             okText="Xóa"
             cancelText="Hủy"
           >
-            <Button size="small" danger icon={<DeleteOutlined />} loading={workingId === row._id} />
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              loading={workingId === row._id}
+              className="!text-rose-600 !border-rose-200/80 !bg-rose-50/80 hover:!bg-rose-100 hover:!border-rose-300 dark:!bg-rose-950/60 dark:!border-rose-800 dark:!text-rose-400 dark:hover:!bg-rose-900/60 shadow-2xs"
+            />
           </Popconfirm>
         </Space>
       ),

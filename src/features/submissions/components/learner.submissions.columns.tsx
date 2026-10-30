@@ -168,7 +168,6 @@ export function createLearnerSubmissionsColumns({
       title: isVi ? 'Thao Tác' : 'Action',
       width: '100px',
       align: 'center',
-      fixed: 'right',
       render: (sub) => {
         const isReviewed = sub.is_teacher_reviewed || sub.status === 'TEACHER_REVIEWED'
         return (

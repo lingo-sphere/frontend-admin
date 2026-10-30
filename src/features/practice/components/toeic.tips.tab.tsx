@@ -291,7 +291,6 @@ export function ToeicTipsTab() {
       key: 'actions',
       width: 120,
       align: 'center',
-      fixed: 'right',
       render: (row) => (
         <TableRowActions
           onEdit={() => {

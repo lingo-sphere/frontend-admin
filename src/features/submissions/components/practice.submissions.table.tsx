@@ -1,6 +1,7 @@
 // Bảng hiển thị danh sách bài nộp và yêu cầu phúc khảo phần luyện tập.
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Tooltip } from 'antd'
 import { FileCheck2, Clock, CheckCircle2, RotateCcw, Sparkles } from 'lucide-react'
@@ -14,8 +15,10 @@ import { practiceReviewService, type PracticeSkill, type PracticeSubmission } fr
 import { practiceScoreLabel, practiceDateLabel, practiceExerciseLabels } from '@/features/submissions/helpers/practice.submission.display'
 
 export function PracticeSubmissionsTable({ skill, onOpenReview }: {
-  skill: PracticeSkill; onOpenReview: (id: string) => void
+  skill: PracticeSkill
+  onOpenReview?: (id: string) => void
 }) {
+  const navigate = useNavigate()
   const [status, setStatus] = useState('ALL')
   const [standard, setStandard] = useState('ALL')
   const [search, setSearch] = useState('')
@@ -222,7 +225,10 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
           size="small"
           type="primary"
           ghost
-          onClick={() => onOpenReview(item.id)}
+          onClick={() => {
+            if (onOpenReview) onOpenReview(item.id)
+            else navigate(`/submissions/practice/${skill.toLowerCase()}/${item.id}`)
+          }}
           className="rounded-xl text-xs font-semibold whitespace-nowrap px-3"
         >
           Xem và chấm bài

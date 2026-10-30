@@ -50,10 +50,8 @@ export function VocabularyDecksTab({
     })),
   ], [topics])
 
-  // Filter decks by topic and search query
   const filteredDecks = useMemo(() => {
     return decks.filter((deck) => {
-      // Filter by Topic
       if (selectedTopicId !== 'ALL') {
         const matchesTopic =
           deck.topic_id === selectedTopicId ||
@@ -62,7 +60,6 @@ export function VocabularyDecksTab({
         if (!matchesTopic) return false
       }
 
-      // Filter by Search text
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase().trim()
         const name = (deck.name_vi || deck.name || deck.title || '').toLowerCase()
@@ -214,6 +211,7 @@ export function VocabularyDecksTab({
                     size="small"
                     icon={<BookOpen className="w-3.5 h-3.5" />}
                     onClick={() => onManageCards(deck)}
+                    className="!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs"
                   />
                 </Tooltip>
               }

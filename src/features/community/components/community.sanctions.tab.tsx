@@ -196,7 +196,7 @@ export function CommunitySanctionsTab({
                 <Tooltip title={t('community.unban')}>
                   <Button
                     size="small"
-                    className="!text-emerald-600 !border-emerald-200 hover:!border-emerald-500 hover:!text-emerald-500"
+                    className="!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs"
                     icon={<CheckCircle className="w-3.5 h-3.5" />}
                   />
                 </Tooltip>
@@ -215,7 +215,7 @@ export function CommunitySanctionsTab({
                 <Tooltip title={t('community.unmute')}>
                   <Button
                     size="small"
-                    className="!text-amber-600 !border-amber-200 hover:!border-amber-500 hover:!text-amber-500"
+                    className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                     icon={<CheckCircle className="w-3.5 h-3.5" />}
                   />
                 </Tooltip>

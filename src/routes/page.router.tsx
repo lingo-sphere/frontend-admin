@@ -1,6 +1,8 @@
 // Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
 
 import { PracticeSpeakingSubmissionsPage, PracticeWritingSubmissionsPage } from '@/features/submissions/pages/practice.submissions.page'
+import { PracticeSubmissionReviewPage } from '@/features/submissions/pages/practice.submission.review.page'
+import { CourseTestSessionDetailPage } from '@/features/submissions/pages/course.test.session.detail.page'
 
 import { Navigate, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
@@ -133,7 +135,7 @@ export function PageRouter() {
     return <ForbiddenPage key={pathname} />
   }
 
-  if (!isAdmin && (['submissions', 'course-submissions', 'practice-speaking-submissions', 'practice-writing-submissions'].includes(activeNavItem) || activeNavItem.startsWith('course-submissions:')) &&
+  if (!isAdmin && (['submissions', 'course-submissions', 'practice-speaking-submissions', 'practice-writing-submissions'].includes(activeNavItem) || activeNavItem.startsWith('course-submissions:') || activeNavItem.startsWith('course-test-session-detail:') || activeNavItem.startsWith('practice-submission-review:')) &&
     currentRole !== 'INSTRUCTOR' && !hasPermission('GET', '/progress/teacher/courses/:courseId/submissions')) {
     return <ForbiddenPage key={pathname} />
   }
@@ -255,6 +257,20 @@ export function PageRouter() {
     const courseId = parts[1]
     const userId = parts[2]
     return <LearnerReminderHistoryPage key={pathname} courseId={courseId} userId={userId} />
+  }
+
+  if (activeNavItem.startsWith('practice-submission-review:')) {
+    const parts = activeNavItem.split(':')
+    const skill = parts[1].toUpperCase() as 'SPEAKING' | 'WRITING'
+    const id = parts[2]
+    return <PracticeSubmissionReviewPage key={pathname} skill={skill} id={id} />
+  }
+
+  if (activeNavItem.startsWith('course-test-session-detail:')) {
+    const parts = activeNavItem.split(':')
+    const courseId = parts[1]
+    const sessionId = parts[2]
+    return <CourseTestSessionDetailPage key={pathname} courseId={courseId} sessionId={sessionId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || NotFoundPage

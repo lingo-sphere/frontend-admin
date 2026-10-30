@@ -150,11 +150,12 @@ export function TableRowActions({
   return (
     <Space
       size={4}
-      className="justify-center"
+      wrap={false}
+      className="justify-center flex-nowrap whitespace-nowrap"
       onClick={(e: React.MouseEvent) => e.stopPropagation()}
     >
       {extraActions && (
-        <span className={isAnyPopOpen ? 'pointer-events-none' : undefined}>
+        <span className={`inline-flex items-center gap-1 flex-nowrap whitespace-nowrap ${isAnyPopOpen ? 'pointer-events-none' : ''}`}>
           {extraActions}
         </span>
       )}
@@ -171,7 +172,7 @@ export function TableRowActions({
               e.stopPropagation()
               onView()
             }}
-            className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            className="!text-indigo-600 !border-indigo-200/80 !bg-indigo-50/80 hover:!bg-indigo-100 hover:!border-indigo-300 dark:!bg-indigo-950/60 dark:!border-indigo-800 dark:!text-indigo-400 dark:hover:!bg-indigo-900/60 shadow-2xs"
           />
         </Tooltip>
       )}
@@ -183,13 +184,12 @@ export function TableRowActions({
         >
           <Button
             size="small"
-            type="primary"
-            ghost
             icon={<Edit2 size={14} />}
             onClick={(e) => {
               e.stopPropagation()
               onEdit()
             }}
+            className="!text-sky-600 !border-sky-200/80 !bg-sky-50/80 hover:!bg-sky-100 hover:!border-sky-300 dark:!bg-sky-950/60 dark:!border-sky-800 dark:!text-sky-400 dark:hover:!bg-sky-900/60 shadow-2xs"
           />
         </Tooltip>
       )}
@@ -205,7 +205,7 @@ export function TableRowActions({
           icon={<RotateCcw size={14} />}
           disabled={disabled}
           loading={loading}
-          className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+          className="!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs"
           open={restorePopOpen}
           onOpenChange={setRestorePopOpen}
           onConfirm={onRestore}
@@ -224,6 +224,7 @@ export function TableRowActions({
           icon={<Trash2 size={14} />}
           disabled={disabled}
           loading={loading}
+          className="!text-rose-600 !border-rose-200/80 !bg-rose-50/80 hover:!bg-rose-100 hover:!border-rose-300 dark:!bg-rose-950/60 dark:!border-rose-800 dark:!text-rose-400 dark:hover:!bg-rose-900/60 shadow-2xs"
           open={deletePopOpen}
           onOpenChange={setDeletePopOpen}
           onConfirm={onDelete}

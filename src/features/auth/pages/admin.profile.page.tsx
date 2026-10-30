@@ -76,13 +76,17 @@ export function AdminProfilePage() {
   }, [])
 
   const handleAvatarChange = async (url: string) => {
-    if (!url || !profileData) return
+    if (!profileData) return
     setIsUploadingAvatar(true)
     try {
       await userService.updateMyProfile({ avatar_url: url })
-      setProfileData((prev) => (prev ? { ...prev, avatar_url: url } : null))
+      setProfileData((prev) => (prev ? { ...prev, avatar_url: url || undefined } : null))
       await fetchCurrentUser()
-      toast.success('Cập nhật ảnh đại diện quản trị viên thành công!')
+      if (url) {
+        toast.success('Cập nhật ảnh đại diện quản trị viên thành công!')
+      } else {
+        toast.success('Đã xóa ảnh đại diện thành công!')
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Tải lên ảnh đại diện thất bại'
       toast.error(msg)

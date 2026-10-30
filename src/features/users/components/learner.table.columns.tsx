@@ -144,8 +144,9 @@ export function getLearnerColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
-      width: 130,
+      width: 190,
       align: 'center',
+      fixed: false,
       render: (u) => {
         const isActive = u.status === 'ACTIVE'
         return (
@@ -160,7 +161,7 @@ export function getLearnerColumns({
                       size="small"
                       icon={<Bell size={14} />}
                       onClick={() => onRemindLearner(u)}
-                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                      className="!text-blue-600 !border-blue-200/80 !bg-blue-50/80 hover:!bg-blue-100 hover:!border-blue-300 dark:!bg-blue-950/60 dark:!border-blue-800 dark:!text-blue-400 dark:hover:!bg-blue-900/60 shadow-2xs"
                     />
                   </Tooltip>
                 )}
@@ -170,7 +171,7 @@ export function getLearnerColumns({
                       size="small"
                       icon={<Sparkles size={14} />}
                       onClick={() => onOpenAiQuotaModal(u)}
-                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                      className="!text-purple-600 !border-purple-200/80 !bg-purple-50/80 hover:!bg-purple-100 hover:!border-purple-300 dark:!bg-purple-950/60 dark:!border-purple-800 dark:!text-purple-400 dark:hover:!bg-purple-900/60 shadow-2xs"
                     />
                   </Tooltip>
                 )}
@@ -187,7 +188,11 @@ export function getLearnerColumns({
                   tooltipTitle={isActive ? (isVi ? 'Khóa tài khoản' : 'Block') : (isVi ? 'Mở khóa' : 'Unblock')}
                   danger={isActive}
                   icon={isActive ? <Ban size={14} /> : <CheckCircle size={14} />}
-                  className={!isActive ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400' : undefined}
+                  className={
+                    isActive
+                      ? '!text-rose-600 !border-rose-200/80 !bg-rose-50/80 hover:!bg-rose-100 hover:!border-rose-300 dark:!bg-rose-950/60 dark:!border-rose-800 dark:!text-rose-400 dark:hover:!bg-rose-900/60 shadow-2xs'
+                      : '!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs'
+                  }
                   onConfirm={() => onOpenStatusModal(u, isActive ? 'ban' : 'unban')}
                 />
                 {onResetData && (
@@ -203,7 +208,7 @@ export function getLearnerColumns({
                     okType="danger"
                     tooltipTitle={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập' : 'Reset learner data'}
                     icon={<RotateCcw size={14} />}
-                    className="text-amber-600 hover:text-amber-700 dark:text-amber-400"
+                    className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                     onConfirm={() => onResetData(u)}
                   />
                 )}

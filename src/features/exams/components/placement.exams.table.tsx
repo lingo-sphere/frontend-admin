@@ -271,6 +271,7 @@ export function PlacementExamsTable({
                     ghost
                     icon={<Edit3 size={14} />}
                     onClick={() => onManageQuestions(exam)}
+                    className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                   />
                 </Tooltip>
               }

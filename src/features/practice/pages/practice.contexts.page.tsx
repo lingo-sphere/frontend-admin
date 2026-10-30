@@ -480,7 +480,6 @@ export function PracticeContextsPage() {
       title: 'Thao tác',
       key: 'actions',
       width: 150,
-      fixed: 'right',
       align: 'center',
       render: (record: PracticeContext) => {
         const canAddChild = record.level < 2

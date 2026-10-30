@@ -7,8 +7,8 @@ import type { StudentProgressItem } from '@/features/progress/services/progress.
 interface CreateCourseProgressColumnsParams {
   isVi: boolean
   usersMap: Map<string, import('@/types/api.types').UserProfile | { full_name?: string | null; email?: string | null; avatar_url?: string | null }>
-  onSelectStudentDetail: (st: StudentProgressItem) => void
-  onSelectReminderHistory: (st: StudentProgressItem) => void
+  onSelectReminderHistory: (student: StudentProgressItem) => void
+  onSelectStudentDetail: (student: StudentProgressItem) => void
 }
 
 function formatScheduleDays(days: Array<number | string> = []): string {
@@ -35,8 +35,8 @@ function formatScheduleDays(days: Array<number | string> = []): string {
 export function createCourseProgressColumns({
   isVi,
   usersMap,
-  onSelectStudentDetail,
   onSelectReminderHistory,
+  onSelectStudentDetail,
 }: CreateCourseProgressColumnsParams): DataTableColumn<StudentProgressItem>[] {
   return [
     {
@@ -265,6 +265,7 @@ export function createCourseProgressColumns({
               size="small"
               icon={<Mail className="w-3.5 h-3.5" />}
               onClick={() => onSelectReminderHistory(st)}
+              className="!text-blue-600 !border-blue-200/80 !bg-blue-50/80 hover:!bg-blue-100 hover:!border-blue-300 dark:!bg-blue-950/60 dark:!border-blue-800 dark:!text-blue-400 dark:hover:!bg-blue-900/60 shadow-2xs"
             />
           </Tooltip>
           <Tooltip title={isVi ? 'Xem chi tiết tiến độ các chương và bài thi' : 'View detailed chapter progress and test results'}>
@@ -272,6 +273,7 @@ export function createCourseProgressColumns({
               size="small"
               icon={<BarChart3 className="w-3.5 h-3.5" />}
               onClick={() => onSelectStudentDetail(st)}
+              className="!text-indigo-600 !border-indigo-200/80 !bg-indigo-50/80 hover:!bg-indigo-100 hover:!border-indigo-300 dark:!bg-indigo-950/60 dark:!border-indigo-800 dark:!text-indigo-400 dark:hover:!bg-indigo-900/60 shadow-2xs"
             />
           </Tooltip>
         </Space>

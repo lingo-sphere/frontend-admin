@@ -1,8 +1,10 @@
 // Component hiển thị danh sách các phiên kiểm tra khóa học và thống kê tổng quan.
 
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import dayjs from 'dayjs'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Modal, Spin, Tooltip } from 'antd'
+import { Button, Tooltip } from 'antd'
 import { Layers, CheckCircle2, AlertTriangle, RotateCcw } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableTextCell } from '@/components/table.text.cell'
@@ -11,7 +13,6 @@ import { StatCard } from '@/components/stat.card'
 import { type CourseSimple } from '@/features/courses/hooks/use.course.learners.data'
 import { progressService, type CourseTestSession } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
-import { resolveMediaUrl } from '@/features/media/utils/media.utils'
 
 type SessionRow = CourseTestSession & { course_title: string; user_email: string }
 const testTypes: Record<string, string> = {
@@ -26,8 +27,6 @@ const statuses: Record<string, string> = {
   AWAITING_GRADING: 'Chờ chấm',
   FINALIZING: 'Đang xử lý',
 }
-const formatDate = (date?: string | null) => date ? new Date(date).toLocaleString('vi-VN') : '—'
-const text = (value: unknown) => typeof value === 'string' || typeof value === 'number' ? String(value) : ''
 
 export function CourseTestSessionsTab({
   courses,
@@ -42,12 +41,12 @@ export function CourseTestSessionsTab({
   isLoadingCourses: boolean
   coursesError: Error | null
 }) {
+  const navigate = useNavigate()
   const [type, setType] = useState('ALL')
   const [status, setStatus] = useState('ALL')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [selected, setSelected] = useState<SessionRow | null>(null)
 
   const targetCourses = useMemo(
     () => courses.filter((c) => selectedCourseId === 'ALL' || c.id === selectedCourseId),
@@ -79,12 +78,6 @@ export function CourseTestSessionsTab({
         }))
         .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))
     },
-  })
-
-  const detail = useQuery({
-    queryKey: ['course-test-session-detail', selected?.course_id, selected?._id],
-    enabled: !!selected,
-    queryFn: () => progressService.getCourseTestSession(selected!.course_id, selected!._id),
   })
 
   const filtered = useMemo(() => {
@@ -132,7 +125,8 @@ export function CourseTestSessionsTab({
       dataIndex: 'course_title',
       title: 'Khóa học',
       sortable: true,
-      minWidth: 180,
+      width: 220,
+      minWidth: 160,
       render: (row) => <TableTextCell text={row.course_title} />,
     },
     {
@@ -219,12 +213,15 @@ export function CourseTestSessionsTab({
       dataIndex: 'started_at',
       title: 'Bắt đầu',
       sortable: true,
-      width: 150,
+      width: 140,
       align: 'center',
-      render: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap font-mono">
-          {formatDate(row.started_at)}
-        </span>
+      render: (row) => row.started_at ? (
+        <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400 whitespace-nowrap">
+          <div className="font-medium">{dayjs(row.started_at).format('DD/MM/YYYY')}</div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500">{dayjs(row.started_at).format('HH:mm:ss')}</div>
+        </div>
+      ) : (
+        <span className="text-slate-400 text-xs">—</span>
       ),
     },
     {
@@ -232,12 +229,15 @@ export function CourseTestSessionsTab({
       dataIndex: 'submitted_at',
       title: 'Nộp bài',
       sortable: true,
-      width: 150,
+      width: 140,
       align: 'center',
-      render: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap font-mono">
-          {formatDate(row.submitted_at)}
-        </span>
+      render: (row) => row.submitted_at ? (
+        <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400 whitespace-nowrap">
+          <div className="font-medium">{dayjs(row.submitted_at).format('DD/MM/YYYY')}</div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500">{dayjs(row.submitted_at).format('HH:mm:ss')}</div>
+        </div>
+      ) : (
+        <span className="text-slate-400 text-xs">—</span>
       ),
     },
     {
@@ -245,13 +245,12 @@ export function CourseTestSessionsTab({
       title: 'Thao tác',
       width: 120,
       align: 'center',
-      fixed: 'right',
       render: (row) => (
         <Button
           size="small"
           type="primary"
           ghost
-          onClick={() => setSelected(row)}
+          onClick={() => navigate(`/submissions/courses/${row.course_id}/sessions/${row._id}`)}
           className="rounded-lg text-xs font-semibold"
         >
           Xem bài làm
@@ -259,8 +258,6 @@ export function CourseTestSessionsTab({
       ),
     },
   ]
-
-  const session = detail.data
 
   return (
     <div className="space-y-6">
@@ -378,86 +375,6 @@ export function CourseTestSessionsTab({
           },
         }}
       />
-
-      <Modal
-        open={!!selected}
-        onCancel={() => setSelected(null)}
-        footer={null}
-        width={850}
-        title="Chi tiết bài kiểm tra khóa học"
-        destroyOnHidden
-      >
-        {selected && (
-          <div className="space-y-4">
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {selected.user_email || selected.user_id} · {selected.course_title} · {testTypes[selected.test_type] || selected.test_type}
-            </p>
-            {detail.isLoading && <Spin />}
-            {detail.error && (
-              <p role="alert" className="text-red-500 text-xs">
-                Không tải được bài làm. <Button onClick={() => { void detail.refetch() }}>Thử lại</Button>
-              </p>
-            )}
-            {session && (
-              <>
-                <p className="text-xs">
-                  Điểm: <strong>{session.score == null ? 'Chưa có điểm' : `${session.score}/100`}</strong> · {statuses[session.status] || session.status} · Điểm đạt: {session.passing_score ?? '—'}
-                </p>
-                <p className="text-xs text-slate-500 font-mono">
-                  Bắt đầu: {formatDate(session.started_at)} · Nộp bài: {formatDate(session.submitted_at)}
-                </p>
-                {session.raw_questions.length === 0 && (
-                  <p className="text-xs text-slate-400">Phiên kiểm tra này không lưu nội dung câu hỏi.</p>
-                )}
-                {session.raw_questions.map((q, index) => {
-                  const answer = session.interim_answers.find((a) => a.question_index === index)
-                  const options = Array.isArray(q.options) ? q.options : []
-                  const selectedOption =
-                    answer?.selected_option ??
-                    (answer?.selected_index != null
-                      ? String.fromCharCode(65 + answer.selected_index)
-                      : 'Chưa trả lời')
-                  return (
-                    <div key={index} className="space-y-2 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-                      <p className="font-semibold text-xs text-slate-900 dark:text-slate-100">
-                        Câu {index + 1}: {text(q.question_text) || text(q.prompt)}
-                      </p>
-                      {typeof q.image_url === 'string' && q.image_url && (
-                        <img
-                          className="max-h-56 max-w-full rounded-lg"
-                          src={resolveMediaUrl(q.image_url)}
-                          alt={`Hình câu ${index + 1}`}
-                        />
-                      )}
-                      {!!(q.audio_url || q.media_url) && (
-                        <audio
-                          controls
-                          preload="none"
-                          src={resolveMediaUrl(text(q.audio_url) || text(q.media_url))}
-                        />
-                      )}
-                      {options.map((option, i) => (
-                        <p key={i} className="text-xs text-slate-600 dark:text-slate-300">
-                          {String.fromCharCode(65 + i)}. {typeof option === 'object' && option ? text((option as Record<string, unknown>).text) : text(option)}
-                        </p>
-                      ))}
-                      <p className="text-xs">
-                        Học viên chọn: <strong>{selectedOption}</strong>
-                      </p>
-                      <p className="text-xs">
-                        Đáp án: <strong>{text(q.correct_answer) || text(q.correct_option) || '—'}</strong>
-                      </p>
-                      {!!q.explanation && (
-                        <p className="text-xs text-slate-500">{text(q.explanation)}</p>
-                      )}
-                    </div>
-                  )
-                })}
-              </>
-            )}
-          </div>
-        )}
-      </Modal>
     </div>
   )
 }

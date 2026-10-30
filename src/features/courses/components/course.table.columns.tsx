@@ -226,7 +226,7 @@ export function getCourseColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
-      width: 110,
+      width: 140,
       align: 'center',
       fixed: false,
       render: (course) => (
@@ -244,7 +244,7 @@ export function getCourseColumns({
                     size="small"
                     icon={<GraduationCap size={14} />}
                     onClick={() => onViewStudentScores(course)}
-                    className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                    className="!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs"
                   />
                 </Tooltip>
               )}
@@ -254,7 +254,7 @@ export function getCourseColumns({
                     size="small"
                     icon={<Headphones size={14} />}
                     onClick={() => onViewSubmissions(course)}
-                    className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                    className="!text-purple-600 !border-purple-200/80 !bg-purple-50/80 hover:!bg-purple-100 hover:!border-purple-300 dark:!bg-purple-950/60 dark:!border-purple-800 dark:!text-purple-400 dark:hover:!bg-purple-900/60 shadow-2xs"
                   />
                 </Tooltip>
               )}

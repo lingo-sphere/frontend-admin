@@ -347,6 +347,7 @@ export function CommunityMessagesTable({
                         )
                       }
                       onClick={() => handleTogglePinClick(msg)}
+                      className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                     />
                   </Tooltip>
                 )}
@@ -357,6 +358,7 @@ export function CommunityMessagesTable({
                       size="small"
                       danger
                       icon={<ShieldAlert className="w-3.5 h-3.5" />}
+                      className="!text-rose-600 !border-rose-200/80 !bg-rose-50/80 hover:!bg-rose-100 hover:!border-rose-300 dark:!bg-rose-950/60 dark:!border-rose-800 dark:!text-rose-400 dark:hover:!bg-rose-900/60 shadow-2xs"
                       onClick={() =>
                         onOpenSanctionModal({
                           user_id: msg.sender_id,
