@@ -64,6 +64,7 @@ export function getCourseExamColumns({
       key: 'type',
       title: isVi ? 'Loại Bài Thi' : 'Exam Type',
       width: '140px',
+      minWidth: 125,
       align: 'center',
       render: (exam) => {
         const badge = getExamTypeBadge(exam.type, exam)
@@ -79,7 +80,8 @@ export function getCourseExamColumns({
     {
       key: 'duration',
       title: isVi ? 'Thời Lượng' : 'Duration',
-      width: '125px',
+      width: '120px',
+      minWidth: 95,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -92,7 +94,8 @@ export function getCourseExamColumns({
     {
       key: 'questions',
       title: isVi ? 'Số Câu / Đánh Giá' : 'Questions / Evaluation',
-      width: '150px',
+      width: '160px',
+      minWidth: 150,
       align: 'center',
       sortable: true,
       render: (exam) => {
@@ -131,7 +134,8 @@ export function getCourseExamColumns({
     {
       key: 'attempts',
       title: isVi ? 'Lượt Thi' : 'Attempts',
-      width: '110px',
+      width: '105px',
+      minWidth: 85,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -143,7 +147,8 @@ export function getCourseExamColumns({
     {
       key: 'score',
       title: isVi ? 'Điểm TB' : 'Avg Score',
-      width: '110px',
+      width: '105px',
+      minWidth: 85,
       align: 'center',
       sortable: true,
       render: (exam) => (

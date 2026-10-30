@@ -128,6 +128,7 @@ export function CourseExamsPage() {
         columns={columns}
         data={paginatedExams}
         rowKey={(e) => e._id ?? ''}
+        scroll={{ x: 1200 }}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         renderGridItem={(exam) => (

@@ -1,9 +1,9 @@
-// Trang xem chi tiết bài làm kiểm tra khóa học và đối chiếu đáp án học viên.
+// Trang xem chi tiết bài làm kiểm tra khóa học, sửa điểm và nhận xét học viên.
 
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Button, Image, Spin, Tooltip } from 'antd'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Button, Image, Spin } from 'antd'
 import {
   ChevronLeft,
   RotateCcw,
@@ -16,11 +16,18 @@ import {
   Lightbulb,
   User,
   Volume2,
+  Edit3,
+  Save,
+  MessageSquare,
+  Check,
+  X,
+  Sparkles,
 } from 'lucide-react'
-import { progressService, type CourseTestSession } from '@/features/progress/services/progress.service'
+import { progressService } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 import { courseService } from '@/features/courses/services/course.service'
 import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/features/media/utils/media.utils'
+import { toast } from '@/store/toast.store'
 
 const testTypes: Record<string, string> = {
   challenge: 'Challenge',
@@ -49,6 +56,7 @@ export function CourseTestSessionDetailPage({
   sessionId,
 }: CourseTestSessionDetailPageProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const {
     data: session,
@@ -73,6 +81,112 @@ export function CourseTestSessionDetailPage({
     queryFn: () => courseService.getCourseById(courseId).catch(() => null),
   })
 
+  const [overallScore, setOverallScore] = useState<number | null>(null)
+  const [teacherFeedback, setTeacherFeedback] = useState<string>('')
+  const [questionReviews, setQuestionReviews] = useState<Record<number, { is_correct?: boolean; feedback?: string }>>({})
+  const [isDirty, setIsDirty] = useState(false)
+
+  useEffect(() => {
+    if (!session) return
+    setOverallScore(session.score ?? null)
+    setTeacherFeedback(session.teacher_feedback || '')
+    const map: Record<number, { is_correct?: boolean; feedback?: string }> = {}
+    if (Array.isArray(session.question_reviews)) {
+      session.question_reviews.forEach((qr) => {
+        map[qr.question_index] = {
+          is_correct: qr.is_correct,
+          feedback: qr.feedback || '',
+        }
+      })
+    }
+    setQuestionReviews(map)
+    setIsDirty(false)
+  }, [session])
+
+  const reviewMutation = useMutation({
+    mutationFn: (payload: {
+      score?: number
+      teacher_feedback?: string
+      question_reviews?: Array<{
+        question_index: number
+        is_correct?: boolean
+        feedback?: string
+      }>
+    }) => progressService.reviewCourseTestSession(courseId, sessionId, payload),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['course-test-session-detail', courseId, sessionId], updated)
+      void queryClient.invalidateQueries({ queryKey: ['course-test-session-detail', courseId, sessionId] })
+      void queryClient.invalidateQueries({ queryKey: ['course-test-sessions', courseId] })
+      setIsDirty(false)
+      toast.success('Đã lưu nhận xét và cập nhật điểm bài kiểm tra thành công!')
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi lưu nhận xét.'
+      toast.error(msg)
+    },
+  })
+
+  const handleSaveAll = () => {
+    const reviewsArray = Object.entries(questionReviews).map(([idxStr, rev]) => ({
+      question_index: Number(idxStr),
+      is_correct: rev.is_correct,
+      feedback: rev.feedback || '',
+    }))
+
+    reviewMutation.mutate({
+      score: overallScore != null ? overallScore : undefined,
+      teacher_feedback: teacherFeedback.trim(),
+      question_reviews: reviewsArray,
+    })
+  }
+
+  const handleSaveSingleQuestion = (index: number) => {
+    const rev = questionReviews[index]
+    reviewMutation.mutate({
+      question_reviews: [
+        {
+          question_index: index,
+          is_correct: rev?.is_correct,
+          feedback: rev?.feedback || '',
+        },
+      ],
+    })
+  }
+
+  const handleToggleQuestionCorrect = (index: number, newCorrect: boolean) => {
+    setQuestionReviews((prev) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        is_correct: newCorrect,
+      },
+    }))
+    setIsDirty(true)
+  }
+
+  const handleResetQuestionOverride = (index: number) => {
+    setQuestionReviews((prev) => {
+      const next = { ...prev }
+      if (next[index]) {
+        const { is_correct, ...rest } = next[index]
+        next[index] = rest
+      }
+      return next
+    })
+    setIsDirty(true)
+  }
+
+  const handleQuestionFeedbackChange = (index: number, feedbackText: string) => {
+    setQuestionReviews((prev) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        feedback: feedbackText,
+      },
+    }))
+    setIsDirty(true)
+  }
+
   const questionStats = useMemo(() => {
     if (!session || !session.raw_questions) {
       return { total: 0, correct: 0, wrong: 0, answered: 0, statuses: [] }
@@ -95,18 +209,22 @@ export function CourseTestSessionDetailPage({
       const isAnswered = Boolean(selectedOption)
       if (isAnswered) answered++
 
-      let isCorrect = false
+      let autoIsCorrect = false
       if (selectedOption && correctAns) {
         if (selectedOption.trim().toUpperCase() === correctAns.trim().toUpperCase()) {
-          isCorrect = true
+          autoIsCorrect = true
         } else if (answer?.selected_index != null) {
           const optValue = options[answer.selected_index]
           const optText = typeof optValue === 'object' && optValue ? text((optValue as Record<string, unknown>).text) : text(optValue)
           if (optText.trim().toLowerCase() === correctAns.trim().toLowerCase()) {
-            isCorrect = true
+            autoIsCorrect = true
           }
         }
       }
+
+      const review = questionReviews[index]
+      const isOverridden = review?.is_correct !== undefined
+      const isCorrect = isOverridden ? Boolean(review.is_correct) : autoIsCorrect
 
       if (isCorrect) correct++
       else if (isAnswered) wrong++
@@ -115,6 +233,8 @@ export function CourseTestSessionDetailPage({
         index,
         isAnswered,
         isCorrect,
+        isOverridden,
+        autoIsCorrect,
       }
     })
 
@@ -125,7 +245,7 @@ export function CourseTestSessionDetailPage({
       answered,
       statuses: statusesList,
     }
-  }, [session])
+  }, [session, questionReviews])
 
   const calculateDuration = (startStr?: string, endStr?: string | null) => {
     if (!startStr || !endStr) return '—'
@@ -178,7 +298,8 @@ export function CourseTestSessionDetailPage({
     return () => observer.disconnect()
   }, [session?.raw_questions])
 
-  const isPassed = session?.is_passed ?? (session?.score != null && session?.passing_score != null ? session.score >= session.passing_score : null)
+  const effectivePassingScore = session?.passing_score ?? 80
+  const isPassed = overallScore != null ? overallScore >= effectivePassingScore : (session?.is_passed ?? false)
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -203,14 +324,28 @@ export function CourseTestSessionDetailPage({
           </div>
         </div>
 
-        <Button
-          size="small"
-          icon={<RotateCcw className="w-3.5 h-3.5" />}
-          onClick={() => { void refetch() }}
-          className="rounded-xl text-xs font-semibold self-start sm:self-auto"
-        >
-          Tải lại bài làm
-        </Button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            size="small"
+            icon={<RotateCcw className="w-3.5 h-3.5" />}
+            onClick={() => { void refetch() }}
+            className="rounded-xl text-xs font-semibold"
+          >
+            Tải lại bài làm
+          </Button>
+
+          <Button
+            type="primary"
+            size="small"
+            loading={reviewMutation.isPending}
+            disabled={!isDirty && !reviewMutation.isPending}
+            icon={<Save className="w-3.5 h-3.5" />}
+            onClick={handleSaveAll}
+            className="rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500"
+          >
+            Lưu thay đổi
+          </Button>
+        </div>
       </div>
 
       {isLoading && (
@@ -276,23 +411,21 @@ export function CourseTestSessionDetailPage({
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black font-mono text-slate-900 dark:text-white">
-                  {session.score == null ? '—' : session.score}
+                  {overallScore == null ? '—' : overallScore}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">/ 100</span>
-                {isPassed != null && (
-                  <span
-                    className={`ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                      isPassed
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
-                    }`}
-                  >
-                    {isPassed ? 'Đạt' : 'Chưa đạt'}
-                  </span>
-                )}
+                <span
+                  className={`ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                    isPassed
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                  }`}
+                >
+                  {isPassed ? 'Đạt' : 'Chưa đạt'}
+                </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Điểm sàn đạt: {session.passing_score ?? '80'} điểm · Trạng thái: {statuses[session.status] || session.status}
+                Điểm sàn đạt: {effectivePassingScore} điểm · Trạng thái: {statuses[session.status] || session.status}
               </p>
             </div>
 
@@ -307,6 +440,124 @@ export function CourseTestSessionDetailPage({
               <p className="text-[11px] text-slate-400 font-mono">
                 Nộp bài: {formatDate(session.submitted_at)}
               </p>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Nhận xét & Sửa điểm bài kiểm tra (Toàn bài)
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Giảng viên và quản trị viên có thể điều chỉnh điểm tổng kết hoặc ghi nhận xét chung cho toàn bộ bài làm.
+                  </p>
+                </div>
+              </div>
+
+              {session.reviewed_at && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 self-start sm:self-auto">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>
+                    Đã đánh giá bởi {session.teacher_name || 'Giáo viên'} ({formatDate(session.reviewed_at)})
+                  </span>
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  Điểm tổng kết (thang 100):
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={overallScore ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? null : Number(e.target.value)
+                      setOverallScore(val)
+                      setIsDirty(true)
+                    }}
+                    placeholder="0 - 100"
+                    className="w-28 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs text-slate-400 font-mono">/ 100</span>
+                  <span
+                    className={`ml-auto px-2.5 py-1 rounded-full text-xs font-bold ${
+                      isPassed
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                    }`}
+                  >
+                    {isPassed ? 'Đạt chuẩn' : 'Chưa đạt'}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const calculated = Math.round((questionStats.correct / Math.max(1, questionStats.total)) * 100)
+                    setOverallScore(calculated)
+                    setIsDirty(true)
+                    toast.success(`Đã tự động tính lại điểm: ${calculated}/100 dựa trên ${questionStats.correct}/${questionStats.total} câu đúng.`)
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Tự động tính từ số câu đúng ({questionStats.correct}/{questionStats.total})</span>
+                </button>
+              </div>
+
+              <div className="lg:col-span-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Nhận xét chung toàn bài kiểm tra:
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {teacherFeedback.length} ký tự
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={teacherFeedback}
+                  onChange={(e) => {
+                    setTeacherFeedback(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  placeholder="Nhập nhận xét tổng quan, đánh giá năng lực, hướng dẫn ôn tập cho học viên..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed resize-y"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="text-xs text-slate-500">
+                {isDirty && (
+                  <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>Có thay đổi chưa lưu</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="primary"
+                  loading={reviewMutation.isPending}
+                  onClick={handleSaveAll}
+                  icon={<Save className="w-3.5 h-3.5" />}
+                  className="rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500"
+                >
+                  Lưu tất cả nhận xét & Điểm số
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -384,6 +635,7 @@ export function CourseTestSessionDetailPage({
               const statItem = questionStats.statuses[index]
               const isCorrect = statItem?.isCorrect ?? false
               const isAnswered = statItem?.isAnswered ?? false
+              const isOverridden = statItem?.isOverridden ?? false
 
               return (
                 <div
@@ -409,16 +661,16 @@ export function CourseTestSessionDetailPage({
                       </h3>
                     </div>
 
-                    <div className="shrink-0">
+                    <div className="shrink-0 flex items-center gap-2">
                       {isCorrect ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Chính xác</span>
+                          <span>{isOverridden ? 'Chính xác (Đã điều chỉnh)' : 'Chính xác'}</span>
                         </span>
                       ) : isAnswered ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                           <XCircle className="w-3.5 h-3.5" />
-                          <span>Chưa chính xác</span>
+                          <span>{isOverridden ? 'Chưa chính xác (Đã điều chỉnh)' : 'Chưa chính xác'}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
@@ -537,6 +789,73 @@ export function CourseTestSessionDetailPage({
                       </div>
                     </div>
                   )}
+
+                  <div className="p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/30 dark:bg-indigo-950/20 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100/80 dark:border-indigo-900/40 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Đánh giá & Nhận xét câu {index + 1}:
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleQuestionCorrect(index, true)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            isCorrect
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+                          }`}
+                        >
+                          <Check className="w-3 h-3" />
+                          <span>Công nhận đúng</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleQuestionCorrect(index, false)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            !isCorrect && isAnswered
+                              ? 'bg-rose-600 text-white shadow-xs'
+                              : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-300 dark:border-rose-800'
+                          }`}
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Đánh dấu sai</span>
+                        </button>
+
+                        {isOverridden && (
+                          <button
+                            type="button"
+                            onClick={() => handleResetQuestionOverride(index)}
+                            className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline cursor-pointer ml-1"
+                          >
+                            Đặt lại tự động
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <input
+                        type="text"
+                        value={questionReviews[index]?.feedback || ''}
+                        onChange={(e) => handleQuestionFeedbackChange(index, e.target.value)}
+                        placeholder={`Ghi chú / Nhận xét riêng cho câu ${index + 1}...`}
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        disabled={reviewMutation.isPending}
+                        onClick={() => handleSaveSingleQuestion(index)}
+                        className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
+                      >
+                        Lưu câu này
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )
             })}

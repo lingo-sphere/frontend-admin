@@ -580,9 +580,12 @@ export function DataTable<T extends object>({
           }),
           onCell: (record: T, rowIndex?: number) => {
             const userCell = 'onCell' in col && typeof col.onCell === 'function' ? col.onCell(record, rowIndex) : {}
+            const effectiveMinW = minW ?? normalizedW
             return {
               ...userCell,
-              style: minW ? { minWidth: minW, ...(userCell?.style as React.CSSProperties | undefined) } : userCell?.style,
+              style: effectiveMinW
+                ? { minWidth: effectiveMinW, ...(userCell?.style as React.CSSProperties | undefined) }
+                : userCell?.style,
             }
           },
           sorter: isSortable ? true : false,
@@ -623,6 +626,31 @@ export function DataTable<T extends object>({
         return antdCol
       })
   }, [columns, visibleKeys, state, activeSortKey, activeSortOrder, onSortChange, isVi])
+
+  const calculatedColumnsWidth = useMemo(() => {
+    return antdColumns.reduce((sum, col) => {
+      const w = typeof col.width === 'number' ? col.width : parseInt(String(col.width || ''), 10)
+      return sum + (w && !isNaN(w) ? w : 120)
+    }, 0)
+  }, [antdColumns])
+
+  const hasFixedColumn = useMemo(
+    () => antdColumns.some((col) => Boolean(col.fixed)),
+    [antdColumns]
+  )
+
+  const effectiveScroll = useMemo(() => {
+    if (scroll?.x !== undefined || scroll?.y !== undefined) {
+      return {
+        x: scroll.x ?? (hasFixedColumn ? Math.max(calculatedColumnsWidth, 1000) : undefined),
+        y: scroll.y,
+      }
+    }
+    if (hasFixedColumn) {
+      return { x: Math.max(calculatedColumnsWidth, 1000) }
+    }
+    return undefined
+  }, [scroll, hasFixedColumn, calculatedColumnsWidth])
 
   const totalCount = pagination ? pagination.totalItems : total ?? effectiveData.length
   const totalPages = pagination
@@ -740,7 +768,7 @@ export function DataTable<T extends object>({
               dataSource={sortedData}
               loading={effectiveLoading}
               size={antdSize}
-              scroll={scroll?.x || scroll?.y ? { x: scroll.x, y: scroll.y } : undefined}
+              scroll={effectiveScroll}
               pagination={false}
               rowSelection={rowSelection}
               rowClassName={rowClassName}

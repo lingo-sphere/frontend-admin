@@ -41,6 +41,7 @@ function PracticeMediaRenderer({
   value: string
   image?: boolean
 }) {
+  const [mediaError, setMediaError] = useState(false)
   const isId = /^[a-f\d]{24}$/i.test(value)
   const query = useQuery({
     queryKey: ['practice-review-media', value],
@@ -60,19 +61,44 @@ function PracticeMediaRenderer({
     return <span className="text-xs text-rose-500">Không tải được tệp gốc để đối chiếu.</span>
   }
 
-  return image ? (
-    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 inline-block">
-      <Image
-        src={source}
-        fallback={IMAGE_FALLBACK_PLACEHOLDER}
-        alt="Hình ảnh của đề bài gốc"
-        className="max-h-80 max-w-full rounded-lg object-contain"
-        preview={{ mask: 'Nhấp để xem ảnh lớn' }}
-      />
-    </div>
-  ) : (
+  if (image) {
+    return (
+      <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 inline-block">
+        <Image
+          src={source}
+          fallback={IMAGE_FALLBACK_PLACEHOLDER}
+          alt="Hình ảnh của đề bài gốc"
+          className="max-h-80 max-w-full rounded-lg object-contain"
+          preview={{ mask: 'Nhấp để xem ảnh lớn' }}
+        />
+      </div>
+    )
+  }
+
+  if (mediaError) {
+    return (
+      <div className="p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-start gap-3">
+        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-1 text-xs text-amber-800 dark:text-amber-300">
+          <p className="font-semibold">Không thể tải hoặc phát tệp ghi âm.</p>
+          <p className="text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
+            Tệp ghi âm này không tồn tại trên kho lưu trữ đám mây hoặc đã hết hạn lưu trữ tạm. Vui lòng đối chiếu với bản nhận diện giọng nói (Transcription) bên dưới.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
-      <audio controls src={source} className="w-full h-8" preload="metadata" />
+      <audio
+        key={source}
+        controls
+        src={source}
+        className="w-full h-8"
+        preload="metadata"
+        onError={() => setMediaError(true)}
+      />
     </div>
   )
 }
