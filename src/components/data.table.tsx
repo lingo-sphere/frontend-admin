@@ -49,6 +49,7 @@ export interface DataTableColumn<T> {
   filterKind?: 'text' | 'enum' | 'media' | 'date' | 'number' | 'tree'
   filterOptions?: SelectOption[]
   filteredValue?: FilterValue | null
+  onCell?: (record: T, rowIndex?: number) => React.HTMLAttributes<HTMLElement>
 }
 
 export interface IpaColumn<T> extends Omit<ColumnType<T>, 'title'> {
@@ -373,30 +374,30 @@ export function DataTable<T extends object>({
 
   const densityTokens: Record<TableDensity, Record<string, number | string>> = {
     compact: {
-      cellPaddingBlockMD: 5,
-      cellPaddingInlineMD: 6,
+      cellPaddingBlockMD: 6,
+      cellPaddingInlineMD: 10,
       cellPaddingBlockSM: 4,
-      cellPaddingInlineSM: 5,
+      cellPaddingInlineSM: 8,
       cellPaddingBlock: 6,
-      cellPaddingInline: 6,
+      cellPaddingInline: 10,
       borderColor: 'rgba(226, 232, 240, 0.8)',
     },
     middle: {
-      cellPaddingBlockMD: 8,
-      cellPaddingInlineMD: 8,
-      cellPaddingBlockSM: 6,
-      cellPaddingInlineSM: 6,
-      cellPaddingBlock: 8,
-      cellPaddingInline: 8,
+      cellPaddingBlockMD: 9,
+      cellPaddingInlineMD: 14,
+      cellPaddingBlockSM: 8,
+      cellPaddingInlineSM: 12,
+      cellPaddingBlock: 9,
+      cellPaddingInline: 14,
       borderColor: 'rgba(226, 232, 240, 0.8)',
     },
     comfortable: {
       cellPaddingBlockMD: 14,
-      cellPaddingInlineMD: 12,
+      cellPaddingInlineMD: 16,
       cellPaddingBlockSM: 10,
-      cellPaddingInlineSM: 10,
+      cellPaddingInlineSM: 14,
       cellPaddingBlock: 14,
-      cellPaddingInline: 12,
+      cellPaddingInline: 16,
       borderColor: 'rgba(226, 232, 240, 0.8)',
     },
   }
@@ -475,6 +476,7 @@ export function DataTable<T extends object>({
             : col.key
         ) as (keyof T & (string | number)) | undefined
 
+        const minW = col.minWidth ? normalizeWidth(col.minWidth) : undefined
         const antdCol: ColumnType<T> = {
           key: col.key,
           dataIndex: effectiveDataIndex,
@@ -485,6 +487,20 @@ export function DataTable<T extends object>({
           fixed: isStickyRight ? 'right' : isStickyLeft ? 'left' : undefined,
           sortDirections: isSortable ? ['ascend', 'descend', 'ascend'] : undefined,
           showSorterTooltip: false,
+          onHeaderCell: () => ({
+            style: {
+              textAlign: 'center',
+              ...(minW ? { minWidth: minW } : {}),
+            },
+            className: '!text-center',
+          }),
+          onCell: (record: T, rowIndex?: number) => {
+            const userCell = 'onCell' in col && typeof col.onCell === 'function' ? col.onCell(record, rowIndex) : {}
+            return {
+              ...userCell,
+              style: minW ? { minWidth: minW, ...(userCell?.style as React.CSSProperties | undefined) } : userCell?.style,
+            }
+          },
           sorter: isSortable
             ? onSortChange || state
               ? true
@@ -638,7 +654,7 @@ export function DataTable<T extends object>({
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-column-title]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!flex-nowrap [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-column-sorter]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
           <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
             <Table<T>
               rowKey={effectiveRowKey}

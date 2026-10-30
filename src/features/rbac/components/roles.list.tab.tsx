@@ -85,6 +85,7 @@ export function RolesListTab({
     {
       key: 'name',
       title: isVi ? 'Tên Vai Trò (Role)' : 'Role Name',
+      minWidth: 220,
       sortable: true,
       render: (role) => (
         <div className="flex items-center gap-3">
@@ -105,7 +106,7 @@ export function RolesListTab({
               )}
             </div>
             {role.description && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5" title={role.description}>
                 {role.description}
               </p>
             )}
@@ -116,6 +117,8 @@ export function RolesListTab({
     {
       key: 'permissions_count',
       title: isVi ? 'Quyền Hạn (Permissions)' : 'Permissions',
+      width: '200px',
+      align: 'center',
       render: (role) => {
         const count = Array.isArray(role.permissions) ? role.permissions.length : 0
         return (
@@ -129,7 +132,7 @@ export function RolesListTab({
       key: 'created_at',
       title: isVi ? 'Ngày Tạo' : 'Created At',
       align: 'center',
-      width: '130px',
+      width: '150px',
       sortable: true,
       render: (role) => renderTableDate(role.created_at),
     },
@@ -137,7 +140,7 @@ export function RolesListTab({
       key: 'updated_at',
       title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
       align: 'center',
-      width: '130px',
+      width: '160px',
       sortable: true,
       render: (role) => renderTableDate(role.updated_at),
     },

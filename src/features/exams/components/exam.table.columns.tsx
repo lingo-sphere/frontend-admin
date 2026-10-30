@@ -155,23 +155,27 @@ export function getExamColumns({
       key: 'title',
       title: isVi ? 'Tên đề thi' : 'Exam Title',
       align: 'left',
+      minWidth: 260,
       sortable: true,
       render: (exam) => (
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0 w-full">
           <FileText size={16} className="text-indigo-500 shrink-0" />
-          <button
-            type="button"
-            onClick={() => onManageQuestions && onManageQuestions(exam)}
-            className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline text-left cursor-pointer"
-          >
-            {exam.title}
-          </button>
+          <Tooltip title={exam.title} placement="topLeft" mouseEnterDelay={0.3}>
+            <button
+              type="button"
+              onClick={() => onManageQuestions && onManageQuestions(exam)}
+              className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline text-left cursor-pointer truncate flex-1 min-w-0"
+            >
+              {exam.title}
+            </button>
+          </Tooltip>
         </div>
       ),
     },
     {
       key: 'type',
       title: isVi ? 'Loại đề' : 'Type',
+      width: 140,
       align: 'center',
       render: (exam) => (
         <div className="flex items-center justify-center gap-1.5 flex-wrap">
@@ -193,6 +197,7 @@ export function getExamColumns({
     {
       key: 'duration',
       title: isVi ? 'Thời lượng' : 'Duration',
+      width: 130,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -205,6 +210,7 @@ export function getExamColumns({
     {
       key: 'questions',
       title: isVi ? 'Số câu' : 'Questions',
+      width: 120,
       align: 'center',
       sortable: true,
       render: (exam) =>
@@ -222,12 +228,14 @@ export function getExamColumns({
     {
       key: 'media',
       title: isVi ? 'Tài nguyên' : 'Media',
+      width: 140,
       align: 'center',
       render: (exam) => <ExamMediaCell exam={exam} isVi={isVi} />,
     },
     {
       key: 'attempts',
       title: isVi ? 'Lượt thi' : 'Attempts',
+      width: 110,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -239,6 +247,7 @@ export function getExamColumns({
     {
       key: 'score',
       title: isVi ? 'Điểm TB' : 'Avg Score',
+      width: 110,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -250,6 +259,7 @@ export function getExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      width: 120,
       align: 'center',
       render: (exam) => (
         <div className="inline-flex flex-col items-center gap-0.5">
@@ -268,6 +278,7 @@ export function getExamColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 100,
       align: 'center',
       render: (exam) => (
         <TableRowActions

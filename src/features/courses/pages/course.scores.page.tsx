@@ -80,7 +80,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             .toUpperCase();
 
           return (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0 w-full">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs">
                 {avatarUrl ? (
                   <img
@@ -92,11 +92,17 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                   <span>{initials}</span>
                 )}
               </div>
-              <div className="min-w-0">
-                <div className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[200px]">
+              <div className="min-w-0 flex-1">
+                <div
+                  className="font-bold text-slate-900 dark:text-slate-100 truncate"
+                  title={displayName}
+                >
                   {displayName}
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                <div
+                  className="text-[11px] text-slate-500 dark:text-slate-400 truncate"
+                  title={displayEmail}
+                >
                   {displayEmail}
                 </div>
               </div>
@@ -108,7 +114,8 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         key: "progress",
         dataIndex: "progress_percentage",
         title: "Tiến độ bài học",
-        align: "left",
+        width: 180,
+        align: "center",
         render: (student) => (
           <div className="space-y-1.5 min-w-[140px]">
             <div className="flex items-center justify-between text-[11px] font-bold">
@@ -136,7 +143,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
       {
         key: "modules",
         title: "Bài kiểm tra các chương",
-        align: "left",
+        align: "center",
         render: (student) => {
           const modules = student.modules_progress || [];
           if (modules.length === 0) {
@@ -148,7 +155,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           }
 
           return (
-            <div className="flex flex-wrap gap-1.5 max-w-[320px]">
+            <div className="flex flex-wrap justify-center gap-1.5 max-w-[320px] mx-auto">
               {modules.map((m, mIdx) => {
                 const chNum = m.order_index || mIdx + 1;
                 const hasChallenge =
@@ -208,6 +215,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         key: "final_score",
         dataIndex: "final_test_score",
         title: "Điểm tốt nghiệp",
+        width: 150,
         align: "center",
         render: (student) =>
           typeof student.final_test_score === "number" &&
@@ -223,6 +231,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
       {
         key: "status",
         title: "Trạng thái",
+        width: 140,
         align: "center",
         render: (student) =>
           student.progress_percentage >= 100 ||

@@ -104,11 +104,12 @@ export function CommunitySanctionsTab({
     {
       key: 'sanction_type',
       title: t('community.colSanctionType'),
+      align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         const kicked = isKickedActive(member.kicked_cooldown_until)
         return (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col items-center gap-1">
             {member.is_banned && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 w-fit">
                 <Ban className="w-3 h-3" />
@@ -150,6 +151,7 @@ export function CommunitySanctionsTab({
     {
       key: 'duration',
       title: t('community.colDuration'),
+      align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         const kicked = isKickedActive(member.kicked_cooldown_until)

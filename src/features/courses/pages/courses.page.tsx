@@ -184,6 +184,7 @@ export function CoursesPage() {
         columns={columns}
         data={paginatedCourses}
         rowKey={(c) => c.id}
+        scroll={{ x: 1200 }}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         renderGridItem={(course) => (

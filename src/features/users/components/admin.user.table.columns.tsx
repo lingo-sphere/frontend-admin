@@ -36,11 +36,11 @@ export function getAdminUserColumns({
               user.name.slice(0, 2).toUpperCase()
             )}
           </div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate" title={user.name}>
               {user.name}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">{user.email}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={user.email}>{user.email}</p>
           </div>
         </div>
       ),
@@ -48,6 +48,8 @@ export function getAdminUserColumns({
     {
       key: 'role',
       title: isVi ? 'Vai trò phân quyền' : 'Assigned Role',
+      width: 170,
+      align: 'center',
       render: (user) => (
         <>
           {user.role === 'ADMIN' ? (
@@ -67,6 +69,7 @@ export function getAdminUserColumns({
     {
       key: 'phone',
       title: isVi ? 'Số điện thoại' : 'Phone Number',
+      align: 'center',
       render: (user) => (
         <span className="text-xs text-slate-600 dark:text-slate-400">
           {user.phone || '—'}
@@ -76,6 +79,7 @@ export function getAdminUserColumns({
     {
       key: 'created_at',
       title: isVi ? 'Ngày tạo' : 'Created At',
+      width: 150,
       align: 'center',
       sortable: true,
       render: (user) => renderTableDate(user.created_at),
@@ -83,6 +87,7 @@ export function getAdminUserColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      width: 120,
       align: 'center',
       render: (user) => (
         <span
@@ -99,6 +104,7 @@ export function getAdminUserColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 100,
       align: 'center',
       render: (user) => (
         <TableRowActions

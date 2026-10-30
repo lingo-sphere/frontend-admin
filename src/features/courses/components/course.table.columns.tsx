@@ -33,6 +33,7 @@ export function getCourseColumns({
     {
       key: 'info',
       title: isVi ? 'Thông tin khóa học' : 'Course Info',
+      minWidth: 280,
       sortable: true,
       render: (course) => (
         <div className="flex items-center gap-3.5 py-1">
@@ -53,12 +54,16 @@ export function getCourseColumns({
             <div className="flex items-center gap-2 flex-wrap">
               <p
                 className="font-bold text-sm text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer line-clamp-1"
+                title={course.title}
                 onClick={() => onEdit(course.id)}
               >
                 {course.title}
               </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 max-w-md">
+            <p
+              className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5"
+              title={course.description || undefined}
+            >
               {course.description}
             </p>
           </div>
@@ -68,6 +73,8 @@ export function getCourseColumns({
     {
       key: 'category',
       title: isVi ? 'Danh mục' : 'Category',
+      width: 140,
+      align: 'center',
       sortable: true,
       render: (course) => (
         <span
@@ -80,6 +87,8 @@ export function getCourseColumns({
     {
       key: 'target_score',
       title: isVi ? 'Mục tiêu điểm' : 'Target Score',
+      width: 140,
+      align: 'center',
       sortable: true,
       render: (course) => (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap shadow-2xs bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/60">
@@ -91,6 +100,7 @@ export function getCourseColumns({
     {
       key: 'stats',
       title: isVi ? 'Số bài & Học viên' : 'Lessons & Learners',
+      width: 170,
       render: (course) => (
         <div className="space-y-1 py-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-750 dark:text-slate-200 whitespace-nowrap">
@@ -114,6 +124,8 @@ export function getCourseColumns({
     {
       key: 'price',
       title: isVi ? 'Học phí' : 'Price',
+      width: 130,
+      align: 'center',
       sortable: true,
       render: (course) => {
         const rawPrice = Number(course.price ?? 0)
@@ -169,6 +181,8 @@ export function getCourseColumns({
     {
       key: 'enrollments',
       title: isVi ? 'Học viên' : 'Students',
+      width: 140,
+      align: 'center',
       sortable: true,
       render: (course) => (
         <div className="whitespace-nowrap py-1">
@@ -187,6 +201,7 @@ export function getCourseColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      width: 130,
       align: 'center',
       render: (course) => (
         <div className="whitespace-nowrap py-1">
@@ -210,7 +225,9 @@ export function getCourseColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 130,
       align: 'center',
+      fixed: 'right',
       render: (course) => (
         <TableRowActions
           isVi={isVi}

@@ -248,16 +248,16 @@ export function MonitoringLogsTable({
             <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 font-sans font-bold text-[12.5px] border-b border-slate-200/80 dark:border-slate-800">
               <tr>
                 {visibleColumns.includes('timestamp') && (
-                  <th className="py-3 px-4 w-48 text-center">{isVi ? 'Thời gian (GMT+7)' : 'Time (GMT+7)'}</th>
+                  <th className="py-3 px-4 w-48 text-center whitespace-nowrap">{isVi ? 'Thời gian (GMT+7)' : 'Time (GMT+7)'}</th>
                 )}
                 {visibleColumns.includes('source') && (
-                  <th className="py-3 px-4 w-36 text-center">{isVi ? 'Nguồn' : 'Source'}</th>
+                  <th className="py-3 px-4 w-36 text-center whitespace-nowrap">{isVi ? 'Nguồn' : 'Source'}</th>
                 )}
                 {visibleColumns.includes('level') && (
-                  <th className="py-3 px-3 w-24 text-center">{isVi ? 'Mức độ' : 'Level'}</th>
+                  <th className="py-3 px-3 w-24 text-center whitespace-nowrap">{isVi ? 'Mức độ' : 'Level'}</th>
                 )}
                 {visibleColumns.includes('message') && (
-                  <th className="py-3 px-4 text-center">{isVi ? 'Nội dung Request / Message' : 'Message'}</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">{isVi ? 'Nội dung Request / Message' : 'Message'}</th>
                 )}
               </tr>
             </thead>

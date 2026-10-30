@@ -134,15 +134,16 @@ export function PermissionsListTab({
     {
       key: 'name',
       title: isVi ? 'Tên Quyền Hạn (Permission)' : 'Permission Name',
+      minWidth: 220,
       render: (perm) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800/50 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold shrink-0">
             <KeyRound className="w-4 h-4" />
           </div>
-          <div>
-            <span className="font-bold text-slate-900 dark:text-slate-100">{perm.name}</span>
+          <div className="min-w-0 flex-1">
+            <span className="font-bold text-slate-900 dark:text-slate-100 block truncate" title={perm.name}>{perm.name}</span>
             {perm.description && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5" title={perm.description}>
                 {perm.description}
               </p>
             )}
@@ -153,6 +154,7 @@ export function PermissionsListTab({
     {
       key: 'api_path',
       title: isVi ? 'Đường Dẫn API' : 'API Path',
+      minWidth: 180,
       render: (perm) => (
         <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           {perm.api_path}
@@ -162,6 +164,7 @@ export function PermissionsListTab({
     {
       key: 'method',
       title: isVi ? 'Phương Thức' : 'HTTP Method',
+      width: '130px',
       align: 'center',
       render: (perm) => (
         <span
@@ -176,6 +179,8 @@ export function PermissionsListTab({
     {
       key: 'module',
       title: isVi ? 'Phân Hệ (Module)' : 'Module',
+      width: '160px',
+      align: 'center',
       render: (perm) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase tracking-wide">
           {perm.module || 'GENERAL'}
@@ -186,7 +191,7 @@ export function PermissionsListTab({
       key: 'created_at',
       title: isVi ? 'Ngày Tạo' : 'Created At',
       align: 'center',
-      width: '130px',
+      width: '150px',
       sortable: true,
       render: (perm) => renderTableDate(perm.created_at),
     },
@@ -194,7 +199,7 @@ export function PermissionsListTab({
       key: 'updated_at',
       title: isVi ? 'Ngày Cập Nhật' : 'Updated At',
       align: 'center',
-      width: '130px',
+      width: '160px',
       sortable: true,
       render: (perm) => renderTableDate(perm.updated_at),
     },

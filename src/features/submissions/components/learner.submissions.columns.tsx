@@ -27,12 +27,13 @@ export function createLearnerSubmissionsColumns({
       key: 'student',
       title: isVi ? 'Học Viên' : 'Student',
       sortable: true,
+      minWidth: 160,
       render: (sub) => (
-        <div className="space-y-0.5 min-w-[140px]">
-          <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+        <div className="space-y-0.5 min-w-0 w-full">
+          <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={sub.user_name || sub.user_email || sub.user_id}>
             {sub.user_name || sub.user_email || sub.user_id}
           </div>
-          <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
+          <div className="text-[11px] text-slate-400 truncate w-full" title={sub.user_email || undefined}>
             {sub.user_email}
           </div>
         </div>
@@ -42,10 +43,14 @@ export function createLearnerSubmissionsColumns({
       key: 'course',
       title: isVi ? 'Khóa Học' : 'Course',
       sortable: true,
+      minWidth: 170,
       render: (sub) => (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 whitespace-nowrap">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 max-w-full min-w-0"
+          title={sub.course_title || 'Khóa học'}
+        >
           <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-          <span className="truncate max-w-[160px]">{sub.course_title || 'Khóa học'}</span>
+          <span className="truncate min-w-0">{sub.course_title || 'Khóa học'}</span>
         </span>
       ),
     },
@@ -91,6 +96,7 @@ export function createLearnerSubmissionsColumns({
     {
       key: 'ai_score',
       title: isVi ? 'Điểm AI' : 'AI Score',
+      width: '120px',
       align: 'center',
       sortable: true,
       render: (sub) => (
@@ -105,6 +111,7 @@ export function createLearnerSubmissionsColumns({
     {
       key: 'teacher_score',
       title: isVi ? 'Điểm Giáo Viên' : 'Teacher Score',
+      width: '150px',
       align: 'center',
       sortable: true,
       render: (sub) =>
@@ -121,6 +128,7 @@ export function createLearnerSubmissionsColumns({
     {
       key: 'review_status',
       title: isVi ? 'Trạng Thái' : 'Status',
+      width: '130px',
       align: 'center',
       render: (sub) => {
         const isReviewed = sub.is_teacher_reviewed || sub.status === 'TEACHER_REVIEWED'
@@ -151,14 +159,14 @@ export function createLearnerSubmissionsColumns({
       key: 'created_at',
       title: isVi ? 'Thời Gian Nộp' : 'Submitted At',
       align: 'center',
-      width: '130px',
+      width: '160px',
       sortable: true,
       render: (sub) => renderTableDate(sub.created_at),
     },
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Action',
-      width: '90px',
+      width: '100px',
       align: 'center',
       fixed: 'right',
       render: (sub) => {

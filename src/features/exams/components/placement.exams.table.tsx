@@ -108,8 +108,7 @@ export function PlacementExamsTable({
       {
         key: 'title',
         title: isVi ? 'Tên đề thi' : 'Exam Title',
-        width: 380,
-        minWidth: 340,
+        minWidth: 300,
         align: 'left',
         render: (exam) => {
           const examId = exam._id || exam.id || ''
@@ -118,7 +117,7 @@ export function PlacementExamsTable({
             (examId === active2SkillsExamId || examId === active4SkillsExamId)
 
           return (
-            <div className="flex items-center gap-2 min-w-0 max-w-[360px]">
+            <div className="flex items-center gap-2 min-w-0 w-full">
               <Tooltip title={exam.title} placement="topLeft">
                 <button
                   type="button"

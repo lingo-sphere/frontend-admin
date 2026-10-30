@@ -48,11 +48,11 @@ export function getLearnerColumns({
                 name.slice(0, 2).toUpperCase()
               )}
             </div>
-            <div>
-              <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate" title={name}>
                 {name}
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">{u.email}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={u.email}>{u.email}</p>
             </div>
           </div>
         )
@@ -61,6 +61,8 @@ export function getLearnerColumns({
     {
       key: 'target',
       title: isVi ? 'Mục tiêu & Trình độ' : 'Target & Level',
+      width: 180,
+      align: 'center',
       render: (u) => (
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400">
@@ -83,8 +85,10 @@ export function getLearnerColumns({
     {
       key: 'gamification',
       title: 'Gamification (XP & Streak)',
+      width: 180,
+      align: 'center',
       render: (u) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center gap-3">
           <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <Sparkles className="w-3.5 h-3.5 fill-amber-500" />
             {(u.total_xp ?? 0).toLocaleString()} XP
@@ -99,6 +103,7 @@ export function getLearnerColumns({
     {
       key: 'plan',
       title: isVi ? 'Gói học' : 'Plan',
+      width: 130,
       align: 'center',
       render: (u) => {
         return (
@@ -118,6 +123,7 @@ export function getLearnerColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      width: 120,
       align: 'center',
       render: (u) => (
         <span
@@ -134,6 +140,7 @@ export function getLearnerColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 130,
       align: 'center',
       render: (u) => {
         const isActive = u.status === 'ACTIVE'

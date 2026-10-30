@@ -211,16 +211,16 @@ export function PostHogLiveEventsTable({
             <thead className="bg-slate-50/70 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800">
               <tr className="text-slate-700 dark:text-slate-300 font-bold text-[12.5px]">
                 {visibleColumns.includes('event') && (
-                  <th className="py-3 px-3.5 w-44 text-center">{isVi ? 'Loại sự kiện' : 'Event'}</th>
+                  <th className="py-3 px-3.5 w-44 text-center whitespace-nowrap">{isVi ? 'Loại sự kiện' : 'Event'}</th>
                 )}
                 {visibleColumns.includes('user') && (
-                  <th className="py-3 px-3.5 w-48 text-center">{isVi ? 'Học viên' : 'User'}</th>
+                  <th className="py-3 px-3.5 w-48 text-center whitespace-nowrap">{isVi ? 'Học viên' : 'User'}</th>
                 )}
                 {visibleColumns.includes('properties') && (
-                  <th className="py-3 px-3.5 text-center">{isVi ? 'Dữ liệu thu thập' : 'Properties'}</th>
+                  <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Dữ liệu thu thập' : 'Properties'}</th>
                 )}
                 {visibleColumns.includes('timestamp') && (
-                  <th className="py-3 px-3.5 w-40 text-center">{isVi ? 'Thời gian' : 'Timestamp'}</th>
+                  <th className="py-3 px-3.5 w-40 text-center whitespace-nowrap">{isVi ? 'Thời gian' : 'Timestamp'}</th>
                 )}
               </tr>
             </thead>

@@ -17,6 +17,7 @@ import type { PlacementAttemptItem } from '@/features/exams/services/exam.servic
 import { PlacementAttemptDetailModal } from '@/features/exams/components/placement.attempt.detail.modal'
 import { useDebounce } from '@/hooks/use.debounce'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { TableTextCell } from '@/components/table.text.cell'
 import { TableRowActions, renderTableDate } from '@/components/table.row.actions'
 import { CustomSelect } from '@/components/custom.select'
 import { toast } from '@/store/toast.store'
@@ -126,11 +127,19 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
                 item.learner_name.slice(0, 2).toUpperCase()
               )}
             </div>
-            <div>
-              <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <div className="min-w-0 flex-1">
+              <p
+                className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate"
+                title={item.learner_name}
+              >
                 {item.learner_name}
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">{item.learner_email}</p>
+              <p
+                className="text-[11px] text-slate-500 dark:text-slate-400 truncate"
+                title={item.learner_email}
+              >
+                {item.learner_email}
+              </p>
             </div>
           </div>
         ),
@@ -138,15 +147,14 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'exam',
         title: 'Bài kiểm tra',
-        render: (item) => (
-          <p className="font-medium text-slate-900 dark:text-slate-100 text-xs truncate max-w-[260px]" title={item.exam_title}>
-            {item.exam_title}
-          </p>
-        ),
+        minWidth: 200,
+        render: (item) => <TableTextCell text={item.exam_title} />,
       },
       {
         key: 'total_scaled_score',
         title: 'Điểm TOEIC',
+        width: 130,
+        align: 'center',
         sortable: true,
         render: (item) => {
           const badge = getScoreBadge(item.total_scaled_score)
@@ -168,6 +176,8 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'skills',
         title: 'Kỹ năng (L / R)',
+        width: 140,
+        align: 'center',
         render: (item) => (
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-1.5 font-semibold text-blue-600 dark:text-blue-400">
@@ -184,6 +194,8 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'accuracy',
         title: 'Độ chính xác',
+        width: 130,
+        align: 'center',
         render: (item) => {
           const pct = item.total_questions > 0
             ? Math.round((item.correct_questions / item.total_questions) * 100)
@@ -204,6 +216,8 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'duration',
         title: 'Thời gian làm',
+        width: 120,
+        align: 'center',
         render: (item) => (
           <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
             {formatDuration(item.total_time_seconds)}
@@ -213,6 +227,7 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'submitted_at',
         title: 'Ngày nộp bài',
+        width: 150,
         align: 'center',
         sortable: true,
         render: (item) => renderTableDate(item.submitted_at || item.created_at),
@@ -220,6 +235,7 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
       {
         key: 'actions',
         title: 'Thao tác',
+        width: 90,
         align: 'center',
         render: (item) => (
           <TableRowActions

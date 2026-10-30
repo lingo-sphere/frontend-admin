@@ -195,9 +195,12 @@ export function CommunityMessagesTable({
               msg.sender_name.charAt(0).toUpperCase()
             )}
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate max-w-[110px]">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate min-w-0"
+                title={msg.sender_name}
+              >
                 {msg.sender_name}
               </span>
               <span
@@ -261,7 +264,7 @@ export function CommunityMessagesTable({
       render: (msg) => (
         <div className="space-y-1.5">
           {msg.reply_to && (
-            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md max-w-xs truncate">
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md w-full min-w-0 truncate">
               <CornerDownRight className="w-3 h-3 text-indigo-500 shrink-0" />
               <span className="font-medium text-indigo-600 dark:text-indigo-400">
                 @{msg.reply_to.sender_name}:
@@ -307,7 +310,7 @@ export function CommunityMessagesTable({
       key: 'created_at',
       title: t('community.colTime'),
       align: 'center',
-      width: '130px',
+      width: '145px',
       sortable: true,
       render: (msg) => renderTableDate(msg.created_at),
     },

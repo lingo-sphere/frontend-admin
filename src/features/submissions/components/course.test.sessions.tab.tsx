@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Modal, Spin } from 'antd'
+import { Button, Modal, Spin, Tooltip } from 'antd'
 import { Layers, CheckCircle2, AlertTriangle, RotateCcw } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { TableTextCell } from '@/components/table.text.cell'
 import { CustomSelect } from '@/components/custom.select'
 import { StatCard } from '@/components/stat.card'
 import { type CourseSimple } from '@/features/courses/hooks/use.course.learners.data'
@@ -106,15 +107,17 @@ export function CourseTestSessionsTab({
         const email = row.user_email || row.user_id || 'HV'
         const initials = email.slice(0, 2).toUpperCase()
         return (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 w-full">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-[11px] shrink-0 shadow-2xs">
               {initials}
             </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[150px]" title={email}>
-                {email}
-              </p>
-              <p className="text-[11px] text-slate-400 font-mono truncate max-w-[150px]" title={row.user_id}>
+            <div className="min-w-0 flex-1">
+              <Tooltip title={email} placement="topLeft" mouseEnterDelay={0.3}>
+                <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">
+                  {email}
+                </p>
+              </Tooltip>
+              <p className="text-[11px] text-slate-400 font-mono truncate" title={row.user_id}>
                 ID: {row.user_id.slice(-6)}
               </p>
             </div>
@@ -126,19 +129,13 @@ export function CourseTestSessionsTab({
       key: 'course',
       title: 'Khóa học',
       minWidth: 180,
-      render: (row) => (
-        <span
-          className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate block max-w-[200px]"
-          title={row.course_title}
-        >
-          {row.course_title}
-        </span>
-      ),
+      render: (row) => <TableTextCell text={row.course_title} />,
     },
     {
       key: 'type',
       title: 'Loại bài kiểm tra',
       width: 170,
+      align: 'center',
       render: (row) => (
         <div className="space-y-0.5">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 whitespace-nowrap">

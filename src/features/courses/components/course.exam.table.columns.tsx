@@ -2,6 +2,7 @@
 import { CustomSwitch } from '@/components/custom.switch'
 import { BookOpen, Clock, AlertCircle, Sparkles } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
+import { TableTextCell } from '@/components/table.text.cell'
 import { TableRowActions } from '@/components/table.row.actions'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { getExamTypeBadge } from '@/features/courses/components/course.exam.grid.card'
@@ -29,12 +30,10 @@ export function getCourseExamColumns({
       minWidth: 240,
       sortable: true,
       render: (exam) => (
-        <span
-          className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm block truncate max-w-[280px]"
-          title={exam.title}
-        >
-          {exam.title}
-        </span>
+        <TableTextCell
+          text={exam.title}
+          className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm"
+        />
       ),
     },
     {
@@ -50,9 +49,12 @@ export function getCourseExamColumns({
             <span>Toàn Hệ Thống ({exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS' ? '4 Kỹ năng' : '2 Kỹ năng'})</span>
           </span>
         ) : exam.course_title ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 whitespace-nowrap">
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 max-w-full min-w-0"
+            title={exam.course_title}
+          >
             <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-            <span className="truncate max-w-[180px]">{exam.course_title}</span>
+            <span className="truncate min-w-0">{exam.course_title}</span>
           </span>
         ) : (
           <span className="text-slate-400 text-xs italic whitespace-nowrap">Toàn hệ thống</span>
@@ -62,6 +64,7 @@ export function getCourseExamColumns({
       key: 'type',
       title: isVi ? 'Loại Bài Thi' : 'Exam Type',
       width: '140px',
+      align: 'center',
       render: (exam) => {
         const badge = getExamTypeBadge(exam.type, exam)
         return (
@@ -76,7 +79,7 @@ export function getCourseExamColumns({
     {
       key: 'duration',
       title: isVi ? 'Thời Lượng' : 'Duration',
-      width: '115px',
+      width: '125px',
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -128,7 +131,7 @@ export function getCourseExamColumns({
     {
       key: 'attempts',
       title: isVi ? 'Lượt Thi' : 'Attempts',
-      width: '95px',
+      width: '110px',
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -140,7 +143,7 @@ export function getCourseExamColumns({
     {
       key: 'score',
       title: isVi ? 'Điểm TB' : 'Avg Score',
-      width: '95px',
+      width: '110px',
       align: 'center',
       sortable: true,
       render: (exam) => (

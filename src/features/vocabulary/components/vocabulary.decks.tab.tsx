@@ -107,16 +107,19 @@ export function VocabularyDecksTab({
               <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center border border-violet-200/50 dark:border-violet-800/50 font-bold shrink-0">
                 <Layers className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate"
+                    title={deck.name_vi || deck.name || deck.title || 'Bộ thẻ từ vựng'}
+                  >
                     {deck.name_vi || deck.name || deck.title || 'Bộ thẻ từ vựng'}
                   </span>
                   {deck.is_featured && (
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" aria-label="Bộ thẻ nổi bật" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-label="Bộ thẻ nổi bật" />
                   )}
                   <span
-                    className={`px-2 py-0.2 rounded-full text-[9px] font-bold border ${
+                    className={`px-2 py-0.2 rounded-full text-[9px] font-bold border shrink-0 ${
                       isPublic
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                         : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
@@ -125,7 +128,10 @@ export function VocabularyDecksTab({
                     {isPublic ? 'Công khai' : 'Riêng tư'}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 line-clamp-1 max-w-sm">
+                <p
+                  className="text-[11px] text-slate-400 line-clamp-1 w-full"
+                  title={deck.description_vi || deck.description || undefined}
+                >
                   {deck.description_vi || deck.description || 'Bộ từ vựng ôn tập hàng ngày'}
                 </p>
               </div>
@@ -137,6 +143,7 @@ export function VocabularyDecksTab({
         key: 'topic_name',
         title: 'Chủ đề',
         width: '160px',
+        align: 'center',
         render: (deck) => {
           const deckTopic = topics.find((t) => t.id === deck.topic_id || t._id === deck.topic_id)
           const topicName = deckTopic?.name_vi || deckTopic?.name_en || deck.topic_name

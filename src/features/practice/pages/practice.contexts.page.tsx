@@ -287,7 +287,7 @@ export function PracticeContextsPage() {
                   </span>
                 )}
                 {record.path_string && (
-                  <span className="text-[11px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                  <span className="text-[11px] text-slate-400 truncate w-full min-w-0" title={record.path_string}>
                     {record.path_string}
                   </span>
                 )}
@@ -319,7 +319,7 @@ export function PracticeContextsPage() {
                   </span>
                 )}
                 {record.path_string && (
-                  <span className="text-[10px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                  <span className="text-[10px] text-slate-400 truncate w-full min-w-0" title={record.path_string}>
                     {record.path_string}
                   </span>
                 )}
@@ -350,7 +350,7 @@ export function PracticeContextsPage() {
                 </span>
               )}
               {record.path_string && (
-                <span className="text-[10px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                <span className="text-[10px] text-slate-400 truncate w-full min-w-0" title={record.path_string}>
                   {record.path_string}
                 </span>
               )}
@@ -363,6 +363,7 @@ export function PracticeContextsPage() {
       title: 'Mã Code',
       key: 'code',
       width: 180,
+      align: 'center',
       render: (record: PracticeContext) => {
         if (record.level === 0) {
           return (
@@ -389,6 +390,7 @@ export function PracticeContextsPage() {
       title: 'Cấp bậc',
       key: 'level',
       width: 160,
+      align: 'center',
       render: (record: PracticeContext) => {
         if (record.level === 0) {
           return (
@@ -415,13 +417,14 @@ export function PracticeContextsPage() {
       title: 'Kỹ năng (Domains)',
       key: 'domains',
       width: 200,
+      align: 'center',
       render: (record: PracticeContext) => {
         const domains = record.domains
         if (!domains || domains.length === 0) {
           return <span className="text-xs text-slate-400">Tất cả</span>
         }
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap justify-center gap-1">
             {domains.map((dom) => {
               const matched = DOMAIN_OPTIONS.find((d) => d.value === dom)
               return (

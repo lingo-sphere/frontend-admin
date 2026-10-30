@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Tooltip } from 'antd'
 import { FileCheck2, Clock, CheckCircle2, RotateCcw, Sparkles } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { TableTextCell } from '@/components/table.text.cell'
 import { CustomSelect } from '@/components/custom.select'
 import { StatCard } from '@/components/stat.card'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -49,16 +50,18 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
         const email = item.user_email || item.user_id || 'HV'
         const initials = email.slice(0, 2).toUpperCase()
         return (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 w-full">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-[11px] shrink-0 shadow-2xs">
               {initials}
             </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[150px]" title={email}>
-                {email}
-              </p>
+            <div className="min-w-0 flex-1">
+              <Tooltip title={email} placement="topLeft" mouseEnterDelay={0.3}>
+                <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate block w-full">
+                  {email}
+                </p>
+              </Tooltip>
               {item.user_email && item.user_id && (
-                <p className="text-[11px] text-slate-400 font-mono truncate max-w-[150px]" title={item.user_id}>
+                <p className="text-[11px] text-slate-400 font-mono truncate block w-full" title={item.user_id}>
                   ID: {item.user_id.slice(-6)}
                 </p>
               )}
@@ -70,20 +73,18 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     {
       key: 'title',
       title: 'Bài luyện tập',
-      minWidth: 180,
+      minWidth: 200,
       render: (item) => (
-        <span
-          className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate block max-w-[220px]"
-          title={item.title || 'Bài luyện tập'}
-        >
-          {item.title || 'Bài luyện tập'}
-        </span>
+        <TableTextCell
+          text={item.title || 'Bài luyện tập'}
+        />
       ),
     },
     {
       key: 'type',
       title: 'Loại bài',
       width: 140,
+      align: 'center',
       render: (item) => {
         const label = practiceExerciseLabels[item.exercise_type || ''] || item.exercise_type || '—'
         return (

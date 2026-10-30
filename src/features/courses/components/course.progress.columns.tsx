@@ -43,6 +43,7 @@ export function createCourseProgressColumns({
       key: 'learner',
       title: isVi ? 'Học Viên' : 'Student',
       sortable: true,
+      align: 'left',
       width: '180px',
       minWidth: '160px',
       render: (st) => {
@@ -52,7 +53,7 @@ export function createCourseProgressColumns({
         const avatarSrc = u?.avatar_url || st.avatar_url || undefined
 
         return (
-          <div className="flex items-center gap-2.5 min-w-[150px]">
+          <div className="flex items-center justify-start gap-2.5 w-full">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-xs shrink-0 overflow-hidden">
               {avatarSrc ? (
                 <img
@@ -64,7 +65,7 @@ export function createCourseProgressColumns({
                 displayName.charAt(0)
               )}
             </div>
-            <div className="min-w-0 max-w-[140px]">
+            <div className="min-w-0 text-left">
               <div className="font-bold text-slate-900 dark:text-slate-100 truncate text-xs">
                 {displayName}
               </div>
@@ -78,11 +79,12 @@ export function createCourseProgressColumns({
       key: 'course',
       title: isVi ? 'Khóa Học' : 'Course',
       sortable: true,
-      width: '145px',
+      align: 'left',
+      minWidth: 180,
       render: (st) => (
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 whitespace-nowrap">
           <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-          <span className="truncate max-w-[115px]">{st.course_title || 'Khóa học tiếng Anh'}</span>
+          <span className="truncate min-w-0" title={st.course_title || 'Khóa học tiếng Anh'}>{st.course_title || 'Khóa học tiếng Anh'}</span>
         </span>
       ),
     },
@@ -90,6 +92,7 @@ export function createCourseProgressColumns({
       key: 'progress',
       title: isVi ? 'Tiến Độ' : 'Progress',
       sortable: true,
+      align: 'center',
       width: '120px',
       render: (st) => {
         const progressPct = Math.min(100, Math.max(0, st.progress_percentage || 0))
@@ -122,9 +125,9 @@ export function createCourseProgressColumns({
     {
       key: 'pre_test',
       title: isVi ? 'Đầu Vào' : 'Baseline',
-      align: 'center',
       sortable: true,
-      width: '75px',
+      align: 'center',
+      width: '120px',
       render: (st) =>
         typeof st.measurement_summary?.baseline_internal === 'number' ? (
           <span className="inline-block px-2 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 whitespace-nowrap">
@@ -138,7 +141,7 @@ export function createCourseProgressColumns({
       key: 'modules',
       title: isVi ? 'KT Chương' : 'Modules',
       align: 'center',
-      width: '125px',
+      width: '130px',
       render: (st) => (
         <div className="flex items-center justify-center gap-1 flex-wrap max-w-[130px] mx-auto">
           {st.modules_progress && st.modules_progress.length > 0 ? (
@@ -173,9 +176,9 @@ export function createCourseProgressColumns({
     {
       key: 'final_test',
       title: isVi ? 'Kết Khóa' : 'Final',
-      align: 'center',
       sortable: true,
-      width: '75px',
+      align: 'center',
+      width: '120px',
       render: (st) =>
         st.final_test_score !== undefined ? (
           <span className="inline-block px-2 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 whitespace-nowrap">
@@ -188,9 +191,9 @@ export function createCourseProgressColumns({
     {
       key: 'growth',
       title: isVi ? 'Tăng Trưởng' : 'Growth',
-      align: 'center',
       sortable: true,
-      width: '80px',
+      align: 'center',
+      width: '130px',
       render: (st) => {
         const growth = st.measurement_summary?.internal_delta
         if (typeof growth !== 'number') return <span className="text-xs text-slate-400">Chưa đủ căn cứ</span>
@@ -209,6 +212,7 @@ export function createCourseProgressColumns({
       key: 'schedule',
       title: isVi ? 'Lịch Học' : 'Schedule',
       width: '140px',
+      align: 'center',
       render: (st) => {
         const sched = st.schedule
         const lock = st.lock_state
@@ -218,7 +222,7 @@ export function createCourseProgressColumns({
         const daysText = formatScheduleDays(sched?.days_of_week)
 
         return (
-          <div className="space-y-0.5 min-w-[125px]">
+          <div className="space-y-0.5 min-w-[125px] inline-flex flex-col items-center">
             <div className="flex items-center gap-1 text-xs font-bold text-slate-800 dark:text-slate-200">
               <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
               <span>{time} ({daysText})</span>
@@ -252,7 +256,7 @@ export function createCourseProgressColumns({
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
       align: 'center',
-      width: '90px',
+      width: '100px',
       sticky: 'right',
       render: (st) => (
         <Space size={4}>

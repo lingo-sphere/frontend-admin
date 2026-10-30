@@ -104,6 +104,7 @@ export function ProgressActivityLogsTab({
     {
       key: 'userName',
       title: isVi ? 'Học viên' : 'Learner',
+      minWidth: 200,
       sortable: true,
       align: 'left',
       render: (log) => (
@@ -123,6 +124,7 @@ export function ProgressActivityLogsTab({
     {
       key: 'actionType',
       title: isVi ? 'Hành động' : 'Action',
+      width: '180px',
       sortable: true,
       align: 'center',
       render: (log) => {
@@ -142,6 +144,7 @@ export function ProgressActivityLogsTab({
     {
       key: 'scoreOrXP',
       title: isVi ? 'Điểm / XP' : 'Score / XP',
+      width: '130px',
       sortable: true,
       align: 'center',
       render: (log) => (
@@ -153,7 +156,7 @@ export function ProgressActivityLogsTab({
     {
       key: 'timestamp',
       title: isVi ? 'Thời gian' : 'Timestamp',
-      width: '130px',
+      width: '150px',
       sortable: true,
       align: 'center',
       render: (log) => renderTableDate(log.timestamp),
