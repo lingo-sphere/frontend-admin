@@ -493,13 +493,12 @@ export function PracticeContextsPage() {
             extraActions={
               canAddChild ? (
                 <Tooltip title={`Thêm cấp con (Level ${record.level + 1})`}>
-                  <button
-                    type="button"
+                  <Button
+                    size="small"
+                    icon={<Plus size={14} />}
                     onClick={() => handleOpenCreateModal(record._id)}
-                    className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/60 dark:border-blue-800/60 transition-colors cursor-pointer"
-                  >
-                    <Plus size={14} />
-                  </button>
+                    className="!text-blue-600 !border-blue-200/80 !bg-blue-50/80 hover:!bg-blue-100 hover:!border-blue-300 dark:!bg-blue-950/60 dark:!border-blue-800 dark:!text-blue-400 dark:hover:!bg-blue-900/60 shadow-2xs"
+                  />
                 </Tooltip>
               ) : null
             }

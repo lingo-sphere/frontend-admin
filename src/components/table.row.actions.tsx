@@ -151,11 +151,12 @@ export function TableRowActions({
     <Space
       size={4}
       wrap={false}
-      className="justify-center flex-nowrap whitespace-nowrap"
+      align="center"
+      className="justify-center items-center flex-nowrap whitespace-nowrap"
       onClick={(e: React.MouseEvent) => e.stopPropagation()}
     >
       {extraActions && (
-        <span className={`inline-flex items-center gap-1 flex-nowrap whitespace-nowrap ${isAnyPopOpen ? 'pointer-events-none' : ''}`}>
+        <span className={`inline-flex items-center gap-1 flex-nowrap whitespace-nowrap align-middle ${isAnyPopOpen ? 'pointer-events-none' : ''}`}>
           {extraActions}
         </span>
       )}
