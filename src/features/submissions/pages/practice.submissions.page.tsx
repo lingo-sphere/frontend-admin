@@ -1,30 +1,17 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileCheck2, RefreshCw, X } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useAuthStore } from "@/features/auth/store/auth.store";
+import { Button, Modal, Spin } from "antd";
 import { resolveMediaUrl } from "@/features/media/utils/media.utils";
 import { toast } from "@/store/toast.store";
 import { api } from "@/services/api.client";
+import { PracticeSubmissionsTable } from '../components/practice.submissions.table';
+import { practiceScoreLabel as scoreLabel, practiceDateLabel, practiceExerciseLabels } from '../helpers/practice.submission.display';
 import {
   practiceReviewService,
   type PracticeSkill,
   type PracticeSubmission,
 } from "../services/practice.review.service";
 
-const scoreLabel = (item: PracticeSubmission, ai = false) => {
-  const toeic = item.grading_standard === "TOEIC";
-  const value = toeic
-    ? ai
-      ? item.original_ai_raw_score
-      : item.raw_score
-    : ai
-    ? item.ai_score
-    : item.overall_score;
-  return typeof value === "number"
-    ? `${value}/${toeic ? item.max_score : 100}`
-    : "Chưa có điểm";
-};
 function PracticeMedia({
   value,
   image = false,
@@ -37,7 +24,7 @@ function PracticeMedia({
     queryKey: ["practice-review-media", value],
     enabled: isId,
     queryFn: () =>
-      api.get<{ storage_key?: string; file_path?: string }>(`/media/${value}`),
+      api.get<{ storage_key?: string; file_path?: string }>(`/media/files/${value}`),
   });
   const key = isId
     ? query.data?.storage_key || query.data?.file_path || ""
@@ -64,199 +51,11 @@ export function PracticeWritingSubmissionsPage() {
 }
 
 function PracticeSubmissionsPage({ skill }: { skill: PracticeSkill }) {
-  const [status, setStatus] = useState("ALL");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string | null>(null);
-  const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.role === "ADMIN";
-  const client = useQueryClient();
-  const query = useQuery({
-    queryKey: ["practice-submissions", skill, status, search, page],
-    queryFn: () =>
-      practiceReviewService.list(skill, { status, search, page, limit: 20 }),
-  });
-  const retry = useMutation({
-    mutationFn: (id: string) => practiceReviewService.retry(skill, id),
-    onSuccess: () => {
-      toast.success("Đã chấm lại bài luyện tập");
-      void client.invalidateQueries({ queryKey: ["practice-submissions"] });
-    },
-    onError: (error: Error) =>
-      toast.error(
-        error.message || "Chưa chấm được, bài vẫn được giữ để thử lại",
-      ),
-  });
-  return (
-    <div className="space-y-5">
-      <header className="space-y-2">
-        <h1 className="flex items-center gap-2 text-xl font-bold">
-          <FileCheck2 /> Chấm điểm & Phúc khảo — Luyện tập{" "}
-          {skill === "SPEAKING" ? "Speaking" : "Writing"}
-        </h1>
-        <p className="text-sm text-slate-500">
-          Ưu tiên yêu cầu phúc khảo chưa giải quyết, theo thứ tự gửi trước. Các
-          bài còn lại có thể được giáo viên kiểm tra chủ động.
-        </p>
-        <nav className="flex flex-wrap gap-3 text-sm">
-          <Link
-            className={skill === "SPEAKING" ? "font-bold text-indigo-600" : ""}
-            to="/submissions/practice/speaking"
-          >
-            Luyện tập Speaking
-          </Link>
-          <Link
-            className={skill === "WRITING" ? "font-bold text-indigo-600" : ""}
-            to="/submissions/practice/writing"
-          >
-            Luyện tập Writing
-          </Link>
-          <Link to="/submissions/courses">Bài kiểm tra khóa học</Link>
-        </nav>
-      </header>
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <span>
-          Tìm thấy: <strong>{query.data?.total ?? "—"}</strong>
-        </span>
-        <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-900">
-          Yêu cầu phúc khảo: {query.data?.pending ?? "—"}
-        </span>
-        <input
-          aria-label="Tìm bài luyện tập"
-          placeholder="Mã học viên hoặc tên bài"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(1);
-          }}
-          className="rounded-lg border border-slate-300 bg-transparent p-2 text-sm"
-        />
-        <select
-          aria-label="Trạng thái bài luyện tập"
-          value={status}
-          onChange={(event) => {
-            setStatus(event.target.value);
-            setPage(1);
-          }}
-          className="rounded-lg border border-slate-300 bg-transparent p-2 text-sm"
-        >
-          <option value="ALL">Tất cả bài có điểm</option>
-          <option value="REQUESTED">Yêu cầu phúc khảo</option>
-          <option value="RESOLVED">Đã được giáo viên kiểm tra</option>
-          <option value="NONE">Chưa kiểm tra</option>
-          {isAdmin && (
-            <option value="FAILED">Bài chưa chấm xong / chấm lỗi</option>
-          )}
-        </select>
-        <button
-          aria-label="Làm mới bài luyện tập"
-          onClick={() => void query.refetch()}
-        >
-          <RefreshCw size={18} />
-        </button>
-      </div>
-      {query.isError && (
-        <p role="alert" className="text-red-600">
-          {query.error.message}
-        </p>
-      )}
-      {query.isPending ? (
-        <p>Đang tải bài luyện tập…</p>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-slate-100 dark:bg-slate-800">
-                <th className="p-3">Học viên / bài</th>
-                <th>Điểm AI</th>
-                <th>Điểm hiện tại</th>
-                <th>Trạng thái</th>
-                <th className="p-3">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {query.data?.items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-t border-slate-200 dark:border-slate-800"
-                >
-                  <td className="p-3">
-                    <p className="font-semibold">{item.user_id}</p>
-                    <p>{item.title}</p>
-                    <small>
-                      {item.exercise_type} · {item.grading_version}
-                    </small>
-                  </td>
-                  <td>{scoreLabel(item, true)}</td>
-                  <td>{scoreLabel(item)}</td>
-                  <td>
-                    {item.review?.status === "REQUESTED" ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-900">
-                        Yêu cầu phúc khảo
-                      </span>
-                    ) : item.review?.status === "RESOLVED" ? (
-                      "Đã kiểm tra"
-                    ) : item.record_type === "GRADING_REQUEST" ? (
-                      <span>
-                        {item.status}
-                        <br />
-                        {item.error}
-                      </span>
-                    ) : (
-                      "AI đã chấm"
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {item.record_type === "GRADING_REQUEST" ? (
-                      <button
-                        disabled={retry.isPending}
-                        onClick={() => retry.mutate(item.id)}
-                        className="rounded-lg bg-indigo-600 px-3 py-2 text-white disabled:opacity-50"
-                      >
-                        Thử chấm lại
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setSelected(item.id)}
-                        className="rounded-lg bg-indigo-600 px-3 py-2 text-white"
-                      >
-                        Xem & chấm bài
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {!query.isError && !query.data?.items.length && (
-            <p className="p-6 text-center text-slate-500">
-              Không có bài luyện tập phù hợp bộ lọc.
-            </p>
-          )}
-        </div>
-      )}
-      <div className="flex items-center justify-end gap-3 text-sm">
-        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-          Trang trước
-        </button>
-        <span>Trang {page}</span>
-        <button
-          disabled={!query.data || page * 20 >= query.data.total}
-          onClick={() => setPage(page + 1)}
-        >
-          Trang sau
-        </button>
-      </div>
-      {selected && (
-        <PracticeReviewDetail
-          key={selected}
-          id={selected}
-          skill={skill}
-          onClose={() => setSelected(null)}
-        />
-      )}
-    </div>
-  );
+  return <>
+    <PracticeSubmissionsTable key={skill} skill={skill} onOpenReview={setSelected} />
+    {selected && <PracticeReviewDetail key={`${skill}-${selected}`} id={selected} skill={skill} onClose={() => setSelected(null)} />}
+  </>;
 }
 
 function PracticeReviewDetail({
@@ -273,37 +72,16 @@ function PracticeReviewDetail({
     queryFn: () => practiceReviewService.detail(skill, id),
   });
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Đánh giá bài luyện tập"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-    >
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 dark:bg-slate-900">
-        <button
-          aria-label="Đóng đánh giá"
-          onClick={onClose}
-          className="float-right"
-        >
-          <X />
-        </button>
-        <button
-          onClick={() => void query.refetch()}
-          className="mb-3 text-sm text-indigo-600"
-        >
-          Tải lại bài và điểm mới nhất
-        </button>
-        {query.isPending ? (
-          <p>Đang tải nội dung bài…</p>
-        ) : query.isError ? (
-          <p role="alert">{query.error.message}</p>
-        ) : (
-          <PracticeReviewForm item={query.data} onClose={onClose} />
-        )}
+    <Modal open onCancel={onClose} footer={null} width={950} title="Đánh giá bài luyện tập" destroyOnHidden>
+      <div className="space-y-4">
+        <Button onClick={() => void query.refetch()}>Tải lại bài và điểm mới nhất</Button>
+        {query.isPending ? <Spin /> : query.isError ? <p role="alert">{query.error.message}</p> :
+          <PracticeReviewForm item={query.data} onClose={onClose} />}
       </div>
-    </div>
+    </Modal>
   );
 }
+
 function PracticeReviewForm({
   item,
   onClose,
@@ -359,8 +137,20 @@ function PracticeReviewForm({
   return (
     <div className="space-y-5">
       <h2 className="text-lg font-bold">
-        Bài luyện tập {item.skill} · {item.user_id}
+        {item.title || `Bài luyện tập ${item.skill}`} · {item.user_email || item.user_id}
       </h2>
+      <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 p-4 text-sm dark:border-slate-700">
+        <p>Tài khoản: <strong>{item.user_email || item.user_id}</strong></p>
+        <p>Loại bài: {practiceExerciseLabels[item.exercise_type || ''] || item.exercise_type || '—'}</p>
+        <p>Nộp bài: {practiceDateLabel(item.submitted_at)}</p>
+        <p>Hoàn thành: {practiceDateLabel(item.completed_at)}</p>
+        <p>Lượt / phiên bản: {item.attempt_number ?? item.version_number ?? '—'}</p>
+        <p>{item.skill === 'WRITING' ? `Số từ: ${item.word_count ?? '—'}` : `Thời lượng ghi âm: ${item.recording_duration_seconds == null ? '—' : `${item.recording_duration_seconds} giây`}`}</p>
+        <p>Yêu cầu phúc khảo: {practiceDateLabel(item.review?.requested_at)}</p>
+        <p>Đã kiểm tra: {practiceDateLabel(item.review?.reviewed_at)}</p>
+        <p>Người kiểm tra: {item.review?.reviewer_name || '—'}</p>
+        <p>Thang điểm: {item.grading_standard === 'TOEIC' ? `TOEIC /${item.max_score ?? '—'}` : 'Thực hành /100'}</p>
+      </div>
       {item.review?.reason && (
         <div className="rounded-xl bg-amber-50 p-4 text-amber-950">
           <strong>Yêu cầu phúc khảo</strong>

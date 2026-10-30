@@ -11,6 +11,7 @@
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "test:practice-appeals": "node --test tests/practice-appeals.test.cjs",
+        "test:course-submissions": "node --test tests/course-submissions.test.cjs",
         "preview": "vite preview"
     },
     "dependencies": {

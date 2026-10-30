@@ -15,6 +15,7 @@ export interface PracticeSubmission {
   id: string;
   skill: PracticeSkill;
   user_id: string;
+  user_email?: string | null;
   title?: string;
   exercise_type?: string;
   overall_score: number | null;
@@ -27,6 +28,13 @@ export interface PracticeSubmission {
   revision: number;
   review: PracticeReview | null;
   submitted_at?: string;
+  created_at?: string;
+  completed_at?: string | null;
+  attempt_number?: number;
+  version_number?: number;
+  word_count?: number;
+  recording_duration_seconds?: number;
+  writing_time_seconds?: number;
   record_type?: "RESULT" | "GRADING_REQUEST";
   error?: string;
   status?: string;
@@ -50,6 +58,7 @@ export interface PracticeSubmissionList {
   items: PracticeSubmission[];
   total: number;
   pending: number;
+  reviewed?: number;
   page: number;
   limit: number;
 }

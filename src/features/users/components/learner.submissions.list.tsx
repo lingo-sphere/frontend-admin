@@ -51,7 +51,7 @@ export function LearnerSubmissionsList({
                     </span>
 
                     <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Điểm AI: <span className="text-purple-600 dark:text-purple-400">{sub.ai_score}đ</span>
+                      Điểm AI: <span className="text-purple-600 dark:text-purple-400">{sub.ai_score == null ? 'Chưa có điểm' : `${sub.ai_score}đ`}</span>
                       {sub.teacher_score !== undefined && (
                         <span className="text-emerald-600 dark:text-emerald-400 ml-1.5">
                           • Giáo viên: {sub.teacher_score}đ

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
+import { Tabs } from 'antd'
+import { CourseTestSessionsTab } from '@/features/submissions/components/course.test.sessions.tab'
 import { useCourseLearnersData } from '@/features/courses/hooks/use.course.learners.data'
 import { LearnerSubmissionsTab } from '@/features/submissions/components/learner.submissions.tab'
 import { LearnerSubmissionReviewModal } from '@/features/submissions/components/learner.submission.review.modal'
@@ -15,6 +17,7 @@ export function SubmissionsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const [selectedSubmission, setSelectedSubmission] = useState<SkillSubmissionItem | null>(null)
+  const [activeTab, setActiveTab] = useState('tests')
   const {
     isTeacher,
     courses,
@@ -28,7 +31,7 @@ export function SubmissionsPage() {
     stats,
   } = useCourseLearnersData({
     loadProgress: false,
-    loadSubmissions: true,
+    loadSubmissions: activeTab === 'skills',
     courseId: searchParams.get('courseId') || 'ALL',
   })
 
@@ -46,6 +49,8 @@ export function SubmissionsPage() {
     void queryClient.invalidateQueries({ queryKey: ['course-learners'] })
     void queryClient.invalidateQueries({ queryKey: ['learner-progress-detail'] })
     void queryClient.invalidateQueries({ queryKey: ['course-submissions'] })
+    void queryClient.invalidateQueries({ queryKey: ['course-test-sessions'] })
+    void queryClient.invalidateQueries({ queryKey: ['course-test-session-detail'] })
   }
 
   return (
@@ -60,8 +65,8 @@ export function SubmissionsPage() {
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isVi
-              ? 'Xem bài làm, đối chiếu kết quả AI và duyệt điểm Speaking, Writing của học viên.'
-              : 'Inspect learner submissions, compare AI feedback and review Speaking and Writing grades.'}
+              ? 'Xem các lượt kiểm tra khóa học, bài làm và kết quả; duyệt điểm Speaking, Writing của học viên.'
+              : 'Inspect course test attempts, answers and results, and review Speaking and Writing grades.'}
           </p>
         </div>
       </div>
@@ -72,6 +77,17 @@ export function SubmissionsPage() {
         <Link className="font-bold text-indigo-600" to="/submissions/courses">Bài kiểm tra khóa học</Link>
       </nav>
 
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
+        { key: 'tests', label: isVi ? 'Bài kiểm tra khóa học' : 'Course tests' },
+        { key: 'skills', label: isVi ? 'Phúc khảo Speaking & Writing' : 'Speaking & Writing review' },
+      ]} />
+
+      {activeTab === 'tests' && <CourseTestSessionsTab
+        key={selectedCourseId} courses={courses} selectedCourseId={selectedCourseId}
+        onSelectCourseId={selectCourse} isLoadingCourses={isLoadingCourses} coursesError={coursesError}
+      />}
+
+      {activeTab === 'skills' && <>
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <p className="text-xs text-slate-500">{isVi ? 'Tổng bài nộp' : 'Submissions'}</p>
@@ -102,6 +118,7 @@ export function SubmissionsPage() {
         isVi={isVi}
         isTeacher={isTeacher}
       />
+      </>}
 
       {selectedSubmission && (
         <LearnerSubmissionReviewModal

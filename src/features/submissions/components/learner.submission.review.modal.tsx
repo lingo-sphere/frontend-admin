@@ -40,18 +40,18 @@ export function LearnerSubmissionReviewModal({
 
   useEffect(() => {
     if (submission) {
-      setEditScore(
-        submission.teacher_score !== undefined
-          ? submission.teacher_score
-          : submission.ai_score
-      );
+      setEditScore(submission.teacher_score ?? submission.ai_score ?? 0);
       setEditFeedback(submission.teacher_feedback || "");
     }
   }, [submission]);
 
   if (!submission) return null;
 
+  const canReview = submission.ai_score != null &&
+    ['AI_GRADED', 'TEACHER_REVIEWED'].includes(submission.status);
+
   const handleSaveReview = async (overrideScore?: number) => {
+    if (!canReview) return;
     const scoreToSave = overrideScore !== undefined ? overrideScore : editScore;
     setIsSubmitting(true);
     try {
@@ -98,7 +98,7 @@ export function LearnerSubmissionReviewModal({
                 <span>
                   Học viên:{" "}
                   <strong className="text-slate-700 dark:text-slate-200">
-                    {submission.user_name}
+                    {submission.user_name || submission.user_email || submission.user_id}
                   </strong>
                 </span>
                 {submission.course_title && (
@@ -224,13 +224,14 @@ export function LearnerSubmissionReviewModal({
                   Điểm AI đề xuất:
                 </span>
                 <span className="text-base font-black text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-3 py-1 rounded-xl">
-                  {submission.ai_score}/100
+                  {submission.ai_score == null ? "Chưa có điểm" : `${submission.ai_score}/100`}
                 </span>
               </div>
 
               <button
                 type="button"
-                onClick={() => setEditScore(submission.ai_score)}
+                disabled={!canReview}
+                onClick={() => { if (submission.ai_score != null) setEditScore(submission.ai_score); }}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 cursor-pointer shadow-2xs"
               >
                 Áp dụng điểm AI ({submission.ai_score})
@@ -293,7 +294,7 @@ export function LearnerSubmissionReviewModal({
                     Độ chính xác
                   </span>
                   <span className="text-xs font-black text-purple-600 dark:text-purple-400">
-                    {submission.ai_score}/100
+                    {submission.ai_score == null ? "Chưa có điểm" : `${submission.ai_score}/100`}
                   </span>
                 </div>
               </div>
@@ -335,6 +336,11 @@ export function LearnerSubmissionReviewModal({
             <Edit3 className="w-4 h-4 text-indigo-500" />
             <span>3. Giáo viên Duyệt & Hiệu chỉnh điểm số</span>
           </span>
+          {!canReview && (
+            <p role="status" className="text-sm text-amber-700 dark:text-amber-400">
+              Bài chưa có kết quả AI hợp lệ để phúc khảo.
+            </p>
+          )}
 
           <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/40 space-y-3.5">
             <div>
@@ -394,7 +400,7 @@ export function LearnerSubmissionReviewModal({
           </button>
           <button
             type="button"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !canReview}
             onClick={() => handleSaveReview()}
             className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
           >

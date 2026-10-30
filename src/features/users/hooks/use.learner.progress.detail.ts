@@ -139,13 +139,14 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
 
   const handleOpenReview = useCallback((sub: SkillSubmissionItem) => {
     setSelectedSubmission(sub)
-    setEditScore(sub.teacher_score !== undefined ? sub.teacher_score : sub.ai_score)
+    setEditScore(sub.teacher_score ?? sub.ai_score ?? 0)
     setEditFeedback(sub.teacher_feedback || '')
   }, [])
 
   const handleSaveReview = useCallback(
     async (overrideScore?: number) => {
       if (!selectedSubmission) return
+      if (selectedSubmission.ai_score == null || !['AI_GRADED', 'TEACHER_REVIEWED'].includes(selectedSubmission.status)) return
       const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
       await reviewMutation.mutateAsync({
         submissionId: selectedSubmission._id,

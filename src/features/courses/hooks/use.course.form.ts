@@ -6,6 +6,7 @@ import type { CourseFormData, CourseLesson, CourseModule } from '@/features/cour
 import type { Course } from '@/features/courses/schemas/course.schema'
 import { courseService } from '@/features/courses/services/course.service'
 import { mediaService } from '@/features/media/services/media.service'
+import { collectCourseMediaUrls } from '@/features/courses/helpers/course.media.helper'
 import { pathToNavItem, navItemToPath } from '@/routes/navigation'
 import { authStore, useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
@@ -442,34 +443,7 @@ export function useCourseForm(editCourseId?: string, isVi: boolean = true) {
         }))
       }
 
-      const allMediaUrls: string[] = [...uploadedR2Urls]
-      if (payload.thumbnail_url) allMediaUrls.push(payload.thumbnail_url)
-      if (payload.document_url) allMediaUrls.push(payload.document_url)
-      if (payload.final_test_audio_url) allMediaUrls.push(payload.final_test_audio_url)
-      if (payload.final_test_speaking_file_url)
-        allMediaUrls.push(payload.final_test_speaking_file_url)
-      if (payload.final_test_writing_file_url)
-        allMediaUrls.push(payload.final_test_writing_file_url)
-      if (Array.isArray(payload.final_test_questions)) {
-        payload.final_test_questions.forEach((q) => {
-          if (q.media_url) allMediaUrls.push(q.media_url)
-        })
-      }
-      payload.modules?.forEach((mod) => {
-        if (mod.theory_file_url) allMediaUrls.push(mod.theory_file_url)
-        if (mod.test_audio_url) allMediaUrls.push(mod.test_audio_url)
-        if (mod.challenge_audio_url) allMediaUrls.push(mod.challenge_audio_url)
-        if (mod.audio_url) allMediaUrls.push(mod.audio_url)
-        const qList =
-          mod.test_questions || mod.post_mini_questions || mod.challenge_questions || []
-        qList.forEach((q) => {
-          if (q.media_url) allMediaUrls.push(q.media_url)
-        })
-        mod.lessons?.forEach((les) => {
-          if (les.video_url) allMediaUrls.push(les.video_url)
-          if (les.theory_file_url) allMediaUrls.push(les.theory_file_url)
-        })
-      })
+      const allMediaUrls = collectCourseMediaUrls(payload, uploadedR2Urls)
 
       if (abortController.signal.aborted) {
         throw new DOMException('Aborted', 'AbortError')
