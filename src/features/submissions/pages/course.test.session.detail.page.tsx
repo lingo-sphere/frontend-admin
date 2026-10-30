@@ -1,6 +1,6 @@
 // Trang xem chi tiết bài làm kiểm tra khóa học và đối chiếu đáp án học viên.
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Button, Image, Spin, Tooltip } from 'antd'
@@ -138,6 +138,46 @@ export function CourseTestSessionDetailPage({
     return `${mins} phút ${secs} giây`
   }
 
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null)
+
+  const handleScrollToQuestion = (index: number) => {
+    setActiveQuestionIndex(index)
+    const el = document.getElementById(`question-card-${index}`)
+    if (el) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (!session?.raw_questions || session.raw_questions.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.find((e) => e.isIntersecting)
+        if (visible && visible.target.id) {
+          const idx = Number(visible.target.id.replace('question-card-', ''))
+          if (!Number.isNaN(idx)) {
+            setActiveQuestionIndex(idx)
+          }
+        }
+      },
+      {
+        rootMargin: '-180px 0px -60% 0px',
+        threshold: 0,
+      }
+    )
+
+    session.raw_questions.forEach((_, idx) => {
+      const el = document.getElementById(`question-card-${idx}`)
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [session?.raw_questions])
+
   const isPassed = session?.is_passed ?? (session?.score != null && session?.passing_score != null ? session.score >= session.passing_score : null)
 
   return (
@@ -271,7 +311,7 @@ export function CourseTestSessionDetailPage({
           </div>
 
           {questionStats.total > 0 && (
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
+            <div className="sticky top-[68px] z-30 p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/90 shadow-md space-y-3 transition-all">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   Mục lục câu hỏi ({questionStats.correct}/{questionStats.total} câu đúng)
@@ -292,28 +332,30 @@ export function CourseTestSessionDetailPage({
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {questionStats.statuses.map((item) => (
-                  <button
-                    key={item.index}
-                    type="button"
-                    onClick={() => {
-                      document.getElementById(`question-card-${item.index}`)?.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                      })
-                    }}
-                    className={`w-8 h-8 rounded-xl font-mono text-xs font-bold flex items-center justify-center border transition-all cursor-pointer ${
-                      item.isCorrect
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-400'
-                        : item.isAnswered
-                          ? 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-400'
-                          : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
-                    }`}
-                  >
-                    {item.index + 1}
-                  </button>
-                ))}
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+                {questionStats.statuses.map((item) => {
+                  const isActive = activeQuestionIndex === item.index
+                  return (
+                    <button
+                      key={item.index}
+                      type="button"
+                      onClick={() => handleScrollToQuestion(item.index)}
+                      className={`w-8 h-8 rounded-xl font-mono text-xs font-bold flex items-center justify-center border transition-all cursor-pointer ${
+                        isActive
+                          ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900 scale-105 shadow-xs z-10'
+                          : ''
+                      } ${
+                        item.isCorrect
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-400'
+                          : item.isAnswered
+                            ? 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-400'
+                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
+                      }`}
+                    >
+                      {item.index + 1}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -347,12 +389,14 @@ export function CourseTestSessionDetailPage({
                 <div
                   key={index}
                   id={`question-card-${index}`}
-                  className={`p-5 rounded-2xl border bg-white dark:bg-slate-900 space-y-4 shadow-2xs transition-all ${
-                    isCorrect
-                      ? 'border-emerald-200 dark:border-emerald-900/60'
-                      : isAnswered
-                        ? 'border-rose-200 dark:border-rose-900/60'
-                        : 'border-slate-200 dark:border-slate-800'
+                  className={`scroll-mt-56 p-5 rounded-2xl border bg-white dark:bg-slate-900 space-y-4 shadow-2xs transition-all ${
+                    activeQuestionIndex === index
+                      ? 'ring-2 ring-indigo-500/40 dark:ring-indigo-400/40 border-indigo-300 dark:border-indigo-700'
+                      : isCorrect
+                        ? 'border-emerald-200 dark:border-emerald-900/60'
+                        : isAnswered
+                          ? 'border-rose-200 dark:border-rose-900/60'
+                          : 'border-slate-200 dark:border-slate-800'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">

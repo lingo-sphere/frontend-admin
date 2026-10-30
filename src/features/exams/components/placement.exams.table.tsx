@@ -11,11 +11,12 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react'
-import { Button, Switch, Tooltip } from 'antd'
+import { Button, Tooltip } from 'antd'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableRowActions } from '@/components/table.row.actions'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 
 interface PlacementExamsTableProps {
   exams: ToeicExamItem[]
@@ -232,18 +233,15 @@ export function PlacementExamsTable({
         width: 110,
         align: 'center',
         render: (exam) => (
-          <div className="inline-flex flex-col items-center gap-0.5">
-            <Switch
-              size="small"
-              aria-label={`Xuất bản ${exam.title}`}
-              checked={Boolean(exam.is_published)}
-              disabled={isMutatingPublish}
-              onChange={(checked) => onTogglePublish(exam, checked)}
-            />
-            <span className="text-[10px] text-slate-500 whitespace-nowrap">
-              {exam.is_published ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-            </span>
-          </div>
+          <TableStatusSwitch
+            checked={Boolean(exam.is_published)}
+            disabled={isMutatingPublish}
+            loading={isMutatingPublish}
+            checkedChildren="Bật"
+            unCheckedChildren="Ẩn"
+            ariaLabel={`Xuất bản ${exam.title}`}
+            onChange={(checked) => onTogglePublish(exam, checked)}
+          />
         ),
       },
       {

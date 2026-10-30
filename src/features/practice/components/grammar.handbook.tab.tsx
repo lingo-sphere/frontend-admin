@@ -9,7 +9,7 @@ import {
   Image,
   Tooltip,
 } from 'antd'
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import {
   EditOutlined,
   DeleteOutlined,
@@ -280,11 +280,13 @@ export function GrammarHandbookTab() {
       width: 110,
       align: 'center',
       render: (row) => (
-        <CustomSwitch
-          size="sm"
-          color="emerald"
+        <TableStatusSwitch
           checked={row.is_published}
           loading={workingId === row._id}
+          disabled={Boolean(workingId)}
+          checkedChildren="Bật"
+          unCheckedChildren="Ẩn"
+          ariaLabel={`Xuất bản chủ điểm ${row.title_vi}`}
           onChange={(checked) => void handleTogglePublish(row, checked)}
         />
       ),

@@ -9,7 +9,6 @@ import {
   Input,
   InputNumber,
   Modal,
-  Switch,
   Tag,
   Tooltip,
 } from 'antd'
@@ -25,6 +24,7 @@ import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableRowActions } from '@/components/table.row.actions'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import {
   usePracticeContextsAdmin,
 } from '@/features/practice/hooks/use.practice.contexts'
@@ -235,7 +235,10 @@ export function PracticeContextsPage() {
     }
   }
 
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
   const handleToggleStatus = async (record: PracticeContext, checked: boolean) => {
+    setTogglingId(record._id)
     try {
       await updateContext.mutateAsync({
         id: record._id,
@@ -245,6 +248,8 @@ export function PracticeContextsPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể đổi trạng thái'
       toast.error(msg)
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -467,11 +472,13 @@ export function PracticeContextsPage() {
       width: 120,
       align: 'center',
       render: (record: PracticeContext) => (
-        <Switch
+        <TableStatusSwitch
           checked={record.status === 'ACTIVE'}
+          loading={togglingId === record._id}
+          disabled={Boolean(togglingId)}
           checkedChildren="Bật"
           unCheckedChildren="Ẩn"
-          size="small"
+          ariaLabel={`Trạng thái ngữ cảnh ${record.name_vi || record.name_en}`}
           onChange={(checked) => handleToggleStatus(record, checked)}
         />
       ),

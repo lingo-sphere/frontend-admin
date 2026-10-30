@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { FileText, Clock, HelpCircle, Volume2, Pause, Image as ImageIcon, ExternalLink } from 'lucide-react'
-import { Button, Image, Switch, Tooltip } from 'antd'
+import { Button, Image, Tooltip } from 'antd'
 import type { DataTableColumn } from '@/components/data.table'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { TableRowActions } from '@/components/table.row.actions'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { resolveMediaUrl } from '@/lib/media.utils'
 
 interface GetExamColumnsOptions {
@@ -261,20 +262,16 @@ export function getExamColumns({
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
       sortable: true,
-      width: 120,
+      width: 110,
       align: 'center',
       render: (exam) => (
-        <div className="inline-flex flex-col items-center gap-0.5">
-          <Switch
-            size="small"
-            aria-label={`Xuất bản ${exam.title}`}
-            checked={Boolean(exam.is_published)}
-            onChange={(checked) => onTogglePublish(exam._id || '', checked)}
-          />
-          <span className="text-[10px] text-slate-500 whitespace-nowrap">
-            {exam.is_published ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-          </span>
-        </div>
+        <TableStatusSwitch
+          checked={Boolean(exam.is_published)}
+          checkedChildren="Bật"
+          unCheckedChildren="Ẩn"
+          ariaLabel={`Xuất bản ${exam.title}`}
+          onChange={() => onTogglePublish(exam._id || '', Boolean(exam.is_published))}
+        />
       ),
     },
     {

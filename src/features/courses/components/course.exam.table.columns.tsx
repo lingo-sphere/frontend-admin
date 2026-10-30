@@ -1,5 +1,5 @@
 // Định nghĩa các cột hiển thị cho DataTable quản lý bài thi.
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { BookOpen, Clock, AlertCircle, Sparkles } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
 import { TableTextCell } from '@/components/table.text.cell'
@@ -155,8 +155,8 @@ export function getCourseExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng Thái' : 'Status',
-      width: '135px',
-      minWidth: 125,
+      width: '120px',
+      minWidth: 110,
       align: 'center',
       render: (exam) => {
         const isPublished = Boolean(exam.is_published)
@@ -164,26 +164,15 @@ export function getCourseExamColumns({
         const isOtherUpdating = Boolean(publishingExamId && publishingExamId !== exam._id)
 
         return (
-          <div className="inline-flex flex-col items-center gap-1">
-            <CustomSwitch
-              size="sm"
-              color="emerald"
-              checked={isPublished}
-              loading={isUpdating}
-              disabled={isOtherUpdating}
-              aria-label={isPublished ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-              onChange={() => onTogglePublish(exam)}
-            />
-            <span
-              className={`text-[10.5px] font-semibold transition-colors duration-200 whitespace-nowrap ${
-                isPublished
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-slate-400 dark:text-slate-500'
-              }`}
-            >
-              {isPublished ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-            </span>
-          </div>
+          <TableStatusSwitch
+            checked={isPublished}
+            loading={isUpdating}
+            disabled={isOtherUpdating}
+            checkedChildren="Bật"
+            unCheckedChildren="Ẩn"
+            ariaLabel={isPublished ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
+            onChange={() => onTogglePublish(exam)}
+          />
         )
       },
     },

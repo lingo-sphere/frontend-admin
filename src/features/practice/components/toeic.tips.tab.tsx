@@ -6,7 +6,7 @@ import {
   Tag,
   Image,
 } from 'antd'
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { BulbOutlined } from '@ant-design/icons'
 import {
   Plus,
@@ -238,11 +238,13 @@ export function ToeicTipsTab() {
       width: 110,
       align: 'center',
       render: (row) => (
-        <CustomSwitch
-          size="sm"
-          color="emerald"
+        <TableStatusSwitch
           checked={row.is_published}
           loading={workingId === row._id}
+          disabled={Boolean(workingId)}
+          checkedChildren="Bật"
+          unCheckedChildren="Ẩn"
+          ariaLabel={`Xuất bản mẹo ${row.title}`}
           onChange={(checked) => void handleTogglePublish(row, checked)}
         />
       ),

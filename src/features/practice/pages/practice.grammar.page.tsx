@@ -5,7 +5,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Alert, Button, Card, ConfigProvider, Segmented, Tag, Tree, theme as antdTheme } from 'antd'
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { CustomSelect } from '@/components/custom.select'
 import { IpaDataTable, type IpaColumn } from '@/components/data.table'
 import { AdminTabs } from '@/components/admin.tabs'
@@ -200,7 +200,7 @@ function GrammarBank({ kind, tree = [] }: { kind: GrammarKind; tree?: GrammarTre
   ]
 
   const sharedColumns: IpaColumn<GrammarRecord>[] = [
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-start gap-0.5"><CustomSwitch size="sm" color="emerald" aria-label={`Trạng thái ${row._id}`} checked={kind === 'topics' ? (row as GrammarTopic).status === 'ACTIVE' : (row as GrammarQuestion).status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void toggle(row, value) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{statuses.find(item => item.value === (kind === 'topics' ? (row as GrammarTopic).status : (row as GrammarQuestion).status))?.label}</span></div> },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 100, align: 'center', filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <TableStatusSwitch checked={kind === 'topics' ? (row as GrammarTopic).status === 'ACTIVE' : (row as GrammarQuestion).status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} checkedChildren="Bật" unCheckedChildren="Ẩn" ariaLabel={`Trạng thái ${row._id}`} onChange={value => { void toggle(row, value) }} /> },
     { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', initiallyHidden: true, render: value => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
     { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: value => value ? <div className="font-mono text-xs leading-tight text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
     { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, row) => <IpaRowActions onView={() => setEditor({ id: row._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: row._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(row)} trash={trash} loading={working === row._id} disabled={Boolean(working)} isVi={isVi} deleteTitle={trash ? (isVi ? 'Khôi phục bản ghi?' : 'Restore record?') : (isVi ? 'Chuyển vào thùng rác?' : 'Move to trash?')} deleteDescription={isVi ? 'Giữ lại lịch sử liên kết dữ liệu.' : 'Preserves linked attempt data.'} /> },
