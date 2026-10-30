@@ -1,50 +1,43 @@
-/**
- * @file course.learners.stats.bar.tsx
- * @description Thanh hiển thị chỉ số tổng quan học viên và tiến độ trung bình.
- */
-
-import { Users, Trophy } from "lucide-react";
+// Thanh hiển thị các thẻ thống kê học viên và tiến độ trung bình theo thiết kế SaaS hiện đại.
+import { Users, Trophy } from 'lucide-react'
+import { StatCard } from '@/components/stat.card'
 
 interface CourseLearnersStatsBarProps {
-  isVi: boolean;
-  totalStudents: number;
-  avgProgress: number;
+  isVi: boolean
+  totalStudents: number
+  avgProgress: number
+  isLoading?: boolean
 }
 
 export function CourseLearnersStatsBar({
   isVi,
   totalStudents,
   avgProgress,
+  isLoading,
 }: CourseLearnersStatsBarProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-          <Users className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-            {isVi ? "Tổng Học Viên" : "Total Students"}
-          </span>
-          <span className="text-xl font-black text-slate-900 dark:text-slate-100">
-            {totalStudents}
-          </span>
-        </div>
-      </div>
+      <StatCard
+        title={isVi ? 'Tổng Học Viên' : 'Total Learners'}
+        value={totalStudents.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+        subtitle={isVi ? 'Học viên theo dõi tiến độ trong hệ thống' : 'Total registered learners in course system'}
+        icon={Users}
+        color="emerald"
+        trend={totalStudents > 0 ? `${totalStudents}` : undefined}
+        trendType="neutral"
+        loading={isLoading}
+      />
 
-      <div className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-          <Trophy className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-            {isVi ? "Tiến Độ TB" : "Avg Progress"}
-          </span>
-          <span className="text-xl font-black text-slate-900 dark:text-slate-100">
-            {avgProgress}%
-          </span>
-        </div>
-      </div>
+      <StatCard
+        title={isVi ? 'Tiến Độ Trung Bình' : 'Average Progress'}
+        value={`${avgProgress}%`}
+        subtitle={isVi ? 'Tỉ lệ hoàn thành nội dung bài học trung bình' : 'Average course curriculum completion rate'}
+        icon={Trophy}
+        color="teal"
+        trend={`${avgProgress}%`}
+        trendType={avgProgress >= 50 ? 'up' : 'neutral'}
+        loading={isLoading}
+      />
     </div>
-  );
+  )
 }
