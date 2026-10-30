@@ -1,8 +1,11 @@
+// Component hiển thị danh sách các phiên kiểm tra khóa học và thống kê tổng quan.
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Button, Modal, Select, Spin, Tag } from 'antd'
+import { Layers, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { CustomSelect } from '@/components/custom.select'
+import { StatCard } from '@/components/stat.card'
 import { type CourseSimple } from '@/features/courses/hooks/use.course.learners.data'
 import { progressService, type CourseTestSession } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
@@ -72,12 +75,37 @@ export function CourseTestSessionsTab({ courses, selectedCourseId, onSelectCours
   ]
   const session = detail.data
   return <div className="space-y-4">
-    <div className="grid grid-cols-3 gap-4">
-      {[
-        ['Tổng phiên kiểm tra', rows.length],
-        ['Bài đã nộp', rows.filter(r => r.status === 'SUBMITTED').length],
-        ['Phiên hết hạn', rows.filter(r => r.status === 'EXPIRED').length],
-      ].map(([label, count]) => <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 text-2xl font-bold">{count}</p></div>)}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <StatCard
+        title="Tổng Phiên Kiểm Tra"
+        value={rows.length.toLocaleString('vi-VN')}
+        subtitle="Lượt làm bài kiểm tra trong khóa học"
+        icon={Layers}
+        color="indigo"
+        trend={rows.length > 0 ? `${rows.length}` : undefined}
+        trendType="neutral"
+        loading={isLoadingCourses || isLoading}
+      />
+      <StatCard
+        title="Bài Đã Nộp"
+        value={rows.filter(r => r.status === 'SUBMITTED').length.toLocaleString('vi-VN')}
+        subtitle="Học viên hoàn thành bài kiểm tra"
+        icon={CheckCircle2}
+        color="emerald"
+        trend={rows.length > 0 ? `${Math.round((rows.filter(r => r.status === 'SUBMITTED').length / rows.length) * 100)}%` : undefined}
+        trendType="up"
+        loading={isLoadingCourses || isLoading}
+      />
+      <StatCard
+        title="Phiên Hết Hạn"
+        value={rows.filter(r => r.status === 'EXPIRED').length.toLocaleString('vi-VN')}
+        subtitle="Phiên làm bài bị quá thời gian quy định"
+        icon={AlertTriangle}
+        color="rose"
+        trend={rows.filter(r => r.status === 'EXPIRED').length > 0 ? `${rows.filter(r => r.status === 'EXPIRED').length}` : undefined}
+        trendType={rows.filter(r => r.status === 'EXPIRED').length > 0 ? 'down' : 'neutral'}
+        loading={isLoadingCourses || isLoading}
+      />
     </div>
     <DataTable<SessionRow>
       title="Bài kiểm tra khóa học"

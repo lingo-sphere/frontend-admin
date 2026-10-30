@@ -55,7 +55,6 @@ export function SidebarNavGroup({
           const showActiveIndicator = isLeafActive || (isCollapsedMode && isChildActive)
           const showActiveBg = isLeafActive || (isCollapsedMode && isChildActive)
           const showSolidIcon = isLeafActive || (isCollapsedMode && isChildActive)
-          const showActiveText = isLeafActive || isChildActive
 
           const navButtonContent = (
             <>
@@ -63,9 +62,9 @@ export function SidebarNavGroup({
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
               )}
 
-              <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+              <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                 <div
-                  className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                  className={`w-7.5 h-7.5 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                     showSolidIcon
                       ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
                       : isChildActive
@@ -79,20 +78,22 @@ export function SidebarNavGroup({
 
               <div
                 className={`flex-1 min-w-0 flex items-center justify-between overflow-hidden transition-[max-width,opacity,margin] duration-300 ease-in-out ${
-                  isCollapsedMode ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-[170px] opacity-100 ml-2.5'
+                  isCollapsedMode ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-full opacity-100 ml-2'
                 }`}
               >
                 <span
-                  className={`overflow-hidden truncate whitespace-nowrap ${
-                    showActiveText
+                  className={`overflow-hidden truncate whitespace-nowrap text-[12.5px] sm:text-[13px] tracking-tight ${
+                    isLeafActive
                       ? 'text-blue-600 dark:text-blue-400 font-bold'
+                      : isChildActive
+                      ? 'text-blue-600 dark:text-blue-400 font-semibold'
                       : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-slate-200'
                   }`}
                 >
                   {item.label}
                 </span>
 
-                <div className="flex items-center gap-1.5 shrink-0 pl-1.5">
+                <div className="flex items-center gap-1 shrink-0 pl-1">
                   {item.kicker && (
                     <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20">
                       {item.kicker}
@@ -148,7 +149,7 @@ export function SidebarNavGroup({
                       : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                   }`}
                 >
-                  <div className="min-h-0 overflow-hidden w-[220px]">
+                  <div className="min-h-0 overflow-hidden w-full">
                     <SidebarBranchedSubmenu
                       children={item.children!}
                       activeNavItem={activeNavItem}

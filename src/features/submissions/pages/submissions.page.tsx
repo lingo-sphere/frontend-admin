@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
-import { FileCheck2 } from 'lucide-react'
+// Trang quản lý chấm điểm và phúc khảo bài kiểm tra khóa học.
+import { FileCheck2, FileText, Clock, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Tabs } from 'antd'
+import { StatCard } from '@/components/stat.card'
 import { CourseTestSessionsTab } from '@/features/submissions/components/course.test.sessions.tab'
 import { useCourseLearnersData } from '@/features/courses/hooks/use.course.learners.data'
 import { LearnerSubmissionsTab } from '@/features/submissions/components/learner.submissions.tab'
@@ -71,11 +72,6 @@ export function SubmissionsPage() {
         </div>
       </div>
 
-      <nav className="flex flex-wrap gap-3 text-sm">
-        <Link to="/submissions/practice/speaking">Luyện tập Speaking</Link>
-        <Link to="/submissions/practice/writing">Luyện tập Writing</Link>
-        <Link className="font-bold text-indigo-600" to="/submissions/courses">Bài kiểm tra khóa học</Link>
-      </nav>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
         { key: 'tests', label: isVi ? 'Bài kiểm tra khóa học' : 'Course tests' },
@@ -88,15 +84,37 @@ export function SubmissionsPage() {
       />}
 
       {activeTab === 'skills' && <>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">{isVi ? 'Tổng bài nộp' : 'Submissions'}</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{stats.totalSubmissions}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">{isVi ? 'Bài chưa duyệt' : 'Not yet reviewed'}</p>
-          <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingReviews}</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard
+          title={isVi ? 'Tổng Bài Nộp' : 'Total Submissions'}
+          value={stats.totalSubmissions.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+          subtitle={isVi ? 'Bài nộp Speaking & Writing trong khóa học' : 'Course Speaking & Writing submissions'}
+          icon={FileText}
+          color="indigo"
+          trend={stats.totalSubmissions > 0 ? `${stats.totalSubmissions}` : undefined}
+          trendType="neutral"
+          loading={isLoadingSubmissions}
+        />
+        <StatCard
+          title={isVi ? 'Bài Chờ Duyệt' : 'Pending Reviews'}
+          value={stats.pendingReviews.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+          subtitle={isVi ? 'Cần giáo viên kiểm tra và chấm điểm' : 'Requires teacher grading and review'}
+          icon={Clock}
+          color="amber"
+          trend={stats.pendingReviews > 0 ? `${stats.pendingReviews}` : undefined}
+          trendType={stats.pendingReviews > 0 ? 'down' : 'neutral'}
+          loading={isLoadingSubmissions}
+        />
+        <StatCard
+          title={isVi ? 'Đã Chấm Điểm' : 'Reviewed'}
+          value={(stats.totalSubmissions - stats.pendingReviews).toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+          subtitle={isVi ? 'Bài làm đã hoàn tất đánh giá' : 'Completed evaluations'}
+          icon={CheckCircle2}
+          color="emerald"
+          trend={stats.totalSubmissions > 0 ? `${Math.round(((stats.totalSubmissions - stats.pendingReviews) / stats.totalSubmissions) * 100)}%` : undefined}
+          trendType="up"
+          loading={isLoadingSubmissions}
+        />
       </div>
 
       {(coursesError || submissionsError) && (

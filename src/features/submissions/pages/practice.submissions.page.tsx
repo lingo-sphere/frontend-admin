@@ -1,16 +1,17 @@
+// Trang chi tiết và xử lý phúc khảo bài nộp luyện tập.
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Modal, Spin } from "antd";
 import { resolveMediaUrl } from "@/features/media/utils/media.utils";
 import { toast } from "@/store/toast.store";
 import { api } from "@/services/api.client";
-import { PracticeSubmissionsTable } from '../components/practice.submissions.table';
-import { practiceScoreLabel as scoreLabel, practiceDateLabel, practiceExerciseLabels } from '../helpers/practice.submission.display';
+import { PracticeSubmissionsTable } from "@/features/submissions/components/practice.submissions.table";
+import { practiceScoreLabel as scoreLabel, practiceDateLabel, practiceExerciseLabels } from "@/features/submissions/helpers/practice.submission.display";
 import {
   practiceReviewService,
   type PracticeSkill,
   type PracticeSubmission,
-} from "../services/practice.review.service";
+} from "@/features/submissions/services/practice.review.service";
 
 function PracticeMedia({
   value,

@@ -1,13 +1,14 @@
+// Bảng hiển thị danh sách bài nộp và yêu cầu phúc khảo phần luyện tập.
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Select, Tag, Tooltip } from 'antd'
-import { FileCheck2 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { FileCheck2, Clock, CheckCircle2 } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { StatCard } from '@/components/stat.card'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
-import { practiceReviewService, type PracticeSkill, type PracticeSubmission } from '../services/practice.review.service'
-import { practiceScoreLabel, practiceDateLabel, practiceExerciseLabels } from '../helpers/practice.submission.display'
+import { practiceReviewService, type PracticeSkill, type PracticeSubmission } from '@/features/submissions/services/practice.review.service'
+import { practiceScoreLabel, practiceDateLabel, practiceExerciseLabels } from '@/features/submissions/helpers/practice.submission.display'
 
 export function PracticeSubmissionsTable({ skill, onOpenReview }: {
   skill: PracticeSkill; onOpenReview: (id: string) => void
@@ -66,15 +67,37 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
       <div><h1 className="text-xl font-bold text-slate-900 dark:text-white">Chấm điểm & Phúc khảo — Luyện tập {skill === 'SPEAKING' ? 'Speaking' : 'Writing'}</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Xem bài làm, đối chiếu điểm AI và xử lý yêu cầu phúc khảo. Yêu cầu chưa giải quyết được ưu tiên theo thời gian gửi.</p></div>
     </div>
-    <nav className="flex flex-wrap gap-3 text-sm">
-      <Link className={skill === 'SPEAKING' ? 'font-bold text-indigo-600' : ''} to="/submissions/practice/speaking">Luyện tập Speaking</Link>
-      <Link className={skill === 'WRITING' ? 'font-bold text-indigo-600' : ''} to="/submissions/practice/writing">Luyện tập Writing</Link>
-      <Link to="/submissions/courses">Bài kiểm tra khóa học</Link>
-    </nav>
-    <div className="grid grid-cols-3 gap-4">
-      {[
-        ['Bài phù hợp bộ lọc', query.data?.total], ['Yêu cầu phúc khảo', query.data?.pending], ['Đã kiểm tra', query.data?.reviewed],
-      ].map(([label, count]) => <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 text-2xl font-bold">{count ?? '—'}</p></div>)}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <StatCard
+        title="Bài Phù Hợp Bộ Lọc"
+        value={query.data?.total != null ? query.data.total.toLocaleString('vi-VN') : '—'}
+        subtitle="Tổng số bài làm theo tiêu chí đang lọc"
+        icon={FileCheck2}
+        color="indigo"
+        trend={query.data?.total != null && query.data.total > 0 ? `${query.data.total}` : undefined}
+        trendType="neutral"
+        loading={query.isFetching && !query.data}
+      />
+      <StatCard
+        title="Yêu Cầu Phúc Khảo"
+        value={query.data?.pending != null ? query.data.pending.toLocaleString('vi-VN') : '—'}
+        subtitle="Học viên gửi yêu cầu giáo viên chấm lại"
+        icon={Clock}
+        color="amber"
+        trend={query.data?.pending != null && query.data.pending > 0 ? `${query.data.pending}` : undefined}
+        trendType={query.data?.pending ? 'down' : 'neutral'}
+        loading={query.isFetching && !query.data}
+      />
+      <StatCard
+        title="Đã Kiểm Tra"
+        value={query.data?.reviewed != null ? query.data.reviewed.toLocaleString('vi-VN') : '—'}
+        subtitle="Bài làm đã hoàn tất đánh giá và cập nhật điểm"
+        icon={CheckCircle2}
+        color="emerald"
+        trend={query.data?.total && query.data.total > 0 ? `${Math.round(((query.data.reviewed || 0) / query.data.total) * 100)}%` : undefined}
+        trendType="up"
+        loading={query.isFetching && !query.data}
+      />
     </div>
     <DataTable<PracticeSubmission>
       title={`Bài luyện tập ${skill === 'SPEAKING' ? 'Speaking' : 'Writing'}`}

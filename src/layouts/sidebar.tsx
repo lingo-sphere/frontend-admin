@@ -220,7 +220,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           </div>
           <div
             className={`min-w-0 flex-1 overflow-hidden transition-[max-width,opacity,margin] duration-300 ease-in-out ${
-              sidebarCollapsed && !mobile ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-[170px] opacity-100 ml-3'
+              sidebarCollapsed && !mobile ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-[170px] opacity-100 ml-2.5'
             }`}
           >
             <p className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
@@ -290,7 +290,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   return (
     <aside
-      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 transition-[width] duration-300 ease-in-out will-change-[width] shadow-sm dark:shadow-none px-3.5 py-4 ${
+      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 transition-[width] duration-300 ease-in-out will-change-[width] shadow-sm dark:shadow-none px-2.5 py-4 ${
         sidebarCollapsed ? 'w-[72px]' : 'w-64'
       }`}
     >
