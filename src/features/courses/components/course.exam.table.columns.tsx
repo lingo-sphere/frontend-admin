@@ -1,5 +1,4 @@
 // Định nghĩa các cột hiển thị cho DataTable quản lý bài thi.
-
 import { CustomSwitch } from '@/components/custom.switch'
 import { BookOpen, Clock, AlertCircle, Sparkles } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
@@ -26,31 +25,23 @@ export function getCourseExamColumns({
     {
       key: 'exam_info',
       title: isVi ? 'Tên Bài Thi & Đánh Giá' : 'Exam Title & Details',
-      width: '260px',
+      width: '280px',
+      minWidth: 240,
       sortable: true,
-      render: (exam) => {
-        const examId = exam._id
-        return (
-          <div className="space-y-1">
-            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
-              {exam.title}
-            </div>
-            {exam.module_title && (
-              <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium truncate max-w-sm">
-                {exam.module_title}
-              </div>
-            )}
-            <div className="text-[10px] text-slate-400">
-              Mã: <span className="font-mono">{examId}</span>
-            </div>
-          </div>
-        )
-      },
+      render: (exam) => (
+        <span
+          className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm block truncate max-w-[280px]"
+          title={exam.title}
+        >
+          {exam.title}
+        </span>
+      ),
     },
     {
       key: 'course',
       title: isVi ? 'Khóa Học Áp Dụng' : 'Applied Course',
       width: '190px',
+      minWidth: 160,
       sortable: true,
       render: (exam) =>
         exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || (!exam.course_id && !exam.course_title) ? (
@@ -161,7 +152,8 @@ export function getCourseExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng Thái' : 'Status',
-      width: '125px',
+      width: '135px',
+      minWidth: 125,
       align: 'center',
       render: (exam) => {
         const isPublished = Boolean(exam.is_published)
@@ -195,7 +187,8 @@ export function getCourseExamColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
-      width: '120px',
+      width: '110px',
+      minWidth: 100,
       align: 'center',
       render: (exam) => {
         const examId = exam._id

@@ -98,6 +98,7 @@ export const navGroups: NavGroup[] = [
           { id: 'courses-list', label: 'Quản lý khóa học', icon: Book02Icon },
           { id: 'course-learners', label: 'Quản lý học viên', icon: UserGroupIcon },
           { id: 'course-exams', label: 'Quản lý bài thi', icon: FileEditIcon },
+          { id: 'placement-tests', label: 'Đề thi đầu vào', icon: Rocket01Icon },
         ],
       },
       {

@@ -1,13 +1,12 @@
 // Trang quản lý bài thi và đánh giá năng lực khóa học.
-
 import { useCallback, useMemo } from 'react'
-import { UserCheck, ShieldCheck } from 'lucide-react'
+import { UserCheck, ShieldCheck, Sparkles } from 'lucide-react'
 import { DataTable } from '@/components/data.table'
 import { CourseExamStatsOverview } from '@/features/courses/components/course.exam.stats.overview'
 import { CourseExamFilterBar } from '@/features/courses/components/course.exam.filter.bar'
 import { CourseExamHeaderActions } from '@/features/courses/components/course.exam.header.actions'
 import { CourseExamGridCard } from '@/features/courses/components/course.exam.grid.card'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { getCourseExamColumns } from '@/features/courses/components/course.exam.table.columns'
 import { useCourseExams } from '@/features/courses/hooks/use.course.exams'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
@@ -74,6 +73,28 @@ export function CourseExamsPage() {
     <div className="space-y-6 animate-in fade-in duration-200">
       <CourseExamStatsOverview stats={stats} isVi={isVi} />
 
+      {typeFilter === 'DIAGNOSTIC_TEST' && (
+        <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="text-xs text-indigo-900 dark:text-indigo-200">
+            <span className="font-bold block mb-0.5">
+              {isVi ? 'Quản lý & Tạo đề thi đầu vào hệ thống' : 'System Placement Test Management'}
+            </span>
+            <span className="opacity-90">
+              {isVi
+                ? 'Các bài thi đánh giá năng lực đầu vào 2 Kỹ Năng (LR) và 4 Kỹ Năng (Full Skills) được cấu hình và xuất bản tại trang chuyên biệt.'
+                : 'Placement diagnostic tests for 2 Skills (LR) and 4 Skills (Full Skills) are authored and configured in the dedicated Placement Tests studio.'}
+            </span>
+          </div>
+          <Link
+            to="/practice/placement-tests"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{isVi ? 'Đến trang Đề thi đầu vào' : 'Go to Placement Tests'}</span>
+          </Link>
+        </div>
+      )}
+
       <DataTable<ToeicExamItem>
         title={
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -97,6 +118,13 @@ export function CourseExamsPage() {
             : 'Author and manage chapter challenge tests and final course graduation exams'
         }
         isLoading={isLoading}
+        emptyText={
+          typeFilter === 'DIAGNOSTIC_TEST'
+            ? (isVi
+                ? 'Đề thi đầu vào hệ thống được quản lý tại mục "Đề thi đầu vào". Bấm nút "Đề thi đầu vào" ở góc phải để tạo và quản lý.'
+                : 'System placement tests are managed in the dedicated "Placement Tests" section. Click the "Placement Tests" button at top right.')
+            : undefined
+        }
         columns={columns}
         data={paginatedExams}
         rowKey={(e) => e._id ?? ''}
@@ -120,6 +148,7 @@ export function CourseExamsPage() {
           setCurrentPage(1)
         }}
         onResetFilters={handleResetFilters}
+        scroll={{ x: 1200 }}
         extraActions={
           <CourseExamHeaderActions
             isVi={isVi}

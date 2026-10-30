@@ -139,14 +139,9 @@ export function PlacementAttemptsTable({ onViewLearnerProfile }: PlacementAttemp
         key: 'exam',
         title: 'Bài kiểm tra',
         render: (item) => (
-          <div className="space-y-0.5">
-            <p className="font-medium text-slate-900 dark:text-slate-100 text-xs">
-              {item.exam_title}
-            </p>
-            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-              {item.exam_code}
-            </span>
-          </div>
+          <p className="font-medium text-slate-900 dark:text-slate-100 text-xs truncate max-w-[260px]" title={item.exam_title}>
+            {item.exam_title}
+          </p>
         ),
       },
       {

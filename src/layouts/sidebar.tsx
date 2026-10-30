@@ -117,7 +117,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return false
         case 'toeic-tests':
         case 'placement-tests':
-          return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE')
+          return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE') || hasModulePermission('COURSES')
         case 'community':
           return hasModulePermission('COMMUNITY')
         case 'progress':
