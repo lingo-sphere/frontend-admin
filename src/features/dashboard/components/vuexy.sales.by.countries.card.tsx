@@ -1,94 +1,87 @@
-// Component thẻ phân bổ học viên theo kỹ năng Sales by Countries theo phong cách Vuexy Admin.
+// Component thẻ phân bổ học liệu theo 4 kỹ năng Sales by Countries theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
-import { MoreVertical, ChevronUp, ChevronDown, Headphones, BookOpen, Mic, PenTool, Layers, Volume2 } from 'lucide-react'
-
-interface SkillItem {
-  id: string
-  name: string
-  category: string
-  value: string
-  trend: string
-  isPositive: boolean
-  icon: typeof Headphones
-  colorClass: string
-}
+import { MoreVertical, Headphones, BookOpen, Mic, PenTool, Layers, Volume2 } from 'lucide-react'
 
 interface VuexySalesByCountriesCardProps {
+  totalWords: number
+  publicDecksCount: number
+  writingCount: number
+  speakingCount: number
+  listeningCount: number
+  grammarPointsCount: number
   title?: string
   subtitle?: string
-  items?: SkillItem[]
 }
 
-const defaultItems: SkillItem[] = [
-  {
-    id: 'listening',
-    name: 'TOEIC Listening',
-    category: 'Part 1 - 4 Audio',
-    value: '1,450 lượt',
-    trend: '25.8%',
-    isPositive: true,
-    icon: Headphones,
-    colorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
-  },
-  {
-    id: 'reading',
-    name: 'TOEIC Reading',
-    category: 'Part 5 - 7 Reading',
-    value: '1,120 lượt',
-    trend: '18.4%',
-    isPositive: true,
-    icon: BookOpen,
-    colorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
-  },
-  {
-    id: 'speaking',
-    name: 'Speaking AI',
-    category: 'Phát âm & Hội thoại',
-    value: '865 bài',
-    trend: '12.4%',
-    isPositive: true,
-    icon: Mic,
-    colorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
-  },
-  {
-    id: 'writing',
-    name: 'Writing Essay',
-    category: 'Chấm luận AI',
-    value: '745 bài',
-    trend: '6.2%',
-    isPositive: false,
-    icon: PenTool,
-    colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
-  },
-  {
-    id: 'vocab',
-    name: 'Flashcard SRS',
-    category: 'Kho từ vựng 3000+',
-    value: '4,250 từ',
-    trend: '22.6%',
-    isPositive: true,
-    icon: Layers,
-    colorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
-  },
-  {
-    id: 'ipa',
-    name: 'Ngữ Âm IPA',
-    category: 'Bảng phiên âm quốc tế',
-    value: '520 lượt',
-    trend: '9.8%',
-    isPositive: true,
-    icon: Volume2,
-    colorClass: 'bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400',
-  },
-]
-
 export function VuexySalesByCountriesCard({
+  totalWords,
+  publicDecksCount,
+  writingCount,
+  speakingCount,
+  listeningCount,
+  grammarPointsCount,
   title = 'Phân Bổ Kỹ Năng & Luyện Đề',
-  subtitle = 'Tổng quan tương tác học tập tháng này',
-  items = defaultItems,
+  subtitle = 'Tổng hợp số lượng học liệu theo 4 kỹ năng',
 }: VuexySalesByCountriesCardProps) {
   const [showMenu, setShowMenu] = useState(false)
+
+  const items = [
+    {
+      id: 'vocab',
+      name: 'Kho Từ Vựng SRS',
+      category: 'Từ vựng chuẩn CEFR',
+      value: `${totalWords.toLocaleString('vi-VN')} từ`,
+      tag: 'Toàn sàn',
+      icon: Layers,
+      colorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
+    },
+    {
+      id: 'decks',
+      name: 'Bộ Thẻ Flashcard',
+      category: 'Bộ thẻ từ vựng cộng đồng',
+      value: `${publicDecksCount} bộ thẻ`,
+      tag: 'Công khai',
+      icon: BookOpen,
+      colorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
+    },
+    {
+      id: 'writing',
+      name: 'Bài Luyện Viết (Writing)',
+      category: 'Viết câu & chấm luận AI',
+      value: `${writingCount} bài`,
+      tag: 'Luyện tập',
+      icon: PenTool,
+      colorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
+    },
+    {
+      id: 'speaking',
+      name: 'Bài Luyện Nói (Speaking)',
+      category: 'Phát âm & hội thoại AI',
+      value: `${speakingCount} bài`,
+      tag: 'Luyện tập',
+      icon: Mic,
+      colorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
+    },
+    {
+      id: 'listening',
+      name: 'Bài Luyện Nghe (Listening)',
+      category: 'Nghe hiểu ngữ cảnh Audio',
+      value: `${listeningCount} bài`,
+      tag: 'Luyện tập',
+      icon: Headphones,
+      colorClass: 'bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400',
+    },
+    {
+      id: 'grammar',
+      name: 'Chủ Điểm Ngữ Pháp',
+      category: 'Cấu trúc ngữ pháp TOEIC',
+      value: `${grammarPointsCount} điểm`,
+      tag: 'Ngữ pháp',
+      icon: Volume2,
+      colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
+    },
+  ]
 
   return (
     <div className="h-full rounded-2xl bg-white dark:bg-[#2f3349] border border-slate-200/80 dark:border-slate-700/60 p-5 shadow-xs flex flex-col justify-between relative">
@@ -107,13 +100,6 @@ export function VuexySalesByCountriesCard({
           </button>
           {showMenu && (
             <div className="absolute right-0 top-8 z-20 w-36 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg text-xs">
-              <button
-                type="button"
-                onClick={() => setShowMenu(false)}
-                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-              >
-                Tải xuống
-              </button>
               <button
                 type="button"
                 onClick={() => setShowMenu(false)}
@@ -143,16 +129,9 @@ export function VuexySalesByCountriesCard({
 
               <div className="flex items-center gap-3 text-right">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.value}</span>
-                <div
-                  className={`flex items-center text-xs font-semibold ${
-                    item.isPositive
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  {item.isPositive ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  {item.trend}
-                </div>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                  {item.tag}
+                </span>
               </div>
             </div>
           )
@@ -161,4 +140,3 @@ export function VuexySalesByCountriesCard({
     </div>
   )
 }
-

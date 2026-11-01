@@ -1,37 +1,34 @@
-// Component thẻ theo dõi chấm điểm và hỗ trợ Support Tracker theo phong cách Vuexy Admin.
+// Component thẻ theo dõi chấm điểm và khảo thí Support Tracker theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
-import { MoreVertical, Ticket, CheckCircle2, Clock } from 'lucide-react'
+import { MoreVertical, Ticket, CheckCircle2, BookOpen } from 'lucide-react'
 
 interface VuexySupportTrackerCardProps {
-  totalTickets?: number
-  newTickets?: number
-  openTickets?: number
-  responseTime?: string
-  completedPercent?: number
+  toeicAttemptsCount: number
+  examsCount: number
+  coursesCount: number
 }
 
 export function VuexySupportTrackerCard({
-  totalTickets = 164,
-  newTickets = 142,
-  openTickets = 28,
-  responseTime = '1 ngày',
-  completedPercent = 85,
+  toeicAttemptsCount,
+  examsCount,
+  coursesCount,
 }: VuexySupportTrackerCardProps) {
   const [showMenu, setShowMenu] = useState(false)
 
+  const readinessPercent = examsCount > 0 ? 100 : 0
   const radius = 64
   const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference - (completedPercent / 100) * circumference * 0.75
+  const strokeDashoffset = circumference - (readinessPercent / 100) * circumference * 0.75
 
   return (
     <div className="h-full rounded-2xl bg-white dark:bg-[#2f3349] border border-slate-200/80 dark:border-slate-700/60 p-5 shadow-xs flex flex-col justify-between relative">
       <div className="flex items-start justify-between mb-2">
         <div>
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
-            Giám Sát Chấm Điểm & Hỗ Trợ
+            Giám Sát Khảo Thí & Đề Thi
           </h5>
-          <p className="text-xs text-slate-500 dark:text-slate-400">7 ngày gần nhất</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Trạng thái bài nộp và độ sẵn sàng ngân hàng đề</p>
         </div>
         <div className="relative">
           <button
@@ -50,13 +47,6 @@ export function VuexySupportTrackerCard({
               >
                 Làm mới
               </button>
-              <button
-                type="button"
-                onClick={() => setShowMenu(false)}
-                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-              >
-                Chuyển tiếp
-              </button>
             </div>
           )}
         </div>
@@ -65,8 +55,10 @@ export function VuexySupportTrackerCard({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center my-auto">
         <div className="md:col-span-5">
           <div className="mb-4">
-            <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{totalTickets}</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Tổng yêu cầu & bài chấm</p>
+            <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+              {toeicAttemptsCount.toLocaleString('vi-VN')}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Tổng lượt làm bài thi</p>
           </div>
 
           <div className="space-y-3">
@@ -75,28 +67,28 @@ export function VuexySupportTrackerCard({
                 <Ticket className="w-4 h-4" />
               </span>
               <div>
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Bài thi mới</p>
-                <span className="text-[11px] text-slate-400">{newTickets} bài chờ duyệt</span>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Đề thi sẵn sàng</p>
+                <span className="text-[11px] text-slate-400">{examsCount} đề thi chuẩn TOEIC</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <span className="p-2 rounded-lg bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400">
-                <CheckCircle2 className="w-4 h-4" />
+                <BookOpen className="w-3.5 h-3.5" />
               </span>
               <div>
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Đang xử lý</p>
-                <span className="text-[11px] text-slate-400">{openTickets} bài đang chấm</span>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Khóa học hoàn thiện</p>
+                <span className="text-[11px] text-slate-400">{coursesCount} khóa học đang chạy</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="p-2 rounded-lg bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                <Clock className="w-4 h-4" />
+              <span className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
               </span>
               <div>
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Thời gian phản hồi</p>
-                <span className="text-[11px] text-slate-400">Trung bình {responseTime}</span>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Hệ thống khảo thí</p>
+                <span className="text-[11px] text-slate-400">Đang hoạt động ổn định</span>
               </div>
             </div>
           </div>
@@ -131,13 +123,13 @@ export function VuexySupportTrackerCard({
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-xs font-medium text-slate-400 dark:text-slate-500 mb-0.5">
-                Hoàn thành
+                Sẵn sàng
               </span>
               <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">
-                {completedPercent}%
+                {readinessPercent}%
               </span>
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                Đạt tiến độ
+                Vận hành 100%
               </span>
             </div>
           </div>
@@ -146,4 +138,3 @@ export function VuexySupportTrackerCard({
     </div>
   )
 }
-

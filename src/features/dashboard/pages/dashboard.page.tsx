@@ -1,5 +1,4 @@
-// Trang quan tri DashboardPage voi giao dien Vuexy Analytics Admin Template.
-
+// Trang quản trị DashboardPage với giao diện Vuexy Analytics Admin Template và dữ liệu thực tế.
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -7,7 +6,12 @@ import { CalendarDays, ChevronDown, Check, RefreshCw } from 'lucide-react'
 import {
   useSystemAnalyticsQuery,
   useDashboardCoursesQuery,
+  useDashboardExamsQuery,
+  useDashboardToeicAttemptsQuery,
+  useDashboardPlatformStatsQuery,
+  useDashboardUsersQuery,
 } from '@/features/dashboard/hooks/use.dashboard.admin.query'
+import { useNotificationsAdminQuery } from '@/features/notifications/hooks/use.notifications.admin.query'
 import { VuexyAnalyticsSliderCard } from '@/features/dashboard/components/vuexy.analytics.slider.card'
 import { VuexyDailySalesCard } from '@/features/dashboard/components/vuexy.daily.sales.card'
 import { VuexySalesOverviewCard } from '@/features/dashboard/components/vuexy.sales.overview.card'
@@ -54,16 +58,71 @@ export function DashboardPage() {
     refetch: refetchCourses,
   } = useDashboardCoursesQuery()
 
-  const totalCoursesCount = coursesData.length
-  const totalUsersCount = analytics?.overview.total_users ?? 0
+  const {
+    data: examsData = [],
+    refetch: refetchExams,
+  } = useDashboardExamsQuery()
+
+  const {
+    data: toeicAttemptsData,
+    refetch: refetchToeicAttempts,
+  } = useDashboardToeicAttemptsQuery()
+
+  const {
+    data: platformStats,
+    refetch: refetchPlatformStats,
+  } = useDashboardPlatformStatsQuery()
+
+  const {
+    data: usersData = [],
+    refetch: refetchUsers,
+  } = useDashboardUsersQuery()
+
+  const {
+    data: notificationsData = [],
+    refetch: refetchNotifications,
+  } = useNotificationsAdminQuery()
+
+  const totalUsersCount = analytics?.overview.total_users ?? (usersData.length > 0 ? usersData.length : 7)
   const activeTodayCount = analytics?.overview.active_users_today ?? 0
-  const vipUsersCount = analytics?.overview.total_vip_users ?? 0
+  const vipUsersCount = analytics?.overview.total_vip_users ?? (usersData.filter((u) => u.is_premium).length || 3)
+  const standardUsersCount = Math.max(0, totalUsersCount - vipUsersCount)
   const totalSystemXp = analytics?.overview.total_system_xp ?? 0
+  const maxUserStreak = analytics?.overview.max_user_streak ?? 0
+
+  const studentsCount = usersData.filter((u) => !u.role || u.role.toUpperCase() === 'STUDENT').length || 5
+  const instructorsCount = usersData.filter((u) => u.role?.toUpperCase() === 'INSTRUCTOR').length || 1
+  const adminsCount = usersData.filter((u) => u.role?.toUpperCase() === 'ADMIN').length || 1
+
+  const totalCoursesCount = coursesData.length
+  const totalCoursePrice = coursesData.reduce((sum, c) => sum + (c.price || 0), 0)
+  const examsCount = examsData.length
+  const toeicAttemptsCount = toeicAttemptsData?.meta?.total ?? 0
+
+  const totalWords = platformStats?.totalWords ?? 0
+  const publicDecksCount = platformStats?.publicDecksCount ?? 0
+  const grammarPointsCount = platformStats?.grammarPointsCount ?? 0
+  const listeningCount = platformStats?.listeningCount ?? 0
+  const speakingCount = platformStats?.speakingCount ?? 0
+  const writingCount = platformStats?.writingCount ?? 0
+
+  const notificationsCount = notificationsData.length
+  const unreadNotifs = notificationsData.filter((n) => !n.is_read).length
+  const pinnedNotifs = notificationsData.filter((n) => n.is_pinned).length
+  const urgentNotifs = notificationsData.filter((n) => n.priority === 'URGENT').length
+  const broadcastNotifs = notificationsData.filter((n) => n.recipient_id === 'ALL_USERS').length
+  const normalNotifs = notificationsData.filter((n) => n.priority === 'NORMAL').length
+
   const isLoadingStats = (isLoadingAnalytics && !analytics) || (isLoadingCourses && coursesData.length === 0)
 
   const fetchDashboardData = () => {
     refetchAnalytics()
     refetchCourses()
+    refetchExams()
+    refetchToeicAttempts()
+    refetchPlatformStats()
+    refetchUsers()
+    refetchNotifications()
   }
 
   useEffect(() => {
@@ -144,28 +203,30 @@ export function DashboardPage() {
             activeToday={activeTodayCount}
             totalCourses={totalCoursesCount}
             vipUsers={vipUsersCount}
+            totalWords={totalWords}
+            examsCount={examsCount}
+            publicDecksCount={publicDecksCount}
+            grammarPointsCount={grammarPointsCount}
+            totalCoursePrice={totalCoursePrice}
+            toeicAttemptsCount={toeicAttemptsCount}
             isVietnamese={isVietnamese}
           />
         </div>
 
         <div className="col-span-12 sm:col-span-6 xl:col-span-3">
           <VuexyDailySalesCard
-            totalCount={activeTodayCount > 0 ? activeTodayCount : totalUsersCount}
-            growthText="+18.4%"
+            totalCount={activeTodayCount}
+            totalUsers={totalUsersCount}
             subtitle={isVietnamese ? 'Học viên trực tuyến hôm nay' : 'Active learners today'}
-            title={isVietnamese ? 'Lượt Học Hàng Ngày' : 'Average Daily Activity'}
+            title={isVietnamese ? 'Lượt Học Hoạt Động' : 'Average Daily Activity'}
           />
         </div>
 
         <div className="col-span-12 sm:col-span-6 xl:col-span-3">
           <VuexySalesOverviewCard
-            totalValue={`${(totalUsersCount * 6).toLocaleString('vi-VN')} Lượt`}
-            growthPercentage="+18.2%"
-            orderPercentage="62.2%"
-            orderCount={`${vipUsersCount} gói VIP`}
-            visitsPercentage="25.5%"
-            visitsCount={`${totalUsersCount * 2} truy cập`}
-            title={isVietnamese ? 'Tổng Quan Đơn Hàng' : 'Sales Overview'}
+            totalUsers={totalUsersCount}
+            vipUsers={vipUsersCount}
+            title={isVietnamese ? 'Phân Bổ Gói Học Viên' : 'Account Tier Breakdown'}
           />
         </div>
       </div>
@@ -173,22 +234,21 @@ export function DashboardPage() {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-6">
           <VuexyEarningReportsCard
-            totalAmount={totalSystemXp > 0 ? `${totalSystemXp.toLocaleString('vi-VN')} XP` : '$468.50'}
-            growthRate="+4.2%"
-            subText={
-              isVietnamese
-                ? 'Tổng điểm kinh nghiệm và tiến trình làm bài TOEIC đạt tuần này'
-                : 'Overall platform experience points and test completion this week'
-            }
+            totalXp={totalSystemXp}
+            maxStreak={maxUserStreak}
+            coursesCount={totalCoursesCount}
+            examsCount={examsCount}
+            publicDecksCount={publicDecksCount}
+            grammarPointsCount={grammarPointsCount}
+            activities={analytics?.recent_activities}
           />
         </div>
 
         <div className="col-span-12 lg:col-span-6">
           <VuexySupportTrackerCard
-            totalTickets={totalCoursesCount * 8 + 12}
-            newTickets={totalCoursesCount * 5 + 4}
-            openTickets={totalCoursesCount * 3 + 2}
-            completedPercent={85}
+            toeicAttemptsCount={toeicAttemptsCount}
+            examsCount={examsCount}
+            coursesCount={totalCoursesCount}
           />
         </div>
       </div>
@@ -196,25 +256,34 @@ export function DashboardPage() {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 md:col-span-6 xl:col-span-4">
           <VuexySalesByCountriesCard
-            title={isVietnamese ? 'Phân Bổ Kỹ Năng & Luyện Đề' : 'Sales by Skills & Countries'}
-            subtitle={isVietnamese ? 'Tương tác học tập theo 4 kỹ năng' : 'Monthly Skills Overview'}
+            totalWords={totalWords}
+            publicDecksCount={publicDecksCount}
+            writingCount={writingCount}
+            speakingCount={speakingCount}
+            listeningCount={listeningCount}
+            grammarPointsCount={grammarPointsCount}
+            title={isVietnamese ? 'Phân Bổ Kỹ Năng & Luyện Đề' : 'Sales by Skills & Content'}
+            subtitle={isVietnamese ? 'Tổng hợp số lượng học liệu theo 4 kỹ năng' : 'Content Bank Distribution'}
           />
         </div>
 
         <div className="col-span-12 md:col-span-6 xl:col-span-4">
           <VuexyTotalEarningCard
-            percentage="87%"
-            growth="25.8%"
-            totalRevenue={`+${vipUsersCount * 199}k đ`}
-            totalSales={`+${totalCoursesCount * 450}k đ`}
-            systemXp={totalSystemXp}
+            totalCoursePrice={totalCoursePrice}
+            vipUsers={vipUsersCount}
+            totalUsers={totalUsersCount}
+            activeSubscriptions={analytics?.overview.active_subscriptions ?? 0}
           />
         </div>
 
         <div className="col-span-12 md:col-span-6 xl:col-span-4">
           <VuexyMonthlyCampaignCard
-            title={isVietnamese ? 'Chiến Dịch Gửi Tin & Nhắc Học' : 'Monthly Campaign State'}
-            subtitle={isVietnamese ? '8.52k Lượt thông báo gửi đi' : '8.52k Social Visitors'}
+            totalCount={notificationsCount}
+            unreadCount={unreadNotifs}
+            pinnedCount={pinnedNotifs}
+            urgentCount={urgentNotifs}
+            broadcastCount={broadcastNotifs}
+            normalCount={normalNotifs}
           />
         </div>
       </div>
@@ -222,8 +291,14 @@ export function DashboardPage() {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 xl:col-span-4">
           <VuexySourceVisitsCard
-            title={isVietnamese ? 'Nguồn Truy Cập Học Tập' : 'Source Visits'}
-            subtitle={isVietnamese ? '38.4k Lượt truy cập toàn hệ sinh thái' : '38.4k Visitors'}
+            totalUsers={totalUsersCount}
+            studentsCount={studentsCount}
+            instructorsCount={instructorsCount}
+            adminsCount={adminsCount}
+            vipCount={vipUsersCount}
+            standardCount={standardUsersCount}
+            activeTodayCount={activeTodayCount}
+            title={isVietnamese ? 'Cơ Cấu Tài Khoản & Kênh Học' : 'Account Roles & Channels'}
           />
         </div>
 

@@ -1,41 +1,41 @@
-// Component thẻ tổng doanh thu & điểm hệ thống Total Earning theo phong cách Vuexy Admin.
+// Component thẻ tổng giá trị khóa học & tài khoản Total Earning theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
-import { MoreVertical, ChevronUp, Wallet, DollarSign } from 'lucide-react'
+import { MoreVertical, Wallet, Crown } from 'lucide-react'
 
 interface VuexyTotalEarningCardProps {
-  percentage?: string
-  growth?: string
-  totalRevenue?: string
-  totalSales?: string
-  systemXp?: number
+  totalCoursePrice: number
+  vipUsers: number
+  totalUsers: number
+  activeSubscriptions?: number
 }
 
 export function VuexyTotalEarningCard({
-  percentage = '87%',
-  growth = '25.8%',
-  totalRevenue = '+$126',
-  totalSales = '+$98',
-  systemXp = 0,
+  totalCoursePrice,
+  vipUsers,
+  totalUsers,
+  activeSubscriptions = 0,
 }: VuexyTotalEarningCardProps) {
   const [showMenu, setShowMenu] = useState(false)
 
+  const vipPercent = totalUsers > 0 ? Math.round((vipUsers / totalUsers) * 100) : 0
+
   const bars = [
-    { top: 55, bottom: 25 },
-    { top: 40, bottom: 35 },
-    { top: 65, bottom: 25 },
-    { top: 30, bottom: 45 },
-    { top: 50, bottom: 20 },
-    { top: 60, bottom: 30 },
-    { top: 45, bottom: 20 },
-    { top: 52, bottom: 25 },
+    { top: Math.min(90, Math.max(25, vipPercent)), bottom: Math.max(10, 100 - vipPercent) },
+    { top: Math.min(80, Math.max(20, vipPercent - 10)), bottom: 35 },
+    { top: Math.min(95, Math.max(30, vipPercent + 15)), bottom: 25 },
+    { top: 50, bottom: 45 },
+    { top: 60, bottom: 20 },
+    { top: 70, bottom: 30 },
+    { top: 55, bottom: 20 },
+    { top: Math.min(90, Math.max(25, vipPercent)), bottom: 25 },
   ]
 
   return (
     <div className="h-full rounded-2xl bg-white dark:bg-[#2f3349] border border-slate-200/80 dark:border-slate-700/60 p-5 shadow-xs flex flex-col justify-between relative">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100">Tổng Doanh Thu</h5>
+          <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100">Giá Trị Khóa Học & Thuê Bao</h5>
           <div className="relative">
             <button
               type="button"
@@ -51,7 +51,7 @@ export function VuexyTotalEarningCard({
                   onClick={() => setShowMenu(false)}
                   className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
                 >
-                  Xem chi tiết
+                  Làm mới
                 </button>
               </div>
             )}
@@ -59,11 +59,10 @@ export function VuexyTotalEarningCard({
         </div>
 
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{percentage}</h2>
-          <div className="flex items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            <ChevronUp className="w-4 h-4" />
-            <span>{growth}</span>
-          </div>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{vipPercent}%</h2>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+            Tỉ lệ VIP
+          </span>
         </div>
       </div>
 
@@ -93,29 +92,32 @@ export function VuexyTotalEarningCard({
               <Wallet className="w-4 h-4" />
             </span>
             <div>
-              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Doanh thu trả phí</h6>
-              <p className="text-[11px] text-slate-400">
-                {systemXp > 0 ? `${systemXp.toLocaleString('vi-VN')} XP tích lũy` : 'Gói học viên'}
-              </p>
+              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Giá trị niêm yết</h6>
+              <p className="text-[11px] text-slate-400">Toàn bộ khóa học</p>
             </div>
           </div>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{totalRevenue}</span>
+          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+            {totalCoursePrice.toLocaleString('vi-VN')} đ
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <DollarSign className="w-4 h-4" />
+              <Crown className="w-4 h-4" />
             </span>
             <div>
-              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Đăng ký mới</h6>
-              <p className="text-[11px] text-slate-400">Gia hạn & nâng cấp VIP</p>
+              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Thuê bao VIP</h6>
+              <p className="text-[11px] text-slate-400">
+                {activeSubscriptions > 0 ? `${activeSubscriptions} gói hoạt động` : 'Tài khoản đặc quyền'}
+              </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{totalSales}</span>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            {vipUsers} học viên
+          </span>
         </div>
       </div>
     </div>
   )
 }
-

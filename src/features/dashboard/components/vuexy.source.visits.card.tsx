@@ -1,94 +1,95 @@
-// Component thẻ nguồn truy cập Source Visits theo phong cách Vuexy Admin.
-
+// Component thẻ phân loại cơ cấu tài khoản và kênh người dùng theo phong cách Vuexy Admin.
 import { useState } from 'react'
-import { MoreVertical, Compass, Globe, Mail, ExternalLink, Megaphone, Star } from 'lucide-react'
-
-interface SourceItem {
-  id: string
-  title: string
-  subtitle: string
-  count: string
-  trend: string
-  isPositive: boolean
-  icon: typeof Compass
-}
+import { MoreVertical, GraduationCap, Users, ShieldCheck, Crown, UserCheck, Compass } from 'lucide-react'
 
 interface VuexySourceVisitsCardProps {
+  totalUsers: number
+  studentsCount: number
+  instructorsCount: number
+  adminsCount: number
+  vipCount: number
+  standardCount: number
+  activeTodayCount?: number
   title?: string
-  subtitle?: string
-  items?: SourceItem[]
 }
 
-const defaultSources: SourceItem[] = [
-  {
-    id: 'direct',
-    title: 'Truy cập trực tiếp',
-    subtitle: 'Ứng dụng Web & Mobile',
-    count: '1.2k',
-    trend: '+4.2%',
-    isPositive: true,
-    icon: Compass,
-  },
-  {
-    id: 'social',
-    title: 'Mạng xã hội & Forum',
-    subtitle: 'Facebook, Zalo & TikTok',
-    count: '31.5k',
-    trend: '+8.2%',
-    isPositive: true,
-    icon: Globe,
-  },
-  {
-    id: 'email',
-    title: 'Email bản tin học tập',
-    subtitle: 'Nhắc học & Thách thức',
-    count: '893',
-    trend: '+2.4%',
-    isPositive: true,
-    icon: Mail,
-  },
-  {
-    id: 'referrals',
-    title: 'Mã giới thiệu học viên',
-    subtitle: 'Học bổng & Bạn bè',
-    count: '342',
-    trend: '-0.4%',
-    isPositive: false,
-    icon: ExternalLink,
-  },
-  {
-    id: 'advt',
-    title: 'Chiến dịch tuyển sinh',
-    subtitle: 'Google & Meta Ads',
-    count: '2.15k',
-    trend: '+9.1%',
-    isPositive: true,
-    icon: Megaphone,
-  },
-  {
-    id: 'other',
-    title: 'Kênh đối tác khác',
-    subtitle: 'Trường học & Trung tâm',
-    count: '12.5k',
-    trend: '+6.2%',
-    isPositive: true,
-    icon: Star,
-  },
-]
-
 export function VuexySourceVisitsCard({
-  title = 'Nguồn Truy Cập & Kênh Học Tập',
-  subtitle = '38.4k Lượt truy cập toàn hệ sinh thái',
-  items = defaultSources,
+  totalUsers,
+  studentsCount,
+  instructorsCount,
+  adminsCount,
+  vipCount,
+  standardCount,
+  activeTodayCount = 0,
+  title = 'Cơ Cấu Tài Khoản & Đối Tượng Học Viên',
 }: VuexySourceVisitsCardProps) {
   const [showMenu, setShowMenu] = useState(false)
+
+  const items = [
+    {
+      id: 'students',
+      title: 'Học viên (Student)',
+      subtitle: 'Người học trực tuyến trên nền tảng',
+      count: `${studentsCount}`,
+      trend: `${totalUsers > 0 ? Math.round((studentsCount / totalUsers) * 100) : 0}%`,
+      icon: GraduationCap,
+      colorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
+    },
+    {
+      id: 'vip',
+      title: 'Gói VIP Premium',
+      subtitle: 'Học viên đăng ký gói đặc quyền',
+      count: `${vipCount}`,
+      trend: `${totalUsers > 0 ? Math.round((vipCount / totalUsers) * 100) : 0}%`,
+      icon: Crown,
+      colorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
+    },
+    {
+      id: 'standard',
+      title: 'Tài khoản Tiêu chuẩn',
+      subtitle: 'Học viên trải nghiệm miễn phí',
+      count: `${standardCount}`,
+      trend: `${totalUsers > 0 ? Math.round((standardCount / totalUsers) * 100) : 0}%`,
+      icon: UserCheck,
+      colorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
+    },
+    {
+      id: 'instructors',
+      title: 'Giảng viên & Trợ giảng',
+      subtitle: 'Biên soạn nội dung & chấm bài thi',
+      count: `${instructorsCount}`,
+      trend: `${totalUsers > 0 ? Math.round((instructorsCount / totalUsers) * 100) : 0}%`,
+      icon: Users,
+      colorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
+    },
+    {
+      id: 'admins',
+      title: 'Quản trị viên (Admin)',
+      subtitle: 'Vận hành và quản lý hệ sinh thái',
+      count: `${adminsCount}`,
+      trend: `${totalUsers > 0 ? Math.round((adminsCount / totalUsers) * 100) : 0}%`,
+      icon: ShieldCheck,
+      colorClass: 'bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400',
+    },
+    {
+      id: 'active',
+      title: 'Tương tác trong ngày (DAU)',
+      subtitle: 'Người dùng phát sinh hành vi hôm nay',
+      count: `${activeTodayCount}`,
+      trend: `${totalUsers > 0 ? Math.round((activeTodayCount / totalUsers) * 100) : 0}%`,
+      icon: Compass,
+      colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
+    },
+  ]
 
   return (
     <div className="h-full rounded-2xl bg-white dark:bg-[#2f3349] border border-slate-200/80 dark:border-slate-700/60 p-5 shadow-xs flex flex-col justify-between relative">
       <div className="flex items-start justify-between mb-3">
         <div>
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">{title}</h5>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {totalUsers.toLocaleString('vi-VN')} Tài khoản toàn hệ sinh thái
+          </p>
         </div>
         <div className="relative">
           <button
@@ -118,7 +119,7 @@ export function VuexySourceVisitsCard({
           return (
             <div key={item.id} className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.colorClass}`}>
                   <IconComp className="w-4 h-4" />
                 </span>
                 <div>
@@ -129,13 +130,7 @@ export function VuexySourceVisitsCard({
 
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.count}</span>
-                <span
-                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                    item.isPositive
-                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400'
-                      : 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400'
-                  }`}
-                >
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 min-w-[42px] text-center">
                   {item.trend}
                 </span>
               </div>
@@ -146,4 +141,3 @@ export function VuexySourceVisitsCard({
     </div>
   )
 }
-

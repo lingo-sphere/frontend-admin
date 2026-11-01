@@ -2,26 +2,30 @@
 
 interface VuexyDailySalesCardProps {
   totalCount: number
-  growthText?: string
+  totalUsers?: number
   subtitle?: string
   title?: string
+  badgeText?: string
 }
 
 export function VuexyDailySalesCard({
   totalCount,
-  growthText = '+12.4%',
-  subtitle = 'Tổng lượt học viên tích cực trong tháng',
-  title = 'Tương Tác Hàng Ngày',
+  totalUsers = 0,
+  subtitle = 'Tương tác học tập hôm nay',
+  title = 'Lượt Học Viên Hoạt Động',
+  badgeText = 'Hôm nay',
 }: VuexyDailySalesCardProps) {
+  const percentage = totalUsers > 0 ? Math.round((totalCount / totalUsers) * 100) : 0
+  const activeY = totalCount > 0 ? 30 : 85
+
   const points = [
-    { x: 0, y: 55 },
-    { x: 35, y: 70 },
-    { x: 75, y: 25 },
-    { x: 115, y: 65 },
-    { x: 155, y: 30 },
-    { x: 195, y: 40 },
-    { x: 235, y: 15 },
-    { x: 280, y: 35 },
+    { x: 0, y: 75 },
+    { x: 40, y: 70 },
+    { x: 80, y: 65 },
+    { x: 130, y: 55 },
+    { x: 180, y: 60 },
+    { x: 230, y: activeY },
+    { x: 280, y: activeY },
   ]
 
   const pathD = `M 0,${points[0].y} ` + points.slice(1).map((p) => `L ${p.x},${p.y}`).join(' ')
@@ -33,17 +37,22 @@ export function VuexyDailySalesCard({
         <div className="flex items-center justify-between mb-2">
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100">{title}</h5>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-            {growthText}
+            {badgeText}
           </span>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{subtitle}</p>
-        <h4 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          {totalCount.toLocaleString('vi-VN')}
-        </h4>
+        <div className="flex items-baseline gap-2">
+          <h4 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            {totalCount.toLocaleString('vi-VN')}
+          </h4>
+          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+            / {totalUsers.toLocaleString('vi-VN')} học viên ({percentage}%)
+          </span>
+        </div>
       </div>
 
       <div className="relative w-full h-[95px] overflow-hidden mt-3">
-        <svg viewBox="0 0 280 105" className="w-full h-full preserve-3d" preserveAspectRatio="none">
+        <svg viewBox="0 0 280 105" className="w-full h-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id="vuexyGreenGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#28c76f" stopOpacity="0.45" />
@@ -57,4 +66,3 @@ export function VuexyDailySalesCard({
     </div>
   )
 }
-

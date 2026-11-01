@@ -1,21 +1,32 @@
 // Component thẻ trượt phân tích Website Analytics theo phong cách Vuexy Admin Template.
-
 import { useState, useEffect } from 'react'
-import { Sparkles, TrendingUp, Users, BookOpen, GraduationCap, Award } from 'lucide-react'
+import { TrendingUp, BookOpen, Award } from 'lucide-react'
 
 interface VuexyAnalyticsSliderCardProps {
-  totalUsers?: number
-  activeToday?: number
-  totalCourses?: number
-  vipUsers?: number
+  totalUsers: number
+  activeToday: number
+  totalCourses: number
+  vipUsers: number
+  totalWords?: number
+  examsCount?: number
+  publicDecksCount?: number
+  grammarPointsCount?: number
+  totalCoursePrice?: number
+  toeicAttemptsCount?: number
   isVietnamese?: boolean
 }
 
 export function VuexyAnalyticsSliderCard({
-  totalUsers = 7,
-  activeToday = 0,
-  totalCourses = 2,
-  vipUsers = 3,
+  totalUsers,
+  activeToday,
+  totalCourses,
+  vipUsers,
+  totalWords = 0,
+  examsCount = 0,
+  publicDecksCount = 0,
+  grammarPointsCount = 0,
+  totalCoursePrice = 0,
+  toeicAttemptsCount = 0,
   isVietnamese = true,
 }: VuexyAnalyticsSliderCardProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -27,44 +38,52 @@ export function VuexyAnalyticsSliderCard({
     return () => clearInterval(timer)
   }, [])
 
+  const vipPercent = totalUsers > 0 ? Math.round((vipUsers / totalUsers) * 100) : 0
+
   const slides = [
     {
       title: isVietnamese ? 'Phân Tích Nền Tảng LingoSphere' : 'Website & Learning Analytics',
-      subtitle: isVietnamese ? 'Tỉ lệ tương tác học tập trung bình 28.5%' : 'Total 28.5% Conversion Rate',
-      sectionTitle: isVietnamese ? 'Lưu Lượng Học Tập' : 'Traffic',
+      subtitle: isVietnamese
+        ? `${vipPercent}% Học viên nâng cấp gói VIP`
+        : `${vipPercent}% Learners upgraded to VIP`,
+      sectionTitle: isVietnamese ? 'Lưu Lượng Học Tập' : 'Learner Traffic',
       stats: [
-        { value: `${totalUsers}`, label: isVietnamese ? 'Tổng học viên' : 'Total Learners' },
+        { value: `${totalUsers}`, label: isVietnamese ? 'Tổng người dùng' : 'Total Users' },
         { value: `${activeToday}`, label: isVietnamese ? 'Học hôm nay' : 'Active Today' },
         { value: `${totalCourses} Khóa`, label: isVietnamese ? 'Khóa học' : 'Courses' },
         { value: `${vipUsers}`, label: isVietnamese ? 'Gói VIP' : 'VIP Accounts' },
       ],
-      badge: isVietnamese ? 'Hoạt động ổn định' : 'Optimal',
+      badge: isVietnamese ? 'Vận hành 100%' : 'Optimal',
       icon: TrendingUp,
     },
     {
-      title: isVietnamese ? 'Tiến Trình Học Tập & Luyện Đề' : 'Study & Practice Progress',
-      subtitle: isVietnamese ? 'Hệ thống luyện thi TOEIC 7 Part chuẩn quốc tế' : 'Full 7 Part TOEIC practice system',
+      title: isVietnamese ? 'Luyện Thi & Kho Học Liệu' : 'Practice & Learning Bank',
+      subtitle: isVietnamese
+        ? 'Hệ thống học liệu và đề thi TOEIC chuẩn quốc tế'
+        : 'International standard TOEIC practice bank',
       sectionTitle: isVietnamese ? 'Kỹ Năng & Từ Vựng' : 'Skills & Vocabulary',
       stats: [
-        { value: '450+', label: isVietnamese ? 'Từ vựng SRS' : 'SRS Words' },
-        { value: '11 Đề', label: isVietnamese ? 'Đề thi TOEIC' : 'Mock Tests' },
-        { value: '88%', label: isVietnamese ? 'Tỉ lệ hoàn thành' : 'Completion Rate' },
-        { value: '94%', label: isVietnamese ? 'Duy trì Streak' : 'Streak Retention' },
+        { value: `${totalWords.toLocaleString('vi-VN')} từ`, label: isVietnamese ? 'Từ vựng SRS' : 'SRS Words' },
+        { value: `${examsCount} Đề`, label: isVietnamese ? 'Đề thi TOEIC' : 'Mock Tests' },
+        { value: `${publicDecksCount} Bộ`, label: isVietnamese ? 'Bộ thẻ Flashcard' : 'Flashcard Decks' },
+        { value: `${grammarPointsCount} Điểm`, label: isVietnamese ? 'Ngữ pháp' : 'Grammar Points' },
       ],
       badge: isVietnamese ? 'Chuẩn CEFR' : 'CEFR Ready',
       icon: BookOpen,
     },
     {
-      title: isVietnamese ? 'Doanh Thu & Tăng Trưởng Khóa Học' : 'Revenue & Subscriptions',
-      subtitle: isVietnamese ? 'Tăng trưởng đơn hàng học tập +18.4% tháng này' : '+18.4% growth this month',
-      sectionTitle: isVietnamese ? 'Phân Bổ Gói Dịch Vụ' : 'Revenue Streams',
+      title: isVietnamese ? 'Giá Trị Khóa Học & Khảo Thí' : 'Courses & Assessment Value',
+      subtitle: isVietnamese
+        ? 'Tổng quan quy mô khóa học và lượt làm bài khảo thí'
+        : 'Overview of courses scale and test submissions',
+      sectionTitle: isVietnamese ? 'Quy Mô & Giá Trị' : 'Scale & Assessment',
       stats: [
-        { value: '65%', label: isVietnamese ? 'Khóa học TOEIC' : 'Course Orders' },
-        { value: '25%', label: isVietnamese ? 'Gói VIP Premium' : 'VIP Premium' },
-        { value: '10%', label: isVietnamese ? 'Luyện tập AI' : 'AI Modules' },
-        { value: '+18.4%', label: isVietnamese ? 'Tăng trưởng' : 'Growth' },
+        { value: `${totalCourses} Khóa`, label: isVietnamese ? 'Khóa học niêm yết' : 'Published Courses' },
+        { value: `${totalCoursePrice.toLocaleString('vi-VN')} đ`, label: isVietnamese ? 'Giá niêm yết' : 'Total Price' },
+        { value: `${toeicAttemptsCount} Lượt`, label: isVietnamese ? 'Lượt làm đề' : 'Exam Submissions' },
+        { value: `${vipUsers} Gói`, label: isVietnamese ? 'Hội viên VIP' : 'VIP Learners' },
       ],
-      badge: isVietnamese ? 'Doanh số VIP' : 'Top Tier',
+      badge: isVietnamese ? 'Hệ Sinh Thái' : 'Ecosystem',
       icon: Award,
     },
   ]
@@ -135,4 +154,3 @@ export function VuexyAnalyticsSliderCard({
     </div>
   )
 }
-

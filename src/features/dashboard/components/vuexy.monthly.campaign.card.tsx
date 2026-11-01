@@ -1,94 +1,88 @@
-// Component thẻ chiến dịch gửi tin Monthly Campaign State theo phong cách Vuexy Admin.
+// Component thẻ quản lý thông báo hệ thống Monthly Campaign State theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
-import { MoreVertical, Mail, ExternalLink, MousePointer, Users, AlertTriangle, UserX } from 'lucide-react'
-
-interface CampaignItem {
-  id: string
-  label: string
-  count: string
-  rate: string
-  isPositive: boolean
-  icon: typeof Mail
-  badgeColorClass: string
-}
+import { MoreVertical, Bell, Mail, Bookmark, AlertCircle, Radio, CheckCheck } from 'lucide-react'
 
 interface VuexyMonthlyCampaignCardProps {
-  title?: string
-  subtitle?: string
-  items?: CampaignItem[]
+  totalCount: number
+  unreadCount: number
+  pinnedCount: number
+  urgentCount: number
+  broadcastCount: number
+  normalCount: number
 }
 
-const defaultCampaignItems: CampaignItem[] = [
-  {
-    id: 'emails',
-    label: 'Thông báo đã gửi',
-    count: '12,346',
-    rate: '0.3%',
-    isPositive: true,
-    icon: Mail,
-    badgeColorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
-  },
-  {
-    id: 'opened',
-    label: 'Đã mở đọc',
-    count: '8,734',
-    rate: '2.1%',
-    isPositive: true,
-    icon: ExternalLink,
-    badgeColorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
-  },
-  {
-    id: 'clicked',
-    label: 'Lượt nhấn liên kết',
-    count: '967',
-    rate: '1.4%',
-    isPositive: false,
-    icon: MousePointer,
-    badgeColorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
-  },
-  {
-    id: 'subscribe',
-    label: 'Tham gia học tập',
-    count: '345',
-    rate: '8.5%',
-    isPositive: true,
-    icon: Users,
-    badgeColorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
-  },
-  {
-    id: 'complaints',
-    label: 'Báo lỗi hệ thống',
-    count: '10',
-    rate: '1.5%',
-    isPositive: false,
-    icon: AlertTriangle,
-    badgeColorClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
-  },
-  {
-    id: 'unsubscribe',
-    label: 'Tắt nhận thông báo',
-    count: '86',
-    rate: '0.8%',
-    isPositive: true,
-    icon: UserX,
-    badgeColorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
-  },
-]
-
 export function VuexyMonthlyCampaignCard({
-  title = 'Chiến Dịch Thông Báo & Tương Tác',
-  subtitle = '8.52k Lượt tiếp cận học viên',
-  items = defaultCampaignItems,
+  totalCount,
+  unreadCount,
+  pinnedCount,
+  urgentCount,
+  broadcastCount,
+  normalCount,
 }: VuexyMonthlyCampaignCardProps) {
   const [showMenu, setShowMenu] = useState(false)
+
+  const items = [
+    {
+      id: 'total',
+      label: 'Tổng thông báo đã tạo',
+      count: totalCount.toString(),
+      statusText: 'Hệ thống',
+      icon: Bell,
+      badgeColorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
+    },
+    {
+      id: 'unread',
+      label: 'Thông báo chưa đọc',
+      count: unreadCount.toString(),
+      statusText: unreadCount > 0 ? 'Cần đọc' : 'Đã đọc hết',
+      icon: Mail,
+      badgeColorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
+    },
+    {
+      id: 'pinned',
+      label: 'Thông báo được ghim',
+      count: pinnedCount.toString(),
+      statusText: 'Ưu tiên cao',
+      icon: Bookmark,
+      badgeColorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
+    },
+    {
+      id: 'urgent',
+      label: 'Khẩn cấp & quan trọng',
+      count: urgentCount.toString(),
+      statusText: 'Cảnh báo',
+      icon: AlertCircle,
+      badgeColorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
+    },
+    {
+      id: 'broadcast',
+      label: 'Phát sóng toàn bộ người học',
+      count: broadcastCount.toString(),
+      statusText: 'Toàn sàn',
+      icon: Radio,
+      badgeColorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
+    },
+    {
+      id: 'normal',
+      label: 'Thông báo thông thường',
+      count: normalCount.toString(),
+      statusText: 'Tiêu chuẩn',
+      icon: CheckCheck,
+      badgeColorClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+    },
+  ]
 
   return (
     <div className="h-full rounded-2xl bg-white dark:bg-[#2f3349] border border-slate-200/80 dark:border-slate-700/60 p-5 shadow-xs flex flex-col justify-between relative">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">{title}</h5>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
+            Thông Báo & Nhắc Học
+          </h5>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {totalCount > 0 ? `${totalCount} thông báo trong hệ thống` : 'Chưa có thông báo nào'}
+          </p>
         </div>
         <div className="relative">
           <button
@@ -105,7 +99,7 @@ export function VuexyMonthlyCampaignCard({
                 onClick={() => setShowMenu(false)}
                 className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
               >
-                Gửi thông báo
+                Làm mới
               </button>
             </div>
           )}
@@ -126,16 +120,10 @@ export function VuexyMonthlyCampaignCard({
                 </span>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.count}</span>
-                <span
-                  className={`text-xs font-semibold min-w-[40px] text-right ${
-                    item.isPositive
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  {item.rate}
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 min-w-[65px] text-center">
+                  {item.statusText}
                 </span>
               </div>
             </div>
@@ -145,4 +133,3 @@ export function VuexyMonthlyCampaignCard({
     </div>
   )
 }
-
