@@ -7,8 +7,9 @@ import {
   Tag,
   Popconfirm,
   Image,
+  Tooltip,
 } from 'antd'
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import {
   EditOutlined,
   DeleteOutlined,
@@ -185,6 +186,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Tên chủ điểm (Việt / Anh)',
       key: 'title',
+      sortable: true,
+      dataIndex: 'title_vi',
       width: 280,
       minWidth: 260,
       render: (row) => (
@@ -211,6 +214,8 @@ export function GrammarHandbookTab() {
     {
       title: 'CEFR',
       key: 'cefr_level',
+      sortable: true,
+      dataIndex: 'cefr_level',
       width: 90,
       align: 'center',
       render: (row) => (
@@ -222,6 +227,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Nhóm ngữ pháp',
       key: 'category',
+      sortable: true,
+      dataIndex: 'category',
       width: 180,
       render: (row) => {
         const found = CATEGORY_OPTIONS.find((c) => c.value === row.category)
@@ -231,6 +238,8 @@ export function GrammarHandbookTab() {
     {
       title: 'TOEIC Target',
       key: 'toeic_relevance',
+      sortable: true,
+      dataIndex: 'toeic_relevance',
       width: 120,
       align: 'center',
       render: (row) =>
@@ -250,6 +259,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Nổi bật',
       key: 'is_featured',
+      sortable: true,
+      dataIndex: 'is_featured',
       width: 90,
       align: 'center',
       render: (row) =>
@@ -264,14 +275,18 @@ export function GrammarHandbookTab() {
     {
       title: 'Xuất bản',
       key: 'publish',
+      sortable: true,
+      dataIndex: 'is_published',
       width: 110,
       align: 'center',
       render: (row) => (
-        <CustomSwitch
-          size="sm"
-          color="emerald"
+        <TableStatusSwitch
           checked={row.is_published}
           loading={workingId === row._id}
+          disabled={Boolean(workingId)}
+          checkedChildren="Bật"
+          unCheckedChildren="Ẩn"
+          ariaLabel={`Xuất bản chủ điểm ${row.title_vi}`}
           onChange={(checked) => void handleTogglePublish(row, checked)}
         />
       ),
@@ -279,6 +294,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Cập nhật',
       key: 'updated_at',
+      sortable: true,
+      dataIndex: 'updated_at',
       width: 115,
       align: 'center',
       render: (row) =>
@@ -296,6 +313,8 @@ export function GrammarHandbookTab() {
     {
       title: 'Ngày tạo',
       key: 'created_at',
+      sortable: true,
+      dataIndex: 'created_at',
       width: 115,
       align: 'center',
       initiallyHidden: true,
@@ -314,21 +333,21 @@ export function GrammarHandbookTab() {
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 140,
+      width: 90,
       align: 'center',
-      fixed: 'right',
       render: (row) => (
-        <Space size="small" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setSelectedItem(row)
-              setDrawerVisible(true)
-            }}
-          >
-            Sửa
-          </Button>
+        <Space size={4} align="center" className="justify-center items-center flex-nowrap whitespace-nowrap" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setSelectedItem(row)
+                setDrawerVisible(true)
+              }}
+              className="!text-sky-600 !border-sky-200/80 !bg-sky-50/80 hover:!bg-sky-100 hover:!border-sky-300 dark:!bg-sky-950/60 dark:!border-sky-800 dark:!text-sky-400 dark:hover:!bg-sky-900/60 shadow-2xs"
+            />
+          </Tooltip>
           <Popconfirm
             title="Xóa chủ điểm ngữ pháp này?"
             description="Chủ điểm sẽ được chuyển vào trạng thái xóa mềm."
@@ -336,7 +355,15 @@ export function GrammarHandbookTab() {
             okText="Xóa"
             cancelText="Hủy"
           >
-            <Button size="small" danger icon={<DeleteOutlined />} loading={workingId === row._id} />
+            <Tooltip title="Xóa">
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                loading={workingId === row._id}
+                className="!text-rose-600 !border-rose-200/80 !bg-rose-50/80 hover:!bg-rose-100 hover:!border-rose-300 dark:!bg-rose-950/60 dark:!border-rose-800 dark:!text-rose-400 dark:hover:!bg-rose-900/60 shadow-2xs"
+              />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -350,7 +377,6 @@ export function GrammarHandbookTab() {
         data={data?.items || []}
         isLoading={isLoading}
         rowKey="_id"
-        scroll={{ x: 1250 }}
         onResetFilters={handleResetFilters}
         extraActions={
           <button

@@ -121,6 +121,17 @@ export const CourseTestSessionSchema = z.object({
     selected_index: z.number().nullish(),
     selected_option: z.string().nullish(),
   }).passthrough()).default([]),
+  teacher_score: z.number().nullable().optional(),
+  teacher_feedback: z.string().optional(),
+  teacher_id: z.string().nullable().optional(),
+  teacher_name: z.string().nullable().optional(),
+  reviewed_at: z.string().nullable().optional(),
+  question_reviews: z.array(z.object({
+    question_index: z.number(),
+    is_correct: z.boolean().optional(),
+    score: z.number().optional(),
+    feedback: z.string().optional(),
+  }).passthrough()).default([]),
   result: z.record(z.string(), z.unknown()).nullish(),
 }).passthrough()
 

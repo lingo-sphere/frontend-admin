@@ -78,11 +78,11 @@ export function DashboardRecentActivity({
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-700 dark:text-slate-200 font-bold text-[13px] tracking-wide">
-                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Học viên' : 'Learner'}</th>
-                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Hành động' : 'Action'}</th>
-                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Điểm / XP' : 'Score / XP'}</th>
-                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Thời gian' : 'Time'}</th>
-                <th className="py-3 px-3.5 text-center">{isVietnamese ? 'Chi tiết' : 'Details'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVietnamese ? 'Học viên' : 'Learner'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVietnamese ? 'Hành động' : 'Action'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVietnamese ? 'Điểm / XP' : 'Score / XP'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVietnamese ? 'Thời gian' : 'Time'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVietnamese ? 'Chi tiết' : 'Details'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-200">

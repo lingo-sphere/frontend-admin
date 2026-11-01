@@ -59,6 +59,7 @@ export function VocabularyTopicsTab({
     () => [
       {
         key: 'topic_info',
+        sortable: true,
         dataIndex: 'name_vi',
         title: 'Chủ đề',
         render: (topic) => (
@@ -86,6 +87,8 @@ export function VocabularyTopicsTab({
       },
       {
         key: 'cefr_level',
+      sortable: true,
+      dataIndex: 'cefr_level',
         title: 'Khung CEFR',
         width: '120px',
         align: 'center',
@@ -97,6 +100,8 @@ export function VocabularyTopicsTab({
       },
       {
         key: 'lexical_count',
+      sortable: true,
+      dataIndex: 'lexical_count',
         title: 'Từ vựng',
         width: '120px',
         align: 'center',
@@ -108,6 +113,8 @@ export function VocabularyTopicsTab({
       },
       {
         key: 'deck_count',
+      sortable: true,
+      dataIndex: 'deck_count',
         title: 'Bộ thẻ liên kết',
         width: '150px',
         align: 'center',

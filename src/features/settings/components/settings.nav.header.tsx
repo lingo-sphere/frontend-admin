@@ -2,7 +2,7 @@
 import { RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-export type SettingsPageType = 'plans' | 'ai' | 'system'
+export type SettingsPageType = 'plans' | 'ai'
 
 interface SettingsNavHeaderProps {
   activePage: SettingsPageType
@@ -26,12 +26,6 @@ export function SettingsNavHeader({ activePage, onRefresh, isRefreshing }: Setti
       desc: isVietnamese
         ? 'Quản lý kết nối nhà cung cấp AI, hạn mức token và điều phối mô hình thông minh'
         : 'Manage AI provider connections, token quotas, and intelligent model routing',
-    },
-    system: {
-      title: isVietnamese ? 'Cài đặt hệ thống' : 'System Settings',
-      desc: isVietnamese
-        ? 'Cấu hình thông số vận hành nền tảng, lưu trữ đám mây và bảo trì hệ thống'
-        : 'Configure operational parameters, cloud storage, and platform maintenance',
     },
   }
 

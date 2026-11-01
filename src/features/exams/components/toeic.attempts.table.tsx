@@ -154,9 +154,10 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'exam_title',
         title: 'Đề thi TOEIC',
+        minWidth: 220,
         render: (item) => (
-          <div className="space-y-1">
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 max-w-[240px] truncate" title={item.exam_title}>
+          <div className="space-y-1 min-w-0 w-full">
+            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 w-full min-w-0 truncate" title={item.exam_title}>
               {item.exam_title}
             </p>
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -184,6 +185,8 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'total_scaled_score',
         title: 'Điểm TOEIC',
+        width: 130,
+        align: 'center',
         sortable: true,
         render: (item) => {
           const badge = getScoreBadge(item.total_scaled_score)
@@ -205,6 +208,8 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'skills',
         title: 'Kỹ năng làm bài',
+        width: 140,
+        align: 'center',
         render: (item) => {
           const is4Skills = item.skills_enabled === '4SKILLS' || item.skills_enabled === 'ALL'
           return (
@@ -229,6 +234,8 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'accuracy',
         title: 'Độ chính xác',
+        width: 130,
+        align: 'center',
         render: (item) => {
           const pct = item.total_questions > 0
             ? Math.round((item.correct_questions / item.total_questions) * 100)
@@ -249,6 +256,8 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'duration',
         title: 'Thời gian làm',
+        width: 120,
+        align: 'center',
         render: (item) => (
           <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
             {formatDuration(item.total_time_seconds)}
@@ -258,6 +267,7 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'submitted_at',
         title: 'Ngày nộp bài',
+        width: 150,
         align: 'center',
         sortable: true,
         render: (item) => renderTableDate(item.submitted_at || item.created_at),
@@ -265,6 +275,7 @@ export function ToeicAttemptsTable({ onViewLearnerProfile }: ToeicAttemptsTableP
       {
         key: 'actions',
         title: 'Thao tác',
+        width: 90,
         align: 'center',
         render: (item) => (
           <TableRowActions

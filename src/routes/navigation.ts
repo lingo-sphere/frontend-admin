@@ -15,8 +15,20 @@ export function navItemToPath(navItem: string): string {
   }
   if (navItem === 'courses' || navItem === 'courses-list') return '/courses'
   if (navItem === 'course-submissions') return '/submissions/courses'
+  if (navItem.startsWith('course-test-session-detail:')) {
+    const parts = navItem.split(':')
+    const courseId = parts[1]
+    const sessionId = parts[2]
+    return `/submissions/courses/${courseId}/sessions/${sessionId}`
+  }
   if (navItem === 'practice-speaking-submissions') return '/submissions/practice/speaking'
   if (navItem === 'practice-writing-submissions') return '/submissions/practice/writing'
+  if (navItem.startsWith('practice-submission-review:')) {
+    const parts = navItem.split(':')
+    const skill = parts[1]
+    const id = parts[2]
+    return `/submissions/practice/${skill}/${id}`
+  }
   if (navItem === 'submissions') return '/submissions'
   if (navItem === 'course-learners') return '/course-learners'
   if (navItem.startsWith('learner-progress:')) {
@@ -79,13 +91,12 @@ export function navItemToPath(navItem: string): string {
   }
   if (navItem === 'community') return '/community'
   if (navItem === 'public-decks') return '/public-decks'
-  if (navItem === 'progress') return '/progress'
+  if (navItem === 'progress') return '/analytics/posthog'
   if (navItem === 'analytics-posthog' || navItem === 'posthog') return '/analytics/posthog'
   if (navItem === 'monitoring-betterstack' || navItem === 'betterstack') return '/monitoring/betterstack'
   if (navItem === 'notifications') return '/notifications'
   if (navItem === 'settings' || navItem === 'settings-plans') return '/settings/plans'
   if (navItem === 'settings-ai') return '/settings/ai'
-  if (navItem === 'settings-system') return '/settings/system'
   if (navItem === 'roles') return '/roles'
   if (navItem === 'permissions') return '/permissions'
   if (navItem === 'admin-profile') return '/profile'
@@ -112,8 +123,21 @@ export function pathToNavItem(pathname: string): string {
     return `admin-user-edit:${id}`
   }
   if (cleanPath === '/submissions/courses') return 'course-submissions'
+  if (cleanPath.startsWith('/submissions/courses/') && cleanPath.includes('/sessions/')) {
+    const raw = cleanPath.replace('/submissions/courses/', '')
+    const parts = raw.split('/sessions/')
+    return `course-test-session-detail:${parts[0]}:${parts[1]}`
+  }
   if (cleanPath === '/submissions/practice/speaking') return 'practice-speaking-submissions'
+  if (cleanPath.startsWith('/submissions/practice/speaking/')) {
+    const id = cleanPath.replace('/submissions/practice/speaking/', '')
+    return `practice-submission-review:speaking:${id}`
+  }
   if (cleanPath === '/submissions/practice/writing') return 'practice-writing-submissions'
+  if (cleanPath.startsWith('/submissions/practice/writing/')) {
+    const id = cleanPath.replace('/submissions/practice/writing/', '')
+    return `practice-submission-review:writing:${id}`
+  }
   if (cleanPath === '/submissions') return 'submissions'
   if (cleanPath === '/courses') return 'courses-list'
   if (cleanPath === '/courses/list') return 'courses-list'
@@ -184,14 +208,12 @@ export function pathToNavItem(pathname: string): string {
   if (cleanPath === '/practice/placement-tests' || cleanPath === '/placement-tests') return 'placement-tests'
   if (cleanPath === '/community') return 'community'
   if (cleanPath === '/public-decks') return 'public-decks'
-  if (cleanPath === '/measurement-profiles') return 'measurement-profiles'
-  if (cleanPath === '/progress') return 'progress'
+  if (cleanPath === '/progress') return 'analytics-posthog'
   if (cleanPath === '/analytics/posthog' || cleanPath === '/posthog') return 'analytics-posthog'
   if (cleanPath === '/monitoring/betterstack' || cleanPath === '/monitoring-betterstack' || cleanPath === '/betterstack') return 'monitoring-betterstack'
   if (cleanPath === '/notifications') return 'notifications'
   if (cleanPath === '/settings' || cleanPath === '/settings/plans') return 'settings-plans'
   if (cleanPath === '/settings/ai' || cleanPath === '/ai-management' || cleanPath === '/ai') return 'settings-ai'
-  if (cleanPath === '/settings/system') return 'settings-system'
   if (cleanPath === '/roles') return 'roles'
   if (cleanPath === '/permissions') return 'permissions'
   if (cleanPath === '/profile') return 'admin-profile'
@@ -204,7 +226,9 @@ export function pathToNavItem(pathname: string): string {
 }
 
 export function getEffectiveNavId(navItem: string): string {
-  if (navItem === 'submissions' || navItem.startsWith('course-submissions:')) return 'course-submissions'
+  if (navItem === 'submissions' || navItem.startsWith('course-submissions:') || navItem.startsWith('course-test-session-detail:')) return 'course-submissions'
+  if (navItem.startsWith('practice-submission-review:speaking:')) return 'practice-speaking-submissions'
+  if (navItem.startsWith('practice-submission-review:writing:')) return 'practice-writing-submissions'
   if (
     navItem === 'courses' ||
     navItem === 'courses-list' ||

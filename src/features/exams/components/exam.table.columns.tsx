@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { FileText, Clock, HelpCircle, Volume2, Pause, Image as ImageIcon, ExternalLink } from 'lucide-react'
-import { Button, Image, Switch, Tooltip } from 'antd'
+import { Button, Image, Tooltip } from 'antd'
 import type { DataTableColumn } from '@/components/data.table'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { TableRowActions } from '@/components/table.row.actions'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { resolveMediaUrl } from '@/lib/media.utils'
 
 interface GetExamColumnsOptions {
@@ -155,23 +156,28 @@ export function getExamColumns({
       key: 'title',
       title: isVi ? 'Tên đề thi' : 'Exam Title',
       align: 'left',
+      minWidth: 260,
       sortable: true,
       render: (exam) => (
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0 w-full">
           <FileText size={16} className="text-indigo-500 shrink-0" />
-          <button
-            type="button"
-            onClick={() => onManageQuestions && onManageQuestions(exam)}
-            className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline text-left cursor-pointer"
-          >
-            {exam.title}
-          </button>
+          <Tooltip title={exam.title} placement="topLeft" mouseEnterDelay={0.3}>
+            <button
+              type="button"
+              onClick={() => onManageQuestions && onManageQuestions(exam)}
+              className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline text-left cursor-pointer truncate flex-1 min-w-0"
+            >
+              {exam.title}
+            </button>
+          </Tooltip>
         </div>
       ),
     },
     {
       key: 'type',
       title: isVi ? 'Loại đề' : 'Type',
+      sortable: true,
+      width: 140,
       align: 'center',
       render: (exam) => (
         <div className="flex items-center justify-center gap-1.5 flex-wrap">
@@ -193,6 +199,7 @@ export function getExamColumns({
     {
       key: 'duration',
       title: isVi ? 'Thời lượng' : 'Duration',
+      width: 130,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -205,6 +212,7 @@ export function getExamColumns({
     {
       key: 'questions',
       title: isVi ? 'Số câu' : 'Questions',
+      width: 120,
       align: 'center',
       sortable: true,
       render: (exam) =>
@@ -222,12 +230,14 @@ export function getExamColumns({
     {
       key: 'media',
       title: isVi ? 'Tài nguyên' : 'Media',
+      width: 140,
       align: 'center',
       render: (exam) => <ExamMediaCell exam={exam} isVi={isVi} />,
     },
     {
       key: 'attempts',
       title: isVi ? 'Lượt thi' : 'Attempts',
+      width: 110,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -239,6 +249,7 @@ export function getExamColumns({
     {
       key: 'score',
       title: isVi ? 'Điểm TB' : 'Avg Score',
+      width: 110,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -250,24 +261,23 @@ export function getExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng thái' : 'Status',
+      sortable: true,
+      width: 110,
       align: 'center',
       render: (exam) => (
-        <div className="inline-flex flex-col items-center gap-0.5">
-          <Switch
-            size="small"
-            aria-label={`Xuất bản ${exam.title}`}
-            checked={Boolean(exam.is_published)}
-            onChange={(checked) => onTogglePublish(exam._id || '', checked)}
-          />
-          <span className="text-[10px] text-slate-500 whitespace-nowrap">
-            {exam.is_published ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-          </span>
-        </div>
+        <TableStatusSwitch
+          checked={Boolean(exam.is_published)}
+          checkedChildren="Bật"
+          unCheckedChildren="Ẩn"
+          ariaLabel={`Xuất bản ${exam.title}`}
+          onChange={() => onTogglePublish(exam._id || '', Boolean(exam.is_published))}
+        />
       ),
     },
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 100,
       align: 'center',
       render: (exam) => (
         <TableRowActions
@@ -288,6 +298,7 @@ export function getExamColumns({
                   ghost
                   icon={<HelpCircle size={14} />}
                   onClick={() => onManageQuestions(exam)}
+                  className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                 />
               </Tooltip>
             )

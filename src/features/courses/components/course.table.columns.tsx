@@ -33,10 +33,12 @@ export function getCourseColumns({
     {
       key: 'info',
       title: isVi ? 'Thông tin khóa học' : 'Course Info',
+      width: 280,
+      minWidth: 240,
       sortable: true,
       render: (course) => (
-        <div className="flex items-center gap-3.5 py-1">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
+        <div className="flex items-center gap-3 py-1 max-w-[270px]">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:bg-slate-950 overflow-hidden shrink-0 border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative group">
             {course.thumbnail_url ? (
               <img
                 src={resolveMediaUrl(course.thumbnail_url)}
@@ -45,20 +47,22 @@ export function getCourseColumns({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-indigo-500/80 bg-indigo-50/50 dark:bg-indigo-950/30">
-                <BookOpen className="w-6 h-6" />
+                <BookOpen className="w-5 h-5" />
               </div>
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p
-                className="font-bold text-sm text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer line-clamp-1"
-                onClick={() => onEdit(course.id)}
-              >
-                {course.title}
-              </p>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 max-w-md">
+          <div className="min-w-0 flex-1 max-w-[205px]">
+            <p
+              className="font-bold text-xs text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer truncate"
+              title={course.title}
+              onClick={() => onEdit(course.id)}
+            >
+              {course.title}
+            </p>
+            <p
+              className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5"
+              title={course.description || undefined}
+            >
               {course.description}
             </p>
           </div>
@@ -68,6 +72,8 @@ export function getCourseColumns({
     {
       key: 'category',
       title: isVi ? 'Danh mục' : 'Category',
+      width: 125,
+      align: 'center',
       sortable: true,
       render: (course) => (
         <span
@@ -80,6 +86,8 @@ export function getCourseColumns({
     {
       key: 'target_score',
       title: isVi ? 'Mục tiêu điểm' : 'Target Score',
+      width: 125,
+      align: 'center',
       sortable: true,
       render: (course) => (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap shadow-2xs bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/60">
@@ -90,14 +98,16 @@ export function getCourseColumns({
     },
     {
       key: 'stats',
+      sortable: true,
       title: isVi ? 'Số bài & Học viên' : 'Lessons & Learners',
+      width: 155,
       render: (course) => (
         <div className="space-y-1 py-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-750 dark:text-slate-200 whitespace-nowrap">
             <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span>
               {isVi
-                ? `${course.total_modules} chương · ${course.total_lessons} bài học`
+                ? `${course.total_modules} chương · ${course.total_lessons} bài`
                 : `${course.total_modules} modules · ${course.total_lessons} lessons`}
             </span>
           </div>
@@ -114,6 +124,8 @@ export function getCourseColumns({
     {
       key: 'price',
       title: isVi ? 'Học phí' : 'Price',
+      width: 120,
+      align: 'center',
       sortable: true,
       render: (course) => {
         const rawPrice = Number(course.price ?? 0)
@@ -169,6 +181,8 @@ export function getCourseColumns({
     {
       key: 'enrollments',
       title: isVi ? 'Học viên' : 'Students',
+      width: 125,
+      align: 'center',
       sortable: true,
       render: (course) => (
         <div className="whitespace-nowrap py-1">
@@ -186,7 +200,9 @@ export function getCourseColumns({
     },
     {
       key: 'status',
+      sortable: true,
       title: isVi ? 'Trạng thái' : 'Status',
+      width: 115,
       align: 'center',
       render: (course) => (
         <div className="whitespace-nowrap py-1">
@@ -210,7 +226,9 @@ export function getCourseColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 140,
       align: 'center',
+      fixed: false,
       render: (course) => (
         <TableRowActions
           isVi={isVi}
@@ -226,7 +244,7 @@ export function getCourseColumns({
                     size="small"
                     icon={<GraduationCap size={14} />}
                     onClick={() => onViewStudentScores(course)}
-                    className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                    className="!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs"
                   />
                 </Tooltip>
               )}
@@ -236,7 +254,7 @@ export function getCourseColumns({
                     size="small"
                     icon={<Headphones size={14} />}
                     onClick={() => onViewSubmissions(course)}
-                    className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                    className="!text-purple-600 !border-purple-200/80 !bg-purple-50/80 hover:!bg-purple-100 hover:!border-purple-300 dark:!bg-purple-950/60 dark:!border-purple-800 dark:!text-purple-400 dark:hover:!bg-purple-900/60 shadow-2xs"
                   />
                 </Tooltip>
               )}

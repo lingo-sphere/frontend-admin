@@ -1,6 +1,6 @@
 // Component bảng dữ liệu dùng chung (DataTable / AdminDataTable) chuẩn hóa giao diện cho toàn bộ Admin.
 
-import { useState, useEffect, useMemo, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Alert,
@@ -49,6 +49,7 @@ export interface DataTableColumn<T> {
   filterKind?: 'text' | 'enum' | 'media' | 'date' | 'number' | 'tree'
   filterOptions?: SelectOption[]
   filteredValue?: FilterValue | null
+  onCell?: (record: T, rowIndex?: number) => React.HTMLAttributes<HTMLElement>
 }
 
 export interface IpaColumn<T> extends Omit<ColumnType<T>, 'title'> {
@@ -133,14 +134,56 @@ function normalizeWidth(width?: string | number): number | string | undefined {
   return width
 }
 
+function resolveCellValue(record: unknown, key: string): unknown {
+  if (!record || typeof record !== 'object') return undefined
+  const rec = record as Record<string, unknown>
+  if (rec[key] !== undefined) return rec[key]
+  if (key === 'name_en' && rec['name'] !== undefined) return rec['name']
+  if (key === 'title_vi' && rec['title'] !== undefined) return rec['title']
+  if (key.includes('.')) {
+    const parts = key.split('.')
+    let current: unknown = rec
+    for (const part of parts) {
+      if (current && typeof current === 'object' && part in (current as Record<string, unknown>)) {
+        current = (current as Record<string, unknown>)[part]
+      } else {
+        return undefined
+      }
+    }
+    return current
+  }
+  return undefined
+}
+
 function defaultCompare<T>(a: T, b: T, key: keyof T | string): number {
-  const valA = (a as Record<string, unknown>)[String(key)]
-  const valB = (b as Record<string, unknown>)[String(key)]
-  if (valA === valB) return 0
-  if (valA === null || valA === undefined) return -1
-  if (valB === null || valB === undefined) return 1
-  if (typeof valA === 'number' && typeof valB === 'number') return valA - valB
-  return String(valA).localeCompare(String(valB))
+  const rawA = resolveCellValue(a, String(key))
+  const rawB = resolveCellValue(b, String(key))
+
+  if (rawA === rawB) return 0
+  if (rawA === null || rawA === undefined || rawA === '') return 1
+  if (rawB === null || rawB === undefined || rawB === '') return -1
+
+  if (typeof rawA === 'string' && typeof rawB === 'string') {
+    const isDateA = !isNaN(Date.parse(rawA)) && (rawA.includes('-') || rawA.includes('/')) && rawA.length >= 8
+    const isDateB = !isNaN(Date.parse(rawB)) && (rawB.includes('-') || rawB.includes('/')) && rawB.length >= 8
+    if (isDateA && isDateB) {
+      const timeA = new Date(rawA).getTime()
+      const timeB = new Date(rawB).getTime()
+      if (timeA !== timeB) return timeA - timeB
+    }
+  }
+
+  const numA = typeof rawA === 'number' ? rawA : !isNaN(Number(rawA)) && rawA !== '' ? Number(rawA) : NaN
+  const numB = typeof rawB === 'number' ? rawB : !isNaN(Number(rawB)) && rawB !== '' ? Number(rawB) : NaN
+  if (!isNaN(numA) && !isNaN(numB)) {
+    return numA - numB
+  }
+
+  if (typeof rawA === 'boolean' && typeof rawB === 'boolean') {
+    return rawA === rawB ? 0 : rawA ? 1 : -1
+  }
+
+  return String(rawA).localeCompare(String(rawB), 'vi', { sensitivity: 'base', numeric: true })
 }
 
 function ColumnFilter({
@@ -291,11 +334,6 @@ export function DataTable<T extends object>({
     return data ?? items ?? dataSource ?? []
   }, [data, items, dataSource])
 
-  const effectiveLoading = Boolean(loading ?? isLoading)
-  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
-  const resolvedSearchLabel = searchLabel || (isVi ? 'Tìm kiếm' : 'Search')
-  const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? 'Tìm kiếm nội dung...' : 'Search content...')
-
   const [density, setDensity] = useState<TableDensity>('middle')
   const [internalSortKey, setInternalSortKey] = useState<string | null>(null)
   const [internalSortOrder, setInternalSortOrder] = useState<'asc' | 'desc' | null>(null)
@@ -303,9 +341,166 @@ export function DataTable<T extends object>({
   const activeSortKey = sortKey !== undefined ? sortKey : internalSortKey
   const activeSortOrder = sortOrder !== undefined ? sortOrder : internalSortOrder
 
+  const sortedData = useMemo(() => {
+    if (state || onSortChange || !activeSortKey || !activeSortOrder) {
+      return effectiveData
+    }
+
+    const targetCol = columns.find(
+      (c) => c.key === activeSortKey || (c.dataIndex && String(c.dataIndex) === activeSortKey)
+    )
+    const customSorter =
+      targetCol && typeof targetCol.sorter === 'function' ? targetCol.sorter : null
+    const compareKey = String(targetCol?.dataIndex || activeSortKey)
+
+    const sortList = (itemsList: T[]): T[] => {
+      const cloned = [...itemsList]
+      cloned.sort((a, b) => {
+        let res = 0
+        if (customSorter) {
+          res = customSorter(a, b)
+        } else {
+          res = defaultCompare(a, b, compareKey)
+        }
+        return activeSortOrder === 'asc' ? res : -res
+      })
+
+      return cloned.map((item) => {
+        const obj = item as Record<string, unknown>
+        if (Array.isArray(obj.children) && obj.children.length > 0) {
+          return {
+            ...item,
+            children: sortList(obj.children as T[]),
+          }
+        }
+        return item
+      })
+    }
+
+    return sortList(effectiveData)
+  }, [effectiveData, state, onSortChange, activeSortKey, activeSortOrder, columns])
+
+  const effectiveLoading = Boolean(loading ?? isLoading)
+  const resolvedEmptyText = emptyText || (isVi ? 'Không tìm thấy dữ liệu nào phù hợp' : 'No matching data found')
+  const resolvedSearchLabel = searchLabel || (isVi ? 'Tìm kiếm' : 'Search')
+  const resolvedSearchPlaceholder = searchPlaceholder || (isVi ? 'Tìm kiếm nội dung...' : 'Search content...')
+
+  const effectiveRowKey = useCallback(
+    (record: T): string => {
+      if (typeof rowKey === 'function') return rowKey(record)
+      if (typeof rowKey === 'string') return String((record as Record<string, unknown>)[rowKey] ?? '')
+      const rec = record as { _id?: string; id?: string; key?: string }
+      return String(rec._id || rec.id || rec.key || '')
+    },
+    [rowKey]
+  )
+
+  const [internalExpandedRowKeys, setInternalExpandedRowKeys] = useState<React.Key[]>(() => {
+    if (expandable?.expandedRowKeys) return [...expandable.expandedRowKeys]
+    if (expandable?.defaultExpandedRowKeys) return [...expandable.defaultExpandedRowKeys]
+    return []
+  })
+  const [newlyExpandedKeys, setNewlyExpandedKeys] = useState<Set<React.Key>>(new Set())
+  const enterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (expandable?.expandedRowKeys) {
+      setInternalExpandedRowKeys([...expandable.expandedRowKeys])
+    }
+  }, [expandable?.expandedRowKeys])
+
+  useEffect(() => {
+    return () => {
+      if (enterTimeoutRef.current) {
+        clearTimeout(enterTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (expandable?.defaultExpandAllRows && effectiveData.length > 0) {
+      const allParentKeys: React.Key[] = []
+      const collectParentKeys = (items: T[]) => {
+        for (const item of items) {
+          const obj = item as Record<string, unknown>
+          if (Array.isArray(obj.children) && obj.children.length > 0) {
+            allParentKeys.push(effectiveRowKey(item))
+            collectParentKeys(obj.children as T[])
+          }
+        }
+      }
+      collectParentKeys(effectiveData)
+      setInternalExpandedRowKeys(allParentKeys)
+    }
+  }, [effectiveData, expandable?.defaultExpandAllRows, effectiveRowKey])
+
+  const getVisibleDescendantKeys = useCallback(
+    (rec: unknown): React.Key[] => {
+      const keys: React.Key[] = []
+      if (!rec || typeof rec !== 'object') return keys
+      const obj = rec as Record<string, unknown>
+      if (Array.isArray(obj.children) && obj.children.length > 0) {
+        for (const child of obj.children) {
+          const childKey = effectiveRowKey(child as T)
+          if (childKey) {
+            keys.push(childKey)
+            if (internalExpandedRowKeys.includes(childKey)) {
+              keys.push(...getVisibleDescendantKeys(child))
+            }
+          }
+        }
+      }
+      return keys
+    },
+    [effectiveRowKey, internalExpandedRowKeys]
+  )
+
+  const handleToggleExpand = useCallback(
+    (record: T, isCurrentlyExpanded: boolean, e: React.MouseEvent) => {
+      e.stopPropagation()
+      const key = effectiveRowKey(record)
+
+      if (isCurrentlyExpanded) {
+        setInternalExpandedRowKeys((prev) => prev.filter((k) => k !== key))
+        if (expandable?.onExpand) {
+          expandable.onExpand(false, record)
+        }
+      } else {
+        const newlyVisible = getVisibleDescendantKeys(record)
+        if (newlyVisible.length > 0) {
+          setNewlyExpandedKeys(new Set(newlyVisible))
+          if (enterTimeoutRef.current) {
+            clearTimeout(enterTimeoutRef.current)
+          }
+          enterTimeoutRef.current = setTimeout(() => {
+            setNewlyExpandedKeys(new Set())
+          }, 350)
+        }
+
+        setInternalExpandedRowKeys((prev) => (prev.includes(key) ? prev : [...prev, key]))
+        if (expandable?.onExpand) {
+          expandable.onExpand(true, record)
+        }
+      }
+    },
+    [effectiveRowKey, expandable, getVisibleDescendantKeys]
+  )
+
   const mergedExpandable = useMemo(() => {
+    const hasControlledKeys = Boolean(expandable?.expandedRowKeys)
+    const activeKeys = hasControlledKeys ? expandable!.expandedRowKeys : internalExpandedRowKeys
+
     return {
       ...expandable,
+      expandedRowKeys: activeKeys,
+      onExpandedRowsChange: (keys: readonly React.Key[]) => {
+        if (expandable?.onExpandedRowsChange) {
+          expandable.onExpandedRowsChange(keys)
+        }
+        if (!hasControlledKeys) {
+          setInternalExpandedRowKeys([...keys])
+        }
+      },
       expandIcon: (props: {
         prefixCls: string
         expanded: boolean
@@ -324,26 +519,30 @@ export function DataTable<T extends object>({
             />
           )
         }
+
         return (
           <button
             type="button"
-            onClick={(e) => {
-              props.onExpand(props.record, e)
-              e.stopPropagation()
-            }}
-            className="inline-flex items-center justify-center w-[18px] h-[18px] rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-400 dark:hover:border-indigo-500 shadow-2xs transition-colors cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none"
+            onClick={(e) => handleToggleExpand(props.record, props.expanded, e)}
+            className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded border transition-all duration-150 cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none shadow-2xs active:scale-90 ${
+              props.expanded
+                ? 'bg-indigo-50 border-indigo-300 text-indigo-600 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300'
+                : 'bg-white border-slate-300 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'
+            }`}
             aria-label={props.expanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Mở rộng' : 'Expand')}
           >
-            {props.expanded ? (
-              <Minus size={11} strokeWidth={2.5} className="shrink-0" />
-            ) : (
-              <Plus size={11} strokeWidth={2.5} className="shrink-0" />
-            )}
+            <span className="inline-flex items-center justify-center transition-transform duration-150 ease-out">
+              {props.expanded ? (
+                <Minus size={11} strokeWidth={2.5} className="shrink-0" />
+              ) : (
+                <Plus size={11} strokeWidth={2.5} className="shrink-0" />
+              )}
+            </span>
           </button>
         )
       },
     }
-  }, [expandable, isVi])
+  }, [expandable, internalExpandedRowKeys, handleToggleExpand, isVi])
 
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
     columns.map((col) => ({
@@ -373,42 +572,35 @@ export function DataTable<T extends object>({
 
   const densityTokens: Record<TableDensity, Record<string, number | string>> = {
     compact: {
-      cellPaddingBlockMD: 5,
-      cellPaddingInlineMD: 6,
+      cellPaddingBlockMD: 6,
+      cellPaddingInlineMD: 10,
       cellPaddingBlockSM: 4,
-      cellPaddingInlineSM: 5,
+      cellPaddingInlineSM: 8,
       cellPaddingBlock: 6,
-      cellPaddingInline: 6,
+      cellPaddingInline: 10,
       borderColor: 'rgba(226, 232, 240, 0.8)',
     },
     middle: {
-      cellPaddingBlockMD: 8,
-      cellPaddingInlineMD: 8,
-      cellPaddingBlockSM: 6,
-      cellPaddingInlineSM: 6,
-      cellPaddingBlock: 8,
-      cellPaddingInline: 8,
+      cellPaddingBlockMD: 9,
+      cellPaddingInlineMD: 14,
+      cellPaddingBlockSM: 8,
+      cellPaddingInlineSM: 12,
+      cellPaddingBlock: 9,
+      cellPaddingInline: 14,
       borderColor: 'rgba(226, 232, 240, 0.8)',
     },
     comfortable: {
       cellPaddingBlockMD: 14,
-      cellPaddingInlineMD: 12,
+      cellPaddingInlineMD: 16,
       cellPaddingBlockSM: 10,
-      cellPaddingInlineSM: 10,
+      cellPaddingInlineSM: 14,
       cellPaddingBlock: 14,
-      cellPaddingInline: 12,
+      cellPaddingInline: 16,
       borderColor: 'rgba(226, 232, 240, 0.8)',
     },
   }
 
   const antdSize = density === 'compact' ? 'small' : density === 'comfortable' ? 'large' : 'middle'
-
-  const effectiveRowKey = (record: T): string => {
-    if (typeof rowKey === 'function') return rowKey(record)
-    if (typeof rowKey === 'string') return String((record as Record<string, unknown>)[rowKey] ?? '')
-    const rec = record as { _id?: string; id?: string }
-    return String(rec._id || rec.id || '')
-  }
 
   const handleResetFiltersInternal = async () => {
     setColumnOptions(
@@ -441,12 +633,15 @@ export function DataTable<T extends object>({
       .filter((col) => visibleKeys.has(col.key) || col.key === 'actions' || col.key === 'action')
       .map((col) => {
         const isActionsCol = col.key === 'actions' || col.key === 'action'
+        const isIpa = isIpaColumn(col)
         const isSortable =
           col.sortable !== undefined
             ? Boolean(col.sortable)
             : col.sorter !== undefined
             ? Boolean(col.sorter)
-            : !isActionsCol
+            : isIpa
+            ? !isActionsCol && col.filterKind !== 'media'
+            : false
 
         const isColActive = state
           ? state.query.sort === col.key || (col.dataIndex && String(col.dataIndex) === state.query.sort)
@@ -464,7 +659,6 @@ export function DataTable<T extends object>({
         const isStickyRight =
           col.sticky === 'right' || col.fixed === 'right' || (isActionsCol && col.fixed !== false)
 
-        const isIpa = isIpaColumn(col)
         const effectiveDataIndex = (
           col.dataIndex
             ? String(col.dataIndex)
@@ -475,23 +669,44 @@ export function DataTable<T extends object>({
             : col.key
         ) as (keyof T & (string | number)) | undefined
 
+        const minW = col.minWidth ? normalizeWidth(col.minWidth) : undefined
+        const hasSorter = Boolean(isSortable)
+        const hasFilter = Boolean(col.filterKind)
+        const autoMinW = hasSorter && hasFilter ? 95 : (hasSorter || hasFilter ? 80 : 65)
+        const numMinW = typeof minW === 'number' ? minW : parseInt(String(minW || ''), 10) || 0
+        const numNormW = typeof normalizedW === 'number' ? normalizedW : parseInt(String(normalizedW || ''), 10) || 0
+        const effectiveHeaderMinW = Math.max(numMinW, numNormW, autoMinW)
+
+        const effectiveAlign = col.align || (isActionsCol ? 'center' : 'left')
         const antdCol: ColumnType<T> = {
           key: col.key,
           dataIndex: effectiveDataIndex,
           title: col.title ?? col.label ?? col.key,
           width: normalizedW,
-          align: col.align || (isActionsCol ? 'center' : 'left'),
+          align: effectiveAlign,
           ellipsis: col.ellipsis,
           fixed: isStickyRight ? 'right' : isStickyLeft ? 'left' : undefined,
           sortDirections: isSortable ? ['ascend', 'descend', 'ascend'] : undefined,
           showSorterTooltip: false,
-          sorter: isSortable
-            ? onSortChange || state
-              ? true
-              : typeof col.sorter === 'function'
-              ? col.sorter
-              : (a: T, b: T) => defaultCompare(a, b, String(col.dataIndex || col.key))
-            : false,
+          onHeaderCell: () => ({
+            style: {
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              minWidth: effectiveHeaderMinW,
+            },
+            className: '!text-center !whitespace-nowrap',
+          }),
+          onCell: (record: T, rowIndex?: number) => {
+            const userCell = 'onCell' in col && typeof col.onCell === 'function' ? col.onCell(record, rowIndex) : {}
+            const effectiveMinW = minW ?? normalizedW
+            return {
+              ...userCell,
+              style: effectiveMinW
+                ? { minWidth: effectiveMinW, ...(userCell?.style as React.CSSProperties | undefined) }
+                : userCell?.style,
+            }
+          },
+          sorter: isSortable ? true : false,
           sortOrder: currentSortOrderForCol,
           render: (value: unknown, record: T, index: number) => {
             if (!col.render) {
@@ -529,6 +744,31 @@ export function DataTable<T extends object>({
         return antdCol
       })
   }, [columns, visibleKeys, state, activeSortKey, activeSortOrder, onSortChange, isVi])
+
+  const calculatedColumnsWidth = useMemo(() => {
+    return antdColumns.reduce((sum, col) => {
+      const w = typeof col.width === 'number' ? col.width : parseInt(String(col.width || ''), 10)
+      return sum + (w && !isNaN(w) ? w : 120)
+    }, 0)
+  }, [antdColumns])
+
+  const hasFixedColumn = useMemo(
+    () => antdColumns.some((col) => Boolean(col.fixed)),
+    [antdColumns]
+  )
+
+  const effectiveScroll = useMemo(() => {
+    if (scroll?.x !== undefined || scroll?.y !== undefined) {
+      return {
+        x: scroll.x ?? (hasFixedColumn ? Math.max(calculatedColumnsWidth, 1000) : undefined),
+        y: scroll.y,
+      }
+    }
+    if (hasFixedColumn) {
+      return { x: Math.max(calculatedColumnsWidth, 1000) }
+    }
+    return { x: Math.max(calculatedColumnsWidth, 1000) }
+  }, [scroll, hasFixedColumn, calculatedColumnsWidth])
 
   const totalCount = pagination ? pagination.totalItems : total ?? effectiveData.length
   const totalPages = pagination
@@ -638,18 +878,28 @@ export function DataTable<T extends object>({
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!ml-0.5 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-column-title]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-column-title]:!inline-flex [&_.ant-table-thead_.ant-table-column-title]:!flex-none [&_.ant-table-thead_.ant-table-column-title]:!w-auto [&_.ant-table-thead_.ant-table-filter-column]:!inline-flex [&_.ant-table-thead_.ant-table-filter-column]:!w-auto [&_.ant-table-thead_.ant-table-filter-column]:!items-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1 [&_.ant-table-thead_.ant-table-column-sorters]:!inline-flex [&_.ant-table-thead_.ant-table-column-sorters]:!w-auto [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1 [&_.ant-table-thead_th]:!px-2.5 [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-column-sorter]:!inline-flex [&_.ant-table-thead_.ant-table-column-sorter]:!flex-none [&_.ant-table-thead_.ant-table-column-sorter]:!m-0 [&_.ant-table-thead_.ant-table-column-sorter]:!self-center [&_.ant-table-thead_.ant-table-filter-trigger]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
           <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
             <Table<T>
               rowKey={effectiveRowKey}
               columns={antdColumns}
-              dataSource={effectiveData}
+              dataSource={sortedData}
               loading={effectiveLoading}
               size={antdSize}
-              scroll={{ x: scroll?.x ?? 'max-content', y: scroll?.y }}
+              scroll={effectiveScroll}
               pagination={false}
               rowSelection={rowSelection}
-              rowClassName={rowClassName}
+              rowClassName={(record, index, indent) => {
+                const userClass =
+                  typeof rowClassName === 'function'
+                    ? rowClassName(record, index, indent)
+                    : typeof rowClassName === 'string'
+                    ? rowClassName
+                    : ''
+                const rowKeyVal = effectiveRowKey(record)
+                const isNewlyExpanded = newlyExpandedKeys.has(rowKeyVal)
+                return `${userClass} ${isNewlyExpanded ? 'ant-table-row-newly-expanded' : ''}`.trim()
+              }}
               expandable={mergedExpandable}
               sortDirections={['ascend', 'descend', 'ascend']}
               showSorterTooltip={false}
@@ -690,11 +940,11 @@ export function DataTable<T extends object>({
                 }
                 if (extra.action === 'sort') {
                   const sort = Array.isArray(sorter) ? sorter[0] : sorter
-                  const colKey = String(sort?.columnKey || sort?.field || sort?.column?.key || '')
-                  if (!colKey) return
-
                   const currentActiveKey = state ? state.query.sort : activeSortKey
                   const currentActiveOrder = state ? state.query.order : activeSortOrder
+
+                  const colKey = String(sort?.columnKey || sort?.field || sort?.column?.key || currentActiveKey || '')
+                  if (!colKey) return
 
                   const isSameColumn = Boolean(
                     currentActiveKey &&

@@ -1,7 +1,4 @@
-/**
- * @file better.stack.monitoring.page.tsx
- * @description Trang quản trị BetterStackMonitoringPage trong giao diện Admin
- */
+// Trang quản trị giám sát hệ thống BetterStack Uptime trong giao diện Admin.
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { progressService } from '@/features/progress/services/progress.service'

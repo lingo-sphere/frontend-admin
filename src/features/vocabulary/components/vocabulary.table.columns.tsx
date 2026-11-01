@@ -72,6 +72,7 @@ export function getVocabularyColumns({
                   e.stopPropagation();
                   onViewDetail?.(w.id);
                 }}
+                title={w.word}
                 className="font-bold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer truncate text-left"
               >
                 {w.word}
@@ -108,6 +109,7 @@ export function getVocabularyColumns({
       key: "lexical_type",
       title: isVi ? "Loại từ" : "Lexical Type",
       width: "w-[120px]",
+      align: "center",
       render: (w) => {
         const typeInfo = w.lexical_type
           ? lexicalTypeLabels[w.lexical_type]
@@ -128,6 +130,7 @@ export function getVocabularyColumns({
       dataIndex: "cefr_level",
       title: isVi ? "CEFR" : "CEFR",
       width: "w-[70px]",
+      align: "center",
       sortable: true,
       render: (w) => (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
@@ -139,8 +142,9 @@ export function getVocabularyColumns({
       key: "phonetics",
       title: isVi ? "Âm tiết" : "Syllables",
       width: "w-[80px]",
+      align: "center",
       render: (w) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
           <Hash className="w-3 h-3 text-slate-400" />
           <span>{w.syllables || 1}</span>
           {w.stress_pattern && (
@@ -153,9 +157,10 @@ export function getVocabularyColumns({
       key: "frequency",
       title: isVi ? "Tần suất" : "Freq",
       width: "w-[70px]",
+      align: "center",
       sortable: true,
       render: (w) => (
-        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-center gap-1 text-xs text-slate-500 dark:text-slate-400">
           <Star className="w-3 h-3 text-amber-400" />
           <span>{w.frequency_rank ? `#${w.frequency_rank}` : "—"}</span>
         </div>
@@ -165,6 +170,7 @@ export function getVocabularyColumns({
       key: "content",
       title: isVi ? "Nghĩa & Ví dụ" : "Definitions",
       width: "w-[120px]",
+      align: "center",
       render: (w) => (
         <div className="text-xs text-slate-600 dark:text-slate-400">
           <span className="font-medium">
@@ -201,8 +207,9 @@ export function getVocabularyColumns({
       key: "status",
       title: isVi ? "Trạng thái" : "Status",
       width: "w-[100px]",
+      align: "center",
       render: (w) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col items-center gap-1">
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold border w-fit ${
               w.is_verified
@@ -239,7 +246,7 @@ export function getVocabularyColumns({
     {
       key: "created_at",
       title: isVi ? "Ngày tạo" : "Created",
-      width: "w-[110px]",
+      width: "130px",
       align: "center",
       sortable: true,
       render: (w) => renderTableDate(w.created_at),
@@ -247,7 +254,7 @@ export function getVocabularyColumns({
     {
       key: "actions",
       title: isVi ? "Thao tác" : "Actions",
-      width: "w-[100px]",
+      width: "110px",
       align: "center",
       render: (w) => (
         <TableRowActions

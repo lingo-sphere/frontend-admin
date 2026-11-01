@@ -1,12 +1,9 @@
-// Trang quản trị tiến độ học tập và thống kê học viên theo khóa học.
+// Trang quản trị bảng điểm và tiến độ học tập của học viên theo khóa học.
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, TrendingUp } from "lucide-react";
-import { CourseAnalyticsTab } from "@/features/courses/components/course.analytics.tab";
 import { CourseLearnersStatsBar } from "@/features/courses/components/course.learners.stats.bar";
 import { CourseProgressTableTab } from "@/features/courses/components/course.progress.table.tab";
 import { createCourseProgressColumns } from "@/features/courses/components/course.progress.columns";
-import { AdminTabs } from "@/components/admin.tabs";
 import { useNavigate } from "react-router-dom";
 import { useCourseLearnersData } from "@/features/courses/hooks/use.course.learners.data";
 import type { StudentProgressItem } from "@/features/progress/services/progress.service";
@@ -19,7 +16,6 @@ export function CourseLearnersPage() {
   const navigate = useNavigate();
 
   const {
-    isTeacher,
     courses,
     selectedCourseId,
     setSelectedCourseId,
@@ -30,9 +26,6 @@ export function CourseLearnersPage() {
     stats,
   } = useCourseLearnersData();
 
-  const [activeTab, setActiveTab] = useState<"PROGRESS" | "ANALYTICS">(
-    "PROGRESS"
-  );
   const [progressSearch, setProgressSearch] = useState<string>("");
   const [progressStatusFilter, setProgressStatusFilter] = useState<
     "ALL" | "COMPLETED" | "IN_PROGRESS" | "STARTED"
@@ -188,80 +181,32 @@ export function CourseLearnersPage() {
         isVi={isVi}
         totalStudents={stats.totalStudents}
         avgProgress={stats.avgProgress}
+        isLoading={isLoadingProgress}
       />
 
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("PROGRESS")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === "PROGRESS"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-            }`}
-          >
-            <GraduationCap className="w-4 h-4" />
-            <span>
-              {isVi ? "Bảng Điểm & Tiến Độ Học Tập" : "Learner Progress Table"}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("ANALYTICS")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === "ANALYTICS"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-            }`}
-          >
-            <TrendingUp className="w-4 h-4" />
-            <span>
-              {isVi
-                ? "Phân Tích Tăng Trưởng & Insights"
-                : "Course Analytics & Insights"}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {activeTab === "PROGRESS" && (
-        <CourseProgressTableTab
-          isVi={isVi}
-          courses={courses}
-          selectedCourseId={selectedCourseId}
-          onSelectCourseId={setSelectedCourseId}
-          progressSearch={progressSearch}
-          onProgressSearchChange={setProgressSearch}
-          progressStatusFilter={progressStatusFilter}
-          onProgressStatusFilterChange={setProgressStatusFilter}
-          onResetFilters={handleResetProgressFilters}
-          onRefresh={fetchProgress}
-          isLoadingProgress={isLoadingProgress}
-          filteredStudents={filteredStudents}
-          paginatedStudents={paginatedStudents}
-          progressColumns={progressColumns}
-          progressCurrentPage={progressCurrentPage}
-          progressPageSize={progressPageSize}
-          onPageChange={setProgressCurrentPage}
-          onPageSizeChange={setProgressPageSize}
-          progressSortKey={progressSortKey}
-          progressSortOrder={progressSortOrder}
-          onSort={handleSort}
-        />
-      )}
-
-      {activeTab === "ANALYTICS" && (
-        <CourseAnalyticsTab
-          allStudentsProgress={allStudentsProgress}
-          courses={courses}
-          selectedCourseId={selectedCourseId}
-          onSelectCourseId={setSelectedCourseId}
-          isVi={isVi}
-          isTeacher={isTeacher}
-        />
-      )}
+      <CourseProgressTableTab
+        isVi={isVi}
+        courses={courses}
+        selectedCourseId={selectedCourseId}
+        onSelectCourseId={setSelectedCourseId}
+        progressSearch={progressSearch}
+        onProgressSearchChange={setProgressSearch}
+        progressStatusFilter={progressStatusFilter}
+        onProgressStatusFilterChange={setProgressStatusFilter}
+        onResetFilters={handleResetProgressFilters}
+        onRefresh={fetchProgress}
+        isLoadingProgress={isLoadingProgress}
+        filteredStudents={filteredStudents}
+        paginatedStudents={paginatedStudents}
+        progressColumns={progressColumns}
+        progressCurrentPage={progressCurrentPage}
+        progressPageSize={progressPageSize}
+        onPageChange={setProgressCurrentPage}
+        onPageSizeChange={setProgressPageSize}
+        progressSortKey={progressSortKey}
+        progressSortOrder={progressSortOrder}
+        onSort={handleSort}
+      />
     </div>
   );
 }

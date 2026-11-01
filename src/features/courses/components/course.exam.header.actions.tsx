@@ -1,7 +1,8 @@
 // Các thao tác hành động trên header bảng: chọn khóa học và làm mới dữ liệu bài thi khóa học.
 
 import { useMemo } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
 
@@ -76,6 +77,14 @@ export function CourseExamHeaderActions({
       >
         <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
       </button>
+
+      <Link
+        to="/practice/placement-tests"
+        className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs hover:shadow-indigo-500/20 transition-all cursor-pointer shrink-0"
+      >
+        <Sparkles className="w-3.5 h-3.5" />
+        <span>{isVi ? 'Đề thi đầu vào' : 'Placement Tests'}</span>
+      </Link>
     </>
   )
 }

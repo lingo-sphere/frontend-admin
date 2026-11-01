@@ -1,6 +1,8 @@
-import { MeasurementProfilesPage } from '@/features/courses/pages/measurement.profiles.page'
-import { PracticeSpeakingSubmissionsPage, PracticeWritingSubmissionsPage } from '@/features/submissions/pages/practice.submissions.page'
 // Điều hướng trang và kiểm soát quyền truy cập các tính năng Quản trị Admin.
+
+import { PracticeSpeakingSubmissionsPage, PracticeWritingSubmissionsPage } from '@/features/submissions/pages/practice.submissions.page'
+import { PracticeSubmissionReviewPage } from '@/features/submissions/pages/practice.submission.review.page'
+import { CourseTestSessionDetailPage } from '@/features/submissions/pages/course.test.session.detail.page'
 
 import { Navigate, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
@@ -17,13 +19,11 @@ import { VocabularyPage } from '@/features/vocabulary/pages/vocabulary.page'
 
 import { CommunityPage } from '@/features/community/pages/community.page'
 import { PublicDecksPage } from '@/features/vocabulary/pages/public.decks.page'
-import { ProgressPage } from '@/features/progress/pages/progress.page'
 import { PostHogAnalyticsPage } from '@/features/progress/pages/posthog.analytics.page'
 import { BetterStackMonitoringPage } from '@/features/progress/pages/better.stack.monitoring.page'
 import { NotificationsPage } from '@/features/notifications/pages/notifications.page'
 import { SettingsPlansPage } from '@/features/settings/pages/settings.plans.page'
 import { SettingsAiPage } from '@/features/settings/pages/settings.ai.page'
-import { SettingsSystemPage } from '@/features/settings/pages/settings.system.page'
 import { UserProfilePage } from '@/features/users/pages/learner.profile.page'
 import { CourseFormPage } from '@/features/courses/pages/course.form.page'
 import { CourseScoresPage } from '@/features/courses/pages/course.scores.page'
@@ -97,8 +97,7 @@ const pageMap: Record<string, React.ComponentType> = {
   'ai-teacher': SettingsAiPage,
   community: CommunityPage,
   'public-decks': PublicDecksPage,
-  progress: ProgressPage,
-  'measurement-profiles': MeasurementProfilesPage,
+  progress: PostHogAnalyticsPage,
   'analytics-posthog': PostHogAnalyticsPage,
   posthog: PostHogAnalyticsPage,
   'monitoring-betterstack': BetterStackMonitoringPage,
@@ -107,7 +106,6 @@ const pageMap: Record<string, React.ComponentType> = {
   settings: SettingsPlansPage,
   'settings-plans': SettingsPlansPage,
   'settings-ai': SettingsAiPage,
-  'settings-system': SettingsSystemPage,
   'admin-profile': AdminProfilePage,
   'not-found': NotFoundPage,
   'forbidden': ForbiddenPage,
@@ -136,7 +134,7 @@ export function PageRouter() {
     return <ForbiddenPage key={pathname} />
   }
 
-  if (!isAdmin && (['submissions', 'course-submissions', 'practice-speaking-submissions', 'practice-writing-submissions'].includes(activeNavItem) || activeNavItem.startsWith('course-submissions:')) &&
+  if (!isAdmin && (['submissions', 'course-submissions', 'practice-speaking-submissions', 'practice-writing-submissions'].includes(activeNavItem) || activeNavItem.startsWith('course-submissions:') || activeNavItem.startsWith('course-test-session-detail:') || activeNavItem.startsWith('practice-submission-review:')) &&
     currentRole !== 'INSTRUCTOR' && !hasPermission('GET', '/progress/teacher/courses/:courseId/submissions')) {
     return <ForbiddenPage key={pathname} />
   }
@@ -191,7 +189,7 @@ export function PageRouter() {
       }
     }
 
-    if (activeNavItem === 'measurement-profiles' || activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
+    if (activeNavItem === 'admins' || activeNavItem === 'settings' || activeNavItem.startsWith('admin-user-')) {
       return <ForbiddenPage key={pathname} />
     }
   }
@@ -258,6 +256,20 @@ export function PageRouter() {
     const courseId = parts[1]
     const userId = parts[2]
     return <LearnerReminderHistoryPage key={pathname} courseId={courseId} userId={userId} />
+  }
+
+  if (activeNavItem.startsWith('practice-submission-review:')) {
+    const parts = activeNavItem.split(':')
+    const skill = parts[1].toUpperCase() as 'SPEAKING' | 'WRITING'
+    const id = parts[2]
+    return <PracticeSubmissionReviewPage key={pathname} skill={skill} id={id} />
+  }
+
+  if (activeNavItem.startsWith('course-test-session-detail:')) {
+    const parts = activeNavItem.split(':')
+    const courseId = parts[1]
+    const sessionId = parts[2]
+    return <CourseTestSessionDetailPage key={pathname} courseId={courseId} sessionId={sessionId} />
   }
 
   const PageComponent = pageMap[activeNavItem] || NotFoundPage

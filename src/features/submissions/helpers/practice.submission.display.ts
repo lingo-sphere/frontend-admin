@@ -1,4 +1,5 @@
-import type { PracticeSubmission } from '../services/practice.review.service'
+// Định dạng hiển thị điểm số và nhãn loại bài nộp luyện tập.
+import type { PracticeSubmission } from '@/features/submissions/services/practice.review.service'
 
 export function practiceScoreLabel(item: PracticeSubmission, ai = false) {
   const toeic = item.grading_standard === 'TOEIC'

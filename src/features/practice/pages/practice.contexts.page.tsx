@@ -9,7 +9,6 @@ import {
   Input,
   InputNumber,
   Modal,
-  Switch,
   Tag,
   Tooltip,
 } from 'antd'
@@ -25,6 +24,7 @@ import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableRowActions } from '@/components/table.row.actions'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import {
   usePracticeContextsAdmin,
 } from '@/features/practice/hooks/use.practice.contexts'
@@ -235,7 +235,10 @@ export function PracticeContextsPage() {
     }
   }
 
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
   const handleToggleStatus = async (record: PracticeContext, checked: boolean) => {
+    setTogglingId(record._id)
     try {
       await updateContext.mutateAsync({
         id: record._id,
@@ -245,6 +248,8 @@ export function PracticeContextsPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể đổi trạng thái'
       toast.error(msg)
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -263,6 +268,8 @@ export function PracticeContextsPage() {
       title: 'Tên ngữ cảnh',
       key: 'name_en',
       width: 320,
+      sortable: true,
+      sorter: (a, b) => (a.name_en || a.name || '').localeCompare(b.name_en || b.name || '', 'vi'),
       render: (record: PracticeContext) => {
         const en = record.name_en || record.name
         const vi = record.name_vi
@@ -287,7 +294,7 @@ export function PracticeContextsPage() {
                   </span>
                 )}
                 {record.path_string && (
-                  <span className="text-[11px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                  <span className="text-[11px] text-slate-400 truncate w-full min-w-0" title={record.path_string}>
                     {record.path_string}
                   </span>
                 )}
@@ -319,7 +326,7 @@ export function PracticeContextsPage() {
                   </span>
                 )}
                 {record.path_string && (
-                  <span className="text-[10px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                  <span className="text-[10px] text-slate-400 truncate w-full min-w-0" title={record.path_string}>
                     {record.path_string}
                   </span>
                 )}
@@ -350,7 +357,7 @@ export function PracticeContextsPage() {
                 </span>
               )}
               {record.path_string && (
-                <span className="text-[10px] text-slate-400 truncate max-w-xs" title={record.path_string}>
+                <span className="text-[10px] text-slate-400 truncate w-full min-w-0" title={record.path_string}>
                   {record.path_string}
                 </span>
               )}
@@ -363,6 +370,9 @@ export function PracticeContextsPage() {
       title: 'Mã Code',
       key: 'code',
       width: 180,
+      sortable: true,
+      dataIndex: 'code',
+      align: 'center',
       render: (record: PracticeContext) => {
         if (record.level === 0) {
           return (
@@ -389,6 +399,9 @@ export function PracticeContextsPage() {
       title: 'Cấp bậc',
       key: 'level',
       width: 160,
+      sortable: true,
+      dataIndex: 'level',
+      align: 'center',
       render: (record: PracticeContext) => {
         if (record.level === 0) {
           return (
@@ -415,13 +428,14 @@ export function PracticeContextsPage() {
       title: 'Kỹ năng (Domains)',
       key: 'domains',
       width: 200,
+      align: 'center',
       render: (record: PracticeContext) => {
         const domains = record.domains
         if (!domains || domains.length === 0) {
           return <span className="text-xs text-slate-400">Tất cả</span>
         }
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap justify-center gap-1">
             {domains.map((dom) => {
               const matched = DOMAIN_OPTIONS.find((d) => d.value === dom)
               return (
@@ -438,6 +452,8 @@ export function PracticeContextsPage() {
       title: 'Bài tập',
       key: 'total_exercises',
       width: 100,
+      sortable: true,
+      dataIndex: 'total_exercises',
       align: 'center',
       render: (record: PracticeContext) => {
         const val = record.total_exercises || 0
@@ -456,11 +472,13 @@ export function PracticeContextsPage() {
       width: 120,
       align: 'center',
       render: (record: PracticeContext) => (
-        <Switch
+        <TableStatusSwitch
           checked={record.status === 'ACTIVE'}
+          loading={togglingId === record._id}
+          disabled={Boolean(togglingId)}
           checkedChildren="Bật"
           unCheckedChildren="Ẩn"
-          size="small"
+          ariaLabel={`Trạng thái ngữ cảnh ${record.name_vi || record.name_en}`}
           onChange={(checked) => handleToggleStatus(record, checked)}
         />
       ),
@@ -469,7 +487,6 @@ export function PracticeContextsPage() {
       title: 'Thao tác',
       key: 'actions',
       width: 150,
-      fixed: 'right',
       align: 'center',
       render: (record: PracticeContext) => {
         const canAddChild = record.level < 2
@@ -483,13 +500,12 @@ export function PracticeContextsPage() {
             extraActions={
               canAddChild ? (
                 <Tooltip title={`Thêm cấp con (Level ${record.level + 1})`}>
-                  <button
-                    type="button"
+                  <Button
+                    size="small"
+                    icon={<Plus size={14} />}
                     onClick={() => handleOpenCreateModal(record._id)}
-                    className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/60 dark:border-blue-800/60 transition-colors cursor-pointer"
-                  >
-                    <Plus size={14} />
-                  </button>
+                    className="!text-blue-600 !border-blue-200/80 !bg-blue-50/80 hover:!bg-blue-100 hover:!border-blue-300 dark:!bg-blue-950/60 dark:!border-blue-800 dark:!text-blue-400 dark:hover:!bg-blue-900/60 shadow-2xs"
+                  />
                 </Tooltip>
               ) : null
             }
@@ -548,15 +564,14 @@ export function PracticeContextsPage() {
         data={treeData}
         isLoading={isLoading}
         rowKey="_id"
-        scroll={{ x: 1150 }}
         rowClassName={(record) => {
           if (record.level === 0) {
-            return '[&>td]:!bg-slate-100/90 dark:[&>td]:!bg-slate-800/85 hover:[&>td]:!bg-slate-200/80 dark:hover:[&>td]:!bg-slate-700/80 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-purple-600 border-t-2 border-slate-300/80 dark:border-slate-700/80 font-medium'
+            return '[&>td]:!bg-slate-100/90 dark:[&>td]:!bg-slate-800/85 hover:[&>td]:!bg-slate-200/80 dark:hover:[&>td]:!bg-slate-700/80 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-purple-600 border-t-2 border-slate-300/80 dark:border-slate-700/80 font-medium transition-colors duration-150'
           }
           if (record.level === 1) {
-            return '[&>td]:!bg-white dark:[&>td]:!bg-slate-900/95 hover:[&>td]:!bg-blue-50/40 dark:hover:[&>td]:!bg-blue-950/20 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-blue-400 border-t border-slate-200/60 dark:border-slate-800/60'
+            return '[&>td]:!bg-white dark:[&>td]:!bg-slate-900/95 hover:[&>td]:!bg-blue-50/40 dark:hover:[&>td]:!bg-blue-950/20 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-blue-400 border-t border-slate-200/60 dark:border-slate-800/60 transition-colors duration-150'
           }
-          return '[&>td]:!bg-slate-50/70 dark:[&>td]:!bg-slate-950/50 hover:[&>td]:!bg-emerald-50/30 dark:hover:[&>td]:!bg-emerald-950/20 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-emerald-400 border-t border-dashed border-slate-200/60 dark:border-slate-800/60'
+          return '[&>td]:!bg-slate-50/70 dark:[&>td]:!bg-slate-950/50 hover:[&>td]:!bg-emerald-50/30 dark:hover:[&>td]:!bg-emerald-950/20 [&>td:first-child]:!border-l-4 [&>td:first-child]:!border-l-emerald-400 border-t border-dashed border-slate-200/60 dark:border-slate-800/60 transition-colors duration-150'
         }}
         search={searchTerm}
         onSearchChange={setSearchTerm}

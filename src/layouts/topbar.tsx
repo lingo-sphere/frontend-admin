@@ -1,12 +1,15 @@
 // Thanh điều hướng trên cùng của giao diện Quản trị Admin.
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Moon, Sun, Menu, Users } from 'lucide-react'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
-import { notificationService } from '@/features/notifications/services/notification.service'
+import {
+  useNotificationsAdminQuery,
+  useNotificationAdminMutations,
+} from '@/features/notifications/hooks/use.notifications.admin.query'
 import { userService } from '@/features/users/services/user.service'
 import { ConfirmModal } from '@/components/confirm.modal'
 import { GlobalSearchModal } from '@/layouts/global.search.modal'
@@ -29,14 +32,40 @@ export function Topbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [totalLearnersCount, setTotalLearnersCount] = useState<number | null>(null)
   const [avatarError, setAvatarError] = useState(false)
 
   const notificationRef = useRef<HTMLDivElement>(null)
   const userDropdownRef = useRef<HTMLDivElement>(null)
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length
+  const { data: rawNotifications = [] } = useNotificationsAdminQuery()
+  const { markAsRead: markAsReadMutation, markAllAsRead: markAllAsReadMutation } =
+    useNotificationAdminMutations()
+
+  const notifications: AppNotification[] = useMemo(() => {
+    return rawNotifications.map((n) => ({
+      _id: n.id,
+      title: n.title,
+      title_vi: n.title_vi,
+      content: n.content,
+      content_vi: n.content_vi,
+      category: n.notification_category,
+      notification_category: n.notification_category,
+      priority: n.priority,
+      is_read: n.is_read,
+      is_pinned: n.is_pinned,
+      recipient_id: n.recipient_id,
+      recipient_type: n.recipient_type,
+      notification_type: n.notification_type,
+      action_url: n.action_url,
+      created_at: n.created_at,
+    }))
+  }, [rawNotifications])
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.is_read).length,
+    [notifications],
+  )
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -72,15 +101,6 @@ export function Topbar() {
   }, [])
 
   useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const items = await notificationService.getMyNotifications()
-        setNotifications(items || [])
-      } catch {
-        setNotifications([])
-      }
-    }
-
     const loadUserStats = async () => {
       try {
         const analytics = await userService.getSystemAnalytics()
@@ -91,7 +111,6 @@ export function Topbar() {
       }
     }
 
-    loadNotifications()
     loadUserStats()
   }, [])
 
@@ -99,26 +118,14 @@ export function Topbar() {
     i18n.changeLanguage(isVietnamese ? 'en' : 'vi')
   }
 
-  const markAsRead = async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => {
-        const notifId = n._id
-        return notifId === id ? { ...n, is_read: true } : n
-      }),
-    )
-    try {
-      await notificationService.markAsRead(id)
-    } catch {
-    }
+  const markAsRead = (id: string) => {
+    markAsReadMutation.mutate({ id, isRead: true })
   }
 
-  const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-    try {
-      await notificationService.markAllAsRead()
-      toast.success(t('header.markAllSuccess'))
-    } catch {
-    }
+  const markAllAsRead = () => {
+    markAllAsReadMutation.mutate(undefined, {
+      onSuccess: () => toast.success(t('header.markAllSuccess')),
+    })
   }
 
   const goToNotifications = () => {

@@ -11,11 +11,12 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react'
-import { Button, Switch, Tooltip } from 'antd'
+import { Button, Tooltip } from 'antd'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableRowActions } from '@/components/table.row.actions'
 import { CustomSelect, type SelectOption } from '@/components/custom.select'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 
 interface PlacementExamsTableProps {
   exams: ToeicExamItem[]
@@ -107,7 +108,10 @@ export function PlacementExamsTable({
     () => [
       {
         key: 'title',
-        title: isVi ? 'Đề thi & Mã đề' : 'Exam & Code',
+        dataIndex: 'title',
+        title: isVi ? 'Tên đề thi' : 'Exam Title',
+        sortable: true,
+        minWidth: 300,
         align: 'left',
         render: (exam) => {
           const examId = exam._id || exam.id || ''
@@ -116,38 +120,32 @@ export function PlacementExamsTable({
             (examId === active2SkillsExamId || examId === active4SkillsExamId)
 
           return (
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 min-w-0 w-full">
+              <Tooltip title={exam.title} placement="topLeft">
                 <button
                   type="button"
                   onClick={() => onManageQuestions(exam)}
-                  className="font-bold text-xs text-indigo-600 dark:text-indigo-400 hover:underline text-left cursor-pointer"
+                  className="font-bold text-xs text-indigo-600 dark:text-indigo-400 hover:underline text-left cursor-pointer truncate flex-1 min-w-0"
                 >
                   {exam.title}
                 </button>
-                {isActiveOfficial && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                    <ShieldCheck className="w-3 h-3 text-amber-500" />
-                    <span>{isVi ? 'Đang áp dụng' : 'Active Standard'}</span>
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
-                <span>{exam.code ? exam.code : `ID: ${examId}`}</span>
-                {exam.created_at && (
-                  <>
-                    <span>•</span>
-                    <span>{new Date(exam.created_at).toLocaleDateString(isVi ? 'vi-VN' : 'en-US')}</span>
-                  </>
-                )}
-              </div>
+              </Tooltip>
+              {isActiveOfficial && (
+                <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
+                  <ShieldCheck className="w-3 h-3 text-amber-500" />
+                  <span>{isVi ? 'Đang áp dụng' : 'Active Standard'}</span>
+                </span>
+              )}
             </div>
           )
         },
       },
       {
         key: 'skills',
+        dataIndex: 'skills_enabled',
         title: isVi ? 'Kỹ năng' : 'Skills',
+        sortable: true,
+        width: 150,
         align: 'center',
         render: (exam) => {
           const isFourSkills =
@@ -157,12 +155,12 @@ export function PlacementExamsTable({
             (Boolean(exam.title) && exam.title.includes('4 Kỹ Năng'))
 
           return isFourSkills ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 whitespace-nowrap">
               <Sparkles className="w-3 h-3" />
               <span>{isVi ? '4 Kỹ Năng (Full)' : '4 Skills (Full)'}</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
               <Headphones className="w-3 h-3" />
               <span>{isVi ? '2 Kỹ Năng (LR)' : '2 Skills (LR)'}</span>
             </span>
@@ -172,6 +170,7 @@ export function PlacementExamsTable({
       {
         key: 'config',
         title: isVi ? 'Cấu hình' : 'Config',
+        width: 140,
         align: 'center',
         render: (exam) => {
           const qCount =
@@ -195,7 +194,10 @@ export function PlacementExamsTable({
       },
       {
         key: 'passing_score',
+        dataIndex: 'passing_score',
         title: isVi ? 'Điểm chuẩn' : 'Passing Score',
+        sortable: true,
+        width: 130,
         align: 'center',
         render: (exam) => (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
@@ -207,7 +209,10 @@ export function PlacementExamsTable({
       },
       {
         key: 'attempts',
+        dataIndex: 'total_attempts',
         title: isVi ? 'Lượt thi & TB' : 'Attempts & Avg',
+        sortable: true,
+        width: 130,
         align: 'center',
         render: (exam) => (
           <div className="space-y-0.5 text-center">
@@ -222,26 +227,27 @@ export function PlacementExamsTable({
       },
       {
         key: 'status',
+        dataIndex: 'is_published',
         title: isVi ? 'Trạng thái' : 'Status',
+        sortable: true,
+        width: 110,
         align: 'center',
         render: (exam) => (
-          <div className="inline-flex flex-col items-center gap-0.5">
-            <Switch
-              size="small"
-              aria-label={`Xuất bản ${exam.title}`}
-              checked={Boolean(exam.is_published)}
-              disabled={isMutatingPublish}
-              onChange={(checked) => onTogglePublish(exam, checked)}
-            />
-            <span className="text-[10px] text-slate-500 whitespace-nowrap">
-              {exam.is_published ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-            </span>
-          </div>
+          <TableStatusSwitch
+            checked={Boolean(exam.is_published)}
+            disabled={isMutatingPublish}
+            loading={isMutatingPublish}
+            checkedChildren="Bật"
+            unCheckedChildren="Ẩn"
+            ariaLabel={`Xuất bản ${exam.title}`}
+            onChange={(checked) => onTogglePublish(exam, checked)}
+          />
         ),
       },
       {
         key: 'actions',
         title: isVi ? 'Thao tác' : 'Actions',
+        width: 110,
         align: 'center',
         render: (exam) => {
           const examId = exam._id || exam.id || ''
@@ -263,6 +269,7 @@ export function PlacementExamsTable({
                     ghost
                     icon={<Edit3 size={14} />}
                     onClick={() => onManageQuestions(exam)}
+                    className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                   />
                 </Tooltip>
               }
@@ -291,7 +298,7 @@ export function PlacementExamsTable({
                 setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              placeholder={isVi ? 'Tìm tên đề, mã đề, ID...' : 'Search by title, code, ID...'}
+              placeholder={isVi ? 'Tìm kiếm đề thi...' : 'Search exams...'}
               className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
             />
             {searchQuery && (

@@ -1,9 +1,7 @@
-/**
- * @file notification.list.item.tsx
- * @description Component giao diện hiển thị từng dòng thông báo chi tiết trong trung tâm thông báo admin
- */
+// Component giao diện hiển thị từng dòng thông báo chi tiết trong trung tâm thông báo admin.
 
-import { Bell, Pin, PinOff, Check, CheckCheck, Trash2, Users, Sparkles, Crown, User, ExternalLink, AlertTriangle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Bell, Pin, PinOff, Check, CheckCheck, Trash2, Users, Sparkles, Crown, User, ExternalLink, AlertTriangle, Shield, GraduationCap } from 'lucide-react'
 import type { Notification } from '@/features/notifications/data/notifications.data'
 import { formatTimeAgo } from '@/features/notifications/helpers/notification.helper'
 import { Popconfirm } from '@/components/popconfirm'
@@ -41,12 +39,27 @@ function renderAudienceBadge(recipientId?: string) {
       </span>
     )
   }
+  if (recipientId === 'ADMIN' || recipientId === 'ALL_ADMINS' || recipientId.includes('admin')) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+        <Shield className="w-3 h-3" />
+        <span>Quản trị viên</span>
+      </span>
+    )
+  }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
       <User className="w-3 h-3" />
       <span>{recipientId}</span>
     </span>
   )
+}
+
+function renderCategoryIcon(category?: string) {
+  if (category === 'COURSE') return <GraduationCap className="w-4 h-4" />
+  if (category === 'USER' || category === 'AUTH') return <User className="w-4 h-4" />
+  if (category === 'SUBSCRIPTION') return <Crown className="w-4 h-4" />
+  return <Bell className="w-4 h-4" />
 }
 
 function renderPriorityBadge(priority?: string) {
@@ -98,7 +111,7 @@ export function NotificationListItem({
                 : 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20'
           }`}
         >
-          <Bell className="w-4 h-4" />
+          {renderCategoryIcon(notification.notification_category)}
         </div>
 
         <div className="space-y-1.5 flex-1 min-w-0">
@@ -133,10 +146,13 @@ export function NotificationListItem({
               {formatTimeAgo(notification.created_at, isVietnamese)}
             </span>
             {notification.action_url && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+              <Link
+                to={notification.action_url}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline cursor-pointer"
+              >
                 <ExternalLink className="w-3 h-3" />
                 <span className="truncate max-w-xs">{notification.action_url}</span>
-              </span>
+              </Link>
             )}
           </div>
         </div>

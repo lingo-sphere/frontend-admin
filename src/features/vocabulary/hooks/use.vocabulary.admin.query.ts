@@ -11,7 +11,6 @@ import {
 import { vocabAdminKeys } from '@/features/vocabulary/keys/vocabulary.admin.keys'
 import type { LexicalItem, Topic, FlashcardDeck, IpaSymbol } from '@/features/vocabulary/data/vocabulary.data'
 
-// Response type với pagination info
 interface VocabularyWordsResponse {
   items: LexicalItem[]
   total: number
@@ -27,7 +26,6 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams & { page?: nu
     queryFn: async () => {
       const res = await vocabularyService.listVocabulary(params)
 
-      // Extract items và total từ response
       let items: any[] = []
       let total = 0
       let page = 1
@@ -64,7 +62,7 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams & { page?: nu
         word_type: w.word_type || undefined,
         lexical_type: w.lexical_type || 'word',
         cefr_level: w.cefr_level || '',
-        pronunciation: w.pronunciation || undefined,  // ✅ Backend trả về pronunciation
+        pronunciation: w.pronunciation || undefined,
         audio_url_us: w.audio_url_us || undefined,
         audio_url_uk: w.audio_url_uk || undefined,
         syllables: w.syllables || undefined,
@@ -100,7 +98,6 @@ export function useVocabularyTopicsQuery() {
     queryKey: vocabAdminKeys.topics(),
     queryFn: async () => {
       const res = await vocabularyService.getAllTopics()
-      // Handle multiple response formats
       let items: any[] = []
       if (Array.isArray(res)) {
         items = res
@@ -278,11 +275,29 @@ export function useRemoveCardFromDeckMutation() {
 }
 
 export function usePublicDecksQuery() {
-  return useQuery<ApiFlashcardDeck[]>({
+  return useQuery<FlashcardDeck[]>({
     queryKey: vocabAdminKeys.publicDecks(),
     queryFn: async () => {
       const res = await vocabularyService.explorePublicDecks()
-      return res || []
+      return (res || []).map((d: ApiFlashcardDeck) => ({
+        id: d._id,
+        _id: d._id,
+        name: d.name || d.title || 'Bộ thẻ',
+        title: d.title || d.name || 'Bộ thẻ',
+        creator_name: 'LingoSphere Master',
+        name_vi: d.name_vi || d.title || d.name,
+        name_en: d.title || d.name,
+        description: d.description || '',
+        description_vi: d.description_vi || '',
+        topic_id: d.topic_id || undefined,
+        topic_name: d.topic_name || undefined,
+        cefr_level: d.cefr_level || undefined,
+        card_count: d.card_count ?? d.total_cards ?? (d.cards?.length || 0),
+        total_cards: d.total_cards ?? d.card_count ?? (d.cards?.length || 0),
+        visibility: d.visibility || 'PUBLIC',
+        cards: (d.cards as FlashcardDeck['cards']) || [],
+        created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
+      }))
     },
     placeholderData: keepPreviousData,
     staleTime: 0,
@@ -313,7 +328,6 @@ export function useVocabularyIpaSymbolsQuery(symbolType?: string) {
         description_vi: s.description_vi || undefined,
         example_word: s.example_word || undefined,
         example_word_ipa: s.example_word_ipa || undefined,
-        // audio_url = IPA symbol audio, example_audio_url = example word audio
         audio_url: s.audio_url || undefined,
         example_audio_url: s.example_audio_url || undefined,
         related_symbols: s.related_symbols || [],

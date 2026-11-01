@@ -15,11 +15,11 @@ interface SidebarBranchedSubmenuProps {
 
 const PAD = 4
 const ROW_HEIGHT = 34
-const INDENT = 36
-const TRUNK = 14
-const RADIUS = 8
+const INDENT = 32
+const TRUNK = 12
+const RADIUS = 7
 const LINE_WIDTH = 1.5
-const END_X = INDENT - 6
+const END_X = INDENT - 5
 
 const renderChildIcon = (icon?: React.ReactNode | IconSvgElement) => {
   if (!icon) return null
@@ -48,7 +48,7 @@ export function SidebarBranchedSubmenu({
   const activeIndex = children.findIndex((child) => child.id === activeNavItem)
 
   return (
-    <div className="relative box-border ml-2" style={{ height: bodyH }}>
+    <div className="relative box-border ml-1" style={{ height: bodyH }}>
       <svg
         className={`pointer-events-none absolute top-0 left-0 overflow-visible transition-opacity duration-300 ${
           isExpanded ? 'opacity-100' : 'opacity-0'

@@ -185,14 +185,14 @@ export function LearnerExamHistorySection({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-700 dark:text-slate-200 font-bold text-[13px] tracking-wide">
-                    <th className="py-3 px-4 text-center">Bài thi</th>
-                    <th className="py-3 px-4 text-center">Loại đề</th>
-                    <th className="py-3 px-4 text-center">Điểm TOEIC</th>
-                    <th className="py-3 px-4 text-center">Kỹ năng (L / R)</th>
-                    <th className="py-3 px-4 text-center">Độ chính xác</th>
-                    <th className="py-3 px-4 text-center">Thời gian</th>
-                    <th className="py-3 px-4 text-center">Ngày nộp</th>
-                    <th className="py-3 px-4 text-center">Thao tác</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Bài thi</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Loại đề</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Điểm TOEIC</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Kỹ năng (L / R)</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Độ chính xác</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Thời gian</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Ngày nộp</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">

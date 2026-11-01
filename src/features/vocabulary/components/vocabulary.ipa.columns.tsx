@@ -62,6 +62,7 @@ export function getIpaColumns({
       key: "symbol_type",
       title: isVi ? "Loại" : "Type",
       width: "w-[110px]",
+      align: "center",
       sortable: true,
       render: (s) => {
         const typeInfo = s.symbol_type
@@ -86,6 +87,7 @@ export function getIpaColumns({
       key: "cefr",
       title: "CEFR",
       width: "w-[70px]",
+      align: "center",
       sortable: true,
       render: (s) => (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
@@ -143,12 +145,13 @@ export function getIpaColumns({
       key: "related",
       title: isVi ? "Liên quan" : "Related",
       width: "w-[140px]",
+      align: "center",
       render: (s) => {
         if (!s.related_symbols || s.related_symbols.length === 0) {
           return <span className="text-xs text-slate-400">—</span>;
         }
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap justify-center gap-1">
             {s.related_symbols.slice(0, 3).map((rel, idx) => (
               <span
                 key={idx}

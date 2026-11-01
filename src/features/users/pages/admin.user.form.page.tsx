@@ -1,4 +1,4 @@
-// Trang quan tri tao moi va cap nhat tai khoan quan tri vien hoac giang vien.
+// Trang quản trị tạo mới và cập nhật tài khoản quản trị viên hoặc giảng viên.
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
 import { AdminUserAccountForm } from '@/features/users/components/admin.user.account.form'
 import { AdminUserRoleSelector } from '@/features/users/components/admin.user.role.selector'
+import { AdminUserPreviewCard } from '@/features/users/components/admin.user.preview.card'
 import { StickyFormActionBar } from '@/components/sticky.form.action.bar'
 import { queryClient } from '@/config/query.config'
 import { adminUserKeys } from '@/features/users/keys/admin.user.keys'
@@ -123,12 +124,12 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="w-full space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/admins')}
-            className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
+            className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
             type="button"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -139,7 +140,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {isEditing
-                ? 'Cập nhật quyền hạn và trạng thái tài khoản quản trị'
+                ? 'Cập nhật thông tin phân quyền và trạng thái tài khoản quản trị'
                 : 'Khởi tạo tài khoản phân quyền quản trị cho cán bộ / giáo viên'}
             </p>
           </div>
@@ -147,21 +148,36 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <AdminUserAccountForm
-          formData={formData}
-          isEditing={isEditing}
-          showPassword={showPassword}
-          errors={errors}
-          onToggleShowPassword={() => setShowPassword(!showPassword)}
-          onChange={handleFieldChange}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-7 space-y-6">
+            <AdminUserAccountForm
+              formData={formData}
+              isEditing={isEditing}
+              showPassword={showPassword}
+              errors={errors}
+              onToggleShowPassword={() => setShowPassword(!showPassword)}
+              onChange={handleFieldChange}
+            />
 
-        <AdminUserRoleSelector
-          selectedRole={formData.role}
-          selectedStatus={formData.status}
-          onRoleChange={(role) => setFormData((prev) => ({ ...prev, role }))}
-          onStatusChange={(status) => setFormData((prev) => ({ ...prev, status }))}
-        />
+            <AdminUserRoleSelector
+              selectedRole={formData.role}
+              selectedStatus={formData.status}
+              onRoleChange={(role) => setFormData((prev) => ({ ...prev, role }))}
+              onStatusChange={(status) => setFormData((prev) => ({ ...prev, status }))}
+            />
+          </div>
+
+          <div className="lg:col-span-5 lg:sticky lg:top-6">
+            <AdminUserPreviewCard
+              fullName={formData.full_name}
+              email={formData.email}
+              role={formData.role}
+              status={formData.status}
+              editUserId={editUserId}
+              isEditing={isEditing}
+            />
+          </div>
+        </div>
 
         <StickyFormActionBar
           title={formData.full_name || formData.email || (isEditing ? 'Tài khoản' : 'Tài khoản mới')}

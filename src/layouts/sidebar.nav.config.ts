@@ -19,7 +19,6 @@ import {
   Activity01Icon,
   Rocket01Icon,
   AiBrain01Icon,
-  Settings02Icon,
 } from '@hugeicons/core-free-icons'
 import {
   LayoutDashboard,
@@ -27,9 +26,9 @@ import {
   Library,
   BookOpen,
   Activity,
+  BarChart3,
   MessageCircle,
   Layers3,
-  BarChart3,
   Bell,
   Settings2,
   Shield,
@@ -98,6 +97,7 @@ export const navGroups: NavGroup[] = [
           { id: 'courses-list', label: 'Quản lý khóa học', icon: Book02Icon },
           { id: 'course-learners', label: 'Quản lý học viên', icon: UserGroupIcon },
           { id: 'course-exams', label: 'Quản lý bài thi', icon: FileEditIcon },
+          { id: 'placement-tests', label: 'Đề thi đầu vào', icon: Rocket01Icon },
         ],
       },
       {
@@ -138,12 +138,10 @@ export const navGroups: NavGroup[] = [
     label: 'THỐNG KÊ & BÁO CÁO',
     items: [
       {
-        id: 'progress',
+        id: 'analytics',
         icon: BarChart3,
         label: 'Thống kê dữ liệu',
         children: [
-          { id: 'progress', label: 'Phân tích học tập' },
-          { id: 'measurement-profiles', label: 'Hiệu chuẩn đánh giá' },
           { id: 'analytics-posthog', label: 'Phân tích Web' },
           { id: 'monitoring-betterstack', label: 'Giám sát hệ thống' },
         ],
@@ -154,7 +152,7 @@ export const navGroups: NavGroup[] = [
     id: 'system',
     label: 'HỆ THỐNG',
     items: [
-      { id: 'notifications', icon: Bell, label: 'Thông báo', kicker: '8' },
+      { id: 'notifications', icon: Bell, label: 'Thông báo' },
       {
         id: 'settings',
         icon: Settings2,
@@ -162,7 +160,6 @@ export const navGroups: NavGroup[] = [
         children: [
           { id: 'settings-plans', label: 'Gói dịch vụ', icon: Rocket01Icon },
           { id: 'settings-ai', label: 'AI & Mô hình', icon: AiBrain01Icon },
-          { id: 'settings-system', label: 'Hệ thống', icon: Settings02Icon },
         ],
       },
     ],

@@ -39,13 +39,13 @@ export function VocabularyImportHistoryTable({
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-700 dark:text-slate-200 font-bold text-[13px] tracking-wide">
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Tên đợt nhập' : 'Batch Name'}</th>
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Định dạng' : 'Format'}</th>
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Tổng số từ' : 'Total Words'}</th>
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Thành công' : 'Success'}</th>
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Lỗi / Trùng lặp' : 'Errors / Duplicates'}</th>
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Trạng thái' : 'Status'}</th>
-                <th className="py-3 px-3.5 text-center">{isVi ? 'Thời gian' : 'Time'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Tên đợt nhập' : 'Batch Name'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Định dạng' : 'Format'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Tổng số từ' : 'Total Words'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Thành công' : 'Success'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Lỗi / Trùng lặp' : 'Errors / Duplicates'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Trạng thái' : 'Status'}</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">{isVi ? 'Thời gian' : 'Time'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-200">

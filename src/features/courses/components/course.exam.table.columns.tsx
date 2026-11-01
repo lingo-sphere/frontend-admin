@@ -1,8 +1,8 @@
 // Định nghĩa các cột hiển thị cho DataTable quản lý bài thi.
-
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { BookOpen, Clock, AlertCircle, Sparkles } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
+import { TableTextCell } from '@/components/table.text.cell'
 import { TableRowActions } from '@/components/table.row.actions'
 import type { ToeicExamItem } from '@/features/exams/services/exam.service'
 import { getExamTypeBadge } from '@/features/courses/components/course.exam.grid.card'
@@ -26,31 +26,21 @@ export function getCourseExamColumns({
     {
       key: 'exam_info',
       title: isVi ? 'Tên Bài Thi & Đánh Giá' : 'Exam Title & Details',
-      width: '260px',
+      width: '280px',
+      minWidth: 240,
       sortable: true,
-      render: (exam) => {
-        const examId = exam._id
-        return (
-          <div className="space-y-1">
-            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
-              {exam.title}
-            </div>
-            {exam.module_title && (
-              <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium truncate max-w-sm">
-                {exam.module_title}
-              </div>
-            )}
-            <div className="text-[10px] text-slate-400">
-              Mã: <span className="font-mono">{examId}</span>
-            </div>
-          </div>
-        )
-      },
+      render: (exam) => (
+        <TableTextCell
+          text={exam.title}
+          className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm"
+        />
+      ),
     },
     {
       key: 'course',
       title: isVi ? 'Khóa Học Áp Dụng' : 'Applied Course',
       width: '190px',
+      minWidth: 160,
       sortable: true,
       render: (exam) =>
         exam.is_system_placement || exam.type === 'DIAGNOSTIC_TEST' || (!exam.course_id && !exam.course_title) ? (
@@ -59,9 +49,12 @@ export function getCourseExamColumns({
             <span>Toàn Hệ Thống ({exam.skills_enabled === 'ALL' || exam.placement_type === '4SKILLS' ? '4 Kỹ năng' : '2 Kỹ năng'})</span>
           </span>
         ) : exam.course_title ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 whitespace-nowrap">
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 max-w-full min-w-0"
+            title={exam.course_title}
+          >
             <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-            <span className="truncate max-w-[180px]">{exam.course_title}</span>
+            <span className="truncate min-w-0">{exam.course_title}</span>
           </span>
         ) : (
           <span className="text-slate-400 text-xs italic whitespace-nowrap">Toàn hệ thống</span>
@@ -71,6 +64,8 @@ export function getCourseExamColumns({
       key: 'type',
       title: isVi ? 'Loại Bài Thi' : 'Exam Type',
       width: '140px',
+      minWidth: 125,
+      align: 'center',
       render: (exam) => {
         const badge = getExamTypeBadge(exam.type, exam)
         return (
@@ -85,7 +80,8 @@ export function getCourseExamColumns({
     {
       key: 'duration',
       title: isVi ? 'Thời Lượng' : 'Duration',
-      width: '115px',
+      width: '120px',
+      minWidth: 95,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -98,7 +94,8 @@ export function getCourseExamColumns({
     {
       key: 'questions',
       title: isVi ? 'Số Câu / Đánh Giá' : 'Questions / Evaluation',
-      width: '150px',
+      width: '160px',
+      minWidth: 150,
       align: 'center',
       sortable: true,
       render: (exam) => {
@@ -137,7 +134,8 @@ export function getCourseExamColumns({
     {
       key: 'attempts',
       title: isVi ? 'Lượt Thi' : 'Attempts',
-      width: '95px',
+      width: '105px',
+      minWidth: 85,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -149,7 +147,8 @@ export function getCourseExamColumns({
     {
       key: 'score',
       title: isVi ? 'Điểm TB' : 'Avg Score',
-      width: '95px',
+      width: '105px',
+      minWidth: 85,
       align: 'center',
       sortable: true,
       render: (exam) => (
@@ -161,7 +160,8 @@ export function getCourseExamColumns({
     {
       key: 'status',
       title: isVi ? 'Trạng Thái' : 'Status',
-      width: '125px',
+      width: '120px',
+      minWidth: 110,
       align: 'center',
       render: (exam) => {
         const isPublished = Boolean(exam.is_published)
@@ -169,33 +169,23 @@ export function getCourseExamColumns({
         const isOtherUpdating = Boolean(publishingExamId && publishingExamId !== exam._id)
 
         return (
-          <div className="inline-flex flex-col items-center gap-1">
-            <CustomSwitch
-              size="sm"
-              color="emerald"
-              checked={isPublished}
-              loading={isUpdating}
-              disabled={isOtherUpdating}
-              aria-label={isPublished ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-              onChange={() => onTogglePublish(exam)}
-            />
-            <span
-              className={`text-[10.5px] font-semibold transition-colors duration-200 whitespace-nowrap ${
-                isPublished
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-slate-400 dark:text-slate-500'
-              }`}
-            >
-              {isPublished ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
-            </span>
-          </div>
+          <TableStatusSwitch
+            checked={isPublished}
+            loading={isUpdating}
+            disabled={isOtherUpdating}
+            checkedChildren="Bật"
+            unCheckedChildren="Ẩn"
+            ariaLabel={isPublished ? (isVi ? 'Đã xuất bản' : 'Published') : (isVi ? 'Bản nháp' : 'Draft')}
+            onChange={() => onTogglePublish(exam)}
+          />
         )
       },
     },
     {
       key: 'actions',
       title: isVi ? 'Thao Tác' : 'Actions',
-      width: '120px',
+      width: '110px',
+      minWidth: 100,
       align: 'center',
       render: (exam) => {
         const examId = exam._id

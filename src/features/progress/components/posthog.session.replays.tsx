@@ -1,7 +1,4 @@
-/**
- * @file posthog.session.replays.tsx
- * @description Session Replay card grid and pagination controls
- */
+// Danh sách video tua lại phiên học viên và phân trang xem trực quan PostHog.
 
 import { Video, ExternalLink, Clock, Laptop, Play } from 'lucide-react'
 import type { PostHogSessionReplay } from '@/types/api.types'
@@ -61,7 +58,7 @@ export function PostHogSessionReplays({
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
+                  <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate max-w-[140px]" title={rep.session_id}>
                     {rep.session_id}
                   </span>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">

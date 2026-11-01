@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button, ConfigProvider, Image, Segmented, Space, Tag, theme as antdTheme } from 'antd'
 import { AdminTabs } from '@/components/admin.tabs'
-import { CustomSwitch } from '@/components/custom.switch'
+import { TableStatusSwitch } from '@/components/table.status.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
@@ -146,16 +146,16 @@ function ListeningTable({ type }: { type: ListeningType }) {
   }
 
   const columns: IpaColumn<ListeningRecord>[] = [
-    { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', width: 140, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, textAlign: 'left', whiteSpace: 'normal', height: 'auto', lineHeight: '1.3' }} onClick={() => setEditor({ id: row._id, readOnly: true })}><span className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline">{row.title}</span></Button> },
-    { key: 'title_vi', label: isVi ? 'Tiêu đề tiếng Việt' : 'Vietnamese Title', width: 140, filterKind: 'text', initiallyHidden: true },
-    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 110, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
+    { key: 'title', label: isVi ? 'Tiêu đề' : 'Title', width: 200, filterKind: 'text', render: (_, row) => <Button type="link" style={{ padding: 0, textAlign: 'left', whiteSpace: 'normal', height: 'auto', lineHeight: '1.3' }} onClick={() => setEditor({ id: row._id, readOnly: true })}><span className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 hover:underline">{row.title}</span></Button> },
+    { key: 'title_vi', label: isVi ? 'Tiêu đề tiếng Việt' : 'Vietnamese Title', width: 180, filterKind: 'text', initiallyHidden: true },
+    { key: 'context_id', label: isVi ? 'Chủ đề' : 'Context', width: 155, filterKind: 'tree', filterOptions: contextSelectOptions, render: value => contextOptions.find(context => context.value === value)?.label || (isVi ? 'Chưa gán' : 'None') },
     ...(subtype.field ? [{ key: subtype.field, label: isVi ? subtype.label : (subtypeEnLabels[subtype.field] || subtype.label), width: 110, align: 'center' as const, filterKind: 'enum' as const, filterOptions: subtype.values.map(value => ({ value, label: value })) }] : []),
     { key: 'audio_url', label: 'Audio', width: 155, align: 'center', filterKind: 'media', render: (value, row) => value ? <IpaAudioPreview value={value} duration={row.duration_seconds ?? row.audio_duration_seconds} /> : (isVi ? 'Chưa có' : 'None') },
     ...(type !== 'dictation' && type !== 'part2' ? [{ key: 'image_url', label: isVi ? 'Ảnh' : 'Image', width: 70, align: 'center' as const, filterKind: 'media' as const, render: (value: string) => value ? <Image width={52} height={38} loading="lazy" style={{ objectFit: 'cover', borderRadius: 6 }} src={resolveMediaUrl(value)} /> : (isVi ? 'Chưa có' : 'None') }] : []),
     {
       key: type === 'part2' ? 'audio_duration_seconds' : 'duration_seconds',
       label: isVi ? 'Thời lượng' : 'Duration',
-      width: 65,
+      width: 120,
       align: 'center',
       filterKind: 'number',
       render: (_, row) => {
@@ -174,14 +174,14 @@ function ListeningTable({ type }: { type: ListeningType }) {
         return <span className="text-slate-400">—</span>
       }
     },
-    ...(type === 'dictation' ? [{ key: 'total_segments', label: isVi ? 'Số đoạn' : 'Segments', width: 65, align: 'center' as const, filterKind: 'number' as const }, { key: 'total_words', label: isVi ? 'Số từ' : 'Words', width: 65, align: 'center' as const, filterKind: 'number' as const }, { key: 'total_blanks', label: isVi ? 'Số ô trống' : 'Blanks', width: 65, align: 'center' as const, filterKind: 'number' as const }] : []),
+    ...(type === 'dictation' ? [{ key: 'total_segments', label: isVi ? 'Số đoạn' : 'Segments', width: 110, align: 'center' as const, filterKind: 'number' as const }, { key: 'total_words', label: isVi ? 'Số từ' : 'Words', width: 110, align: 'center' as const, filterKind: 'number' as const }, { key: 'total_blanks', label: isVi ? 'Số ô trống' : 'Blanks', width: 110, align: 'center' as const, filterKind: 'number' as const }] : []),
     { key: 'transcript', label: 'Transcript', width: 200, filterKind: 'text', ellipsis: true, initiallyHidden: true },
-    { key: 'cefr_level', label: 'CEFR', width: 55, align: 'center', filterKind: 'enum', filterOptions: levels },
-    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 65, align: 'center', filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(option => option.value === value)?.label || value },
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 90, align: 'center', filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <div className="inline-flex flex-col items-center gap-0.5"><CustomSwitch size="sm" color="emerald" aria-label={`Xuất bản ${row.title}`} checked={row.status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} onChange={value => { void changeStatus(row, value) }} /><span className="text-[10px] text-slate-500 whitespace-nowrap">{statuses.find(option => option.value === row.status)?.label}</span></div> },
-    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, align: 'center', filterKind: 'date', initiallyHidden: true, render: value => value ? <div className="font-mono text-xs leading-tight text-center text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
-    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, align: 'center', filterKind: 'date', render: value => value ? <div className="font-mono text-xs leading-tight text-center text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
-    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, align: 'center', render: (_, row) => <IpaRowActions onView={() => setEditor({ id: row._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: row._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(row)} trash={trash} loading={working === row._id} disabled={Boolean(working)} isVi={isVi} /> },
+    { key: 'cefr_level', label: 'CEFR', width: 90, align: 'center', filterKind: 'enum', filterOptions: levels },
+    { key: 'difficulty_level', label: isVi ? 'Độ khó' : 'Difficulty', width: 105, align: 'center', filterKind: 'enum', filterOptions: difficulties, render: value => difficulties.find(option => option.value === value)?.label || value },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 110, align: 'center', filterKind: 'enum', filterOptions: statuses, render: (_, row) => trash ? <Tag>{isVi ? 'Đã xóa' : 'Deleted'}</Tag> : <TableStatusSwitch checked={row.status === 'PUBLISHED'} disabled={Boolean(working)} loading={working === row._id} checkedChildren="Bật" unCheckedChildren="Ẩn" ariaLabel={`Xuất bản ${row.title}`} onChange={value => { void changeStatus(row, value) }} /> },
+    { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 115, align: 'center', filterKind: 'date', initiallyHidden: true, render: value => value ? <div className="font-mono text-xs leading-tight text-center text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
+    { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 115, align: 'center', filterKind: 'date', render: value => value ? <div className="font-mono text-xs leading-tight text-center text-slate-600 dark:text-slate-400"><div className="whitespace-nowrap font-medium">{dayjs(value).format('DD/MM/YYYY')}</div><div className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{dayjs(value).format('HH:mm')}</div></div> : '—' },
+    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 95, align: 'center', render: (_, row) => <IpaRowActions onView={() => setEditor({ id: row._id, readOnly: true })} onEdit={!trash ? () => setEditor({ id: row._id, readOnly: false }) : undefined} onDeleteOrRestore={() => removeOrRestore(row)} trash={trash} loading={working === row._id} disabled={Boolean(working)} isVi={isVi} /> },
   ]
 
   return <>

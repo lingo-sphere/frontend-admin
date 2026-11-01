@@ -19,6 +19,7 @@ export function getAdminUserColumns({
   return [
     {
       key: 'user',
+      sortable: true,
       title: isVi ? 'Quản trị viên / Giảng viên' : 'Admin / Teacher',
       render: (user) => (
         <div
@@ -36,18 +37,21 @@ export function getAdminUserColumns({
               user.name.slice(0, 2).toUpperCase()
             )}
           </div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate" title={user.name}>
               {user.name}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">{user.email}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={user.email}>{user.email}</p>
           </div>
         </div>
       ),
     },
     {
       key: 'role',
+      sortable: true,
       title: isVi ? 'Vai trò phân quyền' : 'Assigned Role',
+      width: 170,
+      align: 'center',
       render: (user) => (
         <>
           {user.role === 'ADMIN' ? (
@@ -66,7 +70,9 @@ export function getAdminUserColumns({
     },
     {
       key: 'phone',
+      sortable: true,
       title: isVi ? 'Số điện thoại' : 'Phone Number',
+      align: 'center',
       render: (user) => (
         <span className="text-xs text-slate-600 dark:text-slate-400">
           {user.phone || '—'}
@@ -76,13 +82,16 @@ export function getAdminUserColumns({
     {
       key: 'created_at',
       title: isVi ? 'Ngày tạo' : 'Created At',
+      width: 150,
       align: 'center',
       sortable: true,
       render: (user) => renderTableDate(user.created_at),
     },
     {
       key: 'status',
+      sortable: true,
       title: isVi ? 'Trạng thái' : 'Status',
+      width: 120,
       align: 'center',
       render: (user) => (
         <span
@@ -99,7 +108,9 @@ export function getAdminUserColumns({
     {
       key: 'actions',
       title: isVi ? 'Thao tác' : 'Actions',
+      width: 100,
       align: 'center',
+      fixed: false,
       render: (user) => (
         <TableRowActions
           isVi={isVi}
@@ -118,7 +129,11 @@ export function getAdminUserColumns({
               tooltipTitle={user.is_active ? (isVi ? 'Khóa tài khoản' : 'Block account') : (isVi ? 'Mở khóa tài khoản' : 'Unblock account')}
               danger={user.is_active}
               icon={user.is_active ? <Ban size={14} /> : <CheckCircle size={14} />}
-              className={!user.is_active ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400' : undefined}
+              className={
+                user.is_active
+                  ? '!text-rose-600 !border-rose-200/80 !bg-rose-50/80 hover:!bg-rose-100 hover:!border-rose-300 dark:!bg-rose-950/60 dark:!border-rose-800 dark:!text-rose-400 dark:hover:!bg-rose-900/60 shadow-2xs'
+                  : '!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs'
+              }
               onConfirm={() => onOpenStatusModal(user, user.is_active ? 'ban' : 'unban')}
             />
           }

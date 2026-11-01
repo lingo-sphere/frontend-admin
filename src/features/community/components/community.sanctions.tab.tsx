@@ -103,12 +103,15 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'sanction_type',
+      dataIndex: 'sanction_type',
       title: t('community.colSanctionType'),
+      sortable: true,
+      align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         const kicked = isKickedActive(member.kicked_cooldown_until)
         return (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col items-center gap-1">
             {member.is_banned && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 w-fit">
                 <Ban className="w-3 h-3" />
@@ -149,7 +152,10 @@ export function CommunitySanctionsTab({
     },
     {
       key: 'duration',
+      dataIndex: 'expires_at',
       title: t('community.colDuration'),
+      sortable: true,
+      align: 'center',
       render: (member) => {
         const muted = isMutedActive(member.muted_until)
         const kicked = isKickedActive(member.kicked_cooldown_until)
@@ -190,7 +196,7 @@ export function CommunitySanctionsTab({
                 <Tooltip title={t('community.unban')}>
                   <Button
                     size="small"
-                    className="!text-emerald-600 !border-emerald-200 hover:!border-emerald-500 hover:!text-emerald-500"
+                    className="!text-emerald-600 !border-emerald-200/80 !bg-emerald-50/80 hover:!bg-emerald-100 hover:!border-emerald-300 dark:!bg-emerald-950/60 dark:!border-emerald-800 dark:!text-emerald-400 dark:hover:!bg-emerald-900/60 shadow-2xs"
                     icon={<CheckCircle className="w-3.5 h-3.5" />}
                   />
                 </Tooltip>
@@ -209,7 +215,7 @@ export function CommunitySanctionsTab({
                 <Tooltip title={t('community.unmute')}>
                   <Button
                     size="small"
-                    className="!text-amber-600 !border-amber-200 hover:!border-amber-500 hover:!text-amber-500"
+                    className="!text-amber-600 !border-amber-200/80 !bg-amber-50/80 hover:!bg-amber-100 hover:!border-amber-300 dark:!bg-amber-950/60 dark:!border-amber-800 dark:!text-amber-400 dark:hover:!bg-amber-900/60 shadow-2xs"
                     icon={<CheckCircle className="w-3.5 h-3.5" />}
                   />
                 </Tooltip>

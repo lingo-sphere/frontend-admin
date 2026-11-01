@@ -44,6 +44,27 @@ export const progressService = {
   getCourseTestSession(courseId: string, sessionId: string): Promise<CourseTestSession> {
     return api.get(`/progress/teacher/courses/${courseId}/test-sessions/${sessionId}`, undefined, CourseTestSessionSchema)
   },
+
+  reviewCourseTestSession(
+    courseId: string,
+    sessionId: string,
+    payload: {
+      score?: number
+      teacher_feedback?: string
+      question_reviews?: Array<{
+        question_index: number
+        is_correct?: boolean
+        score?: number
+        feedback?: string
+      }>
+    }
+  ): Promise<CourseTestSession> {
+    return api.post<CourseTestSession>(
+      `/progress/teacher/courses/${encodeURIComponent(courseId)}/test-sessions/${encodeURIComponent(sessionId)}/review`,
+      payload,
+      CourseTestSessionSchema
+    )
+  },
   async getCourseStudentsProgress(courseId: string): Promise<CourseStudentsProgressResponse> {
     return api.get<CourseStudentsProgressResponse>(
       API_CONFIG.ENDPOINTS.PROGRESS.STUDENTS(courseId),

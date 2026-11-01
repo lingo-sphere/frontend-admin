@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { navGroups, type NavGroup, type NavItem } from '@/layouts/sidebar.nav.config'
 import { SidebarNavGroup } from '@/layouts/sidebar.nav.group'
+import { useNotificationsAdminQuery } from '@/features/notifications/hooks/use.notifications.admin.query'
 
 interface SidebarProps {
   mobile?: boolean
@@ -21,6 +22,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useAdminLayout()
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+
+  const { data: notifications = [] } = useNotificationsAdminQuery()
+  const unreadNotificationCount = useMemo(
+    () => notifications.filter((n) => !n.is_read).length,
+    [notifications],
+  )
 
   const [expandedItem, setExpandedItem] = useState<string | null>(() => {
     for (const group of navGroups) {
@@ -117,20 +124,19 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return false
         case 'toeic-tests':
         case 'placement-tests':
-          return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE')
+          return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE') || hasModulePermission('COURSES')
         case 'community':
           return hasModulePermission('COMMUNITY')
+        case 'analytics':
         case 'progress':
         case 'analytics-posthog':
         case 'monitoring-betterstack':
           return hasModulePermission('PROGRESS')
         case 'notifications':
           return hasModulePermission('NOTIFICATIONS')
-        case 'measurement-profiles':
         case 'settings':
         case 'settings-plans':
         case 'settings-ai':
-        case 'settings-system':
           return false
         default:
           return true
@@ -182,9 +188,17 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         const itemLabel =
           itemTranslated && itemTranslated !== itemKey ? itemTranslated : item.label
 
+        const isNotif = item.id === 'notifications'
+        const dynamicKicker = isNotif
+          ? unreadNotificationCount > 0
+            ? String(unreadNotificationCount)
+            : undefined
+          : item.kicker
+
         return {
           ...item,
           label: itemLabel,
+          kicker: dynamicKicker,
           children: item.children?.map((child) => {
             const childKey =
               child.id === 'progress' && item.id === 'progress'
@@ -220,7 +234,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           </div>
           <div
             className={`min-w-0 flex-1 overflow-hidden transition-[max-width,opacity,margin] duration-300 ease-in-out ${
-              sidebarCollapsed && !mobile ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-[170px] opacity-100 ml-3'
+              sidebarCollapsed && !mobile ? 'max-w-0 opacity-0 ml-0 pointer-events-none' : 'max-w-[170px] opacity-100 ml-2.5'
             }`}
           >
             <p className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
@@ -290,7 +304,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   return (
     <aside
-      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 transition-[width] duration-300 ease-in-out will-change-[width] shadow-sm dark:shadow-none px-3.5 py-4 ${
+      className={`hidden md:flex fixed inset-y-0 left-0 z-30 flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 transition-[width] duration-300 ease-in-out will-change-[width] shadow-sm dark:shadow-none px-2.5 py-4 ${
         sidebarCollapsed ? 'w-[72px]' : 'w-64'
       }`}
     >

@@ -1,5 +1,6 @@
 // Dialog chấm điểm và viết nhận xét phúc khảo bài nộp của học viên.
 
+import { useState } from "react";
 import {
   X,
   Volume2,
@@ -13,6 +14,7 @@ import {
   PenLine,
   MessageSquare,
   Lightbulb,
+  AlertCircle,
 } from "lucide-react";
 import { NumberInput } from "@/components/number.input";
 import type { SkillSubmissionItem } from "@/features/progress/services/progress.service";
@@ -39,6 +41,7 @@ export function CourseSubmissionReviewDialog({
   onClose,
   onSaveReview,
 }: CourseSubmissionReviewDialogProps) {
+  const [audioError, setAudioError] = useState(false);
   const isSpeaking = submission.skill === "SPEAKING";
   const canReview = submission.ai_score != null &&
     ['AI_GRADED', 'TEACHER_REVIEWED'].includes(submission.status);
@@ -99,12 +102,21 @@ export function CourseSubmissionReviewDialog({
                       <span>Bản ghi âm bài nói:</span>
                     </span>
                   </div>
-                  <audio
-                    controls
-                    className="w-full h-9 rounded-lg"
-                    src={resolveMediaUrl(submission.audio_url)}
-                    preload="metadata"
-                  />
+                  {audioError ? (
+                    <div className="p-3 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-start gap-2 text-xs text-amber-800 dark:text-amber-300">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                      <span>Không thể tải hoặc phát tệp ghi âm do tệp không tồn tại hoặc đã hết hạn lưu trữ tạm.</span>
+                    </div>
+                  ) : (
+                    <audio
+                      key={submission.audio_url}
+                      controls
+                      className="w-full h-9 rounded-lg"
+                      src={resolveMediaUrl(submission.audio_url)}
+                      preload="metadata"
+                      onError={() => setAudioError(true)}
+                    />
+                  )}
                 </div>
               ) : (
                 <p className="text-xs text-slate-400 italic">

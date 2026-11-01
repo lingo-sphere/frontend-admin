@@ -1,7 +1,4 @@
-/**
- * @file posthog.analytics.page.tsx
- * @description Trang quản trị PostHogAnalyticsPage trong giao diện Admin
- */
+// Trang quản trị phân tích sản phẩm và hành vi học viên PostHog trong giao diện Admin.
 
 import { useState, useEffect, useCallback } from 'react'
 import { progressService } from '@/features/progress/services/progress.service'

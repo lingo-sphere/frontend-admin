@@ -4,19 +4,28 @@ import { useTranslation } from 'react-i18next'
 import { Search, Plus, RotateCcw, Layers3 } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { toast } from '@/store/toast.store'
-import type { FlashcardDeck } from '@/features/vocabulary/services/vocabulary.service'
+import type { FlashcardDeck } from '@/features/vocabulary/data/vocabulary.data'
 import { PublicDeckCard } from '@/features/vocabulary/components/public.deck.card'
 import { CreatePublicDeckModal } from '@/features/vocabulary/components/create.public.deck.modal'
+import { DeckCardsManagerModal } from '@/features/vocabulary/components/deck.cards.manager.modal'
+import { DeckFormModal } from '@/features/vocabulary/components/deck.form.modal'
 import { Pagination } from '@/components/pagination'
-import { usePublicDecksQuery, useCreatePublicDeckMutation } from '@/features/vocabulary/hooks/use.vocabulary.admin.query'
+import {
+  usePublicDecksQuery,
+  useCreatePublicDeckMutation,
+  useDeleteDeckMutation,
+  useVocabularyTopicsQuery,
+} from '@/features/vocabulary/hooks/use.vocabulary.admin.query'
 
 export function PublicDecksPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
   const { data: decks = [], isLoading, refetch } = usePublicDecksQuery()
+  const { data: topics = [] } = useVocabularyTopicsQuery()
   const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const { mutateAsync: createDeckMutate } = useCreatePublicDeckMutation()
+  const deleteDeckMutation = useDeleteDeckMutation()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -24,6 +33,21 @@ export function PublicDecksPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
+
+  const [selectedDeckForCards, setSelectedDeckForCards] = useState<FlashcardDeck | null>(null)
+  const [isCardsManagerOpen, setIsCardsManagerOpen] = useState(false)
+  const [selectedDeckForEdit, setSelectedDeckForEdit] = useState<FlashcardDeck | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const handleManageCards = (deck: FlashcardDeck) => {
+    setSelectedDeckForCards(deck)
+    setIsCardsManagerOpen(true)
+  }
+
+  const handleEditDeck = (deck: FlashcardDeck) => {
+    setSelectedDeckForEdit(deck)
+    setIsEditModalOpen(true)
+  }
 
   const handleCreateDeck = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,19 +60,27 @@ export function PublicDecksPage() {
         is_public: true,
         is_system: true,
         total_cards: 0,
-      } as Partial<FlashcardDeck>)
-      toast.success('Tạo bộ thẻ công khai thành công!')
+      })
+      toast.success(isVi ? 'Tạo bộ thẻ công khai thành công!' : 'Public deck created successfully')
       setShowAddModal(false)
       setNewTitle('')
       setNewDesc('')
+      refetch()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Tạo bộ thẻ thất bại'
+      const msg = err instanceof Error ? err.message : (isVi ? 'Tạo bộ thẻ thất bại' : 'Failed to create deck')
       toast.error(msg)
     }
   }
 
-  const handleDeleteDeck = (_id: string) => {
-    toast.success('Đã xóa bộ thẻ công khai thành công!')
+  const handleDeleteDeck = async (id: string) => {
+    try {
+      await deleteDeckMutation.mutateAsync(id)
+      toast.success(isVi ? 'Đã xóa bộ thẻ công khai thành công!' : 'Public deck deleted successfully')
+      refetch()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : (isVi ? 'Xóa bộ thẻ thất bại' : 'Failed to delete deck')
+      toast.error(msg)
+    }
   }
 
   const filteredDecks = useMemo(() => {
@@ -136,7 +168,13 @@ export function PublicDecksPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {paginatedDecks.map((deck: FlashcardDeck) => (
-            <PublicDeckCard key={deck._id} deck={deck} onDelete={handleDeleteDeck} />
+            <PublicDeckCard
+              key={deck._id || deck.id}
+              deck={deck}
+              onClick={handleManageCards}
+              onEdit={handleEditDeck}
+              onDelete={handleDeleteDeck}
+            />
           ))}
         </div>
       )}
@@ -165,6 +203,31 @@ export function PublicDecksPage() {
         description={newDesc}
         onDescriptionChange={setNewDesc}
         onSubmit={handleCreateDeck}
+      />
+
+      <DeckCardsManagerModal
+        isOpen={isCardsManagerOpen}
+        onClose={() => {
+          setIsCardsManagerOpen(false)
+          setSelectedDeckForCards(null)
+          refetch()
+        }}
+        deck={selectedDeckForCards}
+      />
+
+      <DeckFormModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedDeckForEdit(null)
+        }}
+        deck={selectedDeckForEdit}
+        topics={topics}
+        onSuccess={() => {
+          setIsEditModalOpen(false)
+          setSelectedDeckForEdit(null)
+          refetch()
+        }}
       />
     </div>
   )
