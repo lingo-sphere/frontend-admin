@@ -4,7 +4,7 @@
  */
 
 import { BarChart3, Eye } from 'lucide-react'
-import type { PostHogAnalyticsData } from '@/types/api.types'
+import type { PostHogAnalyticsData, PostHogTopEvent, PostHogTopPage } from '@/types/api.types'
 
 interface PostHogTopChartsProps {
   data: PostHogAnalyticsData | null
@@ -26,8 +26,8 @@ export function PostHogTopCharts({ data, isVi }: PostHogTopChartsProps) {
         </div>
 
         <div className="space-y-3">
-          {(data?.top_events || []).map((ev, index) => {
-            const maxCount = Math.max(...(data?.top_events?.map((e) => e.count) || [1]), 1)
+          {(data?.top_events || []).map((ev: PostHogTopEvent, index: number) => {
+            const maxCount = Math.max(...(data?.top_events?.map((e: PostHogTopEvent) => e.count) || [1]), 1)
             const percent = Math.min(100, Math.round((ev.count / maxCount) * 100))
             return (
               <div key={index} className="space-y-1.5">
@@ -61,7 +61,7 @@ export function PostHogTopCharts({ data, isVi }: PostHogTopChartsProps) {
         </div>
 
         <div className="space-y-3">
-          {(data?.top_pages || []).map((pg, index) => (
+          {(data?.top_pages || []).map((pg: PostHogTopPage, index: number) => (
             <div
               key={index}
               className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60"

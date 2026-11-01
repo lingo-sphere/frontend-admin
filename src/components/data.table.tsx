@@ -400,8 +400,8 @@ export function DataTable<T extends object>({
     if (expandable?.defaultExpandedRowKeys) return [...expandable.defaultExpandedRowKeys]
     return []
   })
-  const [collapsingKeys, setCollapsingKeys] = useState<Set<React.Key>>(new Set())
-  const collapseTimeoutsRef = useRef<Map<React.Key, ReturnType<typeof setTimeout>>>(new Map())
+  const [newlyExpandedKeys, setNewlyExpandedKeys] = useState<Set<React.Key>>(new Set())
+  const enterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (expandable?.expandedRowKeys) {
@@ -411,8 +411,9 @@ export function DataTable<T extends object>({
 
   useEffect(() => {
     return () => {
-      collapseTimeoutsRef.current.forEach((t) => clearTimeout(t))
-      collapseTimeoutsRef.current.clear()
+      if (enterTimeoutRef.current) {
+        clearTimeout(enterTimeoutRef.current)
+      }
     }
   }, [])
 
@@ -433,7 +434,7 @@ export function DataTable<T extends object>({
     }
   }, [effectiveData, expandable?.defaultExpandAllRows, effectiveRowKey])
 
-  const getDescendantKeys = useCallback(
+  const getVisibleDescendantKeys = useCallback(
     (rec: unknown): React.Key[] => {
       const keys: React.Key[] = []
       if (!rec || typeof rec !== 'object') return keys
@@ -443,13 +444,15 @@ export function DataTable<T extends object>({
           const childKey = effectiveRowKey(child as T)
           if (childKey) {
             keys.push(childKey)
-            keys.push(...getDescendantKeys(child))
+            if (internalExpandedRowKeys.includes(childKey)) {
+              keys.push(...getVisibleDescendantKeys(child))
+            }
           }
         }
       }
       return keys
     },
-    [effectiveRowKey]
+    [effectiveRowKey, internalExpandedRowKeys]
   )
 
   const handleToggleExpand = useCallback(
@@ -458,38 +461,21 @@ export function DataTable<T extends object>({
       const key = effectiveRowKey(record)
 
       if (isCurrentlyExpanded) {
-        const descendantKeys = getDescendantKeys(record)
-        setCollapsingKeys((prev) => new Set([...prev, ...descendantKeys]))
-
-        if (collapseTimeoutsRef.current.has(key)) {
-          clearTimeout(collapseTimeoutsRef.current.get(key)!)
+        setInternalExpandedRowKeys((prev) => prev.filter((k) => k !== key))
+        if (expandable?.onExpand) {
+          expandable.onExpand(false, record)
         }
-
-        const timeoutId = setTimeout(() => {
-          setInternalExpandedRowKeys((prev) => prev.filter((k) => k !== key))
-          setCollapsingKeys((prev) => {
-            const next = new Set(prev)
-            descendantKeys.forEach((k) => next.delete(k))
-            return next
-          })
-          collapseTimeoutsRef.current.delete(key)
-          if (expandable?.onExpand) {
-            expandable.onExpand(false, record)
-          }
-        }, 200)
-
-        collapseTimeoutsRef.current.set(key, timeoutId)
       } else {
-        if (collapseTimeoutsRef.current.has(key)) {
-          clearTimeout(collapseTimeoutsRef.current.get(key)!)
-          collapseTimeoutsRef.current.delete(key)
+        const newlyVisible = getVisibleDescendantKeys(record)
+        if (newlyVisible.length > 0) {
+          setNewlyExpandedKeys(new Set(newlyVisible))
+          if (enterTimeoutRef.current) {
+            clearTimeout(enterTimeoutRef.current)
+          }
+          enterTimeoutRef.current = setTimeout(() => {
+            setNewlyExpandedKeys(new Set())
+          }, 350)
         }
-        const descendantKeys = getDescendantKeys(record)
-        setCollapsingKeys((prev) => {
-          const next = new Set(prev)
-          descendantKeys.forEach((k) => next.delete(k))
-          return next
-        })
 
         setInternalExpandedRowKeys((prev) => (prev.includes(key) ? prev : [...prev, key]))
         if (expandable?.onExpand) {
@@ -497,7 +483,7 @@ export function DataTable<T extends object>({
         }
       }
     },
-    [effectiveRowKey, getDescendantKeys, expandable]
+    [effectiveRowKey, expandable, getVisibleDescendantKeys]
   )
 
   const mergedExpandable = useMemo(() => {
@@ -533,27 +519,20 @@ export function DataTable<T extends object>({
             />
           )
         }
-        const rowKeyVal = effectiveRowKey(props.record)
-        const isRowCollapsing = collapsingKeys.has(rowKeyVal)
-        const isVisualExpanded = props.expanded && !isRowCollapsing
 
         return (
           <button
             type="button"
             onClick={(e) => handleToggleExpand(props.record, props.expanded, e)}
-            className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded border transition-all duration-200 cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none shadow-2xs ${
-              isVisualExpanded
+            className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded border transition-all duration-150 cursor-pointer select-none mr-2 shrink-0 align-middle leading-none focus:outline-none shadow-2xs active:scale-90 ${
+              props.expanded
                 ? 'bg-indigo-50 border-indigo-300 text-indigo-600 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300'
                 : 'bg-white border-slate-300 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'
             }`}
-            aria-label={isVisualExpanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Mở rộng' : 'Expand')}
+            aria-label={props.expanded ? (isVi ? 'Thu gọn' : 'Collapse') : (isVi ? 'Mở rộng' : 'Expand')}
           >
-            <span
-              className={`inline-flex items-center justify-center transition-transform duration-200 ease-out ${
-                isVisualExpanded ? 'rotate-90 scale-95' : 'rotate-0 scale-100'
-              }`}
-            >
-              {isVisualExpanded ? (
+            <span className="inline-flex items-center justify-center transition-transform duration-150 ease-out">
+              {props.expanded ? (
                 <Minus size={11} strokeWidth={2.5} className="shrink-0" />
               ) : (
                 <Plus size={11} strokeWidth={2.5} className="shrink-0" />
@@ -563,7 +542,7 @@ export function DataTable<T extends object>({
         )
       },
     }
-  }, [expandable, internalExpandedRowKeys, effectiveRowKey, collapsingKeys, handleToggleExpand, isVi])
+  }, [expandable, internalExpandedRowKeys, handleToggleExpand, isVi])
 
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>(() =>
     columns.map((col) => ({
@@ -691,12 +670,20 @@ export function DataTable<T extends object>({
         ) as (keyof T & (string | number)) | undefined
 
         const minW = col.minWidth ? normalizeWidth(col.minWidth) : undefined
+        const hasSorter = Boolean(isSortable)
+        const hasFilter = Boolean(col.filterKind)
+        const autoMinW = hasSorter && hasFilter ? 95 : (hasSorter || hasFilter ? 80 : 65)
+        const numMinW = typeof minW === 'number' ? minW : parseInt(String(minW || ''), 10) || 0
+        const numNormW = typeof normalizedW === 'number' ? normalizedW : parseInt(String(normalizedW || ''), 10) || 0
+        const effectiveHeaderMinW = Math.max(numMinW, numNormW, autoMinW)
+
+        const effectiveAlign = col.align || (isActionsCol ? 'center' : 'left')
         const antdCol: ColumnType<T> = {
           key: col.key,
           dataIndex: effectiveDataIndex,
           title: col.title ?? col.label ?? col.key,
           width: normalizedW,
-          align: col.align || (isActionsCol ? 'center' : 'left'),
+          align: effectiveAlign,
           ellipsis: col.ellipsis,
           fixed: isStickyRight ? 'right' : isStickyLeft ? 'left' : undefined,
           sortDirections: isSortable ? ['ascend', 'descend', 'ascend'] : undefined,
@@ -705,7 +692,7 @@ export function DataTable<T extends object>({
             style: {
               textAlign: 'center',
               whiteSpace: 'nowrap',
-              ...(minW ? { minWidth: minW } : normalizedW ? { minWidth: normalizedW } : {}),
+              minWidth: effectiveHeaderMinW,
             },
             className: '!text-center !whitespace-nowrap',
           }),
@@ -780,7 +767,7 @@ export function DataTable<T extends object>({
     if (hasFixedColumn) {
       return { x: Math.max(calculatedColumnsWidth, 1000) }
     }
-    return undefined
+    return { x: Math.max(calculatedColumnsWidth, 1000) }
   }, [scroll, hasFixedColumn, calculatedColumnsWidth])
 
   const totalCount = pagination ? pagination.totalItems : total ?? effectiveData.length
@@ -891,7 +878,7 @@ export function DataTable<T extends object>({
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_.ant-table-column-title]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-column-title]:!inline-flex [&_.ant-table-thead_.ant-table-column-title]:!flex-none [&_.ant-table-thead_.ant-table-column-title]:!w-auto [&_.ant-table-thead_.ant-table-column-title]:!text-center [&_.ant-table-thead_.ant-table-filter-column]:!flex [&_.ant-table-thead_.ant-table-filter-column]:!w-full [&_.ant-table-thead_.ant-table-filter-column]:!justify-center [&_.ant-table-thead_.ant-table-filter-column]:!items-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!flex [&_.ant-table-thead_.ant-table-column-sorters]:!w-full [&_.ant-table-thead_.ant-table-column-sorters]:!justify-center [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1.5 [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-column-sorter]:!inline-flex [&_.ant-table-thead_.ant-table-column-sorter]:!flex-none [&_.ant-table-thead_.ant-table-column-sorter]:!m-0 [&_.ant-table-thead_.ant-table-column-sorter]:!self-center [&_.ant-table-thead_.ant-table-filter-trigger]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
+        <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs [&_.ant-table]:!bg-transparent [&_.ant-table-container]:!bg-transparent [&_.ant-table-thead_th]:!text-center [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-column-title]:!whitespace-nowrap [&_.ant-table-thead_.ant-table-column-title]:!inline-flex [&_.ant-table-thead_.ant-table-column-title]:!flex-none [&_.ant-table-thead_.ant-table-column-title]:!w-auto [&_.ant-table-thead_.ant-table-filter-column]:!inline-flex [&_.ant-table-thead_.ant-table-filter-column]:!w-auto [&_.ant-table-thead_.ant-table-filter-column]:!items-center [&_.ant-table-thead_.ant-table-filter-column]:!gap-1 [&_.ant-table-thead_.ant-table-column-sorters]:!inline-flex [&_.ant-table-thead_.ant-table-column-sorters]:!w-auto [&_.ant-table-thead_.ant-table-column-sorters]:!items-center [&_.ant-table-thead_.ant-table-column-sorters]:!gap-1 [&_.ant-table-thead_th]:!px-2.5 [&_.ant-table-thead_.ant-table-column-sorters]:!cursor-pointer [&_.ant-table-thead_.ant-table-column-sorters]:!select-none [&_.ant-table-thead_.ant-table-column-sorter]:!inline-flex [&_.ant-table-thead_.ant-table-column-sorter]:!flex-none [&_.ant-table-thead_.ant-table-column-sorter]:!m-0 [&_.ant-table-thead_.ant-table-column-sorter]:!self-center [&_.ant-table-thead_.ant-table-filter-trigger]:!shrink-0 [&_.ant-table-thead_.ant-table-filter-trigger]:!m-0 [&_.ant-table-row-indent]:!float-none [&_.ant-table-row-indent]:!inline-block [&_.ant-table-row-indent]:!align-middle [&_.ant-table-cell-with-append]:!align-middle [&_.ant-table-cell-with-append>div]:!inline-flex [&_.ant-table-cell-with-append>div]:!align-middle [&_.ant-table-row-expand-icon]:!float-none [&_.ant-table-row-expand-icon]:!inline-flex [&_.ant-table-row-expand-icon]:!items-center [&_.ant-table-row-expand-icon]:!justify-center [&_.ant-table-row-expand-icon]:!align-middle [&_.ant-table-row-expand-icon]:!m-0 [&_.ant-table-row-expand-icon]:!mr-2">
           <ConfigProvider theme={{ components: { Table: densityTokens[density] } }}>
             <Table<T>
               rowKey={effectiveRowKey}
@@ -910,8 +897,8 @@ export function DataTable<T extends object>({
                     ? rowClassName
                     : ''
                 const rowKeyVal = effectiveRowKey(record)
-                const isCollapsing = collapsingKeys.has(rowKeyVal)
-                return `${userClass} ${isCollapsing ? 'ant-table-row-collapsing' : ''}`.trim()
+                const isNewlyExpanded = newlyExpandedKeys.has(rowKeyVal)
+                return `${userClass} ${isNewlyExpanded ? 'ant-table-row-newly-expanded' : ''}`.trim()
               }}
               expandable={mergedExpandable}
               sortDirections={['ascend', 'descend', 'ascend']}

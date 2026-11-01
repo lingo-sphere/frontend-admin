@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useTranslation } from 'react-i18next'
 import { navGroups, type NavGroup, type NavItem } from '@/layouts/sidebar.nav.config'
 import { SidebarNavGroup } from '@/layouts/sidebar.nav.group'
+import { useNotificationsAdminQuery } from '@/features/notifications/hooks/use.notifications.admin.query'
 
 interface SidebarProps {
   mobile?: boolean
@@ -21,6 +22,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useAdminLayout()
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+
+  const { data: notifications = [] } = useNotificationsAdminQuery()
+  const unreadNotificationCount = useMemo(
+    () => notifications.filter((n) => !n.is_read).length,
+    [notifications],
+  )
 
   const [expandedItem, setExpandedItem] = useState<string | null>(() => {
     for (const group of navGroups) {
@@ -180,9 +187,17 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         const itemLabel =
           itemTranslated && itemTranslated !== itemKey ? itemTranslated : item.label
 
+        const isNotif = item.id === 'notifications'
+        const dynamicKicker = isNotif
+          ? unreadNotificationCount > 0
+            ? String(unreadNotificationCount)
+            : undefined
+          : item.kicker
+
         return {
           ...item,
           label: itemLabel,
+          kicker: dynamicKicker,
           children: item.children?.map((child) => {
             const childKey =
               child.id === 'progress' && item.id === 'progress'

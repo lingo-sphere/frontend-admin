@@ -223,7 +223,7 @@ export function NotificationsPage() {
         <StatCard
           title={isVietnamese ? 'Tổng Thông Báo' : 'Total Notifications'}
           value={stats.total.toLocaleString()}
-          subtitle={isVietnamese ? 'Thông báo đã phát trong hệ thống' : 'Total notifications sent'}
+          subtitle={isVietnamese ? 'Thông báo hệ thống cho quản trị' : 'Admin system notifications'}
           icon={Bell}
           color="indigo"
           trend={stats.total > 0 ? `${stats.total}` : undefined}
@@ -233,7 +233,7 @@ export function NotificationsPage() {
         <StatCard
           title={isVietnamese ? 'Chưa Đọc' : 'Unread'}
           value={stats.unread.toLocaleString()}
-          subtitle={isVietnamese ? 'Chờ học viên mở xem' : 'Pending learner view'}
+          subtitle={isVietnamese ? 'Thông báo quản trị chưa đọc' : 'Unread admin notifications'}
           icon={AlertCircle}
           color="rose"
           trend={stats.unread > 0 ? `${stats.unread}` : undefined}
@@ -275,8 +275,22 @@ export function NotificationsPage() {
 
       <div className="space-y-3">
         {paginatedNotifications.length === 0 ? (
-          <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
-            Không có thông báo nào phù hợp với bộ lọc hiện tại
+          <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 flex flex-col items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+              <Bell className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {notifications.length === 0
+                ? (isVietnamese ? 'Hòm thư thông báo quản trị viên trống' : 'No admin notifications')
+                : (isVietnamese ? 'Không có thông báo nào phù hợp với bộ lọc hiện tại' : 'No notifications match current filter')}
+            </p>
+            {notifications.length === 0 && (
+              <p className="text-xs text-slate-400 max-w-sm">
+                {isVietnamese
+                  ? 'Hiện chưa có cảnh báo hệ thống hoặc tin nhắn mới nào gửi tới quản trị viên.'
+                  : 'No system alerts or new messages for administrators at this time.'}
+              </p>
+            )}
           </div>
         ) : (
           paginatedNotifications.map((notif) => (

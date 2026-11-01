@@ -76,19 +76,19 @@ function SymbolsTable() {
   const audioLabelsEn = ['Phoneme Audio', 'Phoneme US Audio', 'Phoneme UK Audio', 'Example Audio', 'Example US Audio', 'Example UK Audio']
 
   const columns: IpaColumn<IpaSymbolRecord>[] = [
-    { key: 'symbol', label: isVi ? 'Ký hiệu IPA' : 'IPA Symbol', width: 95, filterKind: 'text', render: value => <strong className="font-mono text-base text-indigo-600 dark:text-indigo-400">/{value}/</strong> },
+    { key: 'symbol', label: isVi ? 'Ký hiệu IPA' : 'IPA Symbol', width: 110, filterKind: 'text', render: value => <strong className="font-mono text-base text-indigo-600 dark:text-indigo-400">/{value}/</strong> },
     { key: 'symbol_type', label: isVi ? 'Loại âm' : 'Type', width: 110, filterKind: 'enum', filterOptions: types, render: value => types.find(type => type.value === value)?.label || value },
     { key: 'description_vi', label: isVi ? 'Mô tả tiếng Việt' : 'Vietnamese Description', width: 200, ellipsis: true, filterKind: 'text', initiallyHidden: true },
     { key: 'description_en', label: isVi ? 'Mô tả tiếng Anh' : 'English Description', width: 200, ellipsis: true, filterKind: 'text', initiallyHidden: true },
-    { key: 'example_word', label: isVi ? 'Từ ví dụ' : 'Example Word', width: 110, filterKind: 'text' },
-    { key: 'example_word_ipa', label: isVi ? 'Phiên âm ví dụ' : 'Example IPA', width: 110, filterKind: 'text' },
+    { key: 'example_word', label: isVi ? 'Từ ví dụ' : 'Example Word', width: 125, filterKind: 'text' },
+    { key: 'example_word_ipa', label: isVi ? 'Phiên âm ví dụ' : 'Example IPA', width: 125, filterKind: 'text' },
     { key: 'related_symbols', label: isVi ? 'Âm liên quan' : 'Related Symbols', width: 120, filterKind: 'text', initiallyHidden: true, render: values => ((values || []) as string[]).map(value => `/${value}/`).join(', ') },
-    { key: 'cefr_min_level', label: 'CEFR', width: 55, filterKind: 'enum', filterOptions: levels },
+    { key: 'cefr_min_level', label: 'CEFR', width: 90, filterKind: 'enum', filterOptions: levels },
     ...ipaAudioFields.map((field, index): IpaColumn<IpaSymbolRecord> => ({ key: field, label: isVi ? audioLabelsVi[index] : audioLabelsEn[index], width: 155, filterKind: 'media', render: value => audio(value), initiallyHidden: index !== 0 })),
-    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 100, align: 'center', filterKind: 'enum', filterOptions: symbolStatuses, render: (_, record) => <TableStatusSwitch checked={record.status === 'ACTIVE'} loading={working === record.id} disabled={Boolean(working)} checkedChildren="Bật" unCheckedChildren="Ẩn" ariaLabel={`Trạng thái âm /${record.symbol}/`} onChange={active => { void toggle(record, active) }} /> },
+    { key: 'status', label: isVi ? 'Trạng thái' : 'Status', width: 110, align: 'center', filterKind: 'enum', filterOptions: symbolStatuses, render: (_, record) => <TableStatusSwitch checked={record.status === 'ACTIVE'} loading={working === record.id} disabled={Boolean(working)} checkedChildren="Bật" unCheckedChildren="Ẩn" ariaLabel={`Trạng thái âm /${record.symbol}/`} onChange={active => { void toggle(record, active) }} /> },
     { key: 'created_at', label: isVi ? 'Ngày tạo' : 'Created At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
     { key: 'updated_at', label: isVi ? 'Cập nhật' : 'Updated At', width: 105, filterKind: 'date', render: date, initiallyHidden: true },
-    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 85, render: (_, record) => <IpaRowActions onView={() => setEditor({ id: record.id, readOnly: true })} onEdit={() => setEditor({ id: record.id, readOnly: false })} isVi={isVi} /> },
+    { key: 'actions', label: isVi ? 'Thao tác' : 'Actions', width: 95, render: (_, record) => <IpaRowActions onView={() => setEditor({ id: record.id, readOnly: true })} onEdit={() => setEditor({ id: record.id, readOnly: false })} isVi={isVi} /> },
   ]
 
   return <>

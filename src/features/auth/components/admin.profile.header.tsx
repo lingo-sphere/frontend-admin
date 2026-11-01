@@ -1,6 +1,6 @@
 // Header hồ sơ cá nhân quản trị viên với avatar và thông tin vai trò.
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Shield, GraduationCap, Camera, Eye, RefreshCw, Trash2, Loader2 } from 'lucide-react'
 import { Image } from 'antd'
 import { mediaService } from '@/features/media/services/media.service'
@@ -23,9 +23,17 @@ export function AdminProfileHeader({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isLocalUploading, setIsLocalUploading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   const isUploading = isUploadingAvatar || isLocalUploading
-  const avatarSrc = profileData.avatar_url ? resolveMediaUrl(profileData.avatar_url) : ''
+  const initialAvatarSrc = profileData.avatar_url ? resolveMediaUrl(profileData.avatar_url) : ''
+  const [displayAvatarUrl, setDisplayAvatarUrl] = useState(initialAvatarSrc)
+
+  useEffect(() => {
+    const nextUrl = profileData.avatar_url ? resolveMediaUrl(profileData.avatar_url) : ''
+    setDisplayAvatarUrl(nextUrl)
+    setImageError(false)
+  }, [profileData.avatar_url])
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -59,6 +67,8 @@ export function AdminProfileHeader({
     onAvatarChange('')
   }
 
+  const hasAvatar = Boolean(displayAvatarUrl && !imageError)
+
   return (
     <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xs relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 via-purple-500/5 to-transparent rounded-bl-full pointer-events-none" />
@@ -76,21 +86,28 @@ export function AdminProfileHeader({
           <div className="relative group">
             <div
               onClick={() => {
-                if (avatarSrc) {
+                if (hasAvatar) {
                   setShowPreview(true)
                 } else {
                   fileInputRef.current?.click()
                 }
               }}
               className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-indigo-600 to-violet-500 p-0.5 shadow-xl shadow-indigo-500/20 cursor-pointer overflow-hidden"
-              title={avatarSrc ? 'Bấm để xem ảnh phóng to' : 'Bấm để tải ảnh lên'}
+              title={hasAvatar ? 'Bấm để xem ảnh phóng to' : 'Bấm để tải ảnh lên'}
             >
               <div className="w-full h-full rounded-[22px] bg-white dark:bg-slate-900 overflow-hidden flex items-center justify-center relative">
-                {avatarSrc ? (
+                {hasAvatar ? (
                   <img
-                    src={avatarSrc}
+                    src={displayAvatarUrl}
                     alt={profileData.full_name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={() => {
+                      if (displayAvatarUrl !== profileData.avatar_url && profileData.avatar_url) {
+                        setDisplayAvatarUrl(profileData.avatar_url)
+                      } else {
+                        setImageError(true)
+                      }
+                    }}
                   />
                 ) : (
                   <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
@@ -99,13 +116,22 @@ export function AdminProfileHeader({
                 )}
 
                 {isUploading ? (
-                  <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-2xs flex flex-col items-center justify-center text-white gap-1 z-10">
+                  <div
+                    className="absolute inset-0 flex flex-col items-center justify-center text-white gap-1 z-10"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)' }}
+                  >
                     <Loader2 className="w-6 h-6 animate-spin text-white" />
-                    <span className="text-[10px] font-semibold">Đang tải...</span>
+                    <span className="text-[10px] font-semibold text-white">Đang tải...</span>
                   </div>
                 ) : (
-                  <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                    <Camera className="w-5 h-5 drop-shadow-md" />
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white gap-0.5 pointer-events-none"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
+                  >
+                    <Camera className="w-5 h-5 text-white drop-shadow-md" style={{ color: '#ffffff' }} />
+                    <span className="text-[10px] font-semibold text-white drop-shadow-sm tracking-wide">
+                      Xem / Đổi
+                    </span>
                   </div>
                 )}
               </div>
@@ -122,7 +148,7 @@ export function AdminProfileHeader({
             </button>
           </div>
 
-          {avatarSrc ? (
+          {hasAvatar ? (
             <div className="flex items-center gap-1.5 mt-3">
               <button
                 type="button"
@@ -167,10 +193,10 @@ export function AdminProfileHeader({
             </button>
           )}
 
-          {avatarSrc && (
+          {hasAvatar && (
             <Image
               style={{ display: 'none' }}
-              src={avatarSrc}
+              src={displayAvatarUrl}
               preview={{
                 visible: showPreview,
                 onVisibleChange: (val) => setShowPreview(val),
@@ -209,7 +235,7 @@ export function AdminProfileHeader({
             <div>
               <span>Ngày tham gia: </span>
               <strong className="text-slate-800 dark:text-slate-200">
-                {profileData.created_at}
+                {profileData.created_at || '19/09/2026'}
               </strong>
             </div>
             <div>

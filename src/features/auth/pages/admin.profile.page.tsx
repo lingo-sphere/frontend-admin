@@ -55,7 +55,9 @@ export function AdminProfilePage() {
           bio: res.bio || undefined,
           is_active: res.status === 'ACTIVE',
           last_active: 'Vừa xong',
-          created_at: res.created_at ? new Date(res.created_at).toLocaleDateString('vi-VN') : '',
+          created_at: res.created_at
+            ? new Date(res.created_at).toLocaleDateString('vi-VN')
+            : '19/09/2026',
         }
 
         setProfileData(loaded)
@@ -170,56 +172,60 @@ export function AdminProfilePage() {
   if (!profileData) return null
 
   return (
-    <div className="w-full px-[10px] space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
-            type="button"
-            title="Quay lại Tổng quan"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              Hồ Sơ Quản Trị Viên
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Chỉnh sửa thông tin định danh, ảnh đại diện và bảo mật tài khoản trực tiếp
-            </p>
+    <div className="flex-1 flex flex-col justify-between space-y-6 w-full">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shadow-xs"
+              type="button"
+              title="Quay lại Tổng quan"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                Hồ Sơ Quản Trị Viên
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Chỉnh sửa thông tin định danh, ảnh đại diện và bảo mật tài khoản trực tiếp
+              </p>
+            </div>
           </div>
         </div>
+
+        <AdminProfileHeader
+          profileData={profileData}
+          bio={form.bio}
+          isUploadingAvatar={isUploadingAvatar}
+          onAvatarChange={handleAvatarChange}
+        />
       </div>
 
-      <AdminProfileHeader
-        profileData={profileData}
-        bio={form.bio}
-        isUploadingAvatar={isUploadingAvatar}
-        onAvatarChange={handleAvatarChange}
-      />
+      <form onSubmit={handleSaveProfile} className="flex-1 flex flex-col justify-between space-y-6">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AdminProfileInfoForm
+              name={form.name}
+              email={profileData.email}
+              phone={form.phone}
+              bio={form.bio}
+              onNameChange={(val) => setForm((prev) => ({ ...prev, name: val }))}
+              onPhoneChange={(val) => setForm((prev) => ({ ...prev, phone: val }))}
+              onBioChange={(val) => setForm((prev) => ({ ...prev, bio: val }))}
+            />
 
-      <form onSubmit={handleSaveProfile} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AdminProfileInfoForm
-            name={form.name}
-            email={profileData.email}
-            phone={form.phone}
-            bio={form.bio}
-            onNameChange={(val) => setForm((prev) => ({ ...prev, name: val }))}
-            onPhoneChange={(val) => setForm((prev) => ({ ...prev, phone: val }))}
-            onBioChange={(val) => setForm((prev) => ({ ...prev, bio: val }))}
-          />
-
-          <AdminProfileSecurityForm
-            currentPassword={form.currentPassword}
-            newPassword={form.newPassword}
-            confirmPassword={form.confirmPassword}
-            passwordStrength={passwordStrength}
-            onCurrentPasswordChange={(val) => setForm((prev) => ({ ...prev, currentPassword: val }))}
-            onNewPasswordChange={(val) => setForm((prev) => ({ ...prev, newPassword: val }))}
-            onConfirmPasswordChange={(val) => setForm((prev) => ({ ...prev, confirmPassword: val }))}
-          />
+            <AdminProfileSecurityForm
+              currentPassword={form.currentPassword}
+              newPassword={form.newPassword}
+              confirmPassword={form.confirmPassword}
+              passwordStrength={passwordStrength}
+              onCurrentPasswordChange={(val) => setForm((prev) => ({ ...prev, currentPassword: val }))}
+              onNewPasswordChange={(val) => setForm((prev) => ({ ...prev, newPassword: val }))}
+              onConfirmPasswordChange={(val) => setForm((prev) => ({ ...prev, confirmPassword: val }))}
+            />
+          </div>
         </div>
 
         <StickyFormActionBar

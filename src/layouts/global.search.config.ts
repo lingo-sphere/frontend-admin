@@ -1,7 +1,4 @@
-/**
- * @file global.search.config.ts
- * @description Định nghĩa danh mục tìm kiếm toàn cục, phím tắt và chỉ mục các trang quản trị
- */
+// Định nghĩa danh mục tìm kiếm toàn cục, phím tắt và chỉ mục các trang quản trị.
 
 import {
   LayoutDashboard,

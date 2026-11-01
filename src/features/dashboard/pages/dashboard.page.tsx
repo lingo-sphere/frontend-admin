@@ -294,7 +294,7 @@ export function DashboardPage() {
 
       <DashboardRecentActivity
         activities={analytics?.recent_activities}
-        onViewAll={() => navigate('/progress')}
+        onViewAll={() => navigate('/users')}
         onSelectUser={(userId) => navigate(`/users/${userId}`)}
         isVietnamese={isVietnamese}
       />

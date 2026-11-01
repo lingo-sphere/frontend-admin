@@ -1,14 +1,10 @@
-/**
- * @file vocabulary.data.ts
- * @description Mã nguồn thành phần vocabulary-data.ts
- */
+// Định nghĩa kiểu dữ liệu và giao diện cấu trúc cho mô-đun từ vựng và bộ thẻ flashcard.
 
 export interface LexicalItem {
   id: string
   word: string
   word_lowercase?: string
   slug?: string
-  // word_type = part_of_speech (ở cấp Meaning, không phải LexicalItem)
   word_type?: string
   lexical_type?: 'word' | 'phrase' | 'phrasal_verb' | 'idiom' | 'collocation' | string
   cefr_level?: string
@@ -26,11 +22,10 @@ export interface LexicalItem {
   primary_meaning_vi?: string
   meanings_count?: number
   examples_count?: number
-  // Optional detailed meanings (từ detail API)
   meanings?: Array<{
     meaning_order: number
     part_of_speech: string
-    definition_en?: string  // Backend vẫn trả về cho compatibility
+    definition_en?: string
     definition_vi: string
     short_meaning_vi?: string
     examples?: Array<{ sentence_en: string; sentence_vi?: string }>
@@ -101,6 +96,7 @@ export interface FlashcardDeck {
   total_cards?: number
   total_studied?: number
   total_users?: number
+  enrolled_count?: number
   avg_mastery_percent?: number
   rating_average?: number
   rating_count?: number

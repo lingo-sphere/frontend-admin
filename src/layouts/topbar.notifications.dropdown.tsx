@@ -1,6 +1,7 @@
 // Danh sách thông báo dạng popover trên thanh điều hướng topbar.
 
 import type { RefObject } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Bell } from 'lucide-react'
 import type { AppNotification } from '@/types/api.types'
@@ -30,6 +31,7 @@ export function TopbarNotificationsDropdown({
   isVietnamese,
 }: TopbarNotificationsDropdownProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   return (
     <div className="relative" ref={notificationRef}>
@@ -88,7 +90,13 @@ export function TopbarNotificationsDropdown({
                         ? 'bg-indigo-50 dark:bg-indigo-950/30'
                         : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
                     }`}
-                    onClick={() => onMarkAsRead(notifId)}
+                    onClick={() => {
+                      onMarkAsRead(notifId)
+                      if (notif.action_url) {
+                        navigate(notif.action_url)
+                        onToggleOpen()
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-xs font-semibold text-slate-900 dark:text-slate-200 line-clamp-1">

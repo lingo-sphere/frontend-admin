@@ -181,38 +181,40 @@ export function CommunityMessagesTable({
     {
       key: 'sender',
       title: t('community.colSender'),
-      width: '230px',
+      width: 280,
       render: (msg) => (
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200 overflow-hidden shrink-0">
-            {msg.sender_avatar ? (
-              <img
-                src={resolveMediaUrl(msg.sender_avatar)}
-                alt={msg.sender_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              msg.sender_name.charAt(0).toUpperCase()
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 min-w-0">
+        <div className="w-full flex items-center justify-between gap-3 pr-2">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200 overflow-hidden shrink-0 shadow-2xs">
+              {msg.sender_avatar ? (
+                <img
+                  src={resolveMediaUrl(msg.sender_avatar)}
+                  alt={msg.sender_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                msg.sender_name.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
               <span
-                className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate min-w-0"
+                className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate block min-w-0"
                 title={msg.sender_name}
               >
                 {msg.sender_name}
               </span>
-              <span
-                className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${getBadgeStyle(
-                  msg.sender_badge
-                )}`}
-              >
-                {msg.sender_badge}
+              <span className="text-[11px] text-slate-400 font-mono block">
+                ID: {msg.sender_id.slice(-6)}
               </span>
             </div>
-            <span className="text-[11px] text-slate-400 font-mono">
-              ID: {msg.sender_id.slice(-6)}
+          </div>
+          <div className="w-20 shrink-0 flex justify-center">
+            <span
+              className={`w-full py-0.5 rounded text-[10px] font-bold border text-center ${getBadgeStyle(
+                msg.sender_badge
+              )}`}
+            >
+              {msg.sender_badge}
             </span>
           </div>
         </div>
@@ -221,8 +223,9 @@ export function CommunityMessagesTable({
     {
       key: 'content',
       title: t('community.colContent'),
+      minWidth: '320px',
       render: (msg) => (
-        <div className="max-w-md">
+        <div className="max-w-xl pl-4">
           {msg.is_deleted ? (
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-rose-500 dark:text-rose-400">

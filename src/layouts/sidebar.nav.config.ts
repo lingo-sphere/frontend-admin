@@ -26,9 +26,9 @@ import {
   Library,
   BookOpen,
   Activity,
+  BarChart3,
   MessageCircle,
   Layers3,
-  BarChart3,
   Bell,
   Settings2,
   Shield,
@@ -153,7 +153,7 @@ export const navGroups: NavGroup[] = [
     id: 'system',
     label: 'HỆ THỐNG',
     items: [
-      { id: 'notifications', icon: Bell, label: 'Thông báo', kicker: '8' },
+      { id: 'notifications', icon: Bell, label: 'Thông báo' },
       {
         id: 'settings',
         icon: Settings2,

@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { BetterStackMonitoringData } from '@/types/api.types'
+import type { BetterStackMonitoringData, ServiceHealthItem } from '@/types/api.types'
 import { MonitoringHeroBanner } from '@/features/progress/components/monitoring.hero.banner'
 import { MonitoringLogsTable } from '@/features/progress/components/monitoring.logs.table'
 import { MonitoringServicesGrid } from '@/features/progress/components/monitoring.services.grid'
@@ -71,7 +71,7 @@ export function BetterStackMonitoringTab({
   const totalLogs = pagination.total || 0
 
   const filteredServices = useMemo(() => {
-    return services.filter((s) => {
+    return services.filter((s: ServiceHealthItem) => {
       if (filterType === 'ALL') return true
       if (filterType === 'MICROSERVICES') return s.type !== 'INFRA'
       if (filterType === 'INFRA') return s.type === 'INFRA'
