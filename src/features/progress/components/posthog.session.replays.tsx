@@ -1,7 +1,4 @@
-/**
- * @file posthog.session.replays.tsx
- * @description Session Replay card grid and pagination controls
- */
+// Danh sách video tua lại phiên học viên và phân trang xem trực quan PostHog.
 
 import { Video, ExternalLink, Clock, Laptop, Play } from 'lucide-react'
 import type { PostHogSessionReplay } from '@/types/api.types'

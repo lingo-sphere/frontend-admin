@@ -127,6 +127,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           return hasPermission('GET', '/exams') || hasModulePermission('EXAMS') || hasModulePermission('PRACTICE') || hasModulePermission('COURSES')
         case 'community':
           return hasModulePermission('COMMUNITY')
+        case 'analytics':
         case 'progress':
         case 'analytics-posthog':
         case 'monitoring-betterstack':

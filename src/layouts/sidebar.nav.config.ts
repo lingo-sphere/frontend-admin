@@ -138,11 +138,10 @@ export const navGroups: NavGroup[] = [
     label: 'THỐNG KÊ & BÁO CÁO',
     items: [
       {
-        id: 'progress',
+        id: 'analytics',
         icon: BarChart3,
         label: 'Thống kê dữ liệu',
         children: [
-          { id: 'progress', label: 'Phân tích học tập' },
           { id: 'analytics-posthog', label: 'Phân tích Web' },
           { id: 'monitoring-betterstack', label: 'Giám sát hệ thống' },
         ],

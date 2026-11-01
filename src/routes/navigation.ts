@@ -91,7 +91,7 @@ export function navItemToPath(navItem: string): string {
   }
   if (navItem === 'community') return '/community'
   if (navItem === 'public-decks') return '/public-decks'
-  if (navItem === 'progress') return '/progress'
+  if (navItem === 'progress') return '/analytics/posthog'
   if (navItem === 'analytics-posthog' || navItem === 'posthog') return '/analytics/posthog'
   if (navItem === 'monitoring-betterstack' || navItem === 'betterstack') return '/monitoring/betterstack'
   if (navItem === 'notifications') return '/notifications'
@@ -208,7 +208,7 @@ export function pathToNavItem(pathname: string): string {
   if (cleanPath === '/practice/placement-tests' || cleanPath === '/placement-tests') return 'placement-tests'
   if (cleanPath === '/community') return 'community'
   if (cleanPath === '/public-decks') return 'public-decks'
-  if (cleanPath === '/progress') return 'progress'
+  if (cleanPath === '/progress') return 'analytics-posthog'
   if (cleanPath === '/analytics/posthog' || cleanPath === '/posthog') return 'analytics-posthog'
   if (cleanPath === '/monitoring/betterstack' || cleanPath === '/monitoring-betterstack' || cleanPath === '/betterstack') return 'monitoring-betterstack'
   if (cleanPath === '/notifications') return 'notifications'

@@ -19,7 +19,6 @@ import { VocabularyPage } from '@/features/vocabulary/pages/vocabulary.page'
 
 import { CommunityPage } from '@/features/community/pages/community.page'
 import { PublicDecksPage } from '@/features/vocabulary/pages/public.decks.page'
-import { ProgressPage } from '@/features/progress/pages/progress.page'
 import { PostHogAnalyticsPage } from '@/features/progress/pages/posthog.analytics.page'
 import { BetterStackMonitoringPage } from '@/features/progress/pages/better.stack.monitoring.page'
 import { NotificationsPage } from '@/features/notifications/pages/notifications.page'
@@ -98,7 +97,7 @@ const pageMap: Record<string, React.ComponentType> = {
   'ai-teacher': SettingsAiPage,
   community: CommunityPage,
   'public-decks': PublicDecksPage,
-  progress: ProgressPage,
+  progress: PostHogAnalyticsPage,
   'analytics-posthog': PostHogAnalyticsPage,
   posthog: PostHogAnalyticsPage,
   'monitoring-betterstack': BetterStackMonitoringPage,
