@@ -609,7 +609,7 @@ export function CourseTestSessionDetailPage({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 max-h-40 overflow-y-auto p-1.5">
+              <div className="flex flex-wrap items-center gap-2 max-h-44 overflow-y-auto px-2 py-2.5">
                 {questionStats.statuses.map((item) => {
                   const isActive = activeQuestionIndex === item.index
                   return (
@@ -619,7 +619,7 @@ export function CourseTestSessionDetailPage({
                       onClick={() => handleScrollToQuestion(item.index)}
                       className={`w-8 h-8 rounded-xl font-mono text-xs font-bold flex items-center justify-center transition-all duration-200 cursor-pointer ${
                         isActive
-                          ? '!border-2 !border-indigo-600 dark:!border-indigo-400 ring-2 ring-indigo-500/40 shadow-sm scale-110 z-10'
+                          ? 'border-2 border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-500/40 shadow-sm z-10'
                           : 'border'
                       } ${
                         item.isCorrect
