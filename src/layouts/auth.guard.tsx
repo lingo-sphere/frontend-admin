@@ -1,10 +1,11 @@
 // Component giao diện AuthGuard phục vụ khu vực Quản trị Admin.
-
 import { useEffect, useState, type ReactNode } from 'react'
+import { useLocation, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { LoginPage } from '@/features/auth/pages/login.page'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
+  const location = useLocation()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const user = useAuthStore((state) => state.user)
   const initAuth = useAuthStore((state) => state.initAuth)
@@ -27,8 +28,23 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!isAuthenticated) {
+  const isLoginPage = location.pathname === '/login'
+
+  if (isLoginPage) {
+    if (isAuthenticated) {
+      const searchParams = new URLSearchParams(location.search)
+      const rawReturnUrl = searchParams.get('returnUrl')
+      const targetUrl = (rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//') && rawReturnUrl !== '/login')
+        ? rawReturnUrl
+        : '/dashboard'
+      return <Navigate replace to={targetUrl} />
+    }
     return <LoginPage />
+  }
+
+  if (!isAuthenticated) {
+    const destination = location.pathname + location.search
+    return <Navigate replace to={`/login?returnUrl=${encodeURIComponent(destination)}`} />
   }
 
   const role = (user?.role || '').toUpperCase()

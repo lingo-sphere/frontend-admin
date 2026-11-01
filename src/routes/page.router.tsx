@@ -8,6 +8,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { pathToNavItem } from '@/routes/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { LoginPage } from '@/features/auth/pages/login.page'
 import { DashboardPage } from '@/features/dashboard/pages/dashboard.page'
 import { LearnersPage } from '@/features/users/pages/learners.page'
 import { AdminUsersPage } from '@/features/users/pages/admin.users.page'
@@ -62,6 +63,7 @@ function IpaPageRoute() {
 }
 
 const pageMap: Record<string, React.ComponentType> = {
+  login: LoginPage,
   dashboard: DashboardPage,
   'users-list': LearnersPage,
   users: LearnersPage,
@@ -123,6 +125,14 @@ export function PageRouter() {
 
   const currentRole = (user?.role || profile?.role || '').toUpperCase()
   const isAdmin = currentRole === 'ADMIN'
+
+  if (activeNavItem === 'login') {
+    const rawReturnUrl = new URLSearchParams(window.location.search).get('returnUrl')
+    const targetUrl = (rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//') && rawReturnUrl !== '/login')
+      ? rawReturnUrl
+      : '/dashboard'
+    return <Navigate replace to={targetUrl} />
+  }
 
   if (['practice-ipa', 'practice-listening', 'practice-speaking', 'practice-writing', 'practice-reading', 'practice-grammar', 'practice-contexts'].includes(activeNavItem) && !isAdmin) return <ForbiddenPage key={pathname} />
 
