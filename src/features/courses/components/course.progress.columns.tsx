@@ -48,9 +48,10 @@ export function createCourseProgressColumns({
       minWidth: '160px',
       render: (st) => {
         const u = usersMap.get(st.user_id) || usersMap.get(String(st.user_id))
-        const displayName = u?.full_name || st.full_name || ''
+        const displayName = u?.full_name || st.full_name || u?.email || st.email || st.user_id || 'Học viên'
         const email = u?.email || st.email || ''
         const avatarSrc = u?.avatar_url || st.avatar_url || undefined
+        const initials = (displayName.charAt(0) || 'H').toUpperCase()
 
         return (
           <div className="flex items-center justify-start gap-2.5 w-full">
@@ -62,14 +63,16 @@ export function createCourseProgressColumns({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                displayName.charAt(0)
+                initials
               )}
             </div>
             <div className="min-w-0 text-left">
-              <div className="font-bold text-slate-900 dark:text-slate-100 truncate text-xs">
+              <div className="font-bold text-slate-900 dark:text-slate-100 truncate text-xs" title={displayName}>
                 {displayName}
               </div>
-              <div className="text-[11px] text-slate-400 truncate">{email}</div>
+              <div className="text-[11px] text-slate-400 truncate" title={email || st.user_id}>
+                {email || `ID: ${st.user_id.slice(-6)}`}
+              </div>
             </div>
           </div>
         )

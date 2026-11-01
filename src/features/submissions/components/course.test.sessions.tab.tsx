@@ -14,7 +14,12 @@ import { type CourseSimple } from '@/features/courses/hooks/use.course.learners.
 import { progressService, type CourseTestSession } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 
-type SessionRow = CourseTestSession & { course_title: string; user_email: string }
+type SessionRow = CourseTestSession & {
+  course_title: string
+  user_email: string
+  user_full_name?: string
+  user_avatar?: string
+}
 const testTypes: Record<string, string> = {
   challenge: 'Challenge',
   'post-mini': 'Kiểm tra chương',
@@ -64,18 +69,24 @@ export function CourseTestSessionsTab({
         })
       )
       const sessions = results.flat()
+      const userIds = [...new Set(sessions.map((s) => s.user_id))]
       const profiles = new Map(
         await Promise.all(
-          [...new Set(sessions.map((s) => s.user_id))].map(async (id) => {
+          userIds.map(async (id) => {
             return [id, await userService.getProfileById(id).catch(() => null)] as const
           })
         )
       )
       return sessions
-        .map((s) => ({
-          ...s,
-          user_email: profiles.get(s.user_id)?.email || '',
-        }))
+        .map((s) => {
+          const prof = profiles.get(s.user_id)
+          return {
+            ...s,
+            user_full_name: prof?.full_name || '',
+            user_email: prof?.email || '',
+            user_avatar: prof?.avatar_url || '',
+          }
+        })
         .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))
     },
   })
@@ -86,7 +97,7 @@ export function CourseTestSessionsTab({
       const matchesStatus = status === 'ALL' || row.status === status
       const q = search.trim().toLowerCase()
       const matchesSearch =
-        !q || `${row.user_id} ${row.user_email} ${row.course_title}`.toLowerCase().includes(q)
+        !q || `${row.user_id} ${row.user_full_name || ''} ${row.user_email} ${row.course_title}`.toLowerCase().includes(q)
       return matchesType && matchesStatus && matchesSearch
     })
   }, [rows, type, status, search])
@@ -94,27 +105,39 @@ export function CourseTestSessionsTab({
   const columns: DataTableColumn<SessionRow>[] = [
     {
       key: 'student',
-      dataIndex: 'user_email',
+      dataIndex: 'user_full_name',
       title: 'Học viên',
       sortable: true,
       width: 220,
       render: (row) => {
-        const email = row.user_email || row.user_id || 'HV'
-        const initials = email.slice(0, 2).toUpperCase()
+        const displayName = row.user_full_name || row.user_email || row.user_id || 'Học viên'
+        const email = row.user_email || ''
+        const avatarSrc = row.user_avatar || undefined
+        const initials = (displayName.charAt(0) || 'H').toUpperCase()
         return (
           <div className="flex items-center gap-2.5 min-w-0 w-full">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-[11px] shrink-0 shadow-2xs">
-              {initials}
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-[11px] shrink-0 shadow-2xs overflow-hidden">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
             </div>
             <div className="min-w-0 flex-1">
-              <Tooltip title={email} placement="topLeft" mouseEnterDelay={0.3}>
+              <Tooltip title={displayName} placement="topLeft" mouseEnterDelay={0.3}>
                 <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">
-                  {email}
+                  {displayName}
                 </p>
               </Tooltip>
-              <p className="text-[11px] text-slate-400 font-mono truncate" title={row.user_id}>
-                ID: {row.user_id.slice(-6)}
-              </p>
+              {email ? (
+                <p className="text-[11px] text-slate-400 truncate" title={email}>
+                  {email}
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-400 font-mono truncate" title={row.user_id}>
+                  ID: {row.user_id.slice(-6)}
+                </p>
+              )}
             </div>
           </div>
         )

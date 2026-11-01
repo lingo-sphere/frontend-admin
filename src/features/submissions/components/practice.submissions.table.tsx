@@ -1,6 +1,6 @@
 // Bảng hiển thị danh sách bài nộp và yêu cầu phúc khảo phần luyện tập.
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Tooltip } from 'antd'
@@ -13,6 +13,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { practiceReviewService, type PracticeSkill, type PracticeSubmission } from '@/features/submissions/services/practice.review.service'
 import { practiceScoreLabel, practiceDateLabel, practiceExerciseLabels } from '@/features/submissions/helpers/practice.submission.display'
+import { userService } from '@/features/users/services/user.service'
 
 export function PracticeSubmissionsTable({ skill, onOpenReview }: {
   skill: PracticeSkill
@@ -35,6 +36,28 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     }),
   })
 
+  const items = query.data?.items || []
+  const userIds = useMemo(() => [...new Set(items.map(it => it.user_id).filter(Boolean))], [items])
+
+  const profilesQuery = useQuery({
+    queryKey: ['practice-submissions-user-profiles', userIds],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const map = new Map<string, { full_name?: string | null; email?: string | null; avatar_url?: string | null }>()
+      await Promise.all(
+        userIds.map(async (id) => {
+          try {
+            const p = await userService.getProfileById(id)
+            if (p) map.set(id, p)
+          } catch {}
+        })
+      )
+      return map
+    },
+    staleTime: 60000,
+  })
+  const profilesMap = profilesQuery.data
+
   const retry = useMutation({
     mutationFn: (id: string) => practiceReviewService.retry(skill, id),
     onSuccess: () => {
@@ -47,25 +70,36 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
   const columns: DataTableColumn<PracticeSubmission>[] = [
     {
       key: 'student',
-      dataIndex: 'user_email',
+      dataIndex: 'user_full_name',
       title: 'Học viên',
       sortable: true,
-      width: 210,
+      width: 220,
       render: (item) => {
-        const email = item.user_email || item.user_id || 'HV'
-        const initials = email.slice(0, 2).toUpperCase()
+        const profile = profilesMap?.get(item.user_id)
+        const displayName = item.user_full_name || profile?.full_name || item.user_email || profile?.email || item.user_id || 'Học viên'
+        const email = item.user_email || profile?.email || ''
+        const avatarSrc = item.user_avatar || profile?.avatar_url || undefined
+        const initials = (displayName.charAt(0) || 'H').toUpperCase()
         return (
           <div className="flex items-center gap-2.5 min-w-0 w-full">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-[11px] shrink-0 shadow-2xs">
-              {initials}
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-[11px] shrink-0 shadow-2xs overflow-hidden">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
             </div>
             <div className="min-w-0 flex-1">
-              <Tooltip title={email} placement="topLeft" mouseEnterDelay={0.3}>
+              <Tooltip title={displayName} placement="topLeft" mouseEnterDelay={0.3}>
                 <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate block w-full">
-                  {email}
+                  {displayName}
                 </p>
               </Tooltip>
-              {item.user_email && item.user_id && (
+              {email ? (
+                <p className="text-[11px] text-slate-400 truncate block w-full" title={email}>
+                  {email}
+                </p>
+              ) : (
                 <p className="text-[11px] text-slate-400 font-mono truncate block w-full" title={item.user_id}>
                   ID: {item.user_id.slice(-6)}
                 </p>
