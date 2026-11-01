@@ -141,6 +141,17 @@ export function useCourseLearnersData({
       const mergedStudents = progressResults.flat()
       const map = new Map<string, UserProfile>()
 
+      mergedStudents.forEach((st) => {
+        if (st.user_id && (st.full_name || st.email)) {
+          map.set(st.user_id, {
+            user_id: st.user_id,
+            full_name: st.full_name || '',
+            email: st.email || '',
+            avatar_url: st.avatar_url || null,
+          } as UserProfile)
+        }
+      })
+
       if (usersRes) {
         const uList: UserProfile[] = Array.isArray(usersRes)
           ? usersRes

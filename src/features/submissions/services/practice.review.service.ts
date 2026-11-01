@@ -1,3 +1,4 @@
+// Service xử lý API quản lý bài nộp và phúc khảo phần luyện tập Speaking và Writing.
 import { api } from "@/services/api.client";
 
 export type PracticeSkill = "SPEAKING" | "WRITING";
@@ -15,7 +16,9 @@ export interface PracticeSubmission {
   id: string;
   skill: PracticeSkill;
   user_id: string;
+  user_full_name?: string | null;
   user_email?: string | null;
+  user_avatar?: string | null;
   title?: string;
   exercise_type?: string;
   overall_score: number | null;
