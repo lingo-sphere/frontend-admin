@@ -14,9 +14,6 @@ import {
   PencilEdit02Icon,
   TextFontIcon,
   AudioWave01Icon,
-  ChartLineData02Icon,
-  CursorPointer01Icon,
-  Activity01Icon,
   Rocket01Icon,
   AiBrain01Icon,
 } from '@hugeicons/core-free-icons'

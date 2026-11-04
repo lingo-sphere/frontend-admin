@@ -8,7 +8,6 @@ import {
   MoreVertical,
   BookOpen,
   Layers,
-  CheckCircle2,
   Eye,
   X,
   ExternalLink,

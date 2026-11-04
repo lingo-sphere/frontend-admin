@@ -1,6 +1,6 @@
 // Trang quản trị LoginPage giao diện Admin cao cấp với hiệu ứng hình nền và trình bày hệ thống.
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {

@@ -37,7 +37,6 @@ export function PermissionsListTab({
   onOpenCreatePerm,
   onOpenEditPerm,
   onDeletePerm,
-  onRefresh,
   isLoading = false,
 }: PermissionsListTabProps) {
   const { i18n } = useTranslation()

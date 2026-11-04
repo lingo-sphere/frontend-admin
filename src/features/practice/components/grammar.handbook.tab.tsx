@@ -96,7 +96,7 @@ export function GrammarHandbookTab() {
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [workingId, setWorkingId] = useState<string | null>(null)
 
-  const { data, isLoading, refetch } = useGrammarHandbookListQuery(query)
+  const { data, isLoading } = useGrammarHandbookListQuery(query)
   const { save, togglePublish, remove, uploadImage } = useGrammarHandbookMutations()
 
   const handleSearchChange = (val: string) => {

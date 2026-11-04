@@ -1,6 +1,6 @@
 // Trang quản lý ngữ cảnh luyện tập (Practice Contexts) dành cho quản trị viên.
 
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Badge,
@@ -74,8 +74,6 @@ export function PracticeContextsPage() {
   const {
     contexts,
     isLoading,
-    isFetching,
-    refetch,
     createContext,
     updateContext,
     deleteContext,

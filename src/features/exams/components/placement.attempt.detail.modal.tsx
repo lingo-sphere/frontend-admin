@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAdminAttemptResultQuery } from '@/features/exams/hooks/use.exams.admin.query'
-import { examService, type AdminAttemptAnswer, type AdminAttemptQuestion } from '@/features/exams/services/exam.service'
+import { examService, type AdminAttemptQuestion } from '@/features/exams/services/exam.service'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 

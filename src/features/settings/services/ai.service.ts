@@ -7,7 +7,6 @@ import {
   type AiProviderConfig,
   FreeTierAiLimitsSchema,
   type FreeTierAiLimits,
-  UserAiQuotaStatusSchema,
   type UserAiQuotaStatus,
 } from '@/features/settings/schemas/ai.schema'
 

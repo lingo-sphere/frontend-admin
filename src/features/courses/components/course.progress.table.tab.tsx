@@ -48,7 +48,6 @@ export function CourseProgressTableTab({
   progressStatusFilter,
   onProgressStatusFilterChange,
   onResetFilters,
-  onRefresh,
   isLoadingProgress,
   filteredStudents,
   paginatedStudents,

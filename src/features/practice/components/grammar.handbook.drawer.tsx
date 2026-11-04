@@ -1,6 +1,6 @@
 // Drawer chỉnh sửa chi tiết chủ điểm lý thuyết ngữ pháp & thể công thức.
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Drawer,
   Form,

@@ -3,20 +3,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Image, Spin, Tooltip } from 'antd'
+import { Button, Image, Spin } from 'antd'
 import {
   ChevronLeft,
   RotateCcw,
-  Clock,
-  CheckCircle2,
   Sparkles,
   AlertCircle,
   FileText,
-  Volume2,
   Mic,
   PenTool,
   Award,
-  Layers,
   History,
   Info,
 } from 'lucide-react'

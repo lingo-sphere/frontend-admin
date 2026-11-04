@@ -8,7 +8,6 @@ import {
   Upload,
   FolderOpen,
   CheckCircle2,
-  AlertCircle,
   Loader2,
   FileSpreadsheet,
   Music,
@@ -47,7 +46,7 @@ export function ToeicAiImportModal({ isOpen, onClose, onSuccess }: ToeicAiImport
   ])
   const [title, setTitle] = useState<string>('TOEIC Official 2025 - Test 01')
   const [examSeries, setExamSeries] = useState<string>('ETS 2025')
-  const [releaseYear, setReleaseYear] = useState<number>(2025)
+  const [releaseYear] = useState<number>(2025)
   const [durationMinutes, setDurationMinutes] = useState<number>(120)
 
   const [keyLcBase64, setKeyLcBase64] = useState<string>('')
@@ -59,7 +58,7 @@ export function ToeicAiImportModal({ isOpen, onClose, onSuccess }: ToeicAiImport
   const [stepStatus, setStepStatus] = useState<string>('')
   const [progressPercent, setProgressPercent] = useState<number>(0)
   const [previewQuestions, setPreviewQuestions] = useState<AiExtractedQuestion[]>([])
-  const [showPreviewDrawer, setShowPreviewDrawer] = useState<boolean>(false)
+  const [, setShowPreviewDrawer] = useState<boolean>(false)
   const [extractedAnswers, setExtractedAnswers] = useState<Record<number, string>>({})
 
   if (!isOpen) return null
