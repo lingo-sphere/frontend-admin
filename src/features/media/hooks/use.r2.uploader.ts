@@ -24,7 +24,6 @@ export function useR2Uploader({
   type,
   value,
   onChange,
-  fileName,
   onFileNameChange,
   onDurationChange,
   folder = 'courses',

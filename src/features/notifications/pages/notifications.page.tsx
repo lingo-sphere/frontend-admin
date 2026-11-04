@@ -34,7 +34,7 @@ export function NotificationsPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const { data: notifications = [], isLoading, refetch } = useNotificationsAdminQuery()
+  const { data: notifications = [], refetch } = useNotificationsAdminQuery()
   const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(refetch)
   const {
     markAsRead,

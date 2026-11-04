@@ -1,6 +1,6 @@
 // Tab quản lý chiến thuật & mẹo làm bài thi TOEIC 4 kỹ năng dành cho quản trị viên.
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Space,
   Tag,
@@ -75,7 +75,7 @@ export function ToeicTipsTab() {
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [workingId, setWorkingId] = useState<string | null>(null)
 
-  const { data, isLoading, refetch } = useToeicTipsListQuery(query)
+  const { data, isLoading } = useToeicTipsListQuery(query)
   const { save, togglePublish, remove, uploadImage } = useToeicTipsMutations()
 
   const handleSearchChange = (val: string) => {

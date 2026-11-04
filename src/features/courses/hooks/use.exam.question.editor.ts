@@ -13,7 +13,6 @@ import type {
   UseExamQuestionEditorParams,
 } from '@/features/courses/types/exam.question.types'
 import {
-  normalizeQuestions,
   getQuestionsSnapshot,
   computeInitialBundle,
 } from '@/features/courses/utils/exam.question.utils'

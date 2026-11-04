@@ -1,6 +1,6 @@
 // Component hiển thị thẻ xem trước trực quan tài khoản quản trị viên và bảng quyền hạn tương ứng.
 
-import { Shield, GraduationCap, CheckCircle2, Ban, Mail, Check, Sparkles, UserCheck } from 'lucide-react'
+import { Shield, GraduationCap, Ban, Mail, Check, Sparkles, UserCheck } from 'lucide-react'
 
 interface AdminUserPreviewCardProps {
   fullName: string
