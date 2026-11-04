@@ -7,6 +7,7 @@ import { Search, X } from 'lucide-react'
 import { navItemToPath } from '@/routes/navigation'
 import { NAVIGATION_INDEX } from '@/layouts/global.search.config'
 import { GlobalSearchResultItem } from '@/layouts/global.search.result.item'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 
 interface GlobalSearchModalProps {
   isOpen: boolean
@@ -20,6 +21,9 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  usePreventScrollChain(modalRef, isOpen)
 
   useEffect(() => {
     if (isOpen) {
@@ -83,7 +87,8 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+        ref={modalRef}
+        className="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden overscroll-contain animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-slate-800">
@@ -123,7 +128,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
           </div>
         </div>
 
-        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-slate-100 dark:divide-slate-800/40">
+        <div className="max-h-96 overflow-y-auto overscroll-contain p-2 divide-y divide-slate-100 dark:divide-slate-800/40">
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-slate-400 space-y-1">
               <p className="text-sm font-semibold">
