@@ -1,6 +1,7 @@
 // Trang quản trị LoginPage giao diện Admin cao cấp với hiệu ứng hình nền và trình bày hệ thống.
 
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Eye,
@@ -26,6 +27,8 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { useAdminLayout } from '@/contexts/admin.layout.context'
 
 export function LoginPage({ initialError }: { initialError?: string } = {}) {
+  const location = useLocation()
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useAdminLayout()
   const isDark = theme === 'dark'
@@ -58,6 +61,12 @@ export function LoginPage({ initialError }: { initialError?: string } = {}) {
     try {
       await login({ email, password, rememberMe })
       toast.success(t('auth.loginSuccess'))
+      const searchParams = new URLSearchParams(location.search)
+      const rawReturnUrl = searchParams.get('returnUrl')
+      const targetUrl = (rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//') && rawReturnUrl !== '/login')
+        ? rawReturnUrl
+        : '/dashboard'
+      navigate(targetUrl, { replace: true })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('auth.loginFailed')
       setErrorMessage(msg)

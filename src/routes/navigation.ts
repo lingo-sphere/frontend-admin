@@ -1,6 +1,7 @@
 // Ánh xạ điều hướng giữa đường dẫn URL và danh mục menu Quản trị Admin.
 
 export function navItemToPath(navItem: string): string {
+  if (navItem === 'login') return '/login'
   if (!navItem || navItem === 'dashboard') return '/dashboard'
   if (navItem === 'users' || navItem === 'users-list') return '/users'
   if (navItem.startsWith('user-profile:')) {
@@ -111,6 +112,7 @@ export function navItemToPath(navItem: string): string {
 
 export function pathToNavItem(pathname: string): string {
   const cleanPath = pathname ? pathname.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/' : '/'
+  if (cleanPath === '/login') return 'login'
   if (cleanPath === '/' || cleanPath === '/dashboard') return 'dashboard'
   if (cleanPath === '/users') return 'users-list'
   if (cleanPath.startsWith('/users/')) {
