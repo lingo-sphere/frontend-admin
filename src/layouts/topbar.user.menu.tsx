@@ -4,6 +4,7 @@ import type { RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, User as UserIcon, Shield, LogOut } from 'lucide-react'
 import type { UserProfile, AuthUser } from '@/types/api.types'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 
 interface TopbarUserMenuProps {
   userDropdownRef: RefObject<HTMLDivElement | null>
@@ -47,6 +48,8 @@ export function TopbarUserMenu({
         .toUpperCase()
     : 'U'
 
+  usePreventScrollChain(userDropdownRef, userDropdownOpen)
+
   return (
     <div className="relative" ref={userDropdownRef}>
       <button
@@ -78,7 +81,7 @@ export function TopbarUserMenu({
       </button>
 
       {userDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 overscroll-contain animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xs font-extrabold overflow-hidden shrink-0">
               {avatarUrl && !avatarError ? (
