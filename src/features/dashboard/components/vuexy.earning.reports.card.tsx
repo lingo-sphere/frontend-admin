@@ -1,7 +1,7 @@
 // Component thẻ báo cáo hoạt động học tập & điểm kinh nghiệm Earning Reports theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
-import { MoreVertical, Zap, BookOpen, Layers, Award } from 'lucide-react'
+import { MoreVertical, BookOpen, Layers, Award } from 'lucide-react'
 import type { UserActivityLog } from '@/types/api.types'
 
 interface VuexyEarningReportsCardProps {
