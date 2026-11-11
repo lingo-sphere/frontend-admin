@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, Check, Search, X, Loader2 } from 'lucide-react'
+import { ConfigProvider } from 'antd'
 
 export interface SelectOption {
   value?: string | number
@@ -15,6 +16,7 @@ export interface SelectOption {
 }
 
 export interface CustomSelectProps {
+  'aria-label'?: string
   id?: string
   value?: React.Key | React.Key[] | (string | number)[] | string | number
   defaultValue?: React.Key | React.Key[] | (string | number)[] | string | number
@@ -44,13 +46,14 @@ export interface CustomSelectProps {
 }
 
 export function CustomSelect({
+  'aria-label': ariaLabel,
   id: propId,
   value,
   defaultValue,
   onChange,
   options = [],
   placeholder,
-  disabled = false,
+  disabled: disabledProp,
   loading = false,
   allowClear = false,
   className = '',
@@ -70,6 +73,8 @@ export function CustomSelect({
   labelRender,
   maxTagCount,
 }: CustomSelectProps) {
+  const { componentDisabled } = ConfigProvider.useConfig()
+  const disabled = disabledProp ?? componentDisabled ?? false
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const defaultPlaceholder = placeholder ?? (isVi ? 'Chọn...' : 'Select...')
@@ -263,7 +268,7 @@ export function CustomSelect({
   }
 
   const renderTriggerLabel = () => {
-    if (labelRender) {
+    if (labelRender && !isMultiple) {
       return labelRender({ value, label: selectedSingleOption?.label })
     }
     if (isMultiple) {
@@ -284,7 +289,7 @@ export function CustomSelect({
         <>
           {visibleValues.map((val) => {
             const match = flatOptions.find((opt) => opt.value !== undefined && String(opt.value) === String(val))
-            let labelText: React.ReactNode = match?.label
+            let labelText: React.ReactNode = labelRender ? labelRender({ value: val, label: match?.label }) : match?.label
             if (!labelText) {
               if (loading) {
                 labelText = isVi ? 'Đang tải...' : 'Loading...'
@@ -409,7 +414,7 @@ export function CustomSelect({
       <button
         key={String(option.value)}
         type="button"
-        disabled={option.disabled}
+        disabled={disabled || option.disabled}
         onClick={() => handleOptionSelect(option)}
         className={`group w-full px-2.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 transition-colors duration-150 cursor-pointer text-left border ${
           isSelected
@@ -485,11 +490,13 @@ export function CustomSelect({
   return (
     <div
       ref={containerRef}
+      onKeyDownCapture={event => { if (isOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setIsOpen(false) } }}
       style={style}
       className={`relative ${hasExplicitWidth ? 'shrink-0' : 'w-full'} ${className}`}
     >
       <button
         id={selectId}
+        aria-label={ariaLabel}
         type="button"
         disabled={disabled}
         onClick={handleToggle}

@@ -49,7 +49,9 @@ export function WritingAdminEditor({ type, id, readOnly, trash, onClose }: { typ
     const values = form.getFieldsValue(true) as WritingPayload
     const payload = writingPayload(type, { ...result.data, ...values, _id: id || '', revision: form.getFieldValue('expected_revision') ?? result.data?.revision ?? 0, status: status || values.status })
     if (payload.status === 'PUBLISHED' && payload.exercise_type === 'DESCRIBE_PICTURE' && !payload.image_description?.trim()) {
-      payload.image_description = (payload.reference_answer || payload.prompt_text || payload.description || payload.title || '').trim()
+      form.setFields([{ name: 'image_description', errors: [p('Cần mô tả dữ kiện ảnh đã kiểm tra để chấm nội dung chính xác')] }])
+      form.scrollToField('image_description')
+      return
     }
     setSaving(true); setError('')
     try {

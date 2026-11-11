@@ -55,11 +55,9 @@ export function PublicDecksPage() {
 
     try {
       await createDeckMutate({
-        title: newTitle,
+        name: newTitle.trim(),
         description: newDesc,
-        is_public: true,
-        is_system: true,
-        total_cards: 0,
+        visibility: 'PUBLIC',
       })
       toast.success(isVi ? 'Tạo bộ thẻ công khai thành công!' : 'Public deck created successfully')
       setShowAddModal(false)

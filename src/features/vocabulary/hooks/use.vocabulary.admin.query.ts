@@ -188,6 +188,7 @@ export function useVocabularyDecksQuery() {
         card_count: d.card_count ?? d.total_cards ?? (d.cards?.length || 0),
         total_cards: d.total_cards ?? d.card_count ?? (d.cards?.length || 0),
         visibility: d.visibility || 'PUBLIC',
+        is_featured: Boolean(d.is_featured),
         cards: d.cards as FlashcardDeck['cards'] || [],
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
@@ -217,6 +218,7 @@ export function useDeckDetailsQuery(deckId?: string) {
         card_count: d.card_count ?? d.total_cards ?? (d.cards?.length || 0),
         total_cards: d.total_cards ?? d.card_count ?? (d.cards?.length || 0),
         visibility: d.visibility || 'PUBLIC',
+        is_featured: Boolean(d.is_featured),
         cards: d.cards as FlashcardDeck['cards'] || [],
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }
@@ -296,6 +298,7 @@ export function usePublicDecksQuery() {
         total_cards: d.total_cards ?? d.card_count ?? (d.cards?.length || 0),
         visibility: d.visibility || 'PUBLIC',
         cards: (d.cards as FlashcardDeck['cards']) || [],
+        is_featured: Boolean(d.is_featured),
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
     },
