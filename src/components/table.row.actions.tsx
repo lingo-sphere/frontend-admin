@@ -87,6 +87,7 @@ export function ActionPopconfirmButton({
     >
       <Tooltip title={isOpen ? '' : tooltipTitle} open={isOpen ? false : undefined}>
         <Button
+          aria-label={tooltipTitle}
           size="small"
           danger={danger}
           icon={icon}

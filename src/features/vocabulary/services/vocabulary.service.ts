@@ -216,7 +216,7 @@ export const vocabularyService = {
 
   async getAllFlashcardDecks(): Promise<FlashcardDeck[]> {
     return api.get<FlashcardDeck[]>(
-      API_CONFIG.ENDPOINTS.VOCABULARY.DECKS,
+      '/vocabulary/admin/flashcards/decks',
       undefined,
       FlashcardDeckListSchema
     )

@@ -74,7 +74,7 @@ export function PracticeMediaField({
 
       {value &&
         (kind === 'audio' ? (
-          <IpaAudioPreview value={value} onDurationDetected={onDurationDetected} />
+          <IpaAudioPreview key={value} value={value} onDurationDetected={onDurationDetected} />
         ) : (
           <div>
             <Image src={resolveMediaUrl(value)} width={220} style={{ maxHeight: 180, objectFit: 'contain' }} />

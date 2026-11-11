@@ -203,14 +203,14 @@ export function PracticeContextsPage() {
       const values = await form.validateFields()
       const payload: CreatePracticeContextPayload = {
         name_en: values.name_en.trim(),
-        name_vi: values.name_vi?.trim() || undefined,
+        name_vi: values.name_vi?.trim() || '',
         code: values.code?.trim() || undefined,
-        parent_id: values.parent_id || undefined,
+        parent_id: values.parent_id || null,
         domains: values.domains,
-        cefr_level: values.cefr_level || undefined,
-        target_level: values.target_level || undefined,
-        description: values.description?.trim() || undefined,
-        description_vi: values.description_vi?.trim() || undefined,
+        cefr_level: values.cefr_level || '',
+        target_level: values.target_level || '',
+        description: values.description?.trim() || '',
+        description_vi: values.description_vi?.trim() || '',
         sort_order: values.sort_order ?? 0,
         status: values.status,
         is_selectable: values.is_selectable ?? true,
@@ -667,9 +667,9 @@ export function PracticeContextsPage() {
             <Form.Item
               name="code"
               label="Mã định danh (Code)"
-              tooltip="Mã duy nhất viết hoa phân cách bằng gạch dưới (VD: JOB_INTERVIEW). Để trống hệ thống sẽ tự sinh từ tên tiếng Anh."
+              tooltip="Mã duy nhất viết hoa phân cách bằng gạch dưới. Tự sinh nếu để trống khi tạo; mã không đổi sau khi tạo để giữ liên kết với các bài tập cũ."
             >
-              <Input placeholder="Tự sinh nếu để trống (VD: JOB_INTERVIEW)" className="font-mono uppercase" />
+              <Input disabled={Boolean(editingItem)} placeholder="Tự sinh nếu để trống (VD: JOB_INTERVIEW)" className="font-mono uppercase" />
             </Form.Item>
 
             <Form.Item

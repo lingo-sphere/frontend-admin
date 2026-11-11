@@ -79,7 +79,7 @@ export function DeckFormModal({
       title: nameEn.trim() || nameVi.trim(),
       name_vi: nameVi.trim(),
       name_en: nameEn.trim() || nameVi.trim(),
-      topic_id: topicId || undefined,
+      topic_id: topicId || '',
       topic_name: selectedTopic?.name_vi || selectedTopic?.name_en || undefined,
       cefr_level: cefrLevel,
       visibility,

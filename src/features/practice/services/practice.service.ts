@@ -39,7 +39,7 @@ export interface CreatePracticeContextPayload {
   name_vi?: string
   description?: string
   description_vi?: string
-  parent_id?: string
+  parent_id?: string | null
   domains?: string[]
   cefr_level?: string
   target_level?: string
