@@ -31,7 +31,7 @@ export function SpeakingMediaField({ value = '', onChange, onBusy, disabled, kin
   const [uploading, setUploading] = useState(false)
   return <div className="space-y-2"><Space wrap><Upload showUploadList={false} accept={kind === 'image' ? 'image/png,image/jpeg,image/webp' : 'audio/*,.mp3,.wav,.ogg,.m4a'} disabled={disabled || uploading} beforeUpload={file => {
     if (!(kind === 'image' ? /^image\/(png|jpeg|webp)$/.test(file.type) : file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a)$/i.test(file.name))) { toast.error(p("Loại file không phù hợp")); return false }
-    if (file.size > (kind === 'image' ? 10 : 20) * 1024 * 1024) { toast.error(p("File vượt dung lượng cho phép")); return false }
+    if (file.size > (kind === 'image' ? 5 : 20) * 1024 * 1024) { toast.error(p(kind === 'image' ? "Ảnh tối đa 5MB" : "Audio tối đa 20MB")); return false }
     setUploading(true); onBusy(1)
     void mediaService.uploadFile(file, folder || `practice/speaking/${kind}`).then(result => { if (!result.media_id || !/^[a-f\d]{24}$/i.test(result.media_id)) throw new Error(p("Upload chưa trả media ID hợp lệ; hãy kiểm tra media service")); onChange?.(result.media_id) }).catch(error => toast.error(error instanceof Error ? error.message : p("Tải file thất bại"))).finally(() => { setUploading(false); onBusy(-1) })
     return false

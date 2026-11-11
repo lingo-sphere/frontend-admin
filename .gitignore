@@ -24,3 +24,17 @@ dist-ssr
 *.sw?
 package-lock.json
 .env
+
+# Documentation
+/docs/
+docs/
+
+# Tests
+/tests/
+tests/
+/test/
+test/
+
+# Scripts
+/scripts/
+scripts/

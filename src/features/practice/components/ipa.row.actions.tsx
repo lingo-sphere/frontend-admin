@@ -38,6 +38,7 @@ export function IpaRowActions({
     <Space size={4} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
       <Tooltip title={popOpen ? '' : (isVi ? 'Xem' : 'View')} open={popOpen ? false : undefined}>
         <Button
+          aria-label={isVi ? 'Xem' : 'View'}
           size="small"
           icon={<Eye size={14} />}
           onClick={(e) => {
@@ -50,6 +51,7 @@ export function IpaRowActions({
       {!trash && onEdit && (
         <Tooltip title={popOpen ? '' : (isVi ? 'Sửa' : 'Edit')} open={popOpen ? false : undefined}>
           <Button
+            aria-label={isVi ? 'Sửa' : 'Edit'}
             size="small"
             icon={<Edit2 size={14} />}
             onClick={(e) => {

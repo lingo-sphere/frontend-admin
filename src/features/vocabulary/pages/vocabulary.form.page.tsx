@@ -237,6 +237,7 @@ export function VocabularyFormPage({
           isGenerating={false}
         />
 
+        {isEditing && <p className="text-sm text-slate-500">Nghĩa đã có thẻ hoặc lịch sử học được giữ nguyên định nghĩa, loại từ và vị trí. Bạn vẫn có thể sửa ví dụ, thông tin bổ sung hoặc thêm nghĩa mới ở cuối.</p>}
         <VocabularyMeaningsForm
           meanings={meanings}
           onAddMeaning={addMeaning}

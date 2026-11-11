@@ -140,7 +140,7 @@ export function IpaAudioPreview({
       <audio
         ref={audioRef}
         src={audioUrl}
-        preload="none"
+        preload={onDurationDetected ? 'metadata' : 'none'}
         onLoadedMetadata={e => {
           const dur = e.currentTarget.duration
           if (dur && !isNaN(dur) && isFinite(dur)) {
