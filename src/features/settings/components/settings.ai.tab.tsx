@@ -6,6 +6,8 @@ import { aiAdminService } from '@/features/settings/services/ai.service'
 import { toast } from '@/store/toast.store'
 import { AiArchitectureCards } from '@/features/settings/components/ai.architecture.cards'
 import { AiQuotaSettingsCard } from '@/features/settings/components/ai.quota.settings.card'
+import { AiUsageLogsCard } from '@/features/settings/components/ai.usage.logs.card'
+import { AzureSpeechLogsCard } from '@/features/settings/components/azure.speech.logs.card'
 
 export function SettingsAiTab() {
   const [primaryProvider, setPrimaryProvider] = useState<'gemini' | 'groq'>('gemini')
@@ -110,6 +112,8 @@ export function SettingsAiTab() {
       />
 
       <AiQuotaSettingsCard />
+      <AiUsageLogsCard />
+      <AzureSpeechLogsCard />
     </div>
   )
 }

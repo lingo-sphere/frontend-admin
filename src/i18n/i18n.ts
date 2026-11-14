@@ -8,10 +8,12 @@ import practiceEn from '@/i18n/practice-editor.en.json'
 
 import vi from '@/i18n/vi.json'
 import en from '@/i18n/en.json'
+import dashboardVi from '@/i18n/dashboard.vi.json'
+import dashboardEn from '@/i18n/dashboard.en.json'
 
 const resources = {
-  vi: { translation: vi, practiceEditor: practiceVi },
-  en: { translation: en, practiceEditor: practiceEn },
+  vi: { translation: vi, practiceEditor: practiceVi, dashboard: dashboardVi },
+  en: { translation: en, practiceEditor: practiceEn, dashboard: dashboardEn },
 }
 
 i18n

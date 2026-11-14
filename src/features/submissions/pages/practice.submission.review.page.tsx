@@ -1,6 +1,8 @@
 // Trang chi tiết xem bài làm và xử lý chấm điểm, phúc khảo bài luyện tập.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { TeacherRubricEditor } from '../components/teacher.rubric.editor'
+import { emptyTeacherDraft, teacherDraftResult } from '../helpers/teacher.grading'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Image, Spin } from 'antd'
@@ -26,6 +28,7 @@ import {
 } from '@/features/submissions/services/practice.review.service'
 import {
   practiceScoreLabel,
+  practiceHistoryScoreLabel,
   practiceDateLabel,
   practiceExerciseLabels,
 } from '@/features/submissions/helpers/practice.submission.display'
@@ -33,9 +36,11 @@ import {
 function PracticeMediaRenderer({
   value,
   image = false,
+  onUnavailable,
 }: {
   value: string
   image?: boolean
+  onUnavailable?: () => void
 }) {
   const [mediaError, setMediaError] = useState(false)
   const isId = /^[a-f\d]{24}$/i.test(value)
@@ -49,6 +54,8 @@ function PracticeMediaRenderer({
     ? query.data?.storage_key || query.data?.file_path || ''
     : value
   const source = /^data:(audio|image)\//.test(key) ? key : resolveMediaUrl(key)
+
+  useEffect(() => { if (query.isError) onUnavailable?.() }, [query.isError, onUnavailable])
 
   if (isId && query.isPending) {
     return <span className="text-xs text-slate-400">Đang tải tệp đối chiếu…</span>
@@ -78,7 +85,7 @@ function PracticeMediaRenderer({
         <div className="space-y-1 text-xs text-amber-800 dark:text-amber-300">
           <p className="font-semibold">Không thể tải hoặc phát tệp ghi âm.</p>
           <p className="text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
-            Tệp ghi âm này không tồn tại trên kho lưu trữ đám mây hoặc đã hết hạn lưu trữ tạm. Vui lòng đối chiếu với bản nhận diện giọng nói (Transcription) bên dưới.
+            Tệp ghi âm này không tồn tại trên kho lưu trữ đám mây hoặc đã hết hạn lưu trữ tạm. Không dùng transcript thay audio để chấm phát âm hoặc độ trôi chảy. Cần khôi phục bản ghi âm gốc trước khi chấm.
           </p>
         </div>
       </div>
@@ -93,7 +100,7 @@ function PracticeMediaRenderer({
         src={source}
         className="w-full h-8"
         preload="metadata"
-        onError={() => setMediaError(true)}
+        onError={() => { setMediaError(true); onUnavailable?.() }}
       />
     </div>
   )
@@ -182,6 +189,7 @@ export function PracticeSubmissionReviewPage({
 
       {item && (
         <PracticeReviewContent
+          key={`${item.id}:${item.revision}`}
           item={item}
           skill={skill}
           onDecisionSuccess={() => {
@@ -203,18 +211,22 @@ function PracticeReviewContent({
   skill: PracticeSkill
   onDecisionSuccess: () => void
 }) {
-  const [decision, setDecision] = useState<'KEEP' | 'ADJUST'>('KEEP')
+  const manual = item.record_type === 'GRADING_REQUEST'
+  const [decision, setDecision] = useState<'KEEP' | 'ADJUST'>(manual ? 'ADJUST' : 'KEEP')
+  const [teacherDraft, setTeacherDraft] = useState(emptyTeacherDraft)
+  const teacherGrade = teacherDraftResult(item.teacher_rubric, teacherDraft)
   const [score, setScore] = useState(
     String(item.grading_standard === 'TOEIC' ? item.raw_score ?? 0 : item.overall_score ?? 0)
   )
   const [feedback, setFeedback] = useState('')
+  const [audioUnavailable, setAudioUnavailable] = useState(false)
 
   const mutation = useMutation({
     mutationFn: () =>
       practiceReviewService.decide(item.skill, item.id, {
         expected_revision: item.revision,
         decision,
-        ...(decision === 'ADJUST' ? { score: Number(score) } : {}),
+        ...(decision === 'ADJUST' ? teacherGrade ? { teacher_grading: teacherGrade.input, score: teacherGrade.raw } : { score: Number(score) } : {}),
         feedback: feedback.trim(),
       }),
     onSuccess: () => {
@@ -235,7 +247,9 @@ function PracticeReviewContent({
   const valid =
     feedback.trim().length >= 10 &&
     feedback.trim().length <= 5000 &&
-    (decision === 'KEEP' ||
+    (skill !== 'WRITING' || Boolean(item.content?.trim())) &&
+    (!manual || item.status === 'FAILED') &&
+    (decision === 'KEEP' ? item.overall_score != null : item.teacher_rubric ? Boolean(teacherGrade) : !manual &&
       (score.trim() !== '' &&
         Number.isFinite(Number(score)) &&
         Number(score) >= 0 &&
@@ -244,6 +258,8 @@ function PracticeReviewContent({
 
   return (
     <div className="space-y-6">
+      {manual && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">Bài AI chưa chấm được. Giáo viên chấm từ bài làm và đề gốc; điểm giáo viên được lưu riêng, điểm AI vẫn là chưa có. Chỉ lưu khi yêu cầu đã ở trạng thái lỗi.</div>}
+      {item.review?.teacher_grading && <div className="rounded-xl border border-indigo-200 p-4 text-sm"><p className="font-semibold">Phiếu giáo viên đã lưu</p><p>{item.review.teacher_grading.raw_score}/{item.review.teacher_grading.max_score} · {item.review.feedback}</p><ul>{Object.entries(item.review.teacher_grading.criteria_scores).map(([key, value]) => <li key={key}>{item.review!.teacher_grading!.rubric_snapshot.criteria.find(c => c.key === key)?.label || key}: {value == null ? 'Không áp dụng' : `${value}/100`}</li>)}</ul></div>}
       {item.review?.reason && (
         <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -351,7 +367,7 @@ function PracticeReviewContent({
             {item.audio_url && (
               <div className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Bản ghi âm hoàn chỉnh:</span>
-                <PracticeMediaRenderer value={item.audio_url} />
+                <PracticeMediaRenderer value={item.audio_url} onUnavailable={() => setAudioUnavailable(true)} />
               </div>
             )}
 
@@ -400,7 +416,7 @@ function PracticeReviewContent({
                           "{turn.user_transcription}"
                         </p>
                       )}
-                      {mediaSource && <PracticeMediaRenderer value={mediaSource} />}
+                      {mediaSource && <PracticeMediaRenderer value={mediaSource} onUnavailable={() => setAudioUnavailable(true)} />}
                     </div>
                   )
                 })}
@@ -570,12 +586,14 @@ function PracticeReviewContent({
                   onChange={(event) => setDecision(event.target.value as 'KEEP' | 'ADJUST')}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2.5 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
                 >
-                  <option value="KEEP">Giữ nguyên điểm số hiện tại</option>
+                  {!manual && <option value="KEEP">Giữ nguyên điểm số hiện tại</option>}
                   <option value="ADJUST">Điều chỉnh sang điểm mới</option>
                 </select>
               </div>
 
-              {decision === 'ADJUST' && (
+              {decision === 'ADJUST' && item.teacher_rubric && <TeacherRubricEditor rubric={item.teacher_rubric} value={teacherDraft} onChange={setTeacherDraft} />}
+              {decision === 'ADJUST' && !item.teacher_rubric && <p className="text-sm text-amber-700">Không có đủ rubric/đề gốc đã lưu. {manual ? 'Chưa thể chấm thủ công; cần khôi phục dữ liệu gốc.' : 'Bài cũ chỉ hỗ trợ điều chỉnh điểm tổng và phải ghi rõ căn cứ.'}</p>}
+              {decision === 'ADJUST' && !item.teacher_rubric && !manual && (
                 <div>
                   <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
                     Điểm số sau điều chỉnh (0–{max})
@@ -614,13 +632,14 @@ function PracticeReviewContent({
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                Điểm AI gốc và tiêu chí được lưu vết. Quyết định cập nhật điểm luyện tập, không tạo lượt làm/XP mới và không thay đổi bằng chứng ôn tập SRS.
+                Điểm AI gốc và phiếu giáo viên được lưu riêng trong lịch sử. Quyết định không cộng thêm lượt làm hoặc điểm thưởng, không thay đổi kết quả ôn tập đã ghi nhận.
               </div>
 
               <button
                 type="button"
                 disabled={
                   !valid ||
+                  audioUnavailable ||
                   mutation.isPending ||
                   (item.skill === 'SPEAKING' &&
                     !item.audio_url &&
@@ -664,7 +683,7 @@ function PracticeReviewContent({
                       </span>
                     </div>
                     <div className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {entry.previous_score} → {entry.score}/100
+                      {practiceHistoryScoreLabel(entry, item)}
                     </div>
                     {entry.feedback && (
                       <p className="text-slate-600 dark:text-slate-400 italic pt-1">

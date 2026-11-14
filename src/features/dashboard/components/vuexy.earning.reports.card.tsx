@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ báo cáo hoạt động học tập & điểm kinh nghiệm Earning Reports theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
@@ -10,7 +11,7 @@ interface VuexyEarningReportsCardProps {
   coursesCount: number
   examsCount: number
   publicDecksCount: number
-  grammarPointsCount: number
+  grammarPointsCount: number | null
   activities?: UserActivityLog[]
 }
 
@@ -23,9 +24,11 @@ export function VuexyEarningReportsCard({
   grammarPointsCount,
   activities = [],
 }: VuexyEarningReportsCardProps) {
+  const { t, locale } = useDashboardLocale()
+
   const [showMenu, setShowMenu] = useState(false)
 
-  const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+  const dayLabels = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(2026, 0, 5 + index)))
   const todayDayIndex = (new Date().getDay() + 6) % 7
 
   const dayCounts = [0, 0, 0, 0, 0, 0, 0]
@@ -50,16 +53,18 @@ export function VuexyEarningReportsCard({
       <div className="flex items-start justify-between mb-4">
         <div>
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
-            Báo Cáo Điểm XP & Hoạt Động Tuần
+            {t('xpTitle')}
           </h5>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Tổng hợp tương tác người học và tích lũy điểm kinh nghiệm
+            {t('xpSubtitle')}
           </p>
         </div>
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
+            aria-label={t('options')}
+            aria-expanded={showMenu}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
@@ -71,7 +76,7 @@ export function VuexyEarningReportsCard({
                 onClick={() => setShowMenu(false)}
                 className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
               >
-                Làm mới
+                {t('refresh')}
               </button>
             </div>
           )}
@@ -82,14 +87,14 @@ export function VuexyEarningReportsCard({
         <div className="md:col-span-5 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-              {totalXp.toLocaleString('vi-VN')} XP
+              {totalXp.toLocaleString(locale)} XP
             </h2>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-              Tích lũy
+              {t('accumulated')}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            Kỷ lục streak người học dài nhất hiện tại là {maxStreak} ngày liên tục.
+            {t('longestStreak', { count: maxStreak })}
           </p>
         </div>
 
@@ -127,10 +132,10 @@ export function VuexyEarningReportsCard({
               <span className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
                 <BookOpen className="w-3.5 h-3.5" />
               </span>
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Khóa & Đề thi</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{t('coursesAndExams')}</span>
             </div>
             <h5 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1.5">
-              {coursesCount + examsCount} Mục
+              {t('itemCount', { count: coursesCount + examsCount })}
             </h5>
             <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1">
               <div
@@ -145,10 +150,10 @@ export function VuexyEarningReportsCard({
               <span className="p-1 rounded-md bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400">
                 <Layers className="w-3.5 h-3.5" />
               </span>
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Bộ thẻ từ vựng</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{t('vocabularyDecks')}</span>
             </div>
             <h5 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1.5">
-              {publicDecksCount} Bộ thẻ
+              {t('deckCount', { count: publicDecksCount })}
             </h5>
             <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1">
               <div
@@ -163,15 +168,15 @@ export function VuexyEarningReportsCard({
               <span className="p-1 rounded-md bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400">
                 <Award className="w-3.5 h-3.5" />
               </span>
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Điểm ngữ pháp</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{t('grammarTopics')}</span>
             </div>
             <h5 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1.5">
-              {grammarPointsCount} Chủ điểm
+              {grammarPointsCount === null ? '—' : t('topicCount', { count: grammarPointsCount })}
             </h5>
             <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1">
               <div
                 className="bg-amber-500 h-1 rounded-full"
-                style={{ width: `${Math.min(100, grammarPointsCount * 2)}%` }}
+                style={{ width: `${Math.min(100, (grammarPointsCount ?? 0) * 2)}%` }}
               />
             </div>
           </div>

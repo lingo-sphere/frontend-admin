@@ -457,5 +457,7 @@
   "Đánh giá quan điểm, lý do và ví dụ, tổ chức ý và khả năng sử dụng ngôn ngữ. Không tự quy đổi sang điểm toàn bài thi.": "Đánh giá quan điểm, lý do và ví dụ, tổ chức ý và khả năng sử dụng ngôn ngữ. Không tự quy đổi sang điểm toàn bài thi.",
   "Sáu tiêu chí; tổng trọng số bằng 100 hoặc để toàn bộ bằng 0 để dùng mẫu theo dạng. Tiêu chí không áp dụng được loại khỏi cách tính điểm.": "Sáu tiêu chí; tổng trọng số bằng 100 hoặc để toàn bộ bằng 0 để dùng mẫu theo dạng. Tiêu chí không áp dụng được loại khỏi cách tính điểm.",
   "Diễn đạt tự nhiên (%)": "Diễn đạt tự nhiên (%)",
-  "Văn phong phù hợp (%)": "Văn phong phù hợp (%)"
+  "Văn phong phù hợp (%)": "Văn phong phù hợp (%)",
+  "Cần rà soát rubric trước khi chấm bài mới": "Cần rà soát rubric trước khi chấm bài mới",
+  "Trọng số ngữ pháp hoặc từ vựng đang bằng 0; tiêu chí đó sẽ không cộng vào điểm tổng.": "Trọng số ngữ pháp hoặc từ vựng đang bằng 0; tiêu chí đó sẽ không cộng vào điểm tổng."
 }

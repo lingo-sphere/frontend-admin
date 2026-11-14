@@ -73,6 +73,7 @@ export function LearnerProgressDetailPage({ courseId, userId }: LearnerProgressD
 
       {selectedSubmission && (
         <CourseSubmissionReviewDialog
+          key={selectedSubmission._id}
           submission={selectedSubmission}
           editScore={editScore}
           editFeedback={editFeedback}

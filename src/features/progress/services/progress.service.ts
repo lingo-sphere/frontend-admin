@@ -117,7 +117,7 @@ export const progressService = {
 
   async reviewSubmission(
     submissionId: string,
-    data: { teacher_score: number; teacher_feedback?: string }
+    data: { teacher_score: number; teacher_feedback?: string; expected_revision?: number; teacher_grading?: { criteria_scores: Record<string, number | null>; raw_score?: number } }
   ): Promise<SkillSubmissionItem> {
     return api.post<SkillSubmissionItem>(
       `/progress/teacher/submissions/${submissionId}/review`,

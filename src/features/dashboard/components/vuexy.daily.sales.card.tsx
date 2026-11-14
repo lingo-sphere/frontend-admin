@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ thống kê tương tác hàng ngày Average Daily Sales theo phong cách Vuexy Admin.
 
 interface VuexyDailySalesCardProps {
@@ -11,10 +12,15 @@ interface VuexyDailySalesCardProps {
 export function VuexyDailySalesCard({
   totalCount,
   totalUsers = 0,
-  subtitle = 'Tương tác học tập hôm nay',
-  title = 'Lượt Học Viên Hoạt Động',
-  badgeText = 'Hôm nay',
+  subtitle,
+  title,
+  badgeText,
 }: VuexyDailySalesCardProps) {
+  const { t, locale } = useDashboardLocale()
+  subtitle ??= t('dailySubtitle')
+  title ??= t('dailyTitle')
+  badgeText ??= t('today')
+
   const percentage = totalUsers > 0 ? Math.round((totalCount / totalUsers) * 100) : 0
   const activeY = totalCount > 0 ? 30 : 85
 
@@ -43,10 +49,10 @@ export function VuexyDailySalesCard({
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{subtitle}</p>
         <div className="flex items-baseline gap-2">
           <h4 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-            {totalCount.toLocaleString('vi-VN')}
+            {totalCount.toLocaleString(locale)}
           </h4>
           <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            / {totalUsers.toLocaleString('vi-VN')} học viên ({percentage}%)
+            / {totalUsers.toLocaleString(locale)} {t('learnersUnit')} ({percentage}%)
           </span>
         </div>
       </div>

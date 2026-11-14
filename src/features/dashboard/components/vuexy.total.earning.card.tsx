@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ tổng giá trị khóa học & tài khoản Total Earning theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
@@ -16,6 +17,8 @@ export function VuexyTotalEarningCard({
   totalUsers,
   activeSubscriptions = 0,
 }: VuexyTotalEarningCardProps) {
+  const { t, money } = useDashboardLocale()
+
   const [showMenu, setShowMenu] = useState(false)
 
   const vipPercent = totalUsers > 0 ? Math.round((vipUsers / totalUsers) * 100) : 0
@@ -35,11 +38,13 @@ export function VuexyTotalEarningCard({
     <div className="h-full rounded-2xl bg-white dark:bg-[#2f3349] border border-slate-200/80 dark:border-slate-700/60 p-5 shadow-xs flex flex-col justify-between relative">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100">Giá Trị Khóa Học & Thuê Bao</h5>
+          <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100">{t('courseValueTitle')}</h5>
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowMenu(!showMenu)}
+            aria-label={t('options')}
+            aria-expanded={showMenu}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <MoreVertical className="w-4 h-4" />
@@ -51,7 +56,7 @@ export function VuexyTotalEarningCard({
                   onClick={() => setShowMenu(false)}
                   className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
                 >
-                  Làm mới
+                  {t('refresh')}
                 </button>
               </div>
             )}
@@ -61,7 +66,7 @@ export function VuexyTotalEarningCard({
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{vipPercent}%</h2>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-            Tỉ lệ VIP
+            {t('vipRate')}
           </span>
         </div>
       </div>
@@ -92,12 +97,12 @@ export function VuexyTotalEarningCard({
               <Wallet className="w-4 h-4" />
             </span>
             <div>
-              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Giá trị niêm yết</h6>
-              <p className="text-[11px] text-slate-400">Toàn bộ khóa học</p>
+              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('listedValue')}</h6>
+              <p className="text-[11px] text-slate-400">{t('allCourses')}</p>
             </div>
           </div>
           <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-            {totalCoursePrice.toLocaleString('vi-VN')} đ
+            {money(totalCoursePrice)}
           </span>
         </div>
 
@@ -107,14 +112,14 @@ export function VuexyTotalEarningCard({
               <Crown className="w-4 h-4" />
             </span>
             <div>
-              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Thuê bao VIP</h6>
+              <h6 className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('vipSubscriptions')}</h6>
               <p className="text-[11px] text-slate-400">
-                {activeSubscriptions > 0 ? `${activeSubscriptions} gói hoạt động` : 'Tài khoản đặc quyền'}
+                {activeSubscriptions > 0 ? t('activePlanCount', { count: activeSubscriptions }) : t('premiumAccounts')}
               </p>
             </div>
           </div>
           <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-            {vipUsers} học viên
+            {vipUsers} {t('learnersUnit')}
           </span>
         </div>
       </div>
