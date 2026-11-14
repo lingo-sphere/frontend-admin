@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Lưới thẻ số liệu thống kê tổng quan hệ thống trang Dashboard theo phong cách SaaS hiện đại.
 import { Users, GraduationCap, Crown, BookOpenCheck } from 'lucide-react'
 import type { SystemAnalyticsOverview } from '@/types/api.types'
@@ -16,6 +17,7 @@ export function DashboardStatsGrid({
   isVietnamese,
   loading = false,
 }: DashboardStatsGridProps) {
+  const { t } = useDashboardLocale()
   const totalUsers = analytics?.overview?.total_users || 0
   const activeLearners = analytics?.overview?.active_users_today || 0
   const totalCourses = totalCoursesCount || 0
@@ -52,7 +54,7 @@ export function DashboardStatsGrid({
         subtitle={isVietnamese ? 'Giáo trình TOEIC & Từ vựng' : 'TOEIC & Vocab syllabus'}
         icon={BookOpenCheck}
         color="amber"
-        trend={totalCourses > 0 ? `${totalCourses} khóa` : undefined}
+        trend={totalCourses > 0 ? t('courseCount', { count: totalCourses }) : undefined}
         trendType="neutral"
         loading={loading}
       />

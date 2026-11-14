@@ -243,7 +243,7 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
       align: 'center',
       fixed: false,
       render: (item) => item.record_type === 'GRADING_REQUEST' ? (
-        <Button
+        <div className="flex flex-wrap gap-2"><Button size="small" onClick={() => { if (onOpenReview) onOpenReview(item.id); else navigate(`/submissions/practice/${skill.toLowerCase()}/${item.id}`) }}>Xem / Chấm thủ công</Button><Button
           size="small"
           type="primary"
           ghost
@@ -253,7 +253,7 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
           className="rounded-xl text-xs font-semibold whitespace-nowrap"
         >
           Thử chấm lại
-        </Button>
+        </Button></div>
       ) : (
         <Button
           size="small"

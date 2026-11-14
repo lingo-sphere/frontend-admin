@@ -1,5 +1,6 @@
 // Service xử lý API quản lý bài nộp và phúc khảo phần luyện tập Speaking và Writing.
 import { api } from "@/services/api.client";
+import type { TeacherRubric, TeacherGrading } from '../helpers/teacher.grading';
 
 export type PracticeSkill = "SPEAKING" | "WRITING";
 export interface PracticeReview {
@@ -11,6 +12,7 @@ export interface PracticeReview {
   reviewed_at?: string;
   feedback?: string;
   decision?: "KEEP" | "ADJUST";
+  teacher_grading?: { criteria_scores: Record<string, number | null>; raw_score: number; max_score: number; rubric_snapshot: TeacherRubric } | null;
 }
 export interface PracticeSubmission {
   id: string;
@@ -28,6 +30,8 @@ export interface PracticeSubmission {
   max_score?: number;
   grading_standard?: string;
   grading_version?: string;
+  grading_origin?: string;
+  teacher_rubric?: TeacherRubric | null;
   revision: number;
   review: PracticeReview | null;
   submitted_at?: string;
@@ -54,7 +58,7 @@ export interface PracticeSubmission {
     user_transcription?: string;
   }>;
   review_history?: Array<
-    PracticeReview & { previous_score: number; score: number; revision: number }
+    PracticeReview & { previous_score: number | null; score: number; previous_raw_score?: number | null; raw_score?: number | null; max_score?: number; grading_standard?: string; revision: number }
   >;
 }
 export interface PracticeSubmissionList {
@@ -81,6 +85,7 @@ export const practiceReviewService = {
       decision: "KEEP" | "ADJUST";
       score?: number;
       feedback: string;
+      teacher_grading?: TeacherGrading;
     },
   ) => api.post(`/practice/admin/submissions/${skill}/${id}/review`, data),
   retry: (skill: PracticeSkill, id: string) =>

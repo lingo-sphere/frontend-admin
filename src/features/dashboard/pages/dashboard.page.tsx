@@ -40,7 +40,7 @@ const dateRanges: DateRange[] = [
 
 export function DashboardPage() {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const isVietnamese = (i18n.resolvedLanguage || i18n.language).startsWith('vi')
   const navigate = useNavigate()
   const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[1])
   const [showDatePicker, setShowDatePicker] = useState(false)
@@ -101,8 +101,8 @@ export function DashboardPage() {
 
   const totalWords = platformStats?.totalWords ?? 0
   const publicDecksCount = platformStats?.publicDecksCount ?? 0
-  const grammarPointsCount = platformStats?.grammarPointsCount ?? 0
-  const listeningCount = platformStats?.listeningCount ?? 0
+  const grammarPointsCount = platformStats?.grammarPointsCount ?? null
+  const listeningCount = platformStats?.listeningCount ?? null
   const speakingCount = platformStats?.speakingCount ?? 0
   const writingCount = platformStats?.writingCount ?? 0
 
@@ -262,7 +262,7 @@ export function DashboardPage() {
             speakingCount={speakingCount}
             listeningCount={listeningCount}
             grammarPointsCount={grammarPointsCount}
-            title={isVietnamese ? 'Phân Bổ Kỹ Năng & Luyện Đề' : 'Sales by Skills & Content'}
+            title={isVietnamese ? 'Phân Bổ Kỹ Năng & Luyện Đề' : 'Skills & Content Distribution'}
             subtitle={isVietnamese ? 'Tổng hợp số lượng học liệu theo 4 kỹ năng' : 'Content Bank Distribution'}
           />
         </div>

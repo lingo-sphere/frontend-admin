@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ tổng quan phân bổ gói học viên Sales Overview theo phong cách Vuexy Admin.
 
 import { Crown, Users } from 'lucide-react'
@@ -11,8 +12,11 @@ interface VuexySalesOverviewCardProps {
 export function VuexySalesOverviewCard({
   totalUsers,
   vipUsers,
-  title = 'Phân Bổ Gói Tài Khoản Học Viên',
+  title,
 }: VuexySalesOverviewCardProps) {
+  const { t, locale } = useDashboardLocale()
+  title ??= t('accountTierTitle')
+
   const standardUsers = Math.max(0, totalUsers - vipUsers)
   const vipPercent = totalUsers > 0 ? Math.round((vipUsers / totalUsers) * 100) : 0
   const standardPercent = totalUsers > 0 ? 100 - vipPercent : 0
@@ -27,7 +31,7 @@ export function VuexySalesOverviewCard({
           </span>
         </div>
         <h4 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          {totalUsers.toLocaleString('vi-VN')} Học viên
+          {totalUsers.toLocaleString(locale)} {t('learners')}
         </h4>
       </div>
 
@@ -38,32 +42,32 @@ export function VuexySalesOverviewCard({
               <span className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
                 <Crown className="w-3.5 h-3.5" />
               </span>
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Gói VIP</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{t('vipPlan')}</span>
             </div>
             <h5 className="text-base font-bold text-slate-800 dark:text-slate-100">{vipPercent}%</h5>
             <small className="text-[11px] text-slate-400 dark:text-slate-500">
-              {vipUsers.toLocaleString('vi-VN')} học viên
+              {vipUsers.toLocaleString(locale)} {t('learnersUnit')}
             </small>
           </div>
 
           <div className="col-span-1 flex justify-center">
             <div className="w-px h-10 bg-slate-200 dark:bg-slate-700 relative flex items-center justify-center">
               <span className="absolute text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                VS
+                {t('versus')}
               </span>
             </div>
           </div>
 
           <div className="col-span-2 text-right">
             <div className="flex items-center justify-end gap-1.5 mb-1.5">
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Tiêu chuẩn</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{t('standard')}</span>
               <span className="p-1 rounded-md bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400">
                 <Users className="w-3.5 h-3.5" />
               </span>
             </div>
             <h5 className="text-base font-bold text-slate-800 dark:text-slate-100">{standardPercent}%</h5>
             <small className="text-[11px] text-slate-400 dark:text-slate-500">
-              {standardUsers.toLocaleString('vi-VN')} học viên
+              {standardUsers.toLocaleString(locale)} {t('learnersUnit')}
             </small>
           </div>
         </div>

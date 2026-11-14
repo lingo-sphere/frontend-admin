@@ -457,5 +457,7 @@
   "Đánh giá quan điểm, lý do và ví dụ, tổ chức ý và khả năng sử dụng ngôn ngữ. Không tự quy đổi sang điểm toàn bài thi.": "Assess the opinion, reasons and examples, organization and language. Do not convert this to a full-test score.",
   "Sáu tiêu chí; tổng trọng số bằng 100 hoặc để toàn bộ bằng 0 để dùng mẫu theo dạng. Tiêu chí không áp dụng được loại khỏi cách tính điểm.": "Six criteria; weights must total 100, or leave all at 0 to use the task default. Non-applicable criteria do not affect the total.",
   "Diễn đạt tự nhiên (%)": "Naturalness (%)",
-  "Văn phong phù hợp (%)": "Register (%)"
+  "Văn phong phù hợp (%)": "Register (%)",
+  "Cần rà soát rubric trước khi chấm bài mới": "Review the rubric before grading new submissions",
+  "Trọng số ngữ pháp hoặc từ vựng đang bằng 0; tiêu chí đó sẽ không cộng vào điểm tổng.": "Grammar or vocabulary has zero weight; that criterion will not contribute to the overall score."
 }

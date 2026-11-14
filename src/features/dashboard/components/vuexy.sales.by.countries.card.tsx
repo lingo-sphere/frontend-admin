@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ phân bổ học liệu theo 4 kỹ năng Sales by Countries theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
@@ -8,8 +9,8 @@ interface VuexySalesByCountriesCardProps {
   publicDecksCount: number
   writingCount: number
   speakingCount: number
-  listeningCount: number
-  grammarPointsCount: number
+  listeningCount: number | null
+  grammarPointsCount: number | null
   title?: string
   subtitle?: string
 }
@@ -21,63 +22,67 @@ export function VuexySalesByCountriesCard({
   speakingCount,
   listeningCount,
   grammarPointsCount,
-  title = 'Phân Bổ Kỹ Năng & Luyện Đề',
-  subtitle = 'Tổng hợp số lượng học liệu theo 4 kỹ năng',
+  title,
+  subtitle,
 }: VuexySalesByCountriesCardProps) {
+  const { t } = useDashboardLocale()
+  title ??= t('contentTitle')
+  subtitle ??= t('contentSubtitle')
+
   const [showMenu, setShowMenu] = useState(false)
 
   const items = [
     {
       id: 'vocab',
-      name: 'Kho Từ Vựng SRS',
-      category: 'Từ vựng chuẩn CEFR',
-      value: `${totalWords.toLocaleString('vi-VN')} từ`,
-      tag: 'Toàn sàn',
+      name: t('srsBank'),
+      category: t('cefrVocabulary'),
+      value: t('wordCount', { count: totalWords }),
+      tag: t('platformWide'),
       icon: Layers,
       colorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
     },
     {
       id: 'decks',
-      name: 'Bộ Thẻ Flashcard',
-      category: 'Bộ thẻ từ vựng cộng đồng',
-      value: `${publicDecksCount} bộ thẻ`,
-      tag: 'Công khai',
+      name: t('flashcardDecks'),
+      category: t('communityDecks'),
+      value: t('deckCount', { count: publicDecksCount }),
+      tag: t('public'),
       icon: BookOpen,
       colorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
     },
     {
       id: 'writing',
-      name: 'Bài Luyện Viết (Writing)',
-      category: 'Viết câu & chấm luận AI',
-      value: `${writingCount} bài`,
-      tag: 'Luyện tập',
+      name: t('writingPractice'),
+      category: t('writingDescription'),
+      value: t('exerciseCount', { count: writingCount }),
+      tag: t('practice'),
       icon: PenTool,
       colorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
     },
     {
       id: 'speaking',
-      name: 'Bài Luyện Nói (Speaking)',
-      category: 'Phát âm & hội thoại AI',
-      value: `${speakingCount} bài`,
-      tag: 'Luyện tập',
+      name: t('speakingPractice'),
+      category: t('speakingDescription'),
+      value: t('exerciseCount', { count: speakingCount }),
+      tag: t('practice'),
       icon: Mic,
       colorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
     },
     {
       id: 'listening',
-      name: 'Bài Luyện Nghe (Listening)',
-      category: 'Nghe hiểu ngữ cảnh Audio',
-      value: `${listeningCount} bài`,
-      tag: 'Luyện tập',
+      name: t('listeningPractice'),
+      category: t('listeningDescription'),
+      value: listeningCount === null ? '—' : t('exerciseCount', { count: listeningCount }),
+      tag: t('practice'),
       icon: Headphones,
       colorClass: 'bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400',
     },
     {
       id: 'grammar',
-      name: 'Chủ Điểm Ngữ Pháp',
-      category: 'Cấu trúc ngữ pháp TOEIC',
-      value: `${grammarPointsCount} điểm`,
-      tag: 'Ngữ pháp',
+      name: t('grammarBank'),
+      category: t('grammarDescription'),
+      value: grammarPointsCount === null ? '—' : t('topicCount', { count: grammarPointsCount }),
+      tag: t('grammar'),
       icon: Volume2,
       colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
     },
@@ -94,6 +99,8 @@ export function VuexySalesByCountriesCard({
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
+            aria-label={t('options')}
+            aria-expanded={showMenu}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
@@ -105,7 +112,7 @@ export function VuexySalesByCountriesCard({
                 onClick={() => setShowMenu(false)}
                 className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
               >
-                Làm mới
+                {t('refresh')}
               </button>
             </div>
           )}
@@ -128,7 +135,7 @@ export function VuexySalesByCountriesCard({
               </div>
 
               <div className="flex items-center gap-3 text-right">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.value}</span>
+                <span title={item.value === '—' ? t('countUnavailable') : undefined} className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.value}</span>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                   {item.tag}
                 </span>

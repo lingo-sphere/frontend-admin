@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ phân loại cơ cấu tài khoản và kênh người dùng theo phong cách Vuexy Admin.
 import { useState } from 'react'
 import { MoreVertical, GraduationCap, Users, ShieldCheck, Crown, UserCheck, Compass } from 'lucide-react'
@@ -21,15 +22,18 @@ export function VuexySourceVisitsCard({
   vipCount,
   standardCount,
   activeTodayCount = 0,
-  title = 'Cơ Cấu Tài Khoản & Đối Tượng Học Viên',
+  title,
 }: VuexySourceVisitsCardProps) {
+  const { t, locale } = useDashboardLocale()
+  title ??= t('audienceTitle')
+
   const [showMenu, setShowMenu] = useState(false)
 
   const items = [
     {
       id: 'students',
-      title: 'Học viên (Student)',
-      subtitle: 'Người học trực tuyến trên nền tảng',
+      title: t('students'),
+      subtitle: t('studentsDescription'),
       count: `${studentsCount}`,
       trend: `${totalUsers > 0 ? Math.round((studentsCount / totalUsers) * 100) : 0}%`,
       icon: GraduationCap,
@@ -37,8 +41,8 @@ export function VuexySourceVisitsCard({
     },
     {
       id: 'vip',
-      title: 'Gói VIP Premium',
-      subtitle: 'Học viên đăng ký gói đặc quyền',
+      title: t('vipPremium'),
+      subtitle: t('vipDescription'),
       count: `${vipCount}`,
       trend: `${totalUsers > 0 ? Math.round((vipCount / totalUsers) * 100) : 0}%`,
       icon: Crown,
@@ -46,8 +50,8 @@ export function VuexySourceVisitsCard({
     },
     {
       id: 'standard',
-      title: 'Tài khoản Tiêu chuẩn',
-      subtitle: 'Học viên trải nghiệm miễn phí',
+      title: t('standardAccount'),
+      subtitle: t('standardDescription'),
       count: `${standardCount}`,
       trend: `${totalUsers > 0 ? Math.round((standardCount / totalUsers) * 100) : 0}%`,
       icon: UserCheck,
@@ -55,8 +59,8 @@ export function VuexySourceVisitsCard({
     },
     {
       id: 'instructors',
-      title: 'Giảng viên & Trợ giảng',
-      subtitle: 'Biên soạn nội dung & chấm bài thi',
+      title: t('instructors'),
+      subtitle: t('instructorsDescription'),
       count: `${instructorsCount}`,
       trend: `${totalUsers > 0 ? Math.round((instructorsCount / totalUsers) * 100) : 0}%`,
       icon: Users,
@@ -64,8 +68,8 @@ export function VuexySourceVisitsCard({
     },
     {
       id: 'admins',
-      title: 'Quản trị viên (Admin)',
-      subtitle: 'Vận hành và quản lý hệ sinh thái',
+      title: t('admins'),
+      subtitle: t('adminsDescription'),
       count: `${adminsCount}`,
       trend: `${totalUsers > 0 ? Math.round((adminsCount / totalUsers) * 100) : 0}%`,
       icon: ShieldCheck,
@@ -73,8 +77,8 @@ export function VuexySourceVisitsCard({
     },
     {
       id: 'active',
-      title: 'Tương tác trong ngày (DAU)',
-      subtitle: 'Người dùng phát sinh hành vi hôm nay',
+      title: t('dailyActive'),
+      subtitle: t('dailyActiveDescription'),
       count: `${activeTodayCount}`,
       trend: `${totalUsers > 0 ? Math.round((activeTodayCount / totalUsers) * 100) : 0}%`,
       icon: Compass,
@@ -88,13 +92,15 @@ export function VuexySourceVisitsCard({
         <div>
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">{title}</h5>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {totalUsers.toLocaleString('vi-VN')} Tài khoản toàn hệ sinh thái
+            {totalUsers.toLocaleString(locale)} {t('platformAccounts')}
           </p>
         </div>
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
+            aria-label={t('options')}
+            aria-expanded={showMenu}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
@@ -106,7 +112,7 @@ export function VuexySourceVisitsCard({
                 onClick={() => setShowMenu(false)}
                 className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
               >
-                Làm mới
+                {t('refresh')}
               </button>
             </div>
           )}
