@@ -1,6 +1,8 @@
 // Dialog chấm điểm và viết nhận xét phúc khảo bài nộp của học viên.
 
 import { useState } from "react";
+import { TeacherRubricEditor } from "./teacher.rubric.editor";
+import { teacherDraftResult, emptyTeacherDraft, type TeacherRubric, type TeacherGrading } from "../helpers/teacher.grading";
 import {
   X,
   Volume2,
@@ -28,7 +30,7 @@ interface CourseSubmissionReviewDialogProps {
   onScoreChange: (score: number) => void;
   onFeedbackChange: (feedback: string) => void;
   onClose: () => void;
-  onSaveReview: (overrideScore?: number) => void;
+  onSaveReview: (overrideScore?: number, teacherGrading?: TeacherGrading) => void;
 }
 
 export function CourseSubmissionReviewDialog({
@@ -43,8 +45,17 @@ export function CourseSubmissionReviewDialog({
 }: CourseSubmissionReviewDialogProps) {
   const [audioError, setAudioError] = useState(false);
   const isSpeaking = submission.skill === "SPEAKING";
-  const canReview = submission.ai_score != null &&
-    ['AI_GRADED', 'TEACHER_REVIEWED'].includes(submission.status);
+  const rubric = submission.teacher_rubric as TeacherRubric | undefined;
+  const [draft, setDraft] = useState(emptyTeacherDraft);
+  const grade = teacherDraftResult(rubric, draft);
+  const manual = submission.status === 'GRADING_FAILED';
+  const hasEvidence = isSpeaking ? Boolean(submission.audio_url) && !audioError : Boolean(submission.essay_text?.trim());
+  const canReview = hasEvidence && ['AI_GRADED', 'TEACHER_REVIEWED', 'GRADING_FAILED'].includes(submission.status);
+  const originalEvaluation = submission.ai_evaluation as { raw_score?: number } | undefined;
+  const aiLabel = submission.ai_score == null ? 'Chưa có điểm' : rubric?.standard === 'TOEIC' && typeof originalEvaluation?.raw_score === 'number' ? `${originalEvaluation.raw_score}/${rubric.max_score}` : `${submission.ai_score}/100${rubric?.standard === 'TOEIC' ? ' (tỷ lệ nội bộ)' : ''}`;
+  const savedGrade = submission.teacher_grading as { raw_score: number; max_score: number; rubric_snapshot: TeacherRubric; criteria_scores: Record<string, number | null> } | undefined;
+  const history = Array.isArray(submission.review_history) ? submission.review_history as Array<Record<string, unknown>> : [];
+  const canSave = canReview && (rubric ? Boolean(grade) && editFeedback.trim().length >= 10 : !manual);
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 dark:bg-black/45 backdrop-blur-[2px] p-4 animate-in fade-in duration-150">
@@ -77,6 +88,7 @@ export function CourseSubmissionReviewDialog({
           </button>
         </div>
 
+        {manual && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">AI chưa chấm được bài này. Nhập đủ phiếu chấm và nhận xét để ghi điểm giáo viên; điểm AI vẫn được giữ là chưa có.</p>}
         <div className="space-y-3">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             {isSpeaking ? (
@@ -175,18 +187,18 @@ export function CourseSubmissionReviewDialog({
                   Điểm AI đề xuất:
                 </span>
                 <span className="text-base font-black text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-3 py-1 rounded-xl">
-                  {submission.ai_score == null ? "Chưa có điểm" : `${submission.ai_score}/100`}
+                  {aiLabel}
                 </span>
               </div>
 
-              <button
+              {!rubric && <button
                 type="button"
-                disabled={!canReview}
+                disabled={!canReview || submission.ai_score == null}
                 onClick={() => { if (submission.ai_score != null) onScoreChange(submission.ai_score); }}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 cursor-pointer shadow-2xs"
               >
-                Áp dụng điểm AI ({submission.ai_score})
-              </button>
+                Áp dụng điểm AI ({aiLabel})
+              </button>}
             </div>
 
             {submission.ai_feedback?.detailed_comment && (
@@ -227,7 +239,9 @@ export function CourseSubmissionReviewDialog({
           </span>
 
           <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/40 space-y-3.5">
-            <div>
+            {rubric && <TeacherRubricEditor rubric={rubric} value={draft} onChange={setDraft} />}
+            {!rubric && <p className="text-sm text-amber-700">Thiếu rubric/đề gốc. Bài cũ chỉ hỗ trợ điều chỉnh điểm tổng; bài AI lỗi chưa thể chấm thủ công.</p>}
+            {!rubric && !manual && <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 Điểm chính thức của Giáo Viên (Thang 0 - 100):
               </label>
@@ -257,7 +271,7 @@ export function CourseSubmissionReviewDialog({
                   ))}
                 </div>
               </div>
-            </div>
+            </div>}
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -274,15 +288,22 @@ export function CourseSubmissionReviewDialog({
           </div>
         </div>
 
+        {savedGrade && <section className="rounded-xl border border-indigo-200 p-3 text-sm"><h4 className="font-semibold">Phiếu giáo viên đã lưu: {savedGrade.raw_score}/{savedGrade.max_score}</h4><ul>{Object.entries(savedGrade.criteria_scores).map(([key, value]) => <li key={key}>{savedGrade.rubric_snapshot.criteria.find(c => c.key === key)?.label || key}: {value == null ? 'Không áp dụng' : `${value}/100`}</li>)}</ul></section>}
+        {history.length > 0 && <section className="rounded-xl border border-slate-200 p-3 text-sm"><h4 className="font-semibold">Lịch sử chấm của giáo viên</h4>{history.map((entry, i) => {
+          const toeic = entry.grading_standard === 'TOEIC';
+          const before = toeic ? entry.previous_raw_score : entry.previous_score;
+          const after = toeic ? entry.raw_score : entry.score;
+          return <div key={i} className="mt-2 border-t border-slate-100 pt-2"><p>{String(entry.reviewer_name || entry.teacher_id || 'Giáo viên')} · {entry.reviewed_at ? new Date(String(entry.reviewed_at)).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }) : '—'} (UTC+7)</p><p>{entry.history_version === 1 ? `${typeof before === 'number' ? before : 'Chưa có điểm'} → ${typeof after === 'number' ? after : 'Chưa có điểm'}/${Number(entry.max_score || 100)}` : `Bản ghi cũ: ${String(entry.score ?? 'Chưa có điểm')}/100 (nội bộ)`}</p><p>{String(entry.feedback || '')}</p></div>
+        })}</section>}
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={() => { if (canReview && submission.ai_score != null) onSaveReview(submission.ai_score); }}
-            disabled={isSubmitting || !canReview}
+            disabled={isSubmitting || !canReview || submission.ai_score == null}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold transition-colors cursor-pointer"
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>Duyệt điểm AI ({submission.ai_score})</span>
+            <span>Duyệt điểm AI ({aiLabel})</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -295,8 +316,8 @@ export function CourseSubmissionReviewDialog({
             </button>
             <button
               type="button"
-              onClick={() => onSaveReview()}
-              disabled={isSubmitting || !canReview}
+              onClick={() => onSaveReview(grade?.overall, grade?.input)}
+              disabled={isSubmitting || !canSave}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />

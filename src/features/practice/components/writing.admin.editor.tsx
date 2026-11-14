@@ -21,6 +21,9 @@ export function WritingAdminEditor({ type, id, readOnly, trash, onClose }: { typ
   const p = usePracticeText()
   const [form] = Form.useForm<WritingPayload>()
   const standard = Form.useWatch('grading_standard', form) || 'PRACTICAL'
+  const observedRubric = Form.useWatch('rubric', form) || {}
+  const rubricConfigured = Object.values(observedRubric).some(value => typeof value === 'number' && value > 0)
+  const omitsLanguageScore = rubricConfigured && (!observedRubric.grammar || !observedRubric.vocabulary)
   const maxScore = type === 'DESCRIBE_PICTURE' ? 3 : type === 'WRITE_EMAIL' ? 4 : 5
   const [modal, holder] = Modal.useModal()
   const [editing, setEditing] = useState(!readOnly)
@@ -82,6 +85,8 @@ export function WritingAdminEditor({ type, id, readOnly, trash, onClose }: { typ
           <Form.Item name="cefr_level" label="CEFR"><CustomSelect options={ipaLevels.map(value => ({ value, label: value }))} /></Form.Item>
           <Form.Item name="difficulty_level" label={p("Độ khó")}><CustomSelect options={[{ value: 'EASY', label: p("Dễ") }, { value: 'MEDIUM', label: p("Vừa") }, { value: 'HARD', label: p("Khó") }]} /></Form.Item>
         </div>
+        {result.data?.rubric_error && <Alert type="warning" showIcon title={p("Cần rà soát rubric trước khi chấm bài mới")} />}
+        {standard === 'PRACTICAL' && omitsLanguageScore && <Alert type="warning" showIcon title={p("Trọng số ngữ pháp hoặc từ vựng đang bằng 0; tiêu chí đó sẽ không cộng vào điểm tổng.")} />}
         <Form.Item name="grading_standard" label={p("Chuẩn chấm điểm")}><CustomSelect options={[{ value: 'PRACTICAL', label: p("Giao tiếp thực tế (0–100)") }, { value: 'TOEIC', label: 'TOEIC Writing', disabled: type === 'SENTENCE_COMPLETION' }]} onChange={value => { if (value === 'TOEIC') form.setFieldValue('rubric', Object.fromEntries(rubricFields.map(field => [field, 0]))) }} /></Form.Item>
         <Form.Item name="task_requirements" label={p("Các yêu cầu cần hoàn thành")} extra={p("Mỗi yêu cầu là một ý cần phản hồi; nhập xong nhấn Enter.")}><Select mode="tags" /></Form.Item>
         <Form.Item name="grammar_knowledge_id" label={p("Kiến thức ngữ pháp (tùy chọn)")}><CustomSelect allowClear showSearch loading={grammar.isFetching} options={(grammar.data || []).map(row => ({ value: row._id, label: `${localizedPracticeName(row)} · ${row.code}` }))} /></Form.Item>

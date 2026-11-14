@@ -1,4 +1,5 @@
 // Hook quản lý dữ liệu chi tiết tiến độ học tập và bài nộp kỹ năng của học viên với TanStack Query.
+import type { TeacherGrading } from '@/features/submissions/helpers/teacher.grading'
 import { useState, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -116,13 +117,19 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
       submissionId,
       score,
       feedback,
+      teacherGrading,
+      revision,
     }: {
       submissionId: string
       score: number
       feedback: string
+      teacherGrading?: TeacherGrading
+      revision?: number
     }) => {
       return progressService.reviewSubmission(submissionId, {
         teacher_score: score,
+        teacher_grading: teacherGrading,
+        expected_revision: revision,
         teacher_feedback: feedback || 'Giáo viên đã xác nhận và chuẩn hóa điểm số.',
       })
     },
@@ -144,14 +151,16 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
   }, [])
 
   const handleSaveReview = useCallback(
-    async (overrideScore?: number) => {
+    async (overrideScore?: number, teacherGrading?: TeacherGrading) => {
       if (!selectedSubmission) return
-      if (selectedSubmission.ai_score == null || !['AI_GRADED', 'TEACHER_REVIEWED'].includes(selectedSubmission.status)) return
+      if (!['AI_GRADED', 'TEACHER_REVIEWED', 'GRADING_FAILED'].includes(selectedSubmission.status)) return
       const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
       await reviewMutation.mutateAsync({
         submissionId: selectedSubmission._id,
         score: scoreToSave,
         feedback: editFeedback,
+        teacherGrading,
+        revision: Number(selectedSubmission.review_revision || 0),
       })
     },
     [selectedSubmission, editScore, editFeedback, reviewMutation]

@@ -109,7 +109,10 @@ function WritingTable({ type }: { type: WritingType }) {
       const detail = await writingAdminService.detail(row._id)
       const payload = writingPayload(type, detail)
       if (published && payload.exercise_type === 'DESCRIBE_PICTURE' && !payload.image_description?.trim()) {
-        payload.image_description = (payload.reference_answer || payload.prompt_text || payload.description || payload.title || '').trim()
+        setEditor({ id: row._id, readOnly: false })
+        throw new Error(isVi
+          ? 'Cần kiểm tra ảnh và bổ sung dữ kiện ảnh trước khi xuất bản.'
+          : 'Review the picture and add verified picture facts before publishing.')
       }
       await mutations.save.mutateAsync({ id: row._id, payload: { ...payload, status: published ? 'PUBLISHED' : 'DRAFT' } })
       toast.success(isVi ? 'Đã cập nhật trạng thái Writing' : 'Writing exercise status updated')

@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component bảng danh sách khóa học và đội ngũ giảng dạy theo phong cách Vuexy Admin.
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -28,6 +29,8 @@ interface ImagePreviewState {
 }
 
 export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProjectsTableCardProps) {
+  const { t, money } = useDashboardLocale()
+
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [pageSize, setPageSize] = useState(5)
@@ -86,10 +89,10 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
       <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100">
-            Danh Sách Khóa Học & Đội Ngũ Giảng Dạy
+            {t('coursesTitle')}
           </h5>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Quản lý tiến độ xuất bản và phân công trợ giảng
+            {t('coursesSubtitle')}
           </p>
         </div>
 
@@ -103,12 +106,14 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              placeholder="Tìm kiếm khóa học..."
+              placeholder={t('searchCourses')}
+              aria-label={t('searchCourses')}
               className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
 
           <select
+            aria-label={t('pageSize')}
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value))
@@ -116,8 +121,8 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
             }}
             className="py-1.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none"
           >
-            <option value={5}>5 / trang</option>
-            <option value={10}>10 / trang</option>
+            <option value={5}>{t('fivePerPage')}</option>
+            <option value={10}>{t('tenPerPage')}</option>
           </select>
         </div>
       </div>
@@ -128,7 +133,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
             <span className="font-bold px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[11px]">
               {selectedIds.length}
             </span>
-            <span className="font-semibold">khóa học đang được chọn</span>
+            <span className="font-semibold">{t('selectedCourses')}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -138,7 +143,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shadow-xs"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Quản lý khóa học</span>
+              <span>{t('manageCourses')}</span>
             </button>
             <button
               type="button"
@@ -146,7 +151,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold transition-colors"
             >
               <Users className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Học viên & Tiến độ</span>
+              <span>{t('learnersAndProgress')}</span>
             </button>
             <button
               type="button"
@@ -154,7 +159,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold transition-colors"
             >
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Đề thi</span>
+              <span>{t('exams')}</span>
             </button>
             <button
               type="button"
@@ -162,7 +167,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium transition-colors"
             >
               <X className="w-3.5 h-3.5" />
-              <span>Bỏ chọn</span>
+              <span>{t('clearSelection')}</span>
             </button>
           </div>
         </div>
@@ -174,6 +179,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
             <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold text-[11px]">
               <th className="py-3.5 px-4 w-10 text-center">
                 <input
+                  aria-label={t('selectAll')}
                   ref={masterCheckboxRef}
                   type="checkbox"
                   checked={isAllSelectedOnPage}
@@ -181,24 +187,24 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                   className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                 />
               </th>
-              <th className="py-3.5 px-4">Khóa Học / Dự Án</th>
-              <th className="py-3.5 px-4">Giảng Viên Phụ Trách</th>
-              <th className="py-3.5 px-4">Trợ Giảng / Nhóm</th>
-              <th className="py-3.5 px-4 min-w-[140px]">Tiến Độ Hoàn Thiện</th>
-              <th className="py-3.5 px-4 text-center w-20">Thao Tác</th>
+              <th className="py-3.5 px-4">{t('courseColumn')}</th>
+              <th className="py-3.5 px-4">{t('instructorColumn')}</th>
+              <th className="py-3.5 px-4">{t('teamColumn')}</th>
+              <th className="py-3.5 px-4 min-w-[140px]">{t('progressColumn')}</th>
+              <th className="py-3.5 px-4 text-center w-20">{t('actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {isLoading ? (
               <tr>
                 <td colSpan={6} className="py-8 text-center text-slate-400">
-                  Đang tải danh sách khóa học...
+                  {t('loadingCourses')}
                 </td>
               </tr>
             ) : paginatedCourses.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-8 text-center text-slate-400">
-                  Không tìm thấy khóa học nào phù hợp.
+                  {t('noMatchingCourses')}
                 </td>
               </tr>
             ) : (
@@ -207,7 +213,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                 const isSelected = selectedIds.includes(id)
                 const isPublished = course.is_published || course.approval_status === 'PUBLISHED'
                 const progressValue = isPublished ? 100 : 65
-                const leaderName = course.author_name || 'Đội ngũ Giảng viên LingoSphere'
+                const leaderName = course.author_name || t('defaultInstructor')
                 const resolvedImageUrl = course.thumbnail_url ? resolveMediaUrl(course.thumbnail_url) : ''
 
                 return (
@@ -226,6 +232,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                     >
                       <input
                         type="checkbox"
+                        aria-label={t('selectCourse', { title: course.title })}
                         checked={isSelected}
                         onChange={() => toggleSelectOne(id)}
                         className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
@@ -242,7 +249,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                               setPreviewImage({ url: resolvedImageUrl, title: course.title })
                             }
                           }}
-                          title={resolvedImageUrl ? 'Nhấp để xem ảnh đầy đủ' : course.title}
+                          title={resolvedImageUrl ? t('previewCover') : course.title}
                         >
                           {resolvedImageUrl ? (
                             <>
@@ -278,7 +285,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                           <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                             <Layers className="w-3 h-3" />
                             {course.category || 'TOEIC'} •{' '}
-                            {course.price ? `${course.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}
+                            {course.price ? money(course.price) : t('free')}
                           </span>
                         </div>
                       </div>
@@ -333,7 +340,9 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                         type="button"
                         onClick={() => setActiveMenuId(activeMenuId === id ? null : id)}
                         className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        title="Tùy chọn"
+                        title={t('options')}
+                        aria-label={t('options')}
+                        aria-expanded={activeMenuId === id}
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -349,7 +358,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                             className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-slate-700 dark:text-slate-200"
                           >
                             <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                            <span>Quản lý bài giảng</span>
+                            <span>{t('manageLessons')}</span>
                           </button>
                           {resolvedImageUrl && (
                             <button
@@ -361,7 +370,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                               className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-slate-700 dark:text-slate-200"
                             >
                               <Eye className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                              <span>Xem ảnh bìa</span>
+                              <span>{t('viewCover')}</span>
                             </button>
                           )}
                           <button
@@ -373,7 +382,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
                             className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-slate-700 dark:text-slate-200"
                           >
                             <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            <span>Tiến độ học viên</span>
+                            <span>{t('learnerProgress')}</span>
                           </button>
                         </div>
                       )}
@@ -388,13 +397,13 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
 
       <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>
-          Hiển thị {(currentPage - 1) * pageSize + 1} -{' '}
-          {Math.min(currentPage * pageSize, filteredCourses.length)} trong số {filteredCourses.length} khóa học
+          {t('coursePagination', { start: filteredCourses.length ? (currentPage - 1) * pageSize + 1 : 0, end: Math.min(currentPage * pageSize, filteredCourses.length), count: filteredCourses.length })}
         </span>
 
         <div className="flex items-center gap-1.5">
           <button
             type="button"
+            aria-label={t('previousPage')}
             disabled={currentPage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -406,6 +415,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
           </span>
           <button
             type="button"
+            aria-label={t('nextPage')}
             disabled={currentPage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -434,6 +444,7 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
+                aria-label={t('closePreview')}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -449,14 +460,14 @@ export function VuexyProjectsTableCard({ courses, isLoading = false }: VuexyProj
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-400">Ảnh bìa khóa học chất lượng cao</span>
+              <span className="text-slate-400">{t('coverDescription')}</span>
               <a
                 href={previewImage.url}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
               >
-                <span>Mở trong tab mới</span>
+                <span>{t('openNewTab')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>

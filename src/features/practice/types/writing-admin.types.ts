@@ -8,5 +8,5 @@ export interface WritingPayload {
   word_pool: string[]; alternative_answers: string[]; keywords: string[]; target_grammar_structures: string[]
   exercise_type: WritingType; status: string; cefr_level: string; difficulty_level: string; min_words: number; max_words: number; rubric: Record<typeof rubricFields[number], number>; expected_revision?: number
 }
-export interface WritingRecord extends WritingPayload { _id: string; revision: number; created_at?: string; updated_at?: string }
+export interface WritingRecord extends WritingPayload { rubric_error?: string; rubric_policy?: string; _id: string; revision: number; created_at?: string; updated_at?: string }
 export interface WritingGrammarOption { _id: string; code: string; name_en: string; name_vi?: string }

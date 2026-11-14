@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ quản lý thông báo hệ thống Monthly Campaign State theo phong cách Vuexy Admin.
 
 import { useState } from 'react'
@@ -20,54 +21,56 @@ export function VuexyMonthlyCampaignCard({
   broadcastCount,
   normalCount,
 }: VuexyMonthlyCampaignCardProps) {
+  const { t } = useDashboardLocale()
+
   const [showMenu, setShowMenu] = useState(false)
 
   const items = [
     {
       id: 'total',
-      label: 'Tổng thông báo đã tạo',
+      label: t('totalNotifications'),
       count: totalCount.toString(),
-      statusText: 'Hệ thống',
+      statusText: t('system'),
       icon: Bell,
       badgeColorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
     },
     {
       id: 'unread',
-      label: 'Thông báo chưa đọc',
+      label: t('unreadNotifications'),
       count: unreadCount.toString(),
-      statusText: unreadCount > 0 ? 'Cần đọc' : 'Đã đọc hết',
+      statusText: unreadCount > 0 ? t('needsReading') : t('allRead'),
       icon: Mail,
       badgeColorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
     },
     {
       id: 'pinned',
-      label: 'Thông báo được ghim',
+      label: t('pinnedNotifications'),
       count: pinnedCount.toString(),
-      statusText: 'Ưu tiên cao',
+      statusText: t('highPriority'),
       icon: Bookmark,
       badgeColorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
     },
     {
       id: 'urgent',
-      label: 'Khẩn cấp & quan trọng',
+      label: t('urgentNotifications'),
       count: urgentCount.toString(),
-      statusText: 'Cảnh báo',
+      statusText: t('alert'),
       icon: AlertCircle,
       badgeColorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
     },
     {
       id: 'broadcast',
-      label: 'Phát sóng toàn bộ người học',
+      label: t('broadcastNotifications'),
       count: broadcastCount.toString(),
-      statusText: 'Toàn sàn',
+      statusText: t('platformWide'),
       icon: Radio,
       badgeColorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
     },
     {
       id: 'normal',
-      label: 'Thông báo thông thường',
+      label: t('normalNotifications'),
       count: normalCount.toString(),
-      statusText: 'Tiêu chuẩn',
+      statusText: t('standard'),
       icon: CheckCheck,
       badgeColorClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
     },
@@ -78,16 +81,18 @@ export function VuexyMonthlyCampaignCard({
       <div className="flex items-start justify-between mb-3">
         <div>
           <h5 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
-            Thông Báo & Nhắc Học
+            {t('notificationsTitle')}
           </h5>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {totalCount > 0 ? `${totalCount} thông báo trong hệ thống` : 'Chưa có thông báo nào'}
+            {totalCount > 0 ? t('notificationCount', { count: totalCount }) : t('noNotifications')}
           </p>
         </div>
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
+            aria-label={t('options')}
+            aria-expanded={showMenu}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
@@ -99,7 +104,7 @@ export function VuexyMonthlyCampaignCard({
                 onClick={() => setShowMenu(false)}
                 className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
               >
-                Làm mới
+                {t('refresh')}
               </button>
             </div>
           )}

@@ -10,7 +10,15 @@ export function practiceScoreLabel(item: PracticeSubmission, ai = false) {
 export function practiceDateLabel(date?: string | null) {
   if (!date) return '—'
   const value = new Date(date)
-  return Number.isNaN(value.getTime()) ? '—' : value.toLocaleString('vi-VN')
+  return Number.isNaN(value.getTime()) ? '—' : value.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false })
+}
+
+export function practiceHistoryScoreLabel(entry: NonNullable<PracticeSubmission['review_history']>[number], item: PracticeSubmission) {
+  const toeic = (entry.grading_standard || item.grading_standard) === 'TOEIC'
+  const max = entry.max_score ?? (toeic ? item.max_score : 100)
+  const before = toeic ? entry.previous_raw_score : entry.previous_score
+  const after = toeic ? entry.raw_score : entry.score
+  return `${typeof before === 'number' ? before : 'Chưa có điểm'} → ${typeof after === 'number' ? `${after}/${max ?? '—'}` : 'Chưa có điểm tác vụ'}`
 }
 
 export const practiceExerciseLabels: Record<string, string> = {

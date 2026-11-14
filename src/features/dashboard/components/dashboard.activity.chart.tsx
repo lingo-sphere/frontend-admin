@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component biểu đồ cột phân tích phiên học tập theo ngày với hiệu ứng trực quan hiện đại.
 export interface ChartItem {
   value: number
@@ -6,6 +7,7 @@ export interface ChartItem {
 }
 
 export function SimpleChart({ items }: { items: ChartItem[] }) {
+  const { t } = useDashboardLocale()
   const maxValue = Math.max(...items.map((i) => i.value), 1)
   const minValue = Math.min(...items.map((i) => i.value), 0)
 
@@ -22,7 +24,7 @@ export function SimpleChart({ items }: { items: ChartItem[] }) {
           return (
             <div
               key={index}
-              title={`${item.fullDate}: ${item.value} phiên học`}
+              title={t('sessionTooltip', { date: item.fullDate, count: item.value })}
               className="flex-1 flex flex-col justify-end items-center h-full group relative"
             >
               <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 px-2 py-0.5 rounded-md bg-slate-900 text-white text-[10px] font-bold pointer-events-none whitespace-nowrap z-20 shadow-md">

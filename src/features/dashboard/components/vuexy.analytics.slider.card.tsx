@@ -1,3 +1,4 @@
+import { useDashboardLocale } from '@/features/dashboard/hooks/use.dashboard.locale'
 // Component thẻ trượt phân tích Website Analytics theo phong cách Vuexy Admin Template.
 import { useState, useEffect } from 'react'
 import { TrendingUp, BookOpen, Award } from 'lucide-react'
@@ -10,7 +11,7 @@ interface VuexyAnalyticsSliderCardProps {
   totalWords?: number
   examsCount?: number
   publicDecksCount?: number
-  grammarPointsCount?: number
+  grammarPointsCount?: number | null
   totalCoursePrice?: number
   toeicAttemptsCount?: number
   isVietnamese?: boolean
@@ -29,6 +30,8 @@ export function VuexyAnalyticsSliderCard({
   toeicAttemptsCount = 0,
   isVietnamese = true,
 }: VuexyAnalyticsSliderCardProps) {
+  const { t, money } = useDashboardLocale()
+
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export function VuexyAnalyticsSliderCard({
       stats: [
         { value: `${totalUsers}`, label: isVietnamese ? 'Tổng người dùng' : 'Total Users' },
         { value: `${activeToday}`, label: isVietnamese ? 'Học hôm nay' : 'Active Today' },
-        { value: `${totalCourses} Khóa`, label: isVietnamese ? 'Khóa học' : 'Courses' },
+        { value: t('courseCount', { count: totalCourses }), label: isVietnamese ? 'Khóa học' : 'Courses' },
         { value: `${vipUsers}`, label: isVietnamese ? 'Gói VIP' : 'VIP Accounts' },
       ],
       badge: isVietnamese ? 'Vận hành 100%' : 'Optimal',
@@ -63,10 +66,10 @@ export function VuexyAnalyticsSliderCard({
         : 'International standard TOEIC practice bank',
       sectionTitle: isVietnamese ? 'Kỹ Năng & Từ Vựng' : 'Skills & Vocabulary',
       stats: [
-        { value: `${totalWords.toLocaleString('vi-VN')} từ`, label: isVietnamese ? 'Từ vựng SRS' : 'SRS Words' },
-        { value: `${examsCount} Đề`, label: isVietnamese ? 'Đề thi TOEIC' : 'Mock Tests' },
-        { value: `${publicDecksCount} Bộ`, label: isVietnamese ? 'Bộ thẻ Flashcard' : 'Flashcard Decks' },
-        { value: `${grammarPointsCount} Điểm`, label: isVietnamese ? 'Ngữ pháp' : 'Grammar Points' },
+        { value: t('wordCount', { count: totalWords }), label: isVietnamese ? 'Từ vựng SRS' : 'SRS Words' },
+        { value: t('examCount', { count: examsCount }), label: isVietnamese ? 'Đề thi TOEIC' : 'Mock Tests' },
+        { value: t('deckCount', { count: publicDecksCount }), label: isVietnamese ? 'Bộ thẻ Flashcard' : 'Flashcard Decks' },
+        { value: grammarPointsCount === null ? '—' : t('topicCount', { count: grammarPointsCount }), label: isVietnamese ? 'Ngữ pháp' : 'Grammar Points' },
       ],
       badge: isVietnamese ? 'Chuẩn CEFR' : 'CEFR Ready',
       icon: BookOpen,
@@ -78,10 +81,10 @@ export function VuexyAnalyticsSliderCard({
         : 'Overview of courses scale and test submissions',
       sectionTitle: isVietnamese ? 'Quy Mô & Giá Trị' : 'Scale & Assessment',
       stats: [
-        { value: `${totalCourses} Khóa`, label: isVietnamese ? 'Khóa học niêm yết' : 'Published Courses' },
-        { value: `${totalCoursePrice.toLocaleString('vi-VN')} đ`, label: isVietnamese ? 'Giá niêm yết' : 'Total Price' },
-        { value: `${toeicAttemptsCount} Lượt`, label: isVietnamese ? 'Lượt làm đề' : 'Exam Submissions' },
-        { value: `${vipUsers} Gói`, label: isVietnamese ? 'Hội viên VIP' : 'VIP Learners' },
+        { value: t('courseCount', { count: totalCourses }), label: isVietnamese ? 'Khóa học niêm yết' : 'Published Courses' },
+        { value: money(totalCoursePrice), label: isVietnamese ? 'Giá niêm yết' : 'Total Price' },
+        { value: t('attemptCount', { count: toeicAttemptsCount }), label: isVietnamese ? 'Lượt làm đề' : 'Exam Submissions' },
+        { value: t('planCount', { count: vipUsers }), label: isVietnamese ? 'Hội viên VIP' : 'VIP Learners' },
       ],
       badge: isVietnamese ? 'Hệ Sinh Thái' : 'Ecosystem',
       icon: Award,
@@ -114,7 +117,7 @@ export function VuexyAnalyticsSliderCard({
                 className={`h-2 rounded-full transition-all cursor-pointer ${
                   currentSlide === idx ? 'w-6 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
                 }`}
-                aria-label={`Slide ${idx + 1}`}
+                aria-label={t('slide', { number: idx + 1 })}
               />
             ))}
           </div>
