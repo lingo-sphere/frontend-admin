@@ -1,8 +1,10 @@
+import { WritingTaskAssessmentSummary } from './writing.task.assessment';
+import { useTeacherGrade } from '../hooks/use.teacher.grade';
 // Dialog chấm điểm và viết nhận xét phúc khảo bài nộp của học viên.
 
 import { useState } from "react";
 import { TeacherRubricEditor } from "./teacher.rubric.editor";
-import { teacherDraftResult, emptyTeacherDraft, type TeacherRubric, type TeacherGrading } from "../helpers/teacher.grading";
+import { emptyTeacherDraft, type TeacherRubric, type TeacherGrading } from "../helpers/teacher.grading";
 import {
   X,
   Volume2,
@@ -30,7 +32,7 @@ interface CourseSubmissionReviewDialogProps {
   onScoreChange: (score: number) => void;
   onFeedbackChange: (feedback: string) => void;
   onClose: () => void;
-  onSaveReview: (overrideScore?: number, teacherGrading?: TeacherGrading) => void;
+  onSaveReview: (overrideScore?: number, teacherGrading?: TeacherGrading, keepAi?: boolean) => void;
 }
 
 export function CourseSubmissionReviewDialog({
@@ -47,7 +49,8 @@ export function CourseSubmissionReviewDialog({
   const isSpeaking = submission.skill === "SPEAKING";
   const rubric = submission.teacher_rubric as TeacherRubric | undefined;
   const [draft, setDraft] = useState(emptyTeacherDraft);
-  const grade = teacherDraftResult(rubric, draft);
+  const preview = useTeacherGrade(rubric, draft, (submission.task_snapshot || {}) as Record<string, unknown>, submission.essay_text || '');
+  const grade = preview.pending ? null : preview.grade;
   const manual = submission.status === 'GRADING_FAILED';
   const hasEvidence = isSpeaking ? Boolean(submission.audio_url) && !audioError : Boolean(submission.essay_text?.trim());
   const canReview = hasEvidence && ['AI_GRADED', 'TEACHER_REVIEWED', 'GRADING_FAILED'].includes(submission.status);
@@ -88,6 +91,8 @@ export function CourseSubmissionReviewDialog({
           </button>
         </div>
 
+        <WritingTaskAssessmentSummary evaluation={submission.ai_evaluation as Record<string, unknown> | undefined} title="Đánh giá AI ban đầu" />
+        <WritingTaskAssessmentSummary evaluation={submission.teacher_grading as Record<string, unknown> | undefined} title="Đánh giá giáo viên đã lưu" />
         {manual && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">AI chưa chấm được bài này. Nhập đủ phiếu chấm và nhận xét để ghi điểm giáo viên; điểm AI vẫn được giữ là chưa có.</p>}
         <div className="space-y-3">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -239,7 +244,7 @@ export function CourseSubmissionReviewDialog({
           </span>
 
           <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/40 space-y-3.5">
-            {rubric && <TeacherRubricEditor rubric={rubric} value={draft} onChange={setDraft} />}
+            {rubric && <TeacherRubricEditor rubric={rubric} value={draft} onChange={setDraft} calculated={preview.grade} pending={preview.pending} error={preview.error} />}
             {!rubric && <p className="text-sm text-amber-700">Thiếu rubric/đề gốc. Bài cũ chỉ hỗ trợ điều chỉnh điểm tổng; bài AI lỗi chưa thể chấm thủ công.</p>}
             {!rubric && !manual && <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -298,7 +303,7 @@ export function CourseSubmissionReviewDialog({
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
-            onClick={() => { if (canReview && submission.ai_score != null) onSaveReview(submission.ai_score); }}
+            onClick={() => { if (canReview && submission.ai_score != null) onSaveReview(submission.ai_score, undefined, true); }}
             disabled={isSubmitting || !canReview || submission.ai_score == null}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold transition-colors cursor-pointer"
           >

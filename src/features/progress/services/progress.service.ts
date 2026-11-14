@@ -1,3 +1,4 @@
+import type { TeacherGrading } from '@/features/submissions/helpers/teacher.grading';
 /**
  * @file progress.service.ts
  * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ progress và quản lý bài nộp kỹ năng Speaking/Writing của học viên cho giáo viên chấm/sửa điểm
@@ -117,7 +118,7 @@ export const progressService = {
 
   async reviewSubmission(
     submissionId: string,
-    data: { teacher_score: number; teacher_feedback?: string; expected_revision?: number; teacher_grading?: { criteria_scores: Record<string, number | null>; raw_score?: number } }
+    data: { teacher_score: number; teacher_feedback?: string; expected_revision?: number; teacher_grading?: TeacherGrading; decision?: 'KEEP_AI' | 'ADJUST' }
   ): Promise<SkillSubmissionItem> {
     return api.post<SkillSubmissionItem>(
       `/progress/teacher/submissions/${submissionId}/review`,

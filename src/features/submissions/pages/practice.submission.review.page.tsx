@@ -1,8 +1,10 @@
+import { WritingTaskAssessmentSummary } from '../components/writing.task.assessment'
+import { useTeacherGrade } from '../hooks/use.teacher.grade'
 // Trang chi tiết xem bài làm và xử lý chấm điểm, phúc khảo bài luyện tập.
 
 import { useState, useEffect } from 'react'
 import { TeacherRubricEditor } from '../components/teacher.rubric.editor'
-import { emptyTeacherDraft, teacherDraftResult } from '../helpers/teacher.grading'
+import { emptyTeacherDraft } from '../helpers/teacher.grading'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Image, Spin } from 'antd'
@@ -214,7 +216,8 @@ function PracticeReviewContent({
   const manual = item.record_type === 'GRADING_REQUEST'
   const [decision, setDecision] = useState<'KEEP' | 'ADJUST'>(manual ? 'ADJUST' : 'KEEP')
   const [teacherDraft, setTeacherDraft] = useState(emptyTeacherDraft)
-  const teacherGrade = teacherDraftResult(item.teacher_rubric, teacherDraft)
+  const preview = useTeacherGrade(item.teacher_rubric, teacherDraft, item.task_snapshot || {}, item.content || '')
+  const teacherGrade = preview.pending ? null : preview.grade
   const [score, setScore] = useState(
     String(item.grading_standard === 'TOEIC' ? item.raw_score ?? 0 : item.overall_score ?? 0)
   )
@@ -258,6 +261,8 @@ function PracticeReviewContent({
 
   return (
     <div className="space-y-6">
+      <WritingTaskAssessmentSummary evaluation={item.ai_evaluation} title="Đánh giá AI ban đầu" />
+      <WritingTaskAssessmentSummary evaluation={item.review?.teacher_grading as unknown as Record<string, unknown>} title="Đánh giá giáo viên hiện tại" />
       {manual && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">Bài AI chưa chấm được. Giáo viên chấm từ bài làm và đề gốc; điểm giáo viên được lưu riêng, điểm AI vẫn là chưa có. Chỉ lưu khi yêu cầu đã ở trạng thái lỗi.</div>}
       {item.review?.teacher_grading && <div className="rounded-xl border border-indigo-200 p-4 text-sm"><p className="font-semibold">Phiếu giáo viên đã lưu</p><p>{item.review.teacher_grading.raw_score}/{item.review.teacher_grading.max_score} · {item.review.feedback}</p><ul>{Object.entries(item.review.teacher_grading.criteria_scores).map(([key, value]) => <li key={key}>{item.review!.teacher_grading!.rubric_snapshot.criteria.find(c => c.key === key)?.label || key}: {value == null ? 'Không áp dụng' : `${value}/100`}</li>)}</ul></div>}
       {item.review?.reason && (
@@ -591,7 +596,7 @@ function PracticeReviewContent({
                 </select>
               </div>
 
-              {decision === 'ADJUST' && item.teacher_rubric && <TeacherRubricEditor rubric={item.teacher_rubric} value={teacherDraft} onChange={setTeacherDraft} />}
+              {decision === 'ADJUST' && item.teacher_rubric && <TeacherRubricEditor rubric={item.teacher_rubric} value={teacherDraft} onChange={setTeacherDraft} calculated={preview.grade} pending={preview.pending} error={preview.error} />}
               {decision === 'ADJUST' && !item.teacher_rubric && <p className="text-sm text-amber-700">Không có đủ rubric/đề gốc đã lưu. {manual ? 'Chưa thể chấm thủ công; cần khôi phục dữ liệu gốc.' : 'Bài cũ chỉ hỗ trợ điều chỉnh điểm tổng và phải ghi rõ căn cứ.'}</p>}
               {decision === 'ADJUST' && !item.teacher_rubric && !manual && (
                 <div>
