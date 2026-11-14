@@ -118,17 +118,20 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
       score,
       feedback,
       teacherGrading,
+      keepAi,
       revision,
     }: {
       submissionId: string
       score: number
       feedback: string
       teacherGrading?: TeacherGrading
+      keepAi?: boolean
       revision?: number
     }) => {
       return progressService.reviewSubmission(submissionId, {
         teacher_score: score,
         teacher_grading: teacherGrading,
+        decision: keepAi ? 'KEEP_AI' : 'ADJUST',
         expected_revision: revision,
         teacher_feedback: feedback || 'Giáo viên đã xác nhận và chuẩn hóa điểm số.',
       })
@@ -151,7 +154,7 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
   }, [])
 
   const handleSaveReview = useCallback(
-    async (overrideScore?: number, teacherGrading?: TeacherGrading) => {
+    async (overrideScore?: number, teacherGrading?: TeacherGrading, keepAi?: boolean) => {
       if (!selectedSubmission) return
       if (!['AI_GRADED', 'TEACHER_REVIEWED', 'GRADING_FAILED'].includes(selectedSubmission.status)) return
       const scoreToSave = overrideScore !== undefined ? overrideScore : editScore
@@ -160,6 +163,7 @@ export function useLearnerProgressDetail({ courseId, userId }: UseLearnerProgres
         score: scoreToSave,
         feedback: editFeedback,
         teacherGrading,
+        keepAi,
         revision: Number(selectedSubmission.review_revision || 0),
       })
     },
