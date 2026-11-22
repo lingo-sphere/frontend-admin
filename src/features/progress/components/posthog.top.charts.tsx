@@ -1,8 +1,4 @@
-/**
- * @file posthog.top.charts.tsx
- * @description Charts displaying top triggered PostHog events and most viewed pages
- */
-
+// Component biểu đồ hiển thị các sự kiện PostHog và lượt xem trang ứng dụng.
 import { BarChart3, Eye } from 'lucide-react'
 import type { PostHogAnalyticsData, PostHogTopEvent, PostHogTopPage } from '@/types/api.types'
 

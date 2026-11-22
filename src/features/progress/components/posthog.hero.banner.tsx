@@ -57,10 +57,10 @@ export function PostHogHeroBanner({
               href="https://us.posthog.com/project/585141"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-teal-50 text-xs sm:text-sm font-bold shadow-lg shadow-black/10 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-teal-50 dark:hover:bg-slate-700 text-xs sm:text-sm font-bold shadow-lg shadow-black/10 transition-all cursor-pointer"
             >
               <span>{isVi ? 'Mở PostHog Cloud' : 'Open PostHog'}</span>
-              <ExternalLink className="w-4 h-4 text-indigo-600" />
+              <ExternalLink className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             </a>
           </div>
         </div>
