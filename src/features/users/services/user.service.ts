@@ -1,8 +1,5 @@
-/**
- * @file user.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ user
- */
-
+// Service xử lý các logic nghiệp vụ chính cho dịch vụ user.
+import type { ZodType } from 'zod'
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { PaginatedResult } from '@/types/api.types'
@@ -35,7 +32,7 @@ export const userService = {
     return api.get<PaginatedResult<UserProfile>>(
       API_CONFIG.ENDPOINTS.USERS.ADMIN_USERS,
       params as Record<string, unknown>,
-      PaginatedUserProfilesSchema as unknown as import('zod').ZodType<PaginatedResult<UserProfile>>
+      PaginatedUserProfilesSchema as unknown as ZodType<PaginatedResult<UserProfile>>
     )
   },
 

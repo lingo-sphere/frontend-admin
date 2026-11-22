@@ -1,5 +1,5 @@
 // Component gốc cấu hình giao diện Admin và cung cấp QueryClientProvider cùng ConfigProvider quốc tế hóa.
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useMemo, type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useTranslation } from 'react-i18next'
@@ -26,46 +26,51 @@ function AntdAdminThemeWrapper({ currentLanguage, children }: AntdAdminThemeWrap
   const { theme } = useAdminLayout()
   const isDark = theme === 'dark'
 
+  const themeConfig = useMemo(
+    () => ({
+      algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+      token: {
+        colorPrimary: '#6366f1',
+        borderRadius: 8,
+        colorBgContainer: isDark ? '#0f172a' : '#ffffff',
+        colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+        colorBorder: isDark ? '#334155' : '#e2e8f0',
+        colorText: isDark ? '#f8fafc' : '#0f172a',
+      },
+      components: {
+        Table: {
+          headerBg: isDark ? '#1e293b' : '#f8fafc',
+          headerColor: isDark ? '#f8fafc' : '#0f172a',
+          rowHoverBg: isDark ? '#1e293b' : '#f1f5f9',
+          borderColor: isDark ? '#334155' : '#e2e8f0',
+        },
+        Modal: {
+          contentBg: isDark ? '#0f172a' : '#ffffff',
+          headerBg: isDark ? '#0f172a' : '#ffffff',
+        },
+        Select: {
+          colorBgContainer: isDark ? '#0f172a' : '#ffffff',
+          colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+          optionSelectedBg: isDark ? '#312e81' : '#e0e7ff',
+        },
+        Dropdown: {
+          colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+        },
+        Popover: {
+          colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+        },
+        DatePicker: {
+          colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+        },
+      },
+    }),
+    [isDark]
+  )
+
   return (
     <ConfigProvider
       locale={currentLanguage === 'vi' ? viVN : enUS}
-      theme={{
-        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-        token: {
-          colorPrimary: '#6366f1',
-          borderRadius: 8,
-          colorBgContainer: isDark ? '#0f172a' : '#ffffff',
-          colorBgElevated: isDark ? '#1e293b' : '#ffffff',
-          colorBorder: isDark ? '#334155' : '#e2e8f0',
-          colorText: isDark ? '#f8fafc' : '#0f172a',
-        },
-        components: {
-          Table: {
-            headerBg: isDark ? '#1e293b' : '#f8fafc',
-            headerColor: isDark ? '#f8fafc' : '#0f172a',
-            rowHoverBg: isDark ? '#1e293b' : '#f1f5f9',
-            borderColor: isDark ? '#334155' : '#e2e8f0',
-          },
-          Modal: {
-            contentBg: isDark ? '#0f172a' : '#ffffff',
-            headerBg: isDark ? '#0f172a' : '#ffffff',
-          },
-          Select: {
-            colorBgContainer: isDark ? '#0f172a' : '#ffffff',
-            colorBgElevated: isDark ? '#1e293b' : '#ffffff',
-            optionSelectedBg: isDark ? '#312e81' : '#e0e7ff',
-          },
-          Dropdown: {
-            colorBgElevated: isDark ? '#1e293b' : '#ffffff',
-          },
-          Popover: {
-            colorBgElevated: isDark ? '#1e293b' : '#ffffff',
-          },
-          DatePicker: {
-            colorBgElevated: isDark ? '#1e293b' : '#ffffff',
-          },
-        },
-      }}
+      theme={themeConfig}
     >
       {children}
     </ConfigProvider>

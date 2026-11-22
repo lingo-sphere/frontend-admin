@@ -3,12 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Image, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { Button, Image, Segmented, Space, Tag } from 'antd'
 import { AdminTabs } from '@/components/admin.tabs'
 import { TableStatusSwitch } from '@/components/table.status.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
-import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { resolveMediaUrl } from '@/lib/media.utils'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
@@ -205,7 +204,6 @@ function ListeningTable({ type }: { type: ListeningType }) {
 export function PracticeListeningPage() {
   const [params] = useSearchParams()
   const state = useIpaTableState()
-  const { theme } = useAdminLayout()
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
@@ -215,7 +213,7 @@ export function PracticeListeningPage() {
     state.change({ tab, filters: JSON.stringify(common), page: '1', sort: undefined, order: undefined })
   }
 
-  return <ConfigProvider theme={{ algorithm: theme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm, token: { colorPrimary: '#4f46e5', borderRadius: 10 } }}>
+  return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện nghe' : 'Listening Management'}</h1>
@@ -231,5 +229,5 @@ export function PracticeListeningPage() {
         }))}
       />
     </div>
-  </ConfigProvider>
+  )
 }

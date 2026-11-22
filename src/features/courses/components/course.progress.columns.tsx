@@ -3,10 +3,11 @@ import { Button, Space, Tooltip } from 'antd'
 import { BookOpen, TrendingUp, BarChart3, Mail, Clock, ShieldAlert, AlertTriangle } from 'lucide-react'
 import type { DataTableColumn } from '@/components/data.table'
 import type { StudentProgressItem } from '@/features/progress/services/progress.service'
+import type { UserProfile } from '@/types/api.types'
 
 interface CreateCourseProgressColumnsParams {
   isVi: boolean
-  usersMap: Map<string, import('@/types/api.types').UserProfile | { full_name?: string | null; email?: string | null; avatar_url?: string | null }>
+  usersMap: Map<string, UserProfile | { full_name?: string | null; email?: string | null; avatar_url?: string | null }>
   onSelectReminderHistory: (student: StudentProgressItem) => void
   onSelectStudentDetail: (student: StudentProgressItem) => void
 }
