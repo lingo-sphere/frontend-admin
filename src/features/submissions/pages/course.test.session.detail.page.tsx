@@ -1,5 +1,4 @@
-// Trang xem chi tiết bài làm kiểm tra khóa học, sửa điểm và nhận xét học viên.
-
+// Trang xem chi tiết bài làm kiểm tra khóa học, sửa điểm và nhận xét học viên hỗ trợ đa ngôn ngữ.
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -23,27 +22,30 @@ import {
   X,
   Sparkles,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { progressService } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
 import { courseService } from '@/features/courses/services/course.service'
 import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/features/media/utils/media.utils'
 import { toast } from '@/store/toast.store'
 
-const testTypes: Record<string, string> = {
-  challenge: 'Challenge',
-  'post-mini': 'Kiểm tra chương',
-  'final-test': 'Kiểm tra cuối khóa',
+const getTestTypeName = (type: string, isVi: boolean) => {
+  if (type === 'challenge') return isVi ? 'Thử thách đầu chương' : 'Chapter Challenge'
+  if (type === 'post-mini') return isVi ? 'Kiểm tra chương' : 'Post-Chapter Test'
+  if (type === 'final-test') return isVi ? 'Kiểm tra cuối khóa' : 'Final Exam'
+  return type
 }
 
-const statuses: Record<string, string> = {
-  IN_PROGRESS: 'Đang làm',
-  SUBMITTED: 'Đã nộp',
-  EXPIRED: 'Hết hạn',
-  AWAITING_GRADING: 'Chờ chấm',
-  FINALIZING: 'Đang xử lý',
+const getStatusName = (status: string, isVi: boolean) => {
+  if (status === 'IN_PROGRESS') return isVi ? 'Đang làm' : 'In Progress'
+  if (status === 'SUBMITTED') return isVi ? 'Đã nộp' : 'Submitted'
+  if (status === 'EXPIRED') return isVi ? 'Hết hạn' : 'Expired'
+  if (status === 'AWAITING_GRADING') return isVi ? 'Chờ chấm' : 'Awaiting Grading'
+  if (status === 'FINALIZING') return isVi ? 'Đang xử lý' : 'Finalizing'
+  return status
 }
 
-const formatDate = (date?: string | null) => (date ? new Date(date).toLocaleString('vi-VN') : '—')
+const formatDate = (date?: string | null, isVi: boolean = true) => (date ? new Date(date).toLocaleString(isVi ? 'vi-VN' : 'en-US') : '—')
 const text = (value: unknown) => (typeof value === 'string' || typeof value === 'number' ? String(value) : '')
 
 interface CourseTestSessionDetailPageProps {
@@ -57,6 +59,8 @@ export function CourseTestSessionDetailPage({
 }: CourseTestSessionDetailPageProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t, i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
 
   const {
     data: session,
@@ -118,10 +122,10 @@ export function CourseTestSessionDetailPage({
       void queryClient.invalidateQueries({ queryKey: ['course-test-session-detail', courseId, sessionId] })
       void queryClient.invalidateQueries({ queryKey: ['course-test-sessions', courseId] })
       setIsDirty(false)
-      toast.success('Đã lưu nhận xét và cập nhật điểm bài kiểm tra thành công!')
+      toast.success(isVi ? 'Đã lưu nhận xét và cập nhật điểm bài kiểm tra thành công!' : 'Saved feedback and updated test score successfully!')
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi lưu nhận xét.'
+      const msg = err instanceof Error ? err.message : (isVi ? 'Lỗi khi lưu nhận xét.' : 'Error saving feedback.')
       toast.error(msg)
     },
   })
@@ -255,7 +259,7 @@ export function CourseTestSessionDetailPage({
     const diffSec = Math.floor((end - start) / 1000)
     const mins = Math.floor(diffSec / 60)
     const secs = diffSec % 60
-    return `${mins} phút ${secs} giây`
+    return `${mins} ${isVi ? 'phút' : 'mins'} ${secs} ${isVi ? 'giây' : 'secs'}`
   }
 
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null)
@@ -337,15 +341,15 @@ export function CourseTestSessionDetailPage({
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-2xs cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Quay lại danh sách bài kiểm tra</span>
+            <span>{isVi ? 'Quay lại danh sách bài kiểm tra' : 'Back to Test Submissions'}</span>
           </button>
           <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-              Chi tiết bài làm kiểm tra khóa học
+              {isVi ? 'Chi tiết bài làm kiểm tra khóa học' : 'Course Test Submission Details'}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {courseDetail?.title || 'Khóa học'} · {session ? testTypes[session.test_type] || session.test_type : '...'}
+              {courseDetail?.title || (isVi ? 'Khóa học' : 'Course')} · {session ? getTestTypeName(session.test_type, isVi) : '...'}
             </p>
           </div>
         </div>
@@ -357,7 +361,7 @@ export function CourseTestSessionDetailPage({
             onClick={() => { void refetch() }}
             className="rounded-xl text-xs font-semibold"
           >
-            Tải lại bài làm
+            {isVi ? 'Tải lại bài làm' : 'Reload Submission'}
           </Button>
 
           <Button
@@ -369,7 +373,7 @@ export function CourseTestSessionDetailPage({
             onClick={handleSaveAll}
             className="rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500"
           >
-            Lưu thay đổi
+            {isVi ? 'Lưu thay đổi' : 'Save Changes'}
           </Button>
         </div>
       </div>
@@ -377,14 +381,18 @@ export function CourseTestSessionDetailPage({
       {isLoading && (
         <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
           <Spin size="large" />
-          <p className="mt-3 text-xs text-slate-500">Đang tải câu hỏi và kết quả bài làm…</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {isVi ? 'Đang tải câu hỏi và kết quả bài làm…' : 'Loading questions and submission results…'}
+          </p>
         </div>
       )}
 
       {isError && (
         <div className="p-6 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400">
-          <p className="font-semibold text-sm">Không thể tải chi tiết bài làm.</p>
-          <p className="text-xs mt-1">{error instanceof Error ? error.message : 'Lỗi không xác định.'}</p>
+          <p className="font-semibold text-sm">
+            {isVi ? 'Không thể tải chi tiết bài làm.' : 'Unable to load submission details.'}
+          </p>
+          <p className="text-xs mt-1">{error instanceof Error ? error.message : (isVi ? 'Lỗi không xác định.' : 'Unknown error.')}</p>
           <Button
             type="primary"
             danger
@@ -392,7 +400,7 @@ export function CourseTestSessionDetailPage({
             className="mt-3 rounded-lg text-xs"
             onClick={() => { void refetch() }}
           >
-            Thử lại
+            {isVi ? 'Thử lại' : 'Retry'}
           </Button>
         </div>
       )}
@@ -403,7 +411,7 @@ export function CourseTestSessionDetailPage({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <User className="w-4 h-4 text-indigo-500" />
-                <span>Học viên</span>
+                <span>{isVi ? 'Học viên' : 'Learner'}</span>
               </div>
               <div>
                 <p className="font-bold text-sm text-slate-900 dark:text-white truncate">
@@ -418,14 +426,14 @@ export function CourseTestSessionDetailPage({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <BookOpen className="w-4 h-4 text-purple-500" />
-                <span>Khóa học & Loại bài</span>
+                <span>{isVi ? 'Khóa học & Loại bài' : 'Course & Exam Type'}</span>
               </div>
               <div>
                 <p className="font-bold text-sm text-slate-900 dark:text-white truncate">
-                  {courseDetail?.title || 'Khóa học'}
+                  {courseDetail?.title || (isVi ? 'Khóa học' : 'Course')}
                 </p>
                 <span className="inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                  {testTypes[session.test_type] || session.test_type}
+                  {getTestTypeName(session.test_type, isVi)}
                 </span>
               </div>
             </div>
@@ -433,7 +441,7 @@ export function CourseTestSessionDetailPage({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <Award className="w-4 h-4 text-amber-500" />
-                <span>Kết quả & Điểm số</span>
+                <span>{isVi ? 'Kết quả & Điểm số' : 'Result & Score'}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black font-mono text-slate-900 dark:text-white">
@@ -447,24 +455,24 @@ export function CourseTestSessionDetailPage({
                       : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
                   }`}
                 >
-                  {isPassed ? 'Đạt' : 'Chưa đạt'}
+                  {isPassed ? (isVi ? 'Đạt' : 'Passed') : (isVi ? 'Chưa đạt' : 'Failed')}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Điểm sàn đạt: {effectivePassingScore} điểm · Trạng thái: {statuses[session.status] || session.status}
+                {isVi ? 'Điểm sàn đạt: ' : 'Benchmark: '}{effectivePassingScore} {isVi ? 'điểm' : 'pts'} · {isVi ? 'Trạng thái: ' : 'Status: '}{getStatusName(session.status, isVi)}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <Clock className="w-4 h-4 text-emerald-500" />
-                <span>Thời gian làm bài</span>
+                <span>{isVi ? 'Thời gian làm bài' : 'Duration'}</span>
               </div>
               <p className="font-bold text-sm text-slate-900 dark:text-white">
                 {calculateDuration(session.started_at, session.submitted_at)}
               </p>
               <p className="text-[11px] text-slate-400 font-mono">
-                Nộp bài: {formatDate(session.submitted_at)}
+                {isVi ? 'Nộp bài: ' : 'Submitted: '}{formatDate(session.submitted_at, isVi)}
               </p>
             </div>
           </div>
@@ -477,10 +485,12 @@ export function CourseTestSessionDetailPage({
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Nhận xét & Sửa điểm bài kiểm tra (Toàn bài)
+                    {isVi ? 'Nhận xét & Sửa điểm bài kiểm tra (Toàn bài)' : 'Review & Adjust Overall Test Score'}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Giảng viên và quản trị viên có thể điều chỉnh điểm tổng kết hoặc ghi nhận xét chung cho toàn bộ bài làm.
+                    {isVi
+                      ? 'Giảng viên và quản trị viên có thể điều chỉnh điểm tổng kết hoặc ghi nhận xét chung cho toàn bộ bài làm.'
+                      : 'Instructors and admins can adjust final scores and provide comprehensive feedback.'}
                   </p>
                 </div>
               </div>
@@ -489,7 +499,7 @@ export function CourseTestSessionDetailPage({
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 self-start sm:self-auto">
                   <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
                   <span>
-                    Đã đánh giá bởi {session.teacher_name || 'Giáo viên'} ({formatDate(session.reviewed_at)})
+                    {isVi ? 'Đã đánh giá bởi ' : 'Reviewed by '}{session.teacher_name || (isVi ? 'Giáo viên' : 'Teacher')} ({formatDate(session.reviewed_at, isVi)})
                   </span>
                 </span>
               )}
@@ -498,7 +508,7 @@ export function CourseTestSessionDetailPage({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                  Điểm tổng kết (thang 100):
+                  {isVi ? 'Điểm tổng kết (thang 100):' : 'Overall score (100-point scale):'}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -522,7 +532,7 @@ export function CourseTestSessionDetailPage({
                         : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
                     }`}
                   >
-                    {isPassed ? 'Đạt chuẩn' : 'Chưa đạt'}
+                    {isPassed ? (isVi ? 'Đạt chuẩn' : 'Passed') : (isVi ? 'Chưa đạt' : 'Failed')}
                   </span>
                 </div>
 
@@ -532,22 +542,28 @@ export function CourseTestSessionDetailPage({
                     const calculated = Math.round((questionStats.correct / Math.max(1, questionStats.total)) * 100)
                     setOverallScore(calculated)
                     setIsDirty(true)
-                    toast.success(`Đã tự động tính lại điểm: ${calculated}/100 dựa trên ${questionStats.correct}/${questionStats.total} câu đúng.`)
+                    toast.success(
+                      isVi
+                        ? `Đã tự động tính lại điểm: ${calculated}/100 dựa trên ${questionStats.correct}/${questionStats.total} câu đúng.`
+                        : `Auto-calculated score: ${calculated}/100 based on ${questionStats.correct}/${questionStats.total} correct answers.`
+                    )
                   }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Tự động tính từ số câu đúng ({questionStats.correct}/{questionStats.total})</span>
+                  <span>
+                    {isVi ? 'Tự động tính từ số câu đúng' : 'Auto-calculate from correct count'} ({questionStats.correct}/{questionStats.total})
+                  </span>
                 </button>
               </div>
 
               <div className="lg:col-span-2 space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Nhận xét chung toàn bài kiểm tra:
+                    {isVi ? 'Nhận xét chung toàn bài kiểm tra:' : 'Overall Submission Feedback:'}
                   </label>
                   <span className="text-[11px] text-slate-400 font-mono">
-                    {teacherFeedback.length} ký tự
+                    {teacherFeedback.length} {isVi ? 'ký tự' : 'chars'}
                   </span>
                 </div>
                 <textarea
@@ -557,7 +573,11 @@ export function CourseTestSessionDetailPage({
                     setTeacherFeedback(e.target.value)
                     setIsDirty(true)
                   }}
-                  placeholder="Nhập nhận xét tổng quan, đánh giá năng lực, hướng dẫn ôn tập cho học viên..."
+                  placeholder={
+                    isVi
+                      ? 'Nhập nhận xét tổng quan, đánh giá năng lực, hướng dẫn ôn tập cho học viên...'
+                      : 'Enter overall feedback, competency evaluation, study recommendations...'
+                  }
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed resize-y"
                 />
               </div>
@@ -568,7 +588,7 @@ export function CourseTestSessionDetailPage({
                 {isDirty && (
                   <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
                     <AlertCircle className="w-3.5 h-3.5" />
-                    <span>Có thay đổi chưa lưu</span>
+                    <span>{isVi ? 'Có thay đổi chưa lưu' : 'Unsaved changes'}</span>
                   </span>
                 )}
               </div>
@@ -581,7 +601,7 @@ export function CourseTestSessionDetailPage({
                   icon={<Save className="w-3.5 h-3.5" />}
                   className="rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500"
                 >
-                  Lưu tất cả nhận xét & Điểm số
+                  {isVi ? 'Lưu tất cả nhận xét & Điểm số' : 'Save All Feedback & Scores'}
                 </Button>
               </div>
             </div>
@@ -591,20 +611,20 @@ export function CourseTestSessionDetailPage({
             <div className="sticky top-[68px] z-30 p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/90 shadow-md space-y-3 transition-all">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Mục lục câu hỏi ({questionStats.correct}/{questionStats.total} câu đúng)
+                  {isVi ? 'Mục lục câu hỏi' : 'Question Navigation'} ({questionStats.correct}/{questionStats.total} {isVi ? 'câu đúng' : 'correct'})
                 </span>
                 <div className="flex items-center gap-4 text-xs">
                   <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span>Đúng ({questionStats.correct})</span>
+                    <span>{isVi ? 'Đúng' : 'Correct'} ({questionStats.correct})</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                    <span>Sai ({questionStats.wrong})</span>
+                    <span>{isVi ? 'Sai' : 'Incorrect'} ({questionStats.wrong})</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-400">
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                    <span>Chưa trả lời ({questionStats.total - questionStats.answered})</span>
+                    <span>{isVi ? 'Chưa trả lời' : 'Unanswered'} ({questionStats.total - questionStats.answered})</span>
                   </span>
                 </div>
               </div>
@@ -640,7 +660,7 @@ export function CourseTestSessionDetailPage({
           <div className="space-y-4">
             {session.raw_questions.length === 0 && (
               <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
-                Phiên kiểm tra này không lưu nội dung chi tiết từng câu hỏi.
+                {isVi ? 'Phiên kiểm tra này không lưu nội dung chi tiết từng câu hỏi.' : 'This test session did not record detailed question contents.'}
               </div>
             )}
 
@@ -683,7 +703,7 @@ export function CourseTestSessionDetailPage({
                         {index + 1}
                       </span>
                       <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-relaxed">
-                        {cleanQuestionText || `Câu ${index + 1}`}
+                        {cleanQuestionText || `${isVi ? 'Câu' : 'Question'} ${index + 1}`}
                       </h3>
                     </div>
 
@@ -691,16 +711,16 @@ export function CourseTestSessionDetailPage({
                       {isCorrect ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{isOverridden ? 'Chính xác (Đã điều chỉnh)' : 'Chính xác'}</span>
+                          <span>{isOverridden ? (isVi ? 'Chính xác (Đã điều chỉnh)' : 'Correct (Adjusted)') : (isVi ? 'Chính xác' : 'Correct')}</span>
                         </span>
                       ) : isAnswered ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                           <XCircle className="w-3.5 h-3.5" />
-                          <span>{isOverridden ? 'Chưa chính xác (Đã điều chỉnh)' : 'Chưa chính xác'}</span>
+                          <span>{isOverridden ? (isVi ? 'Chưa chính xác (Đã điều chỉnh)' : 'Incorrect (Adjusted)') : (isVi ? 'Chưa chính xác' : 'Incorrect')}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                          Chưa trả lời
+                          {isVi ? 'Chưa trả lời' : 'Unanswered'}
                         </span>
                       )}
                     </div>
@@ -712,8 +732,8 @@ export function CourseTestSessionDetailPage({
                         className="max-h-64 max-w-full object-contain rounded-lg"
                         src={resolveMediaUrl(q.image_url)}
                         fallback={IMAGE_FALLBACK_PLACEHOLDER}
-                        alt={`Hình ảnh câu ${index + 1}`}
-                        preview={{ mask: 'Nhấp để xem ảnh lớn' }}
+                        alt={`${isVi ? 'Hình ảnh câu' : 'Image for question'} ${index + 1}`}
+                        preview={{ mask: isVi ? 'Nhấp để xem ảnh lớn' : 'Click to preview' }}
                       />
                     </div>
                   )}
@@ -732,7 +752,7 @@ export function CourseTestSessionDetailPage({
 
                   <div className="space-y-2 pt-1">
                     <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-                      Các phương án lựa chọn:
+                      {isVi ? 'Các phương án lựa chọn:' : 'Answer Options:'}
                     </span>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       {options.map((option, optIdx) => {
@@ -772,12 +792,12 @@ export function CourseTestSessionDetailPage({
                               <p className="leading-relaxed">{optText}</p>
                               {isUserChoice && (
                                 <span className={`inline-block mt-1 text-[10px] font-bold ${isAnswerMatch ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                  {isAnswerMatch ? '✓ Lựa chọn của học viên' : '✗ Lựa chọn của học viên'}
+                                  {isAnswerMatch ? (isVi ? '✓ Lựa chọn của học viên' : '✓ Learner choice') : (isVi ? '✗ Lựa chọn của học viên' : '✗ Learner choice')}
                                 </span>
                               )}
                               {!isUserChoice && isAnswerMatch && (
                                 <span className="inline-block mt-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                                  ✓ Đáp án đúng
+                                  {isVi ? '✓ Đáp án đúng' : '✓ Correct answer'}
                                 </span>
                               )}
                             </div>
@@ -789,13 +809,13 @@ export function CourseTestSessionDetailPage({
 
                   <div className="flex flex-wrap items-center gap-4 text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
                     <div>
-                      <span className="text-slate-400">Học viên chọn: </span>
+                      <span className="text-slate-400">{isVi ? 'Học viên chọn: ' : 'Learner choice: '}</span>
                       <strong className={`font-mono ${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : isAnswered ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
-                        {selectedOptionLetter || 'Chưa trả lời'}
+                        {selectedOptionLetter || (isVi ? 'Chưa trả lời' : 'Unanswered')}
                       </strong>
                     </div>
                     <div>
-                      <span className="text-slate-400">Đáp án chuẩn: </span>
+                      <span className="text-slate-400">{isVi ? 'Đáp án chuẩn: ' : 'Standard answer: '}</span>
                       <strong className="font-mono text-emerald-600 dark:text-emerald-400">
                         {correctAns || '—'}
                       </strong>
@@ -807,7 +827,7 @@ export function CourseTestSessionDetailPage({
                       <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                       <div className="space-y-0.5">
                         <span className="font-bold text-[11px] uppercase tracking-wider block text-amber-800 dark:text-amber-300">
-                          Giải thích đáp án
+                          {isVi ? 'Giải thích đáp án' : 'Answer Explanation'}
                         </span>
                         <p className="leading-relaxed whitespace-pre-wrap">
                           {text(q.explanation)}
@@ -821,7 +841,7 @@ export function CourseTestSessionDetailPage({
                       <div className="flex items-center gap-2">
                         <MessageSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          Đánh giá & Nhận xét câu {index + 1}:
+                          {isVi ? 'Đánh giá & Nhận xét câu' : 'Review & Feedback for Q'} {index + 1}:
                         </span>
                       </div>
 
@@ -836,7 +856,7 @@ export function CourseTestSessionDetailPage({
                           }`}
                         >
                           <Check className="w-3 h-3" />
-                          <span>Công nhận đúng</span>
+                          <span>{isVi ? 'Công nhận đúng' : 'Mark as Correct'}</span>
                         </button>
 
                         <button
@@ -849,7 +869,7 @@ export function CourseTestSessionDetailPage({
                           }`}
                         >
                           <X className="w-3 h-3" />
-                          <span>Đánh dấu sai</span>
+                          <span>{isVi ? 'Đánh dấu sai' : 'Mark as Incorrect'}</span>
                         </button>
 
                         {isOverridden && (
@@ -858,7 +878,7 @@ export function CourseTestSessionDetailPage({
                             onClick={() => handleResetQuestionOverride(index)}
                             className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline cursor-pointer ml-1"
                           >
-                            Đặt lại tự động
+                            {isVi ? 'Đặt lại tự động' : 'Reset to auto'}
                           </button>
                         )}
                       </div>
@@ -869,7 +889,7 @@ export function CourseTestSessionDetailPage({
                         type="text"
                         value={questionReviews[index]?.feedback || ''}
                         onChange={(e) => handleQuestionFeedbackChange(index, e.target.value)}
-                        placeholder={`Ghi chú / Nhận xét riêng cho câu ${index + 1}...`}
+                        placeholder={`${isVi ? 'Ghi chú / Nhận xét riêng cho câu' : 'Feedback note for Q'} ${index + 1}...`}
                         className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       />
                       <button
@@ -878,7 +898,7 @@ export function CourseTestSessionDetailPage({
                         onClick={() => handleSaveSingleQuestion(index)}
                         className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
                       >
-                        Lưu câu này
+                        {isVi ? 'Lưu câu này' : 'Save Question'}
                       </button>
                     </div>
                   </div>

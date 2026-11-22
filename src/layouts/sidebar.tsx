@@ -226,7 +226,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         <Link
           to="/dashboard"
           onClick={() => handleNavigate('dashboard')}
-          title={isVietnamese ? 'Về trang Tổng quan' : 'Go to Dashboard'}
+          title={t('nav.backToDashboard')}
           className="w-full shrink-0 flex items-center pb-3 border-b border-slate-200/80 dark:border-slate-800/80 text-left cursor-pointer group px-1 overflow-hidden"
         >
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-md shadow-teal-500/25 shrink-0 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 group-hover:shadow-teal-500/40 transition-all duration-200">

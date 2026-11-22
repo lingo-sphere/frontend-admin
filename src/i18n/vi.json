@@ -29,7 +29,9 @@
     "refresh": "Làm mới dữ liệu",
     "perPage": "{{count}} / trang",
     "goTo": "Đến",
-    "page": "Trang"
+    "page": "Trang",
+    "sessionTerminatedTitle": "Đăng nhập từ thiết bị khác",
+    "reLogin": "Đăng nhập lại"
   },
   "auth": {
     "loginTitle": "Đăng nhập Quản trị LingoSphere",
@@ -97,7 +99,9 @@
     "backToDashboard": "Về trang Tổng quan",
     "practiceReading": "Luyện đọc",
     "practiceGrammar": "Ngữ pháp",
-    "practiceIpa": "Ngữ âm & IPA"
+    "practiceIpa": "Ngữ âm & IPA",
+    "practiceContexts": "Quản lý ngữ cảnh",
+    "expandMenu": "Mở rộng menu"
   },
   "header": {
     "search": "Tìm kiếm người học, khóa học....",
@@ -546,6 +550,53 @@
       "exercises": "Bài tập IPA",
       "addExercise": "Thêm bài tập",
       "searchPlaceholder": "Tìm tiêu đề, từ, âm, mô tả..."
+    },
+    "contexts": {
+      "title": "Quản lý Ngữ cảnh (Practice Contexts)",
+      "subtitle": "Phân loại bài tập 4 kỹ năng (Nghe, Nói, Đọc, Viết) và Ngữ pháp theo cây phân cấp 3 tầng chuẩn TOEIC/CEFR.",
+      "threeLevelsLimit": "Giới hạn 3 cấp độ:",
+      "level0": "Level 0: Chủ đề lớn (Theme)",
+      "level1": "Level 1: Nhóm chủ điểm (Topic)",
+      "level2": "Level 2: Tình huống cụ thể (Situation - Tối đa)",
+      "addRoot": "Thêm chủ đề gốc (Level 0)",
+      "searchLabel": "Tìm kiếm ngữ cảnh",
+      "searchPlaceholder": "Tìm theo tên tiếng Anh, tiếng Việt, mã code...",
+      "allLevels": "Tất cả cấp bậc",
+      "allDomains": "Tất cả kỹ năng (Domains)",
+      "allStatus": "Tất cả trạng thái",
+      "activeStatus": "Đang hoạt động (ACTIVE)",
+      "inactiveStatus": "Tạm ẩn (INACTIVE)",
+      "name": "Tên ngữ cảnh",
+      "code": "Mã Code",
+      "level": "Cấp bậc",
+      "domains": "Kỹ năng (Domains)",
+      "all": "Tất cả",
+      "exercises": "Bài tập",
+      "status": "Trạng thái",
+      "actions": "Thao tác",
+      "edit": "Chỉnh sửa ngữ cảnh",
+      "create": "Thêm mới ngữ cảnh",
+      "save": "Lưu thay đổi",
+      "createBtn": "Tạo mới",
+      "cancel": "Hủy bỏ",
+      "addChild": "Thêm cấp con (Level {{level}})",
+      "deleteTitle": "Xóa ngữ cảnh",
+      "deleteDesc": "Bạn có chắc chắn muốn xóa ngữ cảnh này? Không thể hoàn tác nếu không có ràng buộc.",
+      "updateSuccess": "Cập nhật ngữ cảnh thành công!",
+      "createSuccess": "Thêm mới ngữ cảnh thành công!",
+      "statusActivated": "Đã kích hoạt ngữ cảnh",
+      "statusDeactivated": "Đã tạm ẩn ngữ cảnh",
+      "deleteSuccess": "Đã xóa ngữ cảnh thành công",
+      "nameEn": "Tên ngữ cảnh (Tiếng Anh)",
+      "nameVi": "Tên ngữ cảnh (Tiếng Việt)",
+      "parent": "Ngữ cảnh cha",
+      "parentPlaceholder": "-- Là ngữ cảnh gốc (Level 0) --",
+      "domainsLabel": "Kỹ năng áp dụng",
+      "cefrLabel": "Trình độ CEFR khuyến nghị",
+      "cefrPlaceholder": "-- Chọn trình độ --",
+      "sortOrder": "Thứ tự hiển thị",
+      "descEn": "Mô tả chi tiết (Tiếng Anh)",
+      "descVi": "Mô tả chi tiết (Tiếng Việt)"
     }
   }
 }

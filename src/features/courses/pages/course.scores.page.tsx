@@ -1,6 +1,5 @@
-// Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học chuẩn hóa DataTable.
-
-import { useState, useMemo } from "react";
+// Trang quản trị hiển thị bảng điểm chi tiết và tiến độ học viên của khóa học hỗ trợ đa ngôn ngữ.
+import { useState, useMemo } from 'react'
 import {
   GraduationCap,
   ArrowLeft,
@@ -14,21 +13,25 @@ import {
   Target,
   Clock,
   X,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useAdminCourseDetailQuery } from "@/features/courses/hooks/use.courses.admin.query";
-import { useCourseStudentScores } from "@/features/courses/hooks/use.course.student.scores";
-import { DataTable, type DataTableColumn } from "@/components/data.table";
-import { StatCard } from "@/components/stat.card";
-import type { StudentProgressItem } from "@/features/progress/services/progress.service";
+} from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useAdminCourseDetailQuery } from '@/features/courses/hooks/use.courses.admin.query'
+import { useCourseStudentScores } from '@/features/courses/hooks/use.course.student.scores'
+import { DataTable, type DataTableColumn } from '@/components/data.table'
+import { StatCard } from '@/components/stat.card'
+import type { StudentProgressItem } from '@/features/progress/services/progress.service'
 
 interface CourseScoresPageProps {
-  courseId: string;
+  courseId: string
 }
 
 export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
-  const navigate = useNavigate();
-  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId);
+  const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
+  const { data: courseInfo = null } = useAdminCourseDetailQuery(courseId)
 
   const {
     data,
@@ -38,47 +41,47 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
     setSearchTerm,
     filteredStudents,
     fetchData,
-  } = useCourseStudentScores(courseId, true);
+  } = useCourseStudentScores(courseId, true)
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
-  const totalStudents = data?.total_students || 0;
-  const avgProgress = data?.average_progress_percentage || 0;
-  const completedStudents = data?.completed_students || 0;
-  const studentsList = filteredStudents || [];
+  const totalStudents = data?.total_students || 0
+  const avgProgress = data?.average_progress_percentage || 0
+  const completedStudents = data?.completed_students || 0
+  const studentsList = filteredStudents || []
 
-  const courseTitle = courseInfo?.title || "Khóa học";
+  const courseTitle = courseInfo?.title || (isVi ? 'Khóa học' : 'Course')
 
   const paginatedStudents = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return studentsList.slice(start, start + pageSize);
-  }, [studentsList, currentPage, pageSize]);
+    const start = (currentPage - 1) * pageSize
+    return studentsList.slice(start, start + pageSize)
+  }, [studentsList, currentPage, pageSize])
 
   const columns: DataTableColumn<StudentProgressItem>[] = useMemo(
     () => [
       {
-        key: "learner",
-        dataIndex: "full_name",
-        title: "Học viên",
+        key: 'learner',
+        dataIndex: 'full_name',
+        title: isVi ? 'Học viên' : 'Learner',
         sortable: true,
-        align: "left",
+        align: 'left',
         render: (student) => {
-          const userProfile = usersMap.get(student.user_id);
+          const userProfile = usersMap.get(student.user_id)
           const displayName: string = String(
-            userProfile?.full_name || student.full_name || ""
-          );
+            userProfile?.full_name || student.full_name || ''
+          )
           const displayEmail: string = String(
-            userProfile?.email || student.email || ""
-          );
+            userProfile?.email || student.email || ''
+          )
           const avatarUrl: string | undefined =
-            userProfile?.avatar_url || student.avatar_url;
+            userProfile?.avatar_url || student.avatar_url
           const initials = displayName
-            .split(" ")
+            .split(' ')
             .map((n: string) => n[0])
             .slice(-2)
-            .join("")
-            .toUpperCase();
+            .join('')
+            .toUpperCase()
 
           return (
             <div className="flex items-center gap-3 min-w-0 w-full">
@@ -108,16 +111,16 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                 </div>
               </div>
             </div>
-          );
+          )
         },
       },
       {
-        key: "progress",
-        dataIndex: "progress_percentage",
-        title: "Tiến độ bài học",
+        key: 'progress',
+        dataIndex: 'progress_percentage',
+        title: isVi ? 'Tiến độ bài học' : 'Lesson Progress',
         sortable: true,
         width: 180,
-        align: "center",
+        align: 'center',
         render: (student) => (
           <div className="space-y-1.5 min-w-[140px]">
             <div className="flex items-center justify-between text-[11px] font-bold">
@@ -125,7 +128,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                 {student.progress_percentage}%
               </span>
               <span className="text-slate-500 dark:text-slate-400 font-medium">
-                {student.completed_lessons}/{student.total_lessons} bài
+                {student.completed_lessons}/{student.total_lessons} {isVi ? 'bài' : 'lessons'}
               </span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -143,26 +146,26 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         ),
       },
       {
-        key: "modules",
-        title: "Bài kiểm tra các chương",
-        align: "center",
+        key: 'modules',
+        title: isVi ? 'Bài kiểm tra các chương' : 'Chapter Tests',
+        align: 'center',
         render: (student) => {
-          const modules = student.modules_progress || [];
+          const modules = student.modules_progress || []
           if (modules.length === 0) {
             return (
               <span className="text-[11px] text-slate-400 italic">
-                Chưa thực hiện kiểm tra
+                {isVi ? 'Chưa thực hiện kiểm tra' : 'No tests taken'}
               </span>
-            );
+            )
           }
 
           return (
             <div className="flex flex-wrap justify-center gap-1.5 max-w-[320px] mx-auto">
               {modules.map((m, mIdx) => {
-                const chNum = m.order_index || mIdx + 1;
+                const chNum = m.order_index || mIdx + 1
                 const hasChallenge =
-                  (m.challenge_score || 0) > 0 || m.is_passed_by_challenge;
-                const hasPostMini = (m.post_mini_score || 0) > 0;
+                  (m.challenge_score || 0) > 0 || m.is_passed_by_challenge
+                const hasPostMini = (m.post_mini_score || 0) > 0
 
                 return (
                   <div
@@ -177,10 +180,10 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                       <span
                         className={`inline-flex items-center gap-0.5 font-bold px-1 rounded ${
                           m.is_passed_by_challenge
-                            ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300"
-                            : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                         }`}
-                        title={`Thử thách đầu chương: ${
+                        title={`${isVi ? 'Thử thách đầu chương' : 'Chapter challenge'}: ${
                           m.challenge_score || 0
                         }%`}
                       >
@@ -193,35 +196,35 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
                       <span
                         className={`inline-flex items-center gap-0.5 font-bold px-1 rounded ${
                           (m.post_mini_score || 0) >= 70
-                            ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
-                            : "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
+                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
                         }`}
-                        title={`Kiểm tra cuối chương: ${m.post_mini_score}%`}
+                        title={`${isVi ? 'Kiểm tra cuối chương' : 'Post-chapter test'}: ${m.post_mini_score}%`}
                       >
                         <FileCheck2 className="w-2.5 h-2.5" />
                         <span>{m.post_mini_score}%</span>
                       </span>
                     ) : !hasChallenge ? (
                       <span className="text-slate-400 text-[10px]">
-                        Chưa thi
+                        {isVi ? 'Chưa thi' : 'Not tested'}
                       </span>
                     ) : null}
                   </div>
-                );
+                )
               })}
             </div>
-          );
+          )
         },
       },
       {
-        key: "final_score",
-        dataIndex: "final_test_score",
-        title: "Điểm tốt nghiệp",
+        key: 'final_score',
+        dataIndex: 'final_test_score',
+        title: isVi ? 'Điểm tốt nghiệp' : 'Graduation Score',
         sortable: true,
         width: 150,
-        align: "center",
+        align: 'center',
         render: (student) =>
-          typeof student.final_test_score === "number" &&
+          typeof student.final_test_score === 'number' &&
           student.final_test_score > 0 ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px] border border-emerald-200 dark:border-emerald-800 shadow-2xs font-mono">
               <Award className="w-3.5 h-3.5 text-emerald-500" />
@@ -232,27 +235,27 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           ),
       },
       {
-        key: "status",
-        title: "Trạng thái",
+        key: 'status',
+        title: isVi ? 'Trạng thái' : 'Status',
         width: 140,
-        align: "center",
+        align: 'center',
         render: (student) =>
           student.progress_percentage >= 100 ||
-          student.status === "COMPLETED" ? (
+          student.status === 'COMPLETED' ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Hoàn thành</span>
+              <span>{isVi ? 'Hoàn thành' : 'Completed'}</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
               <Clock className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Đang học</span>
+              <span>{isVi ? 'Đang học' : 'In Progress'}</span>
             </span>
           ),
       },
     ],
-    [usersMap]
-  );
+    [usersMap, isVi]
+  )
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -260,11 +263,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate("/courses")}
+            onClick={() => navigate('/courses')}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Quay lại khóa học</span>
+            <span>{isVi ? 'Quay lại khóa học' : 'Back to Courses'}</span>
           </button>
 
           <div className="flex items-center gap-3 min-w-0">
@@ -274,14 +277,14 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 truncate">
-                  Bảng Điểm & Tiến Độ Học Viên
+                  {isVi ? 'Bảng Điểm & Tiến Độ Học Viên' : 'Learner Scores & Progress'}
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                  {totalStudents} học viên
+                  {totalStudents} {isVi ? 'học viên' : 'learners'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                Khóa học:{" "}
+                {isVi ? 'Khóa học: ' : 'Course: '}
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
                   {courseTitle}
                 </span>
@@ -297,7 +300,7 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
           >
             <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span>Chấm bài Nói & Viết</span>
+            <span>{isVi ? 'Chấm bài Nói & Viết' : 'Grade Speaking & Writing'}</span>
           </button>
 
           <button
@@ -305,11 +308,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
             onClick={fetchData}
             disabled={isLoading}
             className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Làm mới dữ liệu"
+            title={isVi ? 'Làm mới dữ liệu' : 'Refresh Data'}
           >
             <RefreshCw
               className={`w-4 h-4 ${
-                isLoading ? "animate-spin text-indigo-500" : ""
+                isLoading ? 'animate-spin text-indigo-500' : ''
               }`}
             />
           </button>
@@ -318,9 +321,9 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Tổng Học Viên"
-          value={totalStudents.toLocaleString("vi-VN")}
-          subtitle="Học viên ghi danh khóa học"
+          title={isVi ? 'Tổng Học Viên' : 'Total Learners'}
+          value={totalStudents.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+          subtitle={isVi ? 'Học viên ghi danh khóa học' : 'Enrolled learners'}
           icon={Users}
           color="indigo"
           trend={totalStudents > 0 ? `${totalStudents}` : undefined}
@@ -329,20 +332,20 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         />
 
         <StatCard
-          title="Tiến Độ TB"
+          title={isVi ? 'Tiến Độ TB' : 'Avg Progress'}
           value={`${avgProgress}%`}
-          subtitle="Tỷ lệ hoàn thành nội dung"
+          subtitle={isVi ? 'Tỷ lệ hoàn thành nội dung' : 'Completion rate'}
           icon={TrendingUp}
           color="emerald"
           trend={`${avgProgress}%`}
-          trendType={avgProgress >= 50 ? "up" : "neutral"}
+          trendType={avgProgress >= 50 ? 'up' : 'neutral'}
           loading={isLoading}
         />
 
         <StatCard
-          title="Đã Tốt Nghiệp"
-          value={completedStudents.toLocaleString("vi-VN")}
-          subtitle="Đã hoàn thành toàn bộ khóa"
+          title={isVi ? 'Đã Tốt Nghiệp' : 'Graduated'}
+          value={completedStudents.toLocaleString(isVi ? 'vi-VN' : 'en-US')}
+          subtitle={isVi ? 'Đã hoàn thành toàn bộ khóa' : 'Completed entire course'}
           icon={CheckCircle2}
           color="teal"
           trend={
@@ -355,11 +358,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         />
 
         <StatCard
-          title="Mục Tiêu Đầu Ra"
+          title={isVi ? 'Mục Tiêu Đầu Ra' : 'Target Outcome'}
           value={
-            courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : "-"
+            courseInfo?.target_score ? `${courseInfo.target_score}+ TOEIC` : '-'
           }
-          subtitle="Dải điểm cam kết khóa học"
+          subtitle={isVi ? 'Dải điểm cam kết khóa học' : 'Target score benchmark'}
           icon={Award}
           color="purple"
           trend={
@@ -376,8 +379,8 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
         rowKey={(s) => s.user_id}
         isLoading={isLoading}
         onResetFilters={() => {
-          setSearchTerm("");
-          setCurrentPage(1);
+          setSearchTerm('')
+          setCurrentPage(1)
         }}
         filterSlot={
           <div className="flex items-center gap-2 w-full sm:w-80 h-10 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
@@ -386,18 +389,18 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
               type="text"
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
               }}
-              placeholder="Tìm theo tên học viên, email hoặc ID..."
+              placeholder={isVi ? 'Tìm theo tên học viên, email hoặc ID...' : 'Search by learner name, email, or ID...'}
               className="w-full bg-transparent border-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 p-0 text-xs focus:ring-0"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => {
-                  setSearchTerm("");
-                  setCurrentPage(1);
+                  setSearchTerm('')
+                  setCurrentPage(1)
                 }}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
@@ -412,11 +415,11 @@ export function CourseScoresPage({ courseId }: CourseScoresPageProps) {
           totalItems: studentsList.length,
           onPageChange: setCurrentPage,
           onPageSizeChange: (limit) => {
-            setPageSize(limit);
-            setCurrentPage(1);
+            setPageSize(limit)
+            setCurrentPage(1)
           },
         }}
       />
     </div>
-  );
+  )
 }

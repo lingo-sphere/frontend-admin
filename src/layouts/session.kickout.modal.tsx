@@ -1,12 +1,10 @@
-/**
- * @file session.kickout.modal.tsx
- * @description Component giao diện SessionKickoutModal phục vụ khu vực Quản trị Admin
- */
-
+// Modal thông báo và xử lý sự kiện phiên đăng nhập bị hủy do đăng nhập nơi khác.
+import { useTranslation } from 'react-i18next'
 import { ConfirmModal } from '@/components/confirm.modal'
 import { useSessionSync } from '@/hooks/use.session.sync'
 
 export function SessionKickoutModal() {
+  const { t } = useTranslation()
   const { kickoutMessage, dismissKickout } = useSessionSync()
 
   return (
@@ -14,10 +12,10 @@ export function SessionKickoutModal() {
       isOpen={Boolean(kickoutMessage)}
       onClose={dismissKickout}
       onConfirm={dismissKickout}
-      title="Đăng Nhập Từ Thiết Bị Khác"
+      title={t('common.sessionTerminatedTitle')}
       message={kickoutMessage || ''}
-      confirmText="Đăng nhập lại"
-      cancelText="Đóng"
+      confirmText={t('common.reLogin')}
+      cancelText={t('common.close')}
       variant="warning"
       icon="warning"
     />

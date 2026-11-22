@@ -6,7 +6,7 @@ import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { Download, RefreshCw } from 'lucide-react'
 import { api } from '@/services/api.client'
-import { azureLogsCsv, azureLogTime, type AzureSpeechLog, type AzureSpeechLogsResponse } from '../helpers/azure.speech.logs'
+import { azureLogsCsv, azureLogTime, type AzureSpeechLog, type AzureSpeechLogsResponse } from '@/features/settings/helpers/azure.speech.logs'
 
 const today = () => dayjs(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date()))
 const id = (value?: string) => <span className="break-all font-mono text-xs">{value || '—'}</span>

@@ -1,4 +1,4 @@
-import { CourseAssessmentConfigFields } from './course.assessment.config.fields'
+import { CourseAssessmentConfigFields } from '@/features/courses/components/course.assessment.config.fields'
 /**
  * @file chapter.speaking.writing.card.tsx
  * @description Component quản lý đề thi và tài liệu đính kèm cho kỹ năng Nói & Viết trong bài test chương

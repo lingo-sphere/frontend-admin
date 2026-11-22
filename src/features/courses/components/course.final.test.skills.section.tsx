@@ -1,4 +1,4 @@
-import { CourseAssessmentConfigFields } from './course.assessment.config.fields'
+import { CourseAssessmentConfigFields } from '@/features/courses/components/course.assessment.config.fields'
 /**
  * @file course.final.test.skills.section.tsx
  * @description Speaking and Writing test prompts and file attachment management for TOEIC 4 Skills

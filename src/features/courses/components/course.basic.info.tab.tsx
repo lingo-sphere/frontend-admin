@@ -1,4 +1,4 @@
-import type { CourseAssessmentConfig } from './course.assessment.config.fields'
+import type { CourseAssessmentConfig } from '@/features/courses/components/course.assessment.config.fields'
 // Tab thong tin co ban cua khoa hoc.
 
 import { useMemo, useEffect } from 'react'

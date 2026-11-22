@@ -2,6 +2,7 @@
 import { api, apiClient } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import type { PermissionItem } from '@/types/api.types'
 import {
   AuthUserSchema,
   LoginResponseSchema,
@@ -81,8 +82,8 @@ export const authService = {
     return api.get<AuthUser>(API_CONFIG.ENDPOINTS.AUTH.ME, undefined, AuthUserSchema)
   },
 
-  async getRolePermissions(roleIdOrName: string): Promise<import('@/types/api.types').PermissionItem[]> {
-    return api.get<import('@/types/api.types').PermissionItem[]>(`/roles/${encodeURIComponent(roleIdOrName)}/permissions`)
+  async getRolePermissions(roleIdOrName: string): Promise<PermissionItem[]> {
+    return api.get<PermissionItem[]>(`/roles/${encodeURIComponent(roleIdOrName)}/permissions`)
   },
 
   async changePassword(userId: string, payload: ChangePasswordPayload): Promise<{ message: string }> {
