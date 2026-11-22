@@ -587,12 +587,16 @@ export interface BetterStackLogItem {
 
 export interface BetterStackMonitoringData {
   provider: string
-  overall_status: 'ALL_SYSTEMS_OPERATIONAL' | 'DEGRADED' | 'OUTAGE'
-  uptime_percentage: number
-  average_latency_ms: number
-  monitored_services_count: number
-  healthy_services_count: number
-  incident_count_last_30d: number
+  overall_status: 'ALL_SYSTEMS_OPERATIONAL' | 'DEGRADED' | 'OUTAGE' | 'UNKNOWN'
+  uptime_percentage: number | null
+  average_latency_ms: number | null
+  monitored_services_count: number | null
+  healthy_services_count: number | null
+  incident_count_last_30d: number | null
+  telemetry_available?: boolean
+  log_count_available?: boolean
+  health_source_verified?: boolean
+  incident_source_verified?: boolean
   total_logs_count?: number
   last_synced_at: string
   status_page_url: string

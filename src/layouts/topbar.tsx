@@ -108,6 +108,7 @@ export function Topbar() {
           setTotalLearnersCount(analytics.overview.total_users)
         }
       } catch {
+        setTotalLearnersCount(null)
       }
     }
 
@@ -184,14 +185,9 @@ export function Topbar() {
           <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-300">
             <Users className="w-4 h-4" />
             <span>
-              {totalLearnersCount !== null ? `${totalLearnersCount} ` : '12.4k '}
+              {totalLearnersCount !== null ? `${totalLearnersCount} ` : '— '}
               {t('header.learnersCount')}
             </span>
-          </div>
-
-          <div className="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-            <span>{t('header.systemStable')}</span>
           </div>
 
           <button

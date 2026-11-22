@@ -109,11 +109,6 @@ export function LoginPage({ initialError }: { initialError?: string } = {}) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-            <span>{isVi ? 'Hệ thống: Trực tuyến (v2.4)' : 'System: Operational (v2.4)'}</span>
-          </div>
-
           <button
             type="button"
             onClick={toggleLanguage}
@@ -232,10 +227,6 @@ export function LoginPage({ initialError }: { initialError?: string } = {}) {
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>{isVi ? 'Mã hóa 256-bit SSL' : '256-bit SSL Encryption'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                <span>{isVi ? '99.98% Thời gian hoạt động' : '99.98% Uptime SLA'}</span>
               </div>
             </div>
           </div>
