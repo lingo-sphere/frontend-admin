@@ -23,7 +23,7 @@ export function listeningPayload(type: ListeningType, record?: Partial<Listening
     ...(type === 'dictation' ? { difficulty_settings: row.difficulty_settings || {
       easy: { hide_ratio: 0.2, blank_types: ['WORD'], show_first_letter: false, show_length: false, time_per_segment: 60, allow_replay: true, replay_limit: 3 },
       medium: { hide_ratio: 0.5, blank_types: ['WORD', 'PHRASE'], show_first_letter: true, show_length: true, time_per_segment: 90, allow_replay: true, replay_limit: 2 },
-      hard: { hide_ratio: 0.9, blank_types: ['WORD', 'PHRASE', 'SENTENCE'], show_first_letter: false, show_length: false, time_per_segment: 120, allow_replay: true, replay_limit: 1 },
+      hard: { hide_ratio: 1, blank_types: ['WORD', 'PHRASE', 'SENTENCE'], show_first_letter: false, show_length: false, time_per_segment: 120, allow_replay: true, replay_limit: 1 },
     } } : {}),
     target_lexical_item_ids: row.target_lexical_item_ids || [], target_grammar_knowledge_ids: row.target_grammar_knowledge_ids || [], target_phonetics_knowledge_ids: row.target_phonetics_knowledge_ids || [],
     ...(row._id ? { expected_revision: row.revision ?? 0 } : {}),
