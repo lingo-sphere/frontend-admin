@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { api } from '@/services/api.client'
-import { teacherDraftInput, teacherDraftResult, type TeacherDraft, type TeacherRubric, type ScorePolicy, type TaskAssessment } from '../helpers/teacher.grading'
+import { teacherDraftInput, teacherDraftResult, type TeacherDraft, type TeacherRubric, type ScorePolicy, type TaskAssessment } from '@/features/submissions/helpers/teacher.grading'
 
 export function useTeacherGrade(rubric: TeacherRubric | null | undefined, draft: TeacherDraft, task: Record<string, unknown>, content: string) {
   const input = teacherDraftInput(rubric, draft)

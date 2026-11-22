@@ -1,4 +1,5 @@
-import type { TaskAssessment, ScorePolicy } from '../helpers/teacher.grading'
+// Component hiển thị tóm tắt đánh giá nhiệm vụ viết của học viên.
+import type { TaskAssessment, ScorePolicy } from '@/features/submissions/helpers/teacher.grading'
 
 export function WritingTaskAssessmentSummary({ evaluation, title }: { evaluation?: Record<string, unknown> | null; title: string }) {
   const assessment = evaluation?.task_assessment as TaskAssessment | undefined
