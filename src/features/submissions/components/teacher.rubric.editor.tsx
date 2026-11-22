@@ -1,4 +1,5 @@
-import { type TeacherRubric, type TeacherDraft, type ScorePolicy } from '../helpers/teacher.grading'
+// Component biểu mẫu cho giáo viên nhập điểm và đánh giá theo rubric bài tập.
+import { type TeacherRubric, type TeacherDraft, type ScorePolicy } from '@/features/submissions/helpers/teacher.grading'
 export function TeacherRubricEditor({ rubric, value, onChange, calculated, pending, error }: { rubric: TeacherRubric; value: TeacherDraft; onChange: (value: TeacherDraft) => void; calculated?: { raw: number; overall: number; score_policy?: ScorePolicy } | null; pending?: boolean; error?: string | null }) {
   const speaking = rubric.task_policy?.version === 'speaking-task-gate-v1'
   return <fieldset className="space-y-3 rounded-xl border border-indigo-200 p-4 dark:border-indigo-900">

@@ -3,12 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, ConfigProvider, Segmented, Space, Tag, theme as antdTheme } from 'antd'
+import { Button, Segmented, Space, Tag } from 'antd'
 import { AdminTabs } from '@/components/admin.tabs'
 import { TableStatusSwitch } from '@/components/table.status.switch'
 import { Plus, RotateCcw } from 'lucide-react'
 import dayjs from 'dayjs'
-import { useAdminLayout } from '@/contexts/admin.layout.context'
 import { toast } from '@/store/toast.store'
 import { CustomSelect } from '@/components/custom.select'
 import { DataTable, type IpaColumn } from '@/components/data.table'
@@ -164,12 +163,11 @@ function ReadingTable({ type }: { type: ReadingType }) {
 export function PracticeReadingPage() {
   const [params] = useSearchParams()
   const state = useIpaTableState()
-  const { theme } = useAdminLayout()
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
   const type = readingTypes.includes(params.get('tab') as ReadingType) ? params.get('tab') as ReadingType : 'PART_7'
-  return <ConfigProvider theme={{ algorithm: theme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm, token: { colorPrimary: '#4f46e5', borderRadius: 10 } }}>
+  return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{isVi ? 'Quản lý Luyện đọc' : 'Reading Management'}</h1>
@@ -185,5 +183,5 @@ export function PracticeReadingPage() {
         }))}
       />
     </div>
-  </ConfigProvider>
+  )
 }

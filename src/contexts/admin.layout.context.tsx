@@ -1,5 +1,5 @@
 // Quản lý trạng thái giao diện, theme và thu phóng thanh bên của trang quản trị
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export type ThemeMode = 'light' | 'dark'
@@ -78,19 +78,29 @@ export function AdminLayoutProvider({ children }: AdminLayoutProviderProps) {
     setSidebarCollapsed((prev) => !prev)
   }, [])
 
+  const value = useMemo(
+    () => ({
+      theme,
+      setTheme,
+      toggleTheme,
+      sidebarCollapsed,
+      setSidebarCollapsed,
+      toggleSidebarCollapsed,
+      mobileSidebarOpen,
+      setMobileSidebarOpen,
+    }),
+    [
+      theme,
+      setTheme,
+      toggleTheme,
+      sidebarCollapsed,
+      toggleSidebarCollapsed,
+      mobileSidebarOpen,
+    ]
+  )
+
   return (
-    <AdminLayoutContext.Provider
-      value={{
-        theme,
-        setTheme,
-        toggleTheme,
-        sidebarCollapsed,
-        setSidebarCollapsed,
-        toggleSidebarCollapsed,
-        mobileSidebarOpen,
-        setMobileSidebarOpen,
-      }}
-    >
+    <AdminLayoutContext.Provider value={value}>
       {children}
     </AdminLayoutContext.Provider>
   )

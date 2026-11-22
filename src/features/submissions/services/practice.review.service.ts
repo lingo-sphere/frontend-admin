@@ -1,6 +1,6 @@
 // Service xử lý API quản lý bài nộp và phúc khảo phần luyện tập Speaking và Writing.
 import { api } from "@/services/api.client";
-import type { TeacherRubric, TeacherGrading } from '../helpers/teacher.grading';
+import type { TeacherRubric, TeacherGrading } from '@/features/submissions/helpers/teacher.grading';
 
 export type PracticeSkill = "SPEAKING" | "WRITING";
 export interface PracticeReview {

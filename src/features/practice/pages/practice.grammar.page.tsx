@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, ConfigProvider, Segmented, Tag, Tree, theme as antdTheme } from 'antd'
+import { Alert, Button, Card, Segmented, Tag, Tree } from 'antd'
 import { TableStatusSwitch } from '@/components/table.status.switch'
 import { CustomSelect } from '@/components/custom.select'
 import { IpaDataTable, type IpaColumn } from '@/components/data.table'
@@ -350,13 +350,7 @@ export function PracticeGrammarPage() {
       }))
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: theme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-        token: { colorPrimary: '#4f46e5', borderRadius: 10 }
-      }}
-    >
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {isVi ? 'Quản lý Ngữ pháp & Bí quyết TOEIC' : 'Grammar & TOEIC Tips Management'}
@@ -603,6 +597,5 @@ export function PracticeGrammarPage() {
           )}
         </div>
       </div>
-    </ConfigProvider>
   )
 }

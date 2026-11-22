@@ -89,10 +89,10 @@ export function MonitoringHeroBanner({
               href="https://telemetry.betterstack.com/team/t586626/tail?s=l2697291"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-emerald-50 text-xs sm:text-sm font-bold shadow-lg shadow-black/10 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-emerald-50 dark:hover:bg-slate-700 text-xs sm:text-sm font-bold shadow-lg shadow-black/10 transition-all cursor-pointer"
             >
               <span>{isVi ? 'Mở BetterStack Live Tail' : 'Open Live Tail'}</span>
-              <ExternalLink className="w-4 h-4 text-emerald-600" />
+              <ExternalLink className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </a>
           </div>
         </div>

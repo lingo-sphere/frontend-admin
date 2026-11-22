@@ -1,10 +1,9 @@
-import { WritingTaskAssessmentSummary } from './writing.task.assessment';
-import { useTeacherGrade } from '../hooks/use.teacher.grade';
 // Dialog chấm điểm và viết nhận xét phúc khảo bài nộp của học viên.
-
 import { useState } from "react";
-import { TeacherRubricEditor } from "./teacher.rubric.editor";
-import { emptyTeacherDraft, type TeacherRubric, type TeacherGrading } from "../helpers/teacher.grading";
+import { WritingTaskAssessmentSummary } from '@/features/submissions/components/writing.task.assessment';
+import { useTeacherGrade } from '@/features/submissions/hooks/use.teacher.grade';
+import { TeacherRubricEditor } from "@/features/submissions/components/teacher.rubric.editor";
+import { emptyTeacherDraft, type TeacherRubric, type TeacherGrading } from "@/features/submissions/helpers/teacher.grading";
 import {
   X,
   Volume2,

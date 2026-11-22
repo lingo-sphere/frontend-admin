@@ -1,6 +1,7 @@
 // Modal xác nhận thao tác quản trị hệ thống với giao diện SaaS hiện đại hỗ trợ cả Light và Dark theme.
 import { useEffect } from 'react'
 import { AlertTriangle, Ban, Trash2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -27,12 +28,15 @@ export function ConfirmModal({
   title,
   message,
   description,
-  confirmText = 'Xác nhận',
-  cancelText = 'Hủy',
+  confirmText,
+  cancelText,
   isLoading = false,
 }: ConfirmModalProps) {
+  const { t } = useTranslation()
   const modalType = type ? type : variant
   const modalMessage = message ? message : (description ? description : '')
+  const resolvedConfirmText = confirmText || t('common.confirm')
+  const resolvedCancelText = cancelText || t('common.cancel')
 
   useEffect(() => {
     if (isOpen) {
@@ -124,7 +128,7 @@ export function ConfirmModal({
             onClick={onClose}
             disabled={isLoading}
           >
-            {cancelText}
+            {resolvedCancelText}
           </button>
           <button
             className={`h-10 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${getConfirmButtonClasses()}`}
@@ -134,7 +138,7 @@ export function ConfirmModal({
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              confirmText
+              resolvedConfirmText
             )}
           </button>
         </div>
