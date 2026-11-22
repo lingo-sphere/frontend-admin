@@ -29,7 +29,9 @@
     "refresh": "Refresh data",
     "perPage": "{{count}} / page",
     "goTo": "Go to",
-    "page": "Page"
+    "page": "Page",
+    "sessionTerminatedTitle": "Signed in from another device",
+    "reLogin": "Sign in again"
   },
   "auth": {
     "loginTitle": "LingoSphere Admin Login",
@@ -97,7 +99,9 @@
     "backToDashboard": "Back to Dashboard",
     "practiceReading": "Reading Practice",
     "practiceGrammar": "Grammar Practice",
-    "practiceIpa": "Phonetics & IPA"
+    "practiceIpa": "Phonetics & IPA",
+    "practiceContexts": "Context Management",
+    "expandMenu": "Expand menu"
   },
   "header": {
     "search": "Search learners, courses...",
@@ -546,6 +550,53 @@
       "exercises": "IPA Exercises",
       "addExercise": "Add Exercise",
       "searchPlaceholder": "Search title, word, phoneme, description..."
+    },
+    "contexts": {
+      "title": "Practice Contexts Management",
+      "subtitle": "Categorize 4-skill exercises (Listening, Speaking, Reading, Writing) and Grammar following standard 3-tier hierarchy.",
+      "threeLevelsLimit": "3-tier hierarchy limit:",
+      "level0": "Level 0: Major Theme",
+      "level1": "Level 1: Topic Group",
+      "level2": "Level 2: Specific Situation (Max)",
+      "addRoot": "Add root theme (Level 0)",
+      "searchLabel": "Search contexts",
+      "searchPlaceholder": "Search by English name, Vietnamese name, code...",
+      "allLevels": "All levels",
+      "allDomains": "All skills (Domains)",
+      "allStatus": "All statuses",
+      "activeStatus": "Active (ACTIVE)",
+      "inactiveStatus": "Inactive (INACTIVE)",
+      "name": "Context Name",
+      "code": "Code",
+      "level": "Level",
+      "domains": "Skills (Domains)",
+      "all": "All",
+      "exercises": "Exercises",
+      "status": "Status",
+      "actions": "Actions",
+      "edit": "Edit Context",
+      "create": "Create Context",
+      "save": "Save Changes",
+      "createBtn": "Create",
+      "cancel": "Cancel",
+      "addChild": "Add sub-level (Level {{level}})",
+      "deleteTitle": "Delete Context",
+      "deleteDesc": "Are you sure you want to delete this context? This action cannot be undone.",
+      "updateSuccess": "Context updated successfully!",
+      "createSuccess": "Context created successfully!",
+      "statusActivated": "Context activated",
+      "statusDeactivated": "Context hidden",
+      "deleteSuccess": "Context deleted successfully",
+      "nameEn": "Context Name (English)",
+      "nameVi": "Context Name (Vietnamese)",
+      "parent": "Parent Context",
+      "parentPlaceholder": "-- Root Context (Level 0) --",
+      "domainsLabel": "Applicable Skills",
+      "cefrLabel": "Recommended CEFR Level",
+      "cefrPlaceholder": "-- Select Level --",
+      "sortOrder": "Display Order",
+      "descEn": "Detailed Description (English)",
+      "descVi": "Detailed Description (Vietnamese)"
     }
   }
 }

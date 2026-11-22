@@ -1,8 +1,9 @@
-// Trang chi tiết hồ sơ học viên, xem tiến độ, lịch sử thi và quản trị hạn mức AI với TanStack Query.
+// Trang chi tiết hồ sơ học viên, xem tiến độ, lịch sử thi và quản trị hạn mức AI hỗ trợ đa ngôn ngữ.
 import { useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
 import { useResetLearnerDataMutation } from '@/features/users/hooks/use.learners.query'
@@ -20,6 +21,9 @@ export function UserProfilePage() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const pathParts = location.pathname.split('/users/')
   const userId = pathParts[1] || ''
 
@@ -46,10 +50,10 @@ export function UserProfilePage() {
           status: u.status,
           is_premium: u.is_premium,
           created_at: u.created_at
-            ? new Date(u.created_at).toLocaleDateString('vi-VN')
+            ? new Date(u.created_at).toLocaleDateString(isVi ? 'vi-VN' : 'en-US')
             : undefined,
           last_active: u.updated_at
-            ? new Date(u.updated_at).toLocaleDateString('vi-VN')
+            ? new Date(u.updated_at).toLocaleDateString(isVi ? 'vi-VN' : 'en-US')
             : undefined,
           total_xp: u.total_xp ?? 0,
           level: u.level ?? 1,
@@ -100,7 +104,7 @@ export function UserProfilePage() {
   if (!profileData || !quotaUser) {
     return (
       <div className="p-8 text-center text-slate-400">
-        Đang tải thông tin hồ sơ học viên...
+        {isVi ? 'Đang tải thông tin hồ sơ học viên...' : 'Loading learner profile...'}
       </div>
     )
   }
@@ -117,10 +121,12 @@ export function UserProfilePage() {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Chi Tiết Hồ Sơ Học Viên
+            {isVi ? 'Chi Tiết Hồ Sơ Học Viên' : 'Learner Profile Details'}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Xem tiến độ học tập TOEIC, lịch sử luyện tập và điểm số ước tính của học viên
+            {isVi
+              ? 'Xem tiến độ học tập TOEIC, lịch sử luyện tập và điểm số ước tính của học viên'
+              : 'Review TOEIC learning progress, practice history, and estimated proficiency scores'}
           </p>
         </div>
       </div>
@@ -131,11 +137,11 @@ export function UserProfilePage() {
         onResetData={async () => {
           try {
             await resetLearnerData(profileData.id)
-            toast.success('Đã khởi tạo lại toàn bộ dữ liệu học tập của học viên thành công!')
+            toast.success(isVi ? 'Đã khởi tạo lại toàn bộ dữ liệu học tập của học viên thành công!' : 'Successfully reset learner study data!')
             await refetch()
             queryClient.invalidateQueries({ queryKey: ['learner-profile', userId] })
           } catch {
-            toast.error('Khởi tạo lại dữ liệu học viên thất bại')
+            toast.error(isVi ? 'Khởi tạo lại dữ liệu học viên thất bại' : 'Failed to reset learner data')
           }
         }}
       />

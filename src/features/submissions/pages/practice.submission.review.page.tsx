@@ -1,10 +1,5 @@
-import { WritingTaskAssessmentSummary } from '../components/writing.task.assessment'
-import { useTeacherGrade } from '../hooks/use.teacher.grade'
-// Trang chi tiết xem bài làm và xử lý chấm điểm, phúc khảo bài luyện tập.
-
+// Trang chi tiết xem bài làm và xử lý chấm điểm, phúc khảo bài luyện tập hỗ trợ đa ngôn ngữ.
 import { useState, useEffect } from 'react'
-import { TeacherRubricEditor } from '../components/teacher.rubric.editor'
-import { emptyTeacherDraft } from '../helpers/teacher.grading'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Image, Spin } from 'antd'
@@ -20,6 +15,7 @@ import {
   History,
   Info,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
 import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/features/media/utils/media.utils'
@@ -34,6 +30,10 @@ import {
   practiceDateLabel,
   practiceExerciseLabels,
 } from '@/features/submissions/helpers/practice.submission.display'
+import { WritingTaskAssessmentSummary } from '@/features/submissions/components/writing.task.assessment'
+import { useTeacherGrade } from '@/features/submissions/hooks/use.teacher.grade'
+import { TeacherRubricEditor } from '@/features/submissions/components/teacher.rubric.editor'
+import { emptyTeacherDraft } from '@/features/submissions/helpers/teacher.grading'
 
 function PracticeMediaRenderer({
   value,
@@ -44,6 +44,8 @@ function PracticeMediaRenderer({
   image?: boolean
   onUnavailable?: () => void
 }) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const [mediaError, setMediaError] = useState(false)
   const isId = /^[a-f\d]{24}$/i.test(value)
   const query = useQuery({
@@ -60,10 +62,10 @@ function PracticeMediaRenderer({
   useEffect(() => { if (query.isError) onUnavailable?.() }, [query.isError, onUnavailable])
 
   if (isId && query.isPending) {
-    return <span className="text-xs text-slate-400">Đang tải tệp đối chiếu…</span>
+    return <span className="text-xs text-slate-400">{isVi ? 'Đang tải tệp đối chiếu…' : 'Loading reference file…'}</span>
   }
   if (!source || query.isError) {
-    return <span className="text-xs text-rose-500">Không tải được tệp gốc để đối chiếu.</span>
+    return <span className="text-xs text-rose-500">{isVi ? 'Không tải được tệp gốc để đối chiếu.' : 'Unable to load original reference file.'}</span>
   }
 
   if (image) {
@@ -72,9 +74,9 @@ function PracticeMediaRenderer({
         <Image
           src={source}
           fallback={IMAGE_FALLBACK_PLACEHOLDER}
-          alt="Hình ảnh của đề bài gốc"
+          alt={isVi ? 'Hình ảnh của đề bài gốc' : 'Original prompt image'}
           className="max-h-80 max-w-full rounded-lg object-contain"
-          preview={{ mask: 'Nhấp để xem ảnh lớn' }}
+          preview={{ mask: isVi ? 'Nhấp để xem ảnh lớn' : 'Click to preview' }}
         />
       </div>
     )
@@ -85,9 +87,11 @@ function PracticeMediaRenderer({
       <div className="p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-start gap-3">
         <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div className="space-y-1 text-xs text-amber-800 dark:text-amber-300">
-          <p className="font-semibold">Không thể tải hoặc phát tệp ghi âm.</p>
+          <p className="font-semibold">{isVi ? 'Không thể tải hoặc phát tệp ghi âm.' : 'Cannot load or play recording file.'}</p>
           <p className="text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
-            Tệp ghi âm này không tồn tại trên kho lưu trữ đám mây hoặc đã hết hạn lưu trữ tạm. Không dùng transcript thay audio để chấm phát âm hoặc độ trôi chảy. Cần khôi phục bản ghi âm gốc trước khi chấm.
+            {isVi
+              ? 'Tệp ghi âm này không tồn tại trên kho lưu trữ đám mây hoặc đã hết hạn lưu trữ tạm. Không dùng transcript thay audio để chấm phát âm hoặc độ trôi chảy. Cần khôi phục bản ghi âm gốc trước khi chấm.'
+              : 'This recording file does not exist on cloud storage or temporary storage expired. Do not use transcript instead of audio to grade pronunciation or fluency.'}
           </p>
         </div>
       </div>
@@ -119,6 +123,8 @@ export function PracticeSubmissionReviewPage({
 }: PracticeSubmissionReviewPageProps) {
   const navigate = useNavigate()
   const client = useQueryClient()
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
 
   const {
     data: item,
@@ -141,15 +147,15 @@ export function PracticeSubmissionReviewPage({
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors shadow-2xs cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Quay lại danh sách</span>
+            <span>{isVi ? 'Quay lại danh sách' : 'Back to list'}</span>
           </button>
           <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-              Chi tiết bài nộp & Chấm điểm — Luyện tập {skill === 'SPEAKING' ? 'Speaking' : 'Writing'}
+              {isVi ? 'Chi tiết bài nộp & Chấm điểm — Luyện tập ' : 'Submission Details & Grading — Practice '}{skill === 'SPEAKING' ? 'Speaking' : 'Writing'}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {item ? (item.title || `Bài luyện tập ${item.skill}`) : 'Đang tải thông tin bài nộp…'}
+              {item ? (item.title || `${isVi ? 'Bài luyện tập' : 'Practice exercise'} ${item.skill}`) : (isVi ? 'Đang tải thông tin bài nộp…' : 'Loading submission…')}
             </p>
           </div>
         </div>
@@ -161,7 +167,7 @@ export function PracticeSubmissionReviewPage({
             onClick={() => { void refetch() }}
             className="rounded-xl text-xs font-semibold"
           >
-            Tải lại
+            {isVi ? 'Tải lại' : 'Reload'}
           </Button>
         </div>
       </div>
@@ -169,14 +175,16 @@ export function PracticeSubmissionReviewPage({
       {isLoading && (
         <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
           <Spin size="large" />
-          <p className="mt-3 text-xs text-slate-500">Đang tải bài làm và dữ liệu chấm điểm…</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {isVi ? 'Đang tải bài làm và dữ liệu chấm điểm…' : 'Loading submission and grading data…'}
+          </p>
         </div>
       )}
 
       {isError && (
         <div className="p-6 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400">
-          <p className="font-semibold text-sm">Không thể tải chi tiết bài làm.</p>
-          <p className="text-xs mt-1">{error instanceof Error ? error.message : 'Lỗi không xác định.'}</p>
+          <p className="font-semibold text-sm">{isVi ? 'Không thể tải chi tiết bài làm.' : 'Unable to load submission details.'}</p>
+          <p className="text-xs mt-1">{error instanceof Error ? error.message : (isVi ? 'Lỗi không xác định.' : 'Unknown error.')}</p>
           <Button
             type="primary"
             danger
@@ -184,7 +192,7 @@ export function PracticeSubmissionReviewPage({
             className="mt-3 rounded-lg text-xs"
             onClick={() => { void refetch() }}
           >
-            Thử lại
+            {isVi ? 'Thử lại' : 'Retry'}
           </Button>
         </div>
       )}
@@ -213,6 +221,9 @@ function PracticeReviewContent({
   skill: PracticeSkill
   onDecisionSuccess: () => void
 }) {
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+
   const manual = item.record_type === 'GRADING_REQUEST'
   const [decision, setDecision] = useState<'KEEP' | 'ADJUST'>(manual ? 'ADJUST' : 'KEEP')
   const [teacherDraft, setTeacherDraft] = useState(emptyTeacherDraft)
@@ -233,7 +244,7 @@ function PracticeReviewContent({
         feedback: feedback.trim(),
       }),
     onSuccess: () => {
-      toast.success('Đã lưu đánh giá và thông báo cho học viên')
+      toast.success(isVi ? 'Đã lưu đánh giá và thông báo cho học viên' : 'Evaluation saved and learner notified')
       onDecisionSuccess()
     },
     onError: (error: Error) => toast.error(error.message),
@@ -261,17 +272,29 @@ function PracticeReviewContent({
 
   return (
     <div className="space-y-6">
-      <WritingTaskAssessmentSummary evaluation={item.ai_evaluation} title="Đánh giá AI ban đầu" />
-      <WritingTaskAssessmentSummary evaluation={item.review?.teacher_grading as unknown as Record<string, unknown>} title="Đánh giá giáo viên hiện tại" />
-      {manual && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">Bài AI chưa chấm được. Giáo viên chấm từ bài làm và đề gốc; điểm giáo viên được lưu riêng, điểm AI vẫn là chưa có. Chỉ lưu khi yêu cầu đã ở trạng thái lỗi.</div>}
-      {item.review?.teacher_grading && <div className="rounded-xl border border-indigo-200 p-4 text-sm"><p className="font-semibold">Phiếu giáo viên đã lưu</p><p>{item.review.teacher_grading.raw_score}/{item.review.teacher_grading.max_score} · {item.review.feedback}</p><ul>{Object.entries(item.review.teacher_grading.criteria_scores).map(([key, value]) => <li key={key}>{item.review!.teacher_grading!.rubric_snapshot.criteria.find(c => c.key === key)?.label || key}: {value == null ? 'Không áp dụng' : `${value}/100`}</li>)}</ul></div>}
+      <WritingTaskAssessmentSummary evaluation={item.ai_evaluation} title={isVi ? 'Đánh giá AI ban đầu' : 'Initial AI Evaluation'} />
+      <WritingTaskAssessmentSummary evaluation={item.review?.teacher_grading as unknown as Record<string, unknown>} title={isVi ? 'Đánh giá giáo viên hiện tại' : 'Current Teacher Grading'} />
+      {manual && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          {isVi
+            ? 'Bài AI chưa chấm được. Giáo viên chấm từ bài làm và đề gốc; điểm giáo viên được lưu riêng, điểm AI vẫn là chưa có. Chỉ lưu khi yêu cầu đã ở trạng thái lỗi.'
+            : 'AI evaluation failed. Teacher grades directly from prompt and submission; teacher score saved separately.'}
+        </div>
+      )}
+      {item.review?.teacher_grading && (
+        <div className="rounded-xl border border-indigo-200 p-4 text-sm">
+          <p className="font-semibold">{isVi ? 'Phiếu giáo viên đã lưu' : 'Saved Teacher Rubric Score'}</p>
+          <p>{item.review.teacher_grading.raw_score}/{item.review.teacher_grading.max_score} · {item.review.feedback}</p>
+          <ul>{Object.entries(item.review.teacher_grading.criteria_scores).map(([key, value]) => <li key={key}>{item.review!.teacher_grading!.rubric_snapshot.criteria.find(c => c.key === key)?.label || key}: {value == null ? (isVi ? 'Không áp dụng' : 'N/A') : `${value}/100`}</li>)}</ul>
+        </div>
+      )}
       {item.review?.reason && (
         <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-bold uppercase tracking-wider text-[11px] text-amber-700 dark:text-amber-300">
-                Yêu cầu phúc khảo từ học viên
+                {isVi ? 'Yêu cầu phúc khảo từ học viên' : 'Review request from learner'}
               </span>
               <span className="text-amber-600/80 dark:text-amber-400/80">
                 · {practiceDateLabel(item.review.requested_at)}
@@ -287,26 +310,26 @@ function PracticeReviewContent({
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4 shadow-2xs">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <FileText className="w-4 h-4 text-indigo-500" />
-              <span>Đề bài tại thời điểm nộp</span>
+              <span>{isVi ? 'Đề bài tại thời điểm nộp' : 'Prompt Snapshot at Submission'}</span>
             </div>
 
             {!item.task_snapshot && (
               <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-200 dark:border-amber-900">
-                Bài cũ chưa lưu snapshot; không dùng đề hiện tại để thay thế đề gốc.
+                {isVi ? 'Bài cũ chưa lưu snapshot; không dùng đề hiện tại để thay thế đề gốc.' : 'No task snapshot available for older submission.'}
               </p>
             )}
 
             <div className="space-y-3 text-xs">
               {typeof task.title === 'string' && task.title && (
                 <div>
-                  <span className="font-semibold text-slate-500 dark:text-slate-400">Tiêu đề: </span>
+                  <span className="font-semibold text-slate-500 dark:text-slate-400">{isVi ? 'Tiêu đề: ' : 'Title: '}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{task.title}</span>
                 </div>
               )}
 
               {typeof task.task_prompt === 'string' && task.task_prompt && (
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">Đề bài:</span>
+                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">{isVi ? 'Đề bài:' : 'Prompt:'}</span>
                   <p className="text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap">
                     {task.task_prompt}
                   </p>
@@ -315,7 +338,7 @@ function PracticeReviewContent({
 
               {typeof task.prompt_text_en === 'string' && task.prompt_text_en && (
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">Nội dung tiếng Anh:</span>
+                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">{isVi ? 'Nội dung tiếng Anh:' : 'English Prompt Content:'}</span>
                   <p className="text-slate-900 dark:text-slate-100 font-medium leading-relaxed whitespace-pre-wrap">
                     {task.prompt_text_en}
                   </p>
@@ -324,21 +347,21 @@ function PracticeReviewContent({
 
               {typeof task.instruction === 'string' && task.instruction && (
                 <div>
-                  <span className="font-semibold text-slate-500 dark:text-slate-400">Hướng dẫn: </span>
+                  <span className="font-semibold text-slate-500 dark:text-slate-400">{isVi ? 'Hướng dẫn: ' : 'Instructions: '}</span>
                   <span className="text-slate-700 dark:text-slate-300">{task.instruction}</span>
                 </div>
               )}
 
               {typeof task.prompt_image_id === 'string' && task.prompt_image_id && (
                 <div className="pt-2">
-                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-2">Hình ảnh kèm theo:</span>
+                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-2">{isVi ? 'Hình ảnh kèm theo:' : 'Attached Image:'}</span>
                   <PracticeMediaRenderer value={task.prompt_image_id} image />
                 </div>
               )}
 
               {Array.isArray(task.task_requirements) && task.task_requirements.length > 0 && (
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">Yêu cầu cần đạt:</span>
+                  <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">{isVi ? 'Yêu cầu cần đạt:' : 'Requirements:'}</span>
                   <ul className="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300">
                     {task.task_requirements.map((req, idx) => (
                       <li key={idx}>{String(req)}</li>
@@ -349,7 +372,7 @@ function PracticeReviewContent({
 
               {typeof task.reference_answer === 'string' && task.reference_answer && (
                 <div className="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/60">
-                  <span className="font-semibold text-indigo-700 dark:text-indigo-300 block mb-1">Đáp án tham khảo:</span>
+                  <span className="font-semibold text-indigo-700 dark:text-indigo-300 block mb-1">{isVi ? 'Đáp án tham khảo:' : 'Sample Answer:'}</span>
                   <p className="text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
                     {task.reference_answer}
                   </p>
@@ -362,30 +385,30 @@ function PracticeReviewContent({
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
                 {skill === 'SPEAKING' ? <Mic className="w-4 h-4 text-emerald-500" /> : <PenTool className="w-4 h-4 text-purple-500" />}
-                <span>Bài làm của học viên</span>
+                <span>{isVi ? 'Bài làm của học viên' : 'Learner Submission'}</span>
               </div>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                {skill === 'WRITING' ? `Số từ: ${item.word_count ?? '—'}` : `Ghi âm: ${item.recording_duration_seconds != null ? `${item.recording_duration_seconds}s` : '—'}`}
+                {skill === 'WRITING' ? `${isVi ? 'Số từ: ' : 'Word count: '}${item.word_count ?? '—'}` : `${isVi ? 'Ghi âm: ' : 'Recording: '}${item.recording_duration_seconds != null ? `${item.recording_duration_seconds}s` : '—'}`}
               </span>
             </div>
 
             {item.audio_url && (
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Bản ghi âm hoàn chỉnh:</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{isVi ? 'Bản ghi âm hoàn chỉnh:' : 'Complete Audio Recording:'}</span>
                 <PracticeMediaRenderer value={item.audio_url} onUnavailable={() => setAudioUnavailable(true)} />
               </div>
             )}
 
             {skill === 'SPEAKING' && !item.audio_url && !item.dialogue_turns_results?.length && (
               <p className="text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900">
-                Thiếu bản ghi âm: không đủ căn cứ để đánh giá lại phát âm.
+                {isVi ? 'Thiếu bản ghi âm: không đủ căn cứ để đánh giá lại phát âm.' : 'Missing audio recording: insufficient evidence to re-evaluate pronunciation.'}
               </p>
             )}
 
             {(item.content || item.transcription) && (
               <div className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  {skill === 'SPEAKING' ? 'Bản nhận diện giọng nói (Transcription):' : 'Nội dung bài viết:'}
+                  {skill === 'SPEAKING' ? (isVi ? 'Bản nhận diện giọng nói (Transcription):' : 'Speech Transcription:') : (isVi ? 'Nội dung bài viết:' : 'Written Content:')}
                 </span>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-sans">
                   {item.content || item.transcription}
@@ -396,7 +419,7 @@ function PracticeReviewContent({
             {Array.isArray(item.dialogue_turns_results) && item.dialogue_turns_results.length > 0 && (
               <div className="space-y-3 pt-2">
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
-                  Các lượt thoại (Dialogue Turns):
+                  {isVi ? 'Các lượt thoại (Dialogue Turns):' : 'Dialogue Turns:'}
                 </span>
                 {item.dialogue_turns_results.map((turn) => {
                   const mediaSource =
@@ -413,7 +436,7 @@ function PracticeReviewContent({
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-slate-800 dark:text-slate-200">
-                          Lượt {turn.turn_number}
+                          {isVi ? 'Lượt ' : 'Turn '}{turn.turn_number}
                         </span>
                       </div>
                       {turn.user_transcription && (
@@ -433,10 +456,10 @@ function PracticeReviewContent({
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
                 <Sparkles className="w-4 h-4 text-indigo-500" />
-                <span>Đánh giá từ AI hệ thống</span>
+                <span>{isVi ? 'Đánh giá từ AI hệ thống' : 'System AI Evaluation'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Điểm AI gốc:</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{isVi ? 'Điểm AI gốc:' : 'Original AI score:'}</span>
                 <span className="font-mono font-bold text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                   {practiceScoreLabel(item, true)}
                 </span>
@@ -445,7 +468,7 @@ function PracticeReviewContent({
 
             {Boolean(ai.detailed_feedback || ai.score_reason) && (
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs">
-                <span className="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Nhận xét chung:</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-400 block mb-1">{isVi ? 'Nhận xét chung:' : 'General feedback:'}</span>
                 <p className="text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
                   {String(ai.detailed_feedback || ai.score_reason)}
                 </p>
@@ -455,7 +478,7 @@ function PracticeReviewContent({
             {criteria && Object.keys(criteria).length > 0 && (
               <div className="space-y-3">
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
-                  Điểm theo từng tiêu chí đánh giá:
+                  {isVi ? 'Điểm theo từng tiêu chí đánh giá:' : 'Scores by evaluation criteria:'}
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {Object.entries(criteria).map(([criterionKey, val]) => {
@@ -503,61 +526,61 @@ function PracticeReviewContent({
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4 shadow-2xs">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <Info className="w-4 h-4 text-blue-500" />
-              <span>Thông tin bài nộp</span>
+              <span>{isVi ? 'Thông tin bài nộp' : 'Submission Information'}</span>
             </div>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Học viên:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Học viên:' : 'Learner:'}</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[180px]" title={item.user_email || item.user_id}>
                   {item.user_email || item.user_id}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Loại bài:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Loại bài:' : 'Exercise Type:'}</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">
                   {practiceExerciseLabels[item.exercise_type || ''] || item.exercise_type || '—'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Thang điểm:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Thang điểm:' : 'Scale:'}</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">
-                  {item.grading_standard === 'TOEIC' ? `TOEIC (Tối đa ${item.max_score ?? '—'})` : 'Thực hành (/100)'}
+                  {item.grading_standard === 'TOEIC' ? `TOEIC (${isVi ? 'Tối đa ' : 'Max '}${item.max_score ?? '—'})` : (isVi ? 'Thực hành (/100)' : 'Practice (/100)')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Điểm hiện tại:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Điểm hiện tại:' : 'Current Score:'}</span>
                 <span className="font-mono font-bold text-xs text-indigo-600 dark:text-indigo-400">
                   {practiceScoreLabel(item)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Lượt làm:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Lượt làm:' : 'Attempt:'}</span>
                 <span className="font-mono text-slate-700 dark:text-slate-300">
                   #{item.attempt_number ?? item.version_number ?? '1'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Thời gian nộp:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Thời gian nộp:' : 'Submitted at:'}</span>
                 <span className="font-mono text-slate-700 dark:text-slate-300">
                   {practiceDateLabel(item.submitted_at)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Trạng thái phúc khảo:</span>
+                <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Trạng thái phúc khảo:' : 'Review Status:'}</span>
                 <span className="font-medium">
                   {item.review?.status === 'REQUESTED' ? (
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">Chờ xem xét</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">{isVi ? 'Chờ xem xét' : 'Pending'}</span>
                   ) : item.review?.status === 'RESOLVED' ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">Đã kiểm tra</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{isVi ? 'Đã kiểm tra' : 'Reviewed'}</span>
                   ) : (
-                    <span className="text-slate-500">Chưa yêu cầu</span>
+                    <span className="text-slate-500">{isVi ? 'Chưa yêu cầu' : 'None'}</span>
                   )}
                 </span>
               </div>
               {item.review?.reviewed_at && (
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Đã chấm lúc:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Đã chấm lúc:' : 'Reviewed at:'}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300">
                     {practiceDateLabel(item.review.reviewed_at)}
                   </span>
@@ -565,7 +588,7 @@ function PracticeReviewContent({
               )}
               {item.review?.reviewer_name && (
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Người chấm:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{isVi ? 'Người chấm:' : 'Reviewer:'}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {item.review.reviewer_name}
                   </span>
@@ -577,34 +600,34 @@ function PracticeReviewContent({
           <div className="rounded-2xl border border-indigo-200 dark:border-indigo-900 bg-white dark:bg-slate-900 p-5 space-y-4 shadow-sm">
             <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <Award className="w-4 h-4 text-indigo-600" />
-              <span>Quyết định của giáo viên</span>
+              <span>{isVi ? 'Quyết định của giáo viên' : 'Teacher Evaluation Decision'}</span>
             </div>
 
             <div className="space-y-4 text-xs">
               <div>
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
-                  Quyết định điểm số
+                  {isVi ? 'Quyết định điểm số' : 'Score Decision'}
                 </label>
                 <select
-                  aria-label="Quyết định phúc khảo"
+                  aria-label={isVi ? 'Quyết định phúc khảo' : 'Grading decision'}
                   value={decision}
                   onChange={(event) => setDecision(event.target.value as 'KEEP' | 'ADJUST')}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2.5 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
                 >
-                  {!manual && <option value="KEEP">Giữ nguyên điểm số hiện tại</option>}
-                  <option value="ADJUST">Điều chỉnh sang điểm mới</option>
+                  {!manual && <option value="KEEP">{isVi ? 'Giữ nguyên điểm số hiện tại' : 'Keep current score'}</option>}
+                  <option value="ADJUST">{isVi ? 'Điều chỉnh sang điểm mới' : 'Adjust to new score'}</option>
                 </select>
               </div>
 
               {decision === 'ADJUST' && item.teacher_rubric && <TeacherRubricEditor rubric={item.teacher_rubric} value={teacherDraft} onChange={setTeacherDraft} calculated={preview.grade} pending={preview.pending} error={preview.error} />}
-              {decision === 'ADJUST' && !item.teacher_rubric && <p className="text-sm text-amber-700">Không có đủ rubric/đề gốc đã lưu. {manual ? 'Chưa thể chấm thủ công; cần khôi phục dữ liệu gốc.' : 'Bài cũ chỉ hỗ trợ điều chỉnh điểm tổng và phải ghi rõ căn cứ.'}</p>}
+              {decision === 'ADJUST' && !item.teacher_rubric && <p className="text-sm text-amber-700">{isVi ? `Không có đủ rubric/đề gốc đã lưu. ${manual ? 'Chưa thể chấm thủ công; cần khôi phục dữ liệu gốc.' : 'Bài cũ chỉ hỗ trợ điều chỉnh điểm tổng và phải ghi rõ căn cứ.'}` : 'Insufficient rubric/prompt snapshot saved.'}</p>}
               {decision === 'ADJUST' && !item.teacher_rubric && !manual && (
                 <div>
                   <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
-                    Điểm số sau điều chỉnh (0–{max})
+                    {isVi ? `Điểm số sau điều chỉnh (0–${max})` : `Adjusted Score (0–${max})`}
                   </label>
                   <input
-                    aria-label="Điểm sau phúc khảo"
+                    aria-label={isVi ? 'Điểm sau phúc khảo' : 'Adjusted score'}
                     type="number"
                     min={0}
                     max={max}
@@ -619,15 +642,15 @@ function PracticeReviewContent({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="font-semibold text-slate-700 dark:text-slate-300">
-                    Nhận xét & Phản hồi cho học viên
+                    {isVi ? 'Nhận xét & Phản hồi cho học viên' : 'Feedback for Learner'}
                   </label>
                   <span className={`text-[11px] ${feedback.trim().length < 10 ? 'text-amber-500' : 'text-slate-400'}`}>
-                    {feedback.trim().length}/5000 (tối thiểu 10 ký tự)
+                    {feedback.trim().length}/5000 ({isVi ? 'tối thiểu 10 ký tự' : 'min 10 chars'})
                   </span>
                 </div>
                 <textarea
-                  aria-label="Nhận xét phúc khảo"
-                  placeholder="Giải thích quyết định, dẫn chứng cụ thể từ bài làm của học viên..."
+                  aria-label={isVi ? 'Nhận xét phúc khảo' : 'Review feedback'}
+                  placeholder={isVi ? 'Giải thích quyết định, dẫn chứng cụ thể từ bài làm của học viên...' : 'Explain grading decision with evidence from submission...'}
                   value={feedback}
                   maxLength={5000}
                   onChange={(event) => setFeedback(event.target.value)}
@@ -637,7 +660,9 @@ function PracticeReviewContent({
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                Điểm AI gốc và phiếu giáo viên được lưu riêng trong lịch sử. Quyết định không cộng thêm lượt làm hoặc điểm thưởng, không thay đổi kết quả ôn tập đã ghi nhận.
+                {isVi
+                  ? 'Điểm AI gốc và phiếu giáo viên được lưu riêng trong lịch sử. Quyết định không cộng thêm lượt làm hoặc điểm thưởng, không thay đổi kết quả ôn tập đã ghi nhận.'
+                  : 'Original AI score and teacher rubric evaluation are kept separately in history.'}
               </div>
 
               <button
@@ -658,10 +683,10 @@ function PracticeReviewContent({
                 {mutation.isPending ? (
                   <>
                     <Spin size="small" />
-                    <span>Đang lưu quyết định…</span>
+                    <span>{isVi ? 'Đang lưu quyết định…' : 'Saving decision…'}</span>
                   </>
                 ) : (
-                  <span>Lưu quyết định chấm điểm</span>
+                  <span>{isVi ? 'Lưu quyết định chấm điểm' : 'Save Grading Decision'}</span>
                 )}
               </button>
             </div>
@@ -671,7 +696,7 @@ function PracticeReviewContent({
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3 shadow-2xs">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm border-b border-slate-100 dark:border-slate-800/80 pb-3">
                 <History className="w-4 h-4 text-slate-500" />
-                <span>Lịch sử đánh giá ({item.review_history.length})</span>
+                <span>{isVi ? 'Lịch sử đánh giá' : 'Evaluation History'} ({item.review_history.length})</span>
               </div>
               <div className="space-y-2.5">
                 {item.review_history.map((entry) => (
@@ -681,7 +706,7 @@ function PracticeReviewContent({
                   >
                     <div className="flex items-center justify-between text-slate-500">
                       <span className="font-semibold text-slate-700 dark:text-slate-300">
-                        {entry.reviewer_name || 'Giáo viên'}
+                        {entry.reviewer_name || (isVi ? 'Giáo viên' : 'Teacher')}
                       </span>
                       <span className="font-mono text-[11px]">
                         {practiceDateLabel(entry.reviewed_at)}

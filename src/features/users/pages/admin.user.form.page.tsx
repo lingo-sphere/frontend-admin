@@ -1,8 +1,8 @@
-// Trang quản trị tạo mới và cập nhật tài khoản quản trị viên hoặc giảng viên.
-
+// Trang quản trị tạo mới và cập nhật tài khoản quản trị viên hoặc giảng viên hỗ trợ đa ngôn ngữ.
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { userService } from '@/features/users/services/user.service'
 import { toast } from '@/store/toast.store'
 import { AdminUserAccountForm } from '@/features/users/components/admin.user.account.form'
@@ -26,6 +26,8 @@ interface AdminUserFormPageProps {
 
 export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
   const navigate = useNavigate()
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
   const isEditing = !!editUserId
 
   const [formData, setFormData] = useState<AdminUserFormData>({
@@ -64,13 +66,13 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
     if (!formData.full_name.trim()) {
-      newErrors.full_name = 'Vui lòng nhập họ và tên'
+      newErrors.full_name = isVi ? 'Vui lòng nhập họ và tên' : 'Please enter full name'
     }
     if (!formData.email.trim() || !formData.email.includes('@')) {
-      newErrors.email = 'Vui lòng nhập email hợp lệ'
+      newErrors.email = isVi ? 'Vui lòng nhập email hợp lệ' : 'Please enter a valid email'
     }
     if (!isEditing && (!formData.password || formData.password.length < 6)) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
+      newErrors.password = isVi ? 'Mật khẩu phải có ít nhất 6 ký tự' : 'Password must be at least 6 characters'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -90,7 +92,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           status: formData.status,
           password: formData.password ? formData.password : undefined,
         })
-        toast.success('Cập nhật tài khoản quản trị viên thành công!')
+        toast.success(isVi ? 'Cập nhật tài khoản quản trị viên thành công!' : 'Admin account updated successfully!')
       } else {
         await userService.createAdminUser({
           email: formData.email.trim(),
@@ -99,7 +101,7 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           status: formData.status,
           password: formData.password,
         })
-        toast.success('Tạo tài khoản quản trị viên mới thành công!')
+        toast.success(isVi ? 'Tạo tài khoản quản trị viên mới thành công!' : 'New admin account created successfully!')
       }
       await queryClient.invalidateQueries({ queryKey: adminUserKeys.all })
       navigate('/admins')
@@ -109,8 +111,8 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : err instanceof Error
             ? err.message
-            : 'Có lỗi xảy ra khi lưu thông tin'
-      toast.error(errorMsg || 'Có lỗi xảy ra khi lưu thông tin')
+            : (isVi ? 'Có lỗi xảy ra khi lưu thông tin' : 'An error occurred while saving')
+      toast.error(errorMsg || (isVi ? 'Có lỗi xảy ra khi lưu thông tin' : 'An error occurred while saving'))
     } finally {
       setIsSubmitting(false)
     }
@@ -136,12 +138,12 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {isEditing ? 'Chỉnh Sửa Quản Trị Viên' : 'Thêm Quản Trị Viên Mới'}
+              {isEditing ? (isVi ? 'Chỉnh Sửa Quản Trị Viên' : 'Edit Administrator') : (isVi ? 'Thêm Quản Trị Viên Mới' : 'Add New Administrator')}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {isEditing
-                ? 'Cập nhật thông tin phân quyền và trạng thái tài khoản quản trị'
-                : 'Khởi tạo tài khoản phân quyền quản trị cho cán bộ / giáo viên'}
+                ? (isVi ? 'Cập nhật thông tin phân quyền và trạng thái tài khoản quản trị' : 'Update permission details and status for admin account')
+                : (isVi ? 'Khởi tạo tài khoản phân quyền quản trị cho cán bộ / giáo viên' : 'Create administrative or instructor user account')}
             </p>
           </div>
         </div>
@@ -180,12 +182,12 @@ export function AdminUserFormPage({ editUserId }: AdminUserFormPageProps) {
         </div>
 
         <StickyFormActionBar
-          title={formData.full_name || formData.email || (isEditing ? 'Tài khoản' : 'Tài khoản mới')}
-          statusText={isEditing ? 'Đang chỉnh sửa:' : 'Đang tạo mới:'}
-          badgeText={formData.role === 'ADMIN' ? 'Quản trị viên' : 'Giảng viên'}
-          cancelText="Hủy Bỏ"
-          saveText={isEditing ? 'Cập Nhật Tài Khoản' : 'Tạo Tài Khoản'}
-          savingText="Đang lưu..."
+          title={formData.full_name || formData.email || (isEditing ? (isVi ? 'Tài khoản' : 'Account') : (isVi ? 'Tài khoản mới' : 'New Account'))}
+          statusText={isEditing ? (isVi ? 'Đang chỉnh sửa:' : 'Editing:') : (isVi ? 'Đang tạo mới:' : 'Creating:')}
+          badgeText={formData.role === 'ADMIN' ? (isVi ? 'Quản trị viên' : 'Administrator') : (isVi ? 'Giảng viên' : 'Instructor')}
+          cancelText={isVi ? 'Hủy Bỏ' : 'Cancel'}
+          saveText={isEditing ? (isVi ? 'Cập Nhật Tài Khoản' : 'Update Account') : (isVi ? 'Tạo Tài Khoản' : 'Create Account')}
+          savingText={isVi ? 'Đang lưu...' : 'Saving...'}
           isSubmitting={isSubmitting}
           onCancel={() => navigate('/admins')}
         />
