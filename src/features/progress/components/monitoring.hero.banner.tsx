@@ -40,8 +40,8 @@ export function MonitoringHeroBanner({
             </div>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
               {isVi
-                ? 'Giám Sát Backend 13 Microservices & Live Logs'
-                : '13 Microservices Health & Live Logs'}
+                ? 'Nhật ký hệ thống'
+                : 'System logs'}
             </h2>
             <p className="text-emerald-100/90 text-sm max-w-2xl">
               {isVi
@@ -101,8 +101,8 @@ export function MonitoringHeroBanner({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
         <StatCard
           title={isVi ? 'Trạng Thái Máy Chủ' : 'Server Status'}
-          value={isVi ? '15/15 Sẵn sàng' : '15/15 Operational'}
-          subtitle={isVi ? '100% microservices hoạt động' : 'All microservices operational'}
+          value={isVi ? 'Chưa có dữ liệu' : 'Unavailable'}
+          subtitle={isVi ? 'Chưa kết nối nguồn trạng thái dịch vụ' : 'Service health source unavailable'}
           icon={CheckCircle2}
           color="emerald"
           loading={isLoading}
@@ -110,8 +110,8 @@ export function MonitoringHeroBanner({
 
         <StatCard
           title={isVi ? 'Uptime 30 ngày' : '30d Uptime'}
-          value={`${data?.uptime_percentage ?? 99.98}%`}
-          subtitle={isVi ? 'Cam kết SLA hệ thống 99.9%' : '30-day infrastructure SLA'}
+          value="—"
+          subtitle={isVi ? 'Chưa có nguồn đo uptime' : 'Uptime source unavailable'}
           icon={ShieldCheck}
           color="teal"
           loading={isLoading}
@@ -119,8 +119,8 @@ export function MonitoringHeroBanner({
 
         <StatCard
           title={isVi ? 'Độ trễ trung bình' : 'Avg Latency'}
-          value={`${data?.average_latency_ms ?? 18.4} ms`}
-          subtitle={isVi ? 'Thời gian phản hồi API vi dịch vụ' : 'Average API latency'}
+          value="—"
+          subtitle={isVi ? 'Chưa có nguồn đo độ trễ' : 'Latency source unavailable'}
           icon={Activity}
           color="indigo"
           loading={isLoading}
@@ -128,7 +128,7 @@ export function MonitoringHeroBanner({
 
         <StatCard
           title={isVi ? 'Tổng Logs ClickHouse' : 'Total Logs'}
-          value={`${totalLogs.toLocaleString()} logs`}
+          value={data?.log_count_available ? `${totalLogs.toLocaleString()} logs` : '—'}
           subtitle={isVi ? 'Bản ghi nhật ký phân tán' : 'Distributed log events'}
           icon={Terminal}
           color="amber"

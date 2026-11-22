@@ -110,7 +110,12 @@ export function BetterStackMonitoringTab({
         onAutoRefreshChange={onAutoRefreshChange}
       />
 
-      <MonitoringLogsTable
+      {!isLoading && !data?.telemetry_available && (
+        <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          {isVi ? 'Không thể xác minh nguồn nhật ký Better Stack. Hãy kiểm tra cấu hình hoặc thử lại.' : 'Better Stack logs are unavailable. Check the configuration or retry.'}
+        </div>
+      )}
+      {data?.telemetry_available && <MonitoringLogsTable
         liveLogs={liveLogs}
         isLoading={isLoading}
         isVi={isVi}
@@ -137,9 +142,9 @@ export function BetterStackMonitoringTab({
         onPageChange={(page: number) => {
           if (onParamsChange) onParamsChange({ page })
         }}
-      />
+      />}
 
-      <MonitoringServicesGrid
+      {data?.health_source_verified && services.length > 0 && <MonitoringServicesGrid
         paginatedServices={paginatedServices}
         filteredServicesCount={filteredServices.length}
         filterType={filterType}
@@ -156,12 +161,12 @@ export function BetterStackMonitoringTab({
           setServicesPageSize(size)
           setServicesPage(1)
         }}
-      />
+      />}
 
-      <MonitoringIncidentsCard
+      {data?.incident_source_verified && (data?.recent_incidents?.length ?? 0) > 0 && <MonitoringIncidentsCard
         incidents={data?.recent_incidents}
         isVi={isVi}
-      />
+      />}
     </div>
   )
 }
