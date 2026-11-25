@@ -87,7 +87,7 @@ export function VuexyEarningReportsCard({
         <div className="md:col-span-5 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-              {totalXp.toLocaleString(locale)} XP
+              {activities.length.toLocaleString(locale)}
             </h2>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
               {t('accumulated')}

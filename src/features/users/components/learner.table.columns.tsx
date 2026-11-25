@@ -86,19 +86,13 @@ export function getLearnerColumns({
     {
       key: 'gamification',
       sortable: true,
-      title: 'Gamification (XP & Streak)',
-      width: 180,
+      title: isVi ? 'Chuỗi chuyên cần' : 'Streak',
+      width: 150,
       align: 'center',
       render: (u) => (
-        <div className="flex items-center justify-center gap-3">
-          <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-            <Sparkles className="w-3.5 h-3.5 fill-amber-500" />
-            {(u.total_xp ?? 0).toLocaleString()} XP
-          </span>
-          <span className="flex items-center gap-1 text-xs font-semibold text-rose-500">
-            <Flame className="w-3.5 h-3.5 fill-rose-500" />
-            {u.current_streak ?? 0} {isVi ? 'ngày' : 'days'}
-          </span>
+        <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-rose-500">
+          <Flame className="w-3.5 h-3.5 fill-rose-500" />
+          <span>{u.current_streak ?? 0} {isVi ? 'ngày' : 'days'}</span>
         </div>
       ),
     },

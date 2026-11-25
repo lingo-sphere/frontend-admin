@@ -122,10 +122,6 @@ export const API_CONFIG = {
       ADMIN_ATTEMPT_RESULT: (attemptId: string) => `/exams/admin/attempts/${attemptId}/result`,
       ADMIN_USER_ATTEMPTS: (userId: string) => `/exams/admin/users/${userId}/attempts`,
       ADMIN_UPDATE_ATTEMPT_SCORE: (attemptId: string) => `/exams/admin/attempts/${attemptId}/score`,
-      AI_IMPORT: '/exams/ai-import',
-      AI_PREVIEW: '/exams/ai-import/preview',
-      AI_EXTRACT_KEYS: '/exams/ai-import/extract-keys',
-      AI_LOCAL_BATCH: '/exams/ai-import/local-batch',
     },
 
     NOTIFICATIONS: {

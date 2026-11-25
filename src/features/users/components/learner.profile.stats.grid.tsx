@@ -9,9 +9,9 @@ interface UserProfileStatsGridProps {
 export function UserProfileStatsGrid({ profileData }: UserProfileStatsGridProps) {
   const statsList = [
     {
-      label: 'Tổng XP',
-      value: (profileData.total_xp ?? 0).toLocaleString(),
-      icon: Star,
+      label: 'Chuỗi Kỷ Lục',
+      value: `${profileData.longest_streak ?? 0} ngày`,
+      icon: Flame,
       strip: 'bg-amber-500',
       iconBox: 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/50',
     },
