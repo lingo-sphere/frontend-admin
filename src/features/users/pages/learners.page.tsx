@@ -148,8 +148,8 @@ export function LearnersPage() {
         title={isVi ? 'Quản Lý Học Viên' : 'Learner Management'}
         subtitle={
           isVi
-            ? 'Theo dõi mục tiêu TOEIC, tiến trình học tập, XP và trạng thái tài khoản học viên'
-            : 'Track TOEIC targets, learning progress, XP, and learner account statuses'
+            ? 'Theo dõi mục tiêu TOEIC, tiến trình học tập, chuỗi chuyên cần và trạng thái tài khoản học viên'
+            : 'Track TOEIC targets, learning progress, study streak, and learner account statuses'
         }
         isLoading={isLoading}
         columns={columns}
