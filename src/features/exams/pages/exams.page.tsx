@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RotateCcw, BookOpen, Sparkles, GraduationCap } from 'lucide-react'
+import { Plus, RotateCcw, BookOpen, GraduationCap } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
 import { type ToeicExamItem } from '@/features/exams/services/exam.service'
 import {
@@ -17,7 +17,6 @@ import { ExamStatsOverview } from '@/features/exams/components/exam.stats.overvi
 import { AdminTabs } from '@/components/admin.tabs'
 import { ExamListTable } from '@/features/exams/components/exam.list.table'
 import { CreateExamModal } from '@/features/exams/components/create.exam.modal'
-import { ToeicAiImportModal } from '@/features/exams/components/toeic.ai.import.modal'
 import { ToeicAttemptsTable } from '@/features/exams/components/toeic.attempts.table'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -55,7 +54,6 @@ export function ExamsPage() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedSkill, setSelectedSkill] = useState<string>('ALL')
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
-  const [showAiImportModal, setShowAiImportModal] = useState<boolean>(false)
 
   const handleManageQuestions = (exam: ToeicExamItem) => {
     storage.session.set(STORAGE_KEYS.ACTIVE_EXAM, exam)
@@ -162,14 +160,6 @@ export function ExamsPage() {
             </button>
 
             <button
-              onClick={() => setShowAiImportModal(true)}
-              className="flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{isVi ? 'Nhập đề thông minh (AI)' : 'AI Smart Importer'}</span>
-            </button>
-
-            <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
@@ -216,14 +206,6 @@ export function ExamsPage() {
             isOpen={showAddModal}
             onClose={() => setShowAddModal(false)}
             onSubmit={handleCreateExam}
-          />
-
-          <ToeicAiImportModal
-            isOpen={showAiImportModal}
-            onClose={() => setShowAiImportModal(false)}
-            onSuccess={() => {
-              handleRefresh()
-            }}
           />
         </div>
       ) : (
