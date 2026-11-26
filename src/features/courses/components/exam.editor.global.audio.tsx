@@ -1,10 +1,7 @@
-/**
- * @file exam.editor.global.audio.tsx
- * @description Thanh hiển thị phát audio nghe chung cho toàn bộ đề thi kèm nút xóa audio
- */
+// Thanh hiển thị phát audio nghe chung cho toàn bộ đề thi kèm nút xóa audio.
 
-import { Trash2, Volume2 } from 'lucide-react'
-import { resolveMediaUrl } from '@/lib/media.utils'
+import { Trash2 } from 'lucide-react'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 
 interface ExamEditorGlobalAudioProps {
   globalAudioUrl: string
@@ -19,16 +16,17 @@ export function ExamEditorGlobalAudio({
 }: ExamEditorGlobalAudioProps) {
   if (!globalAudioUrl) return null
 
-  const resolvedUrl = resolveMediaUrl(globalAudioUrl)
-
   return (
     <div className="flex items-center justify-between gap-3 px-6 py-2 bg-indigo-50/50 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/40 text-xs">
-      <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
-        <Volume2 className="w-4 h-4 text-indigo-500" />
-        <span className="font-semibold">
+      <div className="flex items-center gap-3 flex-1 max-w-xl">
+        <span className="font-semibold text-indigo-700 dark:text-indigo-300 shrink-0">
           {isVi ? 'Audio toàn bài thi:' : 'Global Exam Audio:'}
         </span>
-        <audio controls preload="none" src={resolvedUrl} className="h-7 max-w-xs" />
+        <CustomAudioPlayer
+          src={globalAudioUrl}
+          variant="compact"
+          className="flex-1"
+        />
       </div>
       <button
         type="button"

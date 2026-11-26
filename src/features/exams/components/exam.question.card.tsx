@@ -6,6 +6,7 @@ import { CustomSelect, type SelectOption } from '@/components/custom.select'
 import { NumberInput } from '@/components/number.input'
 import { Image } from 'antd'
 import { ContextSelector } from '@/components/context.selector'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import type { ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 import { resolveMediaUrl } from '@/lib/media.utils'
 
@@ -196,8 +197,8 @@ export function ExamQuestionCard({
                   <span>{hasAudio ? 'Đổi Audio câu' : 'Thêm Audio câu'}</span>
                 </button>
                 {hasAudio && audioSrc && (
-                  <div className="flex items-center gap-1">
-                    <audio controls preload="none" src={audioSrc} className="h-6 max-w-[180px]" />
+                  <div className="flex items-center gap-1.5 min-w-[200px]">
+                    <CustomAudioPlayer src={audioSrc} variant="compact" className="py-1 px-2 text-xs flex-1" />
                     <button
                       type="button"
                       onClick={() => onUpdate({ media_url: undefined, audio_url: undefined })}
