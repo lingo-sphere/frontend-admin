@@ -9,21 +9,7 @@ import { TableRowActions, renderTableDate } from '@/components/table.row.actions
 import { usePermissionsQuery } from '@/features/rbac/hooks/use.rbac.query'
 import { useDebounce } from '@/hooks/use.debounce'
 import { toast } from '@/store/toast.store'
-
-const RBAC_MODULES = [
-  'AUTH',
-  'USERS',
-  'COURSES',
-  'EXAMS',
-  'PRACTICE',
-  'PROGRESS',
-  'COMMUNITY',
-  'NOTIFICATIONS',
-  'MEDIA',
-  'AI',
-  'ROLES',
-  'PERMISSIONS',
-]
+import { RBAC_MODULES, RBAC_MODULE_LABELS } from '@/features/rbac/constants/rbac.constants'
 
 interface PermissionsListTabProps {
   onOpenCreatePerm: () => void
@@ -268,7 +254,7 @@ export function PermissionsListTab({
               { value: 'ALL', label: isVi ? 'Tất cả phân hệ' : 'All Modules' },
               ...modulesList.map((mod) => ({
                 value: mod,
-                label: isVi ? `Phân hệ ${mod}` : `Module ${mod}`,
+                label: isVi ? (RBAC_MODULE_LABELS[mod] || `Phân hệ ${mod}`) : `Module ${mod}`,
               })),
             ]}
             className="w-48"

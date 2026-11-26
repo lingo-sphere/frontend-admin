@@ -6,6 +6,7 @@ import { X, KeyRound, AlertCircle } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import type { Permission } from '@/types/api.types'
 import { CustomSelect } from '@/components/custom.select'
+import { RBAC_MODULES, RBAC_MODULE_LABELS } from '@/features/rbac/constants/rbac.constants'
 
 interface PermissionModalProps {
   isOpen: boolean
@@ -13,7 +14,7 @@ interface PermissionModalProps {
   editingPerm: Permission | null
   onSave: (payload: { name: string; api_path: string; method: string; module: string; description?: string }) => Promise<void>
   isSubmitting: boolean
-  availableModules: string[]
+  availableModules: readonly string[]
   existingPermissions?: Permission[]
 }
 
@@ -43,26 +44,11 @@ export function PermissionModal({
     { value: 'DELETE', label: isVi ? 'DELETE - Xóa' : 'DELETE - Remove' },
   ], [isVi])
 
-  const defaultModules = [
-    'COURSES',
-    'VOCABULARY',
-    'PRACTICE',
-    'EXAMS',
-    'USERS',
-    'NOTIFICATIONS',
-    'MEDIA',
-    'AI',
-    'ROLES',
-    'PERMISSIONS',
-    'PROGRESS',
-    'COMMUNITY',
-  ]
-
   const moduleOptions = useMemo(() => {
-    const list = Array.from(new Set([...defaultModules, ...availableModules])).filter(Boolean).sort()
+    const list = Array.from(new Set([...RBAC_MODULES, ...availableModules])).filter(Boolean).sort()
     return list.map((m) => ({
       value: m,
-      label: isVi ? `Phân hệ ${m}` : `Module ${m}`,
+      label: isVi ? (RBAC_MODULE_LABELS[m] || `Phân hệ ${m}`) : `Module ${m}`,
     }))
   }, [availableModules, isVi])
 

@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import dayjs from 'dayjs'
+import dayjs, { type Dayjs } from 'dayjs'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Tooltip } from 'antd'
+import { Button, Tooltip, DatePicker } from 'antd'
 import { Layers, CheckCircle2, AlertTriangle, RotateCcw } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableTextCell } from '@/components/table.text.cell'
@@ -13,6 +13,8 @@ import { StatCard } from '@/components/stat.card'
 import { type CourseSimple } from '@/features/courses/hooks/use.course.learners.data'
 import { progressService, type CourseTestSession } from '@/features/progress/services/progress.service'
 import { userService } from '@/features/users/services/user.service'
+
+const { RangePicker } = DatePicker
 
 type SessionRow = CourseTestSession & {
   course_title: string
@@ -50,6 +52,7 @@ export function CourseTestSessionsTab({
   const [type, setType] = useState('ALL')
   const [status, setStatus] = useState('ALL')
   const [search, setSearch] = useState('')
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -98,9 +101,19 @@ export function CourseTestSessionsTab({
       const q = search.trim().toLowerCase()
       const matchesSearch =
         !q || `${row.user_id} ${row.user_full_name || ''} ${row.user_email} ${row.course_title}`.toLowerCase().includes(q)
-      return matchesType && matchesStatus && matchesSearch
+
+      const matchesDate = !dateRange || !dateRange[0] || !dateRange[1] || (() => {
+        const dateStr = row.submitted_at || row.started_at
+        if (!dateStr) return false
+        const d = dayjs(dateStr)
+        const start = dateRange[0].startOf('day')
+        const end = dateRange[1].endOf('day')
+        return (d.isAfter(start) || d.isSame(start)) && (d.isBefore(end) || d.isSame(end))
+      })()
+
+      return matchesType && matchesStatus && matchesSearch && matchesDate
     })
-  }, [rows, type, status, search])
+  }, [rows, type, status, search, dateRange])
 
   const columns: DataTableColumn<SessionRow>[] = [
     {
@@ -287,32 +300,32 @@ export function CourseTestSessionsTab({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           title="Tổng Phiên Kiểm Tra"
-          value={rows.length.toLocaleString('vi-VN')}
-          subtitle="Lượt làm bài kiểm tra trong khóa học"
+          value={filtered.length.toLocaleString('vi-VN')}
+          subtitle="Lượt làm bài kiểm tra theo tiêu chí lọc"
           icon={Layers}
           color="indigo"
-          trend={rows.length > 0 ? `${rows.length}` : undefined}
+          trend={filtered.length > 0 ? `${filtered.length}` : undefined}
           trendType="neutral"
           loading={isLoadingCourses || isLoading}
         />
         <StatCard
           title="Bài Đã Nộp"
-          value={rows.filter((r) => r.status === 'SUBMITTED').length.toLocaleString('vi-VN')}
+          value={filtered.filter((r) => r.status === 'SUBMITTED').length.toLocaleString('vi-VN')}
           subtitle="Học viên hoàn thành bài kiểm tra"
           icon={CheckCircle2}
           color="emerald"
-          trend={rows.length > 0 ? `${Math.round((rows.filter((r) => r.status === 'SUBMITTED').length / rows.length) * 100)}%` : undefined}
+          trend={filtered.length > 0 ? `${Math.round((filtered.filter((r) => r.status === 'SUBMITTED').length / filtered.length) * 100)}%` : undefined}
           trendType="up"
           loading={isLoadingCourses || isLoading}
         />
         <StatCard
           title="Phiên Hết Hạn"
-          value={rows.filter((r) => r.status === 'EXPIRED').length.toLocaleString('vi-VN')}
+          value={filtered.filter((r) => r.status === 'EXPIRED').length.toLocaleString('vi-VN')}
           subtitle="Phiên làm bài bị quá thời gian quy định"
           icon={AlertTriangle}
           color="rose"
-          trend={rows.filter((r) => r.status === 'EXPIRED').length > 0 ? `${rows.filter((r) => r.status === 'EXPIRED').length}` : undefined}
-          trendType={rows.filter((r) => r.status === 'EXPIRED').length > 0 ? 'down' : 'neutral'}
+          trend={filtered.filter((r) => r.status === 'EXPIRED').length > 0 ? `${filtered.filter((r) => r.status === 'EXPIRED').length}` : undefined}
+          trendType={filtered.filter((r) => r.status === 'EXPIRED').length > 0 ? 'down' : 'neutral'}
           loading={isLoadingCourses || isLoading}
         />
       </div>
@@ -385,8 +398,28 @@ export function CourseTestSessionsTab({
                 ]}
               />
             </div>
+            <div className="w-64 sm:w-72">
+              <RangePicker
+                value={dateRange}
+                onChange={(dates) => {
+                  setDateRange(dates)
+                  setPage(1)
+                }}
+                format="DD/MM/YYYY"
+                placeholder={['Từ ngày', 'Đến ngày']}
+                allowClear
+                className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs h-9 shadow-2xs"
+              />
+            </div>
           </div>
         }
+        onResetFilters={() => {
+          setType('ALL')
+          setStatus('ALL')
+          setSearch('')
+          setDateRange(null)
+          setPage(1)
+        }}
         pagination={{
           currentPage: page,
           pageSize,
