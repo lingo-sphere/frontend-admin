@@ -194,8 +194,8 @@ export function getLearnerColumns({
                     title={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập?' : 'Reset all learner study data?'}
                     description={
                       isVi
-                        ? 'Hủy toàn bộ khóa học đã đăng ký, xóa tiến độ bài học, bài nộp 4 kỹ năng, từ vựng, lượt thi TOEIC và đưa học tập về trạng thái ban đầu. Tài khoản đăng nhập và lịch sử thanh toán đối soát được giữ nguyên.'
-                        : 'Clear course enrollments, lesson progress, 4-skill submissions, vocabulary, and TOEIC exam attempts back to initial state. Login credentials and financial records remain intact.'
+                        ? 'Hủy toàn bộ khóa học đã đăng ký, xóa tiến độ bài học, bài nộp 4 kỹ năng, từ vựng, lượt thi TOEIC, đơn hàng thanh toán và đưa tài khoản về trạng thái ban đầu. Chỉ giữ lại tài khoản đăng nhập.'
+                        : 'Clear all course enrollments, lesson progress, 4-skill submissions, vocabulary, TOEIC attempts, and payment orders. Only login account is retained.'
                     }
                     okText={isVi ? 'Khởi tạo lại' : 'Reset'}
                     cancelText={isVi ? 'Hủy' : 'Cancel'}
