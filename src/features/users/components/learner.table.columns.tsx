@@ -191,11 +191,11 @@ export function getLearnerColumns({
                 />
                 {onResetData && (
                   <ActionPopconfirmButton
-                    title={isVi ? 'Khởi tạo lại dữ liệu học tập?' : 'Reset learner learning data?'}
+                    title={isVi ? 'Khởi tạo lại toàn bộ dữ liệu học tập?' : 'Reset all learner study data?'}
                     description={
                       isVi
-                        ? 'Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp và điểm thi của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên.'
-                        : 'Clear course enrollments, lesson progress, submissions, and test scores. Login credentials remain intact.'
+                        ? 'Hủy toàn bộ khóa học đã đăng ký, xóa tiến độ bài học, bài nộp 4 kỹ năng, từ vựng, lượt thi TOEIC và đưa học tập về trạng thái ban đầu. Tài khoản đăng nhập và lịch sử thanh toán đối soát được giữ nguyên.'
+                        : 'Clear course enrollments, lesson progress, 4-skill submissions, vocabulary, and TOEIC exam attempts back to initial state. Login credentials and financial records remain intact.'
                     }
                     okText={isVi ? 'Khởi tạo lại' : 'Reset'}
                     cancelText={isVi ? 'Hủy' : 'Cancel'}
