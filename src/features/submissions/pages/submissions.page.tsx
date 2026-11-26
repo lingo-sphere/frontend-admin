@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { CourseTestSessionsTab } from '@/features/submissions/components/course.test.sessions.tab'
 import { useCourseLearnersData } from '@/features/courses/hooks/use.course.learners.data'
+import { SubmissionsTabHeader } from '@/features/submissions/components/submissions.tab.header'
 
 export function SubmissionsPage() {
   const { i18n } = useTranslation()
@@ -33,6 +34,8 @@ export function SubmissionsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      <SubmissionsTabHeader activeTab="courses" />
+
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
           <FileCheck2 className="h-6 w-6" />

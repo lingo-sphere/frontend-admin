@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Tooltip } from 'antd'
+import { Button, Tooltip, DatePicker } from 'antd'
+import dayjs, { type Dayjs } from 'dayjs'
 import { FileCheck2, Clock, CheckCircle2, RotateCcw, Sparkles } from 'lucide-react'
 import { DataTable, type DataTableColumn } from '@/components/data.table'
 import { TableTextCell } from '@/components/table.text.cell'
@@ -14,6 +15,9 @@ import { toast } from '@/store/toast.store'
 import { practiceReviewService, type PracticeSkill, type PracticeSubmission } from '@/features/submissions/services/practice.review.service'
 import { practiceScoreLabel, practiceDateLabel, practiceExerciseLabels } from '@/features/submissions/helpers/practice.submission.display'
 import { userService } from '@/features/users/services/user.service'
+import { SubmissionsTabHeader } from '@/features/submissions/components/submissions.tab.header'
+
+const { RangePicker } = DatePicker
 
 export function PracticeSubmissionsTable({ skill, onOpenReview }: {
   skill: PracticeSkill
@@ -23,20 +27,42 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
   const [status, setStatus] = useState('ALL')
   const [standard, setStandard] = useState('ALL')
   const [search, setSearch] = useState('')
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const user = useAuthStore(state => state.user)
   const isAdmin = user?.role === 'ADMIN'
   const client = useQueryClient()
 
+  const fromDate = dateRange?.[0] ? dateRange[0].startOf('day').toISOString() : undefined
+  const toDate = dateRange?.[1] ? dateRange[1].endOf('day').toISOString() : undefined
+
   const query = useQuery({
-    queryKey: ['practice-submissions', skill, status, standard, search, page, pageSize],
+    queryKey: ['practice-submissions', skill, status, standard, search, fromDate, toDate, page, pageSize],
     queryFn: () => practiceReviewService.list(skill, {
-      status, search, page, limit: pageSize, ...(standard === 'ALL' ? {} : { standard }),
+      status,
+      search,
+      page,
+      limit: pageSize,
+      ...(standard === 'ALL' ? {} : { standard }),
+      ...(fromDate ? { from_date: fromDate } : {}),
+      ...(toDate ? { to_date: toDate } : {}),
     }),
   })
 
   const items = query.data?.items || []
+
+  const displayItems = useMemo(() => {
+    if (!dateRange || !dateRange[0] || !dateRange[1]) return items
+    const start = dateRange[0].startOf('day')
+    const end = dateRange[1].endOf('day')
+    return items.filter((item) => {
+      const dateVal = item.submitted_at || item.created_at
+      if (!dateVal) return true
+      const d = dayjs(dateVal)
+      return (d.isAfter(start) || d.isSame(start)) && (d.isBefore(end) || d.isSame(end))
+    })
+  }, [items, dateRange])
   const userIds = useMemo(() => [...new Set(items.map(it => it.user_id).filter(Boolean))], [items])
 
   const profilesQuery = useQuery({
@@ -275,11 +301,14 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
     setStatus('ALL')
     setStandard('ALL')
     setSearch('')
+    setDateRange(null)
     setPage(1)
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      <SubmissionsTabHeader activeTab={skill === 'SPEAKING' ? 'speaking' : 'writing'} />
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
@@ -340,7 +369,7 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
       </div>
 
       <DataTable<PracticeSubmission>
-        data={query.data?.items || []}
+        data={displayItems}
         columns={columns}
         rowKey={(item) => item.id}
         isLoading={query.isFetching}
@@ -384,6 +413,19 @@ export function PracticeSubmissionsTable({ skill, onOpenReview }: {
                   { value: 'PRACTICAL', label: 'Thực hành /100' },
                   { value: 'TOEIC', label: 'TOEIC' },
                 ]}
+              />
+            </div>
+            <div className="w-64 sm:w-72">
+              <RangePicker
+                value={dateRange}
+                onChange={(dates) => {
+                  setDateRange(dates)
+                  setPage(1)
+                }}
+                format="DD/MM/YYYY"
+                placeholder={['Từ ngày', 'Đến ngày']}
+                allowClear
+                className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs h-9 shadow-2xs"
               />
             </div>
           </div>

@@ -100,7 +100,7 @@ export function UserProfileHeader({ profileData, onOpenAiQuota, onResetData }: U
         {onResetData && (
           <Popconfirm
             title="Khởi tạo lại toàn bộ dữ liệu học tập?"
-            description="Hủy đăng ký khóa học, xóa tiến độ bài học, bài nộp, lượt thi TOEIC và đơn hàng của học viên này. Tài khoản đăng nhập vẫn được giữ nguyên."
+            description="Hủy toàn bộ khóa học đã đăng ký, xóa tiến độ bài học, bài nộp 4 kỹ năng, từ vựng, lượt thi TOEIC, đơn hàng và đưa học tập về trạng thái ban đầu. Chỉ giữ lại tài khoản đăng nhập."
             okText="Khởi tạo lại dữ liệu"
             cancelText="Hủy"
             okType="danger"

@@ -138,10 +138,16 @@ export function UserProfilePage() {
           try {
             await resetLearnerData(profileData.id)
             toast.success(isVi ? 'Đã khởi tạo lại toàn bộ dữ liệu học tập của học viên thành công!' : 'Successfully reset learner study data!')
-            await refetch()
-            queryClient.invalidateQueries({ queryKey: ['learner-profile', userId] })
-          } catch {
-            toast.error(isVi ? 'Khởi tạo lại dữ liệu học viên thất bại' : 'Failed to reset learner data')
+            await Promise.all([
+              refetch(),
+              queryClient.invalidateQueries({ queryKey: ['learner-profile', userId] }),
+              queryClient.invalidateQueries({ queryKey: ['admin-learners'] }),
+              queryClient.invalidateQueries({ queryKey: ['admin-learner-stats'] }),
+            ])
+          } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } }; message?: string }
+            const msg = axiosErr?.response?.data?.message || axiosErr?.message || (isVi ? 'Khởi tạo lại dữ liệu học viên thất bại' : 'Failed to reset learner data')
+            toast.error(msg)
           }
         }}
       />

@@ -40,7 +40,7 @@ export function VocabularyPage() {
   const debouncedSearch = useDebounce(searchWord, 300)
   const [filterLevel, setFilterLevel] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(20)
+  const [pageSize, setPageSize] = useState<number>(10)
 
   const [detailModalId, setDetailModalId] = useState<string | null>(null)
 

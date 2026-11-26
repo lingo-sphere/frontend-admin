@@ -16,23 +16,9 @@ import {
   useDeletePermissionMutation,
   useAssignRoleMutation,
 } from '@/features/rbac/hooks/use.rbac.query'
+import { RBAC_MODULES } from '@/features/rbac/constants/rbac.constants'
 
 type PermTabType = 'permissions' | 'assign'
-
-const RBAC_MODULES = [
-  'AUTH',
-  'USERS',
-  'COURSES',
-  'EXAMS',
-  'PRACTICE',
-  'PROGRESS',
-  'COMMUNITY',
-  'NOTIFICATIONS',
-  'MEDIA',
-  'AI',
-  'ROLES',
-  'PERMISSIONS',
-]
 
 export function PermissionsPage() {
   const [activeTab, setActiveTab] = useState<PermTabType>('permissions')

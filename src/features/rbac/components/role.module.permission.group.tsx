@@ -1,10 +1,8 @@
-/**
- * @file role.module.permission.group.tsx
- * @description Nhóm danh sách quyền hạn (Permissions) theo module trong RoleEditModal kèm toggle mở rộng và chọn tất cả
- */
+// Nhóm danh sách quyền hạn (Permissions) theo module trong RoleEditModal kèm toggle mở rộng và chọn tất cả.
 
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { Permission } from '@/types/api.types'
+import { RBAC_MODULE_LABELS } from '@/features/rbac/constants/rbac.constants'
 
 interface RoleModulePermissionGroupProps {
   moduleName: string
@@ -71,7 +69,7 @@ export function RoleModulePermissionGroup({
           ) : (
             <ChevronRight className="w-4 h-4 text-slate-500" />
           )}
-          <span className="tracking-wide">{moduleName}</span>
+          <span className="tracking-wide">{RBAC_MODULE_LABELS[moduleName] || moduleName}</span>
           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
             {selectedInMod}/{modulePermissions.length}
           </span>

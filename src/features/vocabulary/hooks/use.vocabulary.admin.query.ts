@@ -29,7 +29,7 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams & { page?: nu
       let items: any[] = []
       let total = 0
       let page = 1
-      let limit = 20
+      let limit = params?.limit || 10
       let totalPages = 1
       let nextCursor: string | null = null
 
@@ -41,14 +41,14 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams & { page?: nu
           items = (res as any).items
           total = (res as any).total || items.length
           page = (res as any).page || 1
-          limit = (res as any).limit || 20
+          limit = (res as any).limit || params?.limit || 10
           totalPages = (res as any).total_pages || 1
           nextCursor = (res as any).next_cursor || null
         } else if ('data' in res && Array.isArray((res as any).data)) {
           items = (res as any).data
           total = (res as any).total || items.length
           page = (res as any).page || 1
-          limit = (res as any).limit || 20
+          limit = (res as any).limit || params?.limit || 10
           totalPages = (res as any).total_pages || 1
           nextCursor = (res as any).next_cursor || null
         }

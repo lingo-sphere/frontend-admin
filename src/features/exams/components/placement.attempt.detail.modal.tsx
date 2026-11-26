@@ -27,6 +27,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAdminAttemptResultQuery } from '@/features/exams/hooks/use.exams.admin.query'
 import { examService, type AdminAttemptQuestion } from '@/features/exams/services/exam.service'
 import { resolveMediaUrl } from '@/lib/media.utils'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import { toast } from '@/store/toast.store'
 
 interface PlacementAttemptDetailModalProps {
@@ -682,12 +683,11 @@ export function PlacementAttemptDetailModal({
                         )}
 
                         {(qObj?.audio_url || qObj?.media_url) && (
-                          <div className="mt-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              <Volume2 className="w-3.5 h-3.5 text-blue-500" />
-                              <span>Audio câu hỏi (Listening / Speaking Prompt):</span>
-                            </div>
-                            <audio controls preload="none" className="w-full h-8" src={resolveMediaUrl(qObj.audio_url || qObj.media_url)} />
+                          <div className="mt-3">
+                            <CustomAudioPlayer
+                              src={qObj.audio_url || qObj.media_url}
+                              title="Audio câu hỏi (Listening / Speaking Prompt)"
+                            />
                           </div>
                         )}
 
@@ -734,14 +734,10 @@ export function PlacementAttemptDetailModal({
                                 </a>
                               </div>
                             </div>
-                            <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-indigo-100 dark:border-indigo-900/40">
-                              <audio
-                                controls
-                                className="w-full h-10 rounded-lg"
-                                src={getAudioSrc(rawSelectedOption)}
-                                preload="none"
-                              />
-                            </div>
+                            <CustomAudioPlayer
+                              src={getAudioSrc(rawSelectedOption)}
+                              title="Bản ghi âm giọng nói học viên"
+                            />
                           </div>
                         ) : isWritingAnswer ? (
                           <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
