@@ -46,7 +46,10 @@ export function normalizeQuestions(
       prep_time_seconds: raw.prep_time_seconds,
       response_time_seconds: raw.response_time_seconds,
       min_words: raw.min_words,
+      domain: raw.domain || null,
       context_id: raw.context_id || null,
+      grammar_knowledge_id: raw.grammar_knowledge_id || null,
+      exercise_type: raw.exercise_type || null,
     }
   })
 }
@@ -67,7 +70,10 @@ export function getQuestionsSnapshot(qs: ExamQuestionItem[], audio: string): str
       prep_time_seconds: q.prep_time_seconds ?? null,
       response_time_seconds: q.response_time_seconds ?? null,
       min_words: q.min_words ?? null,
+      domain: q.domain || null,
       context_id: q.context_id || null,
+      grammar_knowledge_id: q.grammar_knowledge_id || null,
+      exercise_type: q.exercise_type || null,
     })),
   })
 }

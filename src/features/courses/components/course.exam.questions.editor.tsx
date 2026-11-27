@@ -303,6 +303,7 @@ export function CourseExamQuestionsEditor({
             />
 
             <CourseExamQuestionsList
+              enableCourseClassification={!isSystemPlacement && !isToeic}
               questions={questions}
               filteredQuestions={filteredQuestions}
               isVi={isVi}

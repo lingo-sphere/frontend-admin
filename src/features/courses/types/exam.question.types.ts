@@ -19,7 +19,10 @@ export interface ExamQuestionItem {
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
+  domain?: string | null
   context_id?: string | null
+  grammar_knowledge_id?: string | null
+  exercise_type?: string | null
   [key: string]: unknown
 }
 
@@ -45,7 +48,10 @@ export interface RawExamQuestion {
   prep_time_seconds?: number | null
   response_time_seconds?: number | null
   min_words?: number | null
+  domain?: string | null
   context_id?: string | null
+  grammar_knowledge_id?: string | null
+  exercise_type?: string | null
 }
 
 export interface UseExamQuestionEditorParams {
