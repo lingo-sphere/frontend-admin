@@ -1,5 +1,5 @@
 // Trang quản trị kho từ vựng và bộ thẻ trong giao diện Admin.
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, RotateCcw, BookOpen, Bookmark, Layers, FileSpreadsheet, Volume2 } from 'lucide-react'
 import { useReloadAnimation } from '@/hooks/use.reload.animation'
@@ -68,21 +68,34 @@ export function VocabularyPage() {
 
   const { data: wordsResponse, isLoading: isWordsLoading, refetch: refetchWords } = useVocabularyWordsQuery(queryParams)
 
-  const { data: topics = [], isLoading: isTopicsLoading, refetch: refetchTopics } = useVocabularyTopicsQuery()
-  const { data: decks = [], isLoading: isDecksLoading, refetch: refetchDecks } = useVocabularyDecksQuery()
-  const { data: ipaSymbols = [], isLoading: isIpaLoading, refetch: refetchIpa } = useVocabularyIpaSymbolsQuery()
+  const { data: topics = [], refetch: refetchTopics } = useVocabularyTopicsQuery()
+  const { data: decks = [], refetch: refetchDecks } = useVocabularyDecksQuery({
+    enabled: activeTab === 'decks' || isDeckModalOpen || isCardsManagerOpen,
+  })
+  const { refetch: refetchIpa } = useVocabularyIpaSymbolsQuery(undefined, {
+    enabled: activeTab === 'ipa',
+  })
 
   const { mutateAsync: deleteWordMutate } = useDeleteWordMutation()
+  const deleteWordMutateRef = useRef(deleteWordMutate)
+  deleteWordMutateRef.current = deleteWordMutate
+
   const { mutateAsync: deleteTopicMutate } = useDeleteTopicMutation()
   const { mutateAsync: deleteDeckMutate } = useDeleteDeckMutation()
-
-  const isLoading = isWordsLoading || isTopicsLoading || isDecksLoading || isIpaLoading
 
   const words: LexicalItem[] = wordsResponse?.items || []
   const totalWords: number = wordsResponse?.total || 0
 
   const { isReloading: isRefreshing, trigger: handleRefresh } = useReloadAnimation(async () => {
-    await Promise.all([refetchWords(), refetchTopics(), refetchDecks(), refetchIpa()])
+    if (activeTab === 'words') {
+      await refetchWords()
+    } else if (activeTab === 'topics') {
+      await refetchTopics()
+    } else if (activeTab === 'decks') {
+      await refetchDecks()
+    } else if (activeTab === 'ipa') {
+      await refetchIpa()
+    }
   })
 
   const handleEditIpaSymbol = (_symbol: IpaSymbol) => {
@@ -91,14 +104,17 @@ export function VocabularyPage() {
 
   const handleDeleteWord = useCallback(async (wordId: string) => {
     try {
-      await deleteWordMutate(wordId)
+      await deleteWordMutateRef.current(wordId)
       toast.success('Đã xóa từ vựng thành công!')
     } catch {
       toast.error('Xóa từ vựng thất bại')
     }
-  }, [deleteWordMutate])
+  }, [])
 
-  // Topic handlers
+  const handleEditWord = useCallback((wordId: string) => {
+    navigate(`/vocabulary/${wordId}/edit`)
+  }, [navigate])
+
   const handleCreateTopic = () => {
     setEditingTopic(null)
     setIsTopicModalOpen(true)
@@ -124,7 +140,6 @@ export function VocabularyPage() {
     setActiveTab('decks')
   }
 
-  // Deck handlers
   const handleCreateDeck = (initialTopicId?: string) => {
     setEditingDeck(null)
     setInitialDeckTopicId(initialTopicId)
@@ -164,14 +179,13 @@ export function VocabularyPage() {
   const columns = useMemo(() => {
     return getVocabularyColumns({
       isVi,
-      onEditWord: (wordId) => navigate(`/vocabulary/${wordId}/edit`),
+      onEditWord: handleEditWord,
       onDeleteWord: handleDeleteWord,
     })
-  }, [isVi, navigate, handleDeleteWord])
+  }, [isVi, handleEditWord, handleDeleteWord])
 
   return (
     <div className="space-y-6">
-      {/* Vocabulary Detail Modal */}
       <VocabularyDetailModal
         isOpen={!!detailModalId}
         onClose={() => setDetailModalId(null)}
@@ -179,7 +193,6 @@ export function VocabularyPage() {
         onEdit={(id) => navigate(`/vocabulary/${id}/edit`)}
       />
 
-      {/* Topic Create / Edit Modal */}
       <TopicFormModal
         isOpen={isTopicModalOpen}
         onClose={() => setIsTopicModalOpen(false)}
@@ -187,7 +200,6 @@ export function VocabularyPage() {
         onSuccess={() => refetchTopics()}
       />
 
-      {/* Deck Create / Edit Modal */}
       <DeckFormModal
         isOpen={isDeckModalOpen}
         onClose={() => setIsDeckModalOpen(false)}
@@ -200,7 +212,6 @@ export function VocabularyPage() {
         }}
       />
 
-      {/* Deck Cards Manager Modal */}
       <DeckCardsManagerModal
         isOpen={isCardsManagerOpen}
         onClose={() => {
@@ -267,13 +278,12 @@ export function VocabularyPage() {
           {
             key: 'decks',
             label: isVi ? 'Bộ thẻ' : 'Decks',
-            count: decks.length,
+            count: decks.length > 0 ? decks.length : undefined,
             icon: Layers,
           },
           {
             key: 'ipa',
             label: isVi ? 'Bảng IPA' : 'IPA Chart',
-            count: ipaSymbols.length,
             icon: Volume2,
           },
         ]}
@@ -284,7 +294,7 @@ export function VocabularyPage() {
           columns={columns}
           data={words}
           rowKey={(w) => w.id}
-          isLoading={isLoading}
+          isLoading={isWordsLoading && words.length === 0}
           sortKey={sortKey}
           sortOrder={sortOrder}
           onSortChange={(k, o) => {

@@ -1,5 +1,6 @@
 // Component danh sách câu hỏi đề thi và vùng kéo thả import zip tài liệu
 import { BookOpen, Plus } from 'lucide-react'
+import { CourseQuestionContext } from '@/features/courses/components/course.question.context'
 import { ExamQuestionCard } from '@/features/exams/components/exam.question.card'
 import { ExamZipDropzone } from '@/features/exams/components/exam.zip.dropzone'
 import { EmptyState } from '@/components/empty.state'
@@ -11,6 +12,7 @@ export interface CourseExamQuestionsListProps {
   isVi: boolean
   is4Skills: boolean
   isSystemPlacement: boolean
+  enableCourseClassification?: boolean
   isProcessingZip: boolean
   zipProcessStatus: string
   zipProgress: { current: number; total: number } | null
@@ -38,6 +40,7 @@ export function CourseExamQuestionsList({
   isVi,
   is4Skills,
   isSystemPlacement,
+  enableCourseClassification,
   isProcessingZip,
   zipProcessStatus,
   zipProgress,
@@ -111,8 +114,8 @@ export function CourseExamQuestionsList({
         const qIndex = actualIdx !== -1 ? actualIdx : filteredIdx
 
         return (
+          <div key={q.id || qIndex}>
           <ExamQuestionCard
-            key={q.id || qIndex}
             question={q}
             index={qIndex}
             isVi={isVi}
@@ -126,6 +129,8 @@ export function CourseExamQuestionsList({
             onRequestUploadAudio={() => onRequestUploadAudio(qIndex)}
             onRequestUploadImage={() => onRequestUploadImage(qIndex)}
           />
+          {enableCourseClassification && <CourseQuestionContext index={qIndex} value={q.context_id} grammar={q.grammar_knowledge_id} isVi={isVi} onChange={(value) => onUpdateQuestion(qIndex, { context_id: value })} onGrammarChange={(value) => onUpdateQuestion(qIndex, { grammar_knowledge_id: value })} />}
+          </div>
         )
       })}
     </div>

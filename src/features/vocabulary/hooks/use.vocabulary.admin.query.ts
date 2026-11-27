@@ -89,11 +89,12 @@ export function useVocabularyWordsQuery(params?: SearchVocabParams & { page?: nu
       }
     },
     placeholderData: keepPreviousData,
-    staleTime: 0,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 }
 
-export function useVocabularyTopicsQuery() {
+export function useVocabularyTopicsQuery(options?: { enabled?: boolean }) {
   return useQuery<Topic[]>({
     queryKey: vocabAdminKeys.topics(),
     queryFn: async () => {
@@ -128,8 +129,10 @@ export function useVocabularyTopicsQuery() {
         created_at: typeof t.created_at === 'string' ? t.created_at : (t.created_at ? new Date(t.created_at).toISOString() : ''),
       }))
     },
+    enabled: options?.enabled !== false,
     placeholderData: keepPreviousData,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -167,7 +170,7 @@ export function useDeleteTopicMutation() {
   })
 }
 
-export function useVocabularyDecksQuery() {
+export function useVocabularyDecksQuery(options?: { enabled?: boolean }) {
   return useQuery<FlashcardDeck[]>({
     queryKey: vocabAdminKeys.decks(),
     queryFn: async () => {
@@ -193,7 +196,10 @@ export function useVocabularyDecksQuery() {
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
     },
-    staleTime: 0,
+    enabled: options?.enabled !== false,
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -276,7 +282,7 @@ export function useRemoveCardFromDeckMutation() {
   })
 }
 
-export function usePublicDecksQuery() {
+export function usePublicDecksQuery(options?: { enabled?: boolean }) {
   return useQuery<FlashcardDeck[]>({
     queryKey: vocabAdminKeys.publicDecks(),
     queryFn: async () => {
@@ -302,8 +308,10 @@ export function usePublicDecksQuery() {
         created_at: typeof d.created_at === 'string' ? d.created_at : (d.created_at instanceof Date ? d.created_at.toISOString() : new Date().toISOString()),
       }))
     },
+    enabled: options?.enabled !== false,
     placeholderData: keepPreviousData,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -318,7 +326,7 @@ export function useDeleteWordMutation() {
   })
 }
 
-export function useVocabularyIpaSymbolsQuery(symbolType?: string) {
+export function useVocabularyIpaSymbolsQuery(symbolType?: string, options?: { enabled?: boolean }) {
   return useQuery<IpaSymbol[]>({
     queryKey: [...vocabAdminKeys.all, 'ipa-symbols', symbolType],
     queryFn: async () => {
@@ -339,8 +347,10 @@ export function useVocabularyIpaSymbolsQuery(symbolType?: string) {
         created_at: s.created_at ? String(s.created_at) : undefined,
       }))
     },
+    enabled: options?.enabled !== false,
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 }
 
