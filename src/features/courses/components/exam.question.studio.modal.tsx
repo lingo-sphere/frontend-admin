@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Save, Plus } from 'lucide-react'
 import { useExamQuestionEditor, type ExamQuestionItem } from '@/features/courses/hooks/use.exam.question.editor'
 import { ExamQuestionCard } from '@/features/exams/components/exam.question.card'
+import { CourseQuestionContext } from '@/features/courses/components/course.question.context'
 import { ExamZipDropzone } from '@/features/exams/components/exam.zip.dropzone'
 import { ExamEditorHeader } from '@/features/courses/components/exam.editor.header'
 import { ExamEditorGlobalAudio } from '@/features/courses/components/exam.editor.global.audio'
@@ -189,8 +190,8 @@ export function ExamQuestionStudioModal({
                   const qIndex = actualIdx !== -1 ? actualIdx : filteredIdx
 
                   return (
+                    <div key={q.id || qIndex}>
                     <ExamQuestionCard
-                      key={q.id || qIndex}
                       question={q}
                       index={qIndex}
                       isVi={isVi}
@@ -210,6 +211,8 @@ export function ExamQuestionStudioModal({
                         questionImageInputRef.current?.click()
                       }}
                     />
+                    <CourseQuestionContext index={qIndex} value={q.context_id} grammar={q.grammar_knowledge_id} isVi={isVi} onChange={(value) => handleUpdateQuestion(qIndex, { context_id: value })} onGrammarChange={(value) => handleUpdateQuestion(qIndex, { grammar_knowledge_id: value })} />
+                    </div>
                   )
                 })
               )}

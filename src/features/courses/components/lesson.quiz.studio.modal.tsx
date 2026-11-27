@@ -30,13 +30,18 @@ export function LessonQuizStudioModal({
     : `Lesson Practice Quiz - Lesson ${chapterIndex + 1}.${lessonIndex + 1}`
 
   const initialQuestions: ExamQuestionItem[] = (lesson.questions || []).map((q, idx) => ({
-    id: q.id || `q_init_${idx}`,
-    question_text: q.question_text || '',
+    id: q.id || q._id || `q_init_${idx}`,
+    question_text: q.question_text || q.prompt || '',
+    skill_type: (['LISTENING', 'READING', 'SPEAKING', 'WRITING'].includes(q.skill_type || q.domain || '') ? (q.skill_type || q.domain) : undefined) as ExamQuestionItem['skill_type'],
+    domain: q.domain,
+    context_id: q.context_id,
+    grammar_knowledge_id: q.grammar_knowledge_id,
+    exercise_type: q.exercise_type,
     options:
       q.options && q.options.length
         ? q.options.map((opt) => (typeof opt === 'string' ? opt : opt?.text || ''))
         : ['', '', '', ''],
-    correct_answer: q.correct_answer || 'A',
+    correct_answer: q.correct_answer || q.correct_option || 'A',
     explanation: q.explanation || '',
     media_url: q.media_url || q.audio_url || '',
     image_url: q.image_url || '',
@@ -46,8 +51,15 @@ export function LessonQuizStudioModal({
     const formatted: LessonQuestion[] = savedQuestions.map((sq, i) => ({
       id: sq.id || `q_${Date.now()}_${i}`,
       question_text: sq.question_text,
+      prompt: sq.question_text,
+      skill_type: sq.skill_type,
+      domain: sq.domain || sq.skill_type,
+      context_id: sq.context_id,
+      grammar_knowledge_id: sq.grammar_knowledge_id,
+      exercise_type: sq.exercise_type,
       options: sq.options,
       correct_answer: sq.correct_answer,
+      correct_option: sq.correct_answer,
       explanation: sq.explanation || undefined,
       audio_url: sq.media_url || sq.audio_url || undefined,
       image_url: sq.image_url || undefined,
